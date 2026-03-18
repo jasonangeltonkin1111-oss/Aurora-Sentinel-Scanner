@@ -2046,9 +2046,11 @@ namespace ASC_Market_Internal
                           bool &is_open,
                           string &reason)
    {
-      datetime now = CurrentServerTime();
-      const int now_seconds = SecondsOfDay(now);
-      const ENUM_DAY_OF_WEEK day = (ENUM_DAY_OF_WEEK)TimeDayOfWeek(now);
+      datetime current_time = CurrentServerTime();
+      const int now_seconds = SecondsOfDay(current_time);
+      MqlDateTime current_time_struct;
+      TimeToStruct(current_time, current_time_struct);
+      const ENUM_DAY_OF_WEEK day = (ENUM_DAY_OF_WEEK)current_time_struct.day_of_week;
 
       is_open = false;
       bool any_session_data = false;
@@ -2095,7 +2097,7 @@ namespace ASC_Market_Internal
                                                const datetime last_quote_time,
                                                string &ineligible_reason)
    {
-      const datetime now = CurrentServerTime();
+      const datetime current_time = CurrentServerTime();
 
       if(last_quote_time <= 0)
       {
@@ -2103,7 +2105,7 @@ namespace ASC_Market_Internal
          return ASC_SESSION_NO_QUOTE;
       }
 
-      if(config.StaleFeedSeconds > 0 && (now - last_quote_time) > config.StaleFeedSeconds)
+      if(config.StaleFeedSeconds > 0 && (current_time - last_quote_time) > config.StaleFeedSeconds)
       {
          ineligible_reason = "stale feed";
          return ASC_SESSION_STALE_FEED;
@@ -2173,7 +2175,8 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
       return false;
    }
 
-   record.MarketTruth.Exists = SymbolExist(symbol, false);
+   bool is_custom_symbol = false;
+   record.MarketTruth.Exists = SymbolExist(symbol, is_custom_symbol);
    if(!record.MarketTruth.Exists)
    {
       record.MarketTruth.SessionTruthStatus = ASC_SESSION_UNKNOWN;
