@@ -1998,6 +1998,13 @@ namespace ASC_Market_Internal
       return true;
    }
 
+   bool TradeModePermitsNewExposure(const long trade_mode)
+   {
+      return (trade_mode == SYMBOL_TRADE_MODE_FULL ||
+              trade_mode == SYMBOL_TRADE_MODE_LONGONLY ||
+              trade_mode == SYMBOL_TRADE_MODE_SHORTONLY);
+   }
+
    struct SessionWindowProbe
    {
       bool Readable;
@@ -2165,6 +2172,54 @@ namespace ASC_Market_Internal
       return (asset_class == "CRYPTO");
    }
 
+   int CompareSymbols(const string left,const string right)
+   {
+      string left_upper = left;
+      string right_upper = right;
+      StringToUpper(left_upper);
+      StringToUpper(right_upper);
+      const int compare_normalized = StringCompare(left_upper,right_upper);
+      if(compare_normalized != 0)
+         return(compare_normalized);
+      return(StringCompare(left,right));
+   }
+
+   void SortSymbols(string &symbols[])
+   {
+      const int total = ArraySize(symbols);
+      for(int i = 1; i < total; ++i)
+        {
+         const string key = symbols[i];
+         int j = i - 1;
+         while(j >= 0 && CompareSymbols(symbols[j],key) > 0)
+           {
+            symbols[j + 1] = symbols[j];
+            --j;
+           }
+         symbols[j + 1] = key;
+        }
+   }
+
+   void UniqueInPlace(string &symbols[])
+   {
+      const int total = ArraySize(symbols);
+      if(total <= 1)
+         return;
+
+      int write_index = 1;
+      string last_symbol = symbols[0];
+      for(int i = 1; i < total; ++i)
+        {
+         if(CompareSymbols(last_symbol,symbols[i]) == 0)
+            continue;
+         symbols[write_index] = symbols[i];
+         last_symbol = symbols[i];
+         ++write_index;
+        }
+
+      ArrayResize(symbols,write_index);
+   }
+
    datetime ResolveNextRecheckTime(const ASC_RuntimeConfig &config,
                                    const ASC_SessionTruthStatus status)
    {
@@ -2212,7 +2267,7 @@ namespace ASC_Market_Internal
       const bool explicit_session_closed = (quote_probe.HasData && !quote_probe.IsOpen && trade_probe.HasData && !trade_probe.IsOpen);
       const bool session_truth_missing = (!quote_probe.HasData || !trade_probe.HasData);
       const bool session_windows_unreadable = (!quote_probe.Readable || !trade_probe.Readable);
-      const bool strong_live_evidence = (fresh_live_quote && (has_session_reference || session_truth_missing || continuous_market_class));
+      const bool strong_live_evidence = (fresh_live_quote && (continuous_market_class || quote_probe.IsOpen || trade_probe.IsOpen));
       const bool weak_recent_evidence = (recent_quote_timestamp && (has_session_reference || continuous_market_class));
 
       if(!trade_allowed)
@@ -2254,6 +2309,15 @@ namespace ASC_Market_Internal
       {
          ineligible_reason = "";
          return ASC_SESSION_OPEN_TRADABLE;
+      }
+
+      if(fresh_live_quote)
+      {
+         if(session_windows_unreadable || session_truth_missing)
+         {
+            ineligible_reason = "live quote present but session truth incomplete";
+            return ASC_SESSION_QUOTE_ONLY;
+         }
       }
 
       if(have_quote_timestamp && stale_quote)
@@ -2359,6 +2423,9 @@ bool ASC_Market_DiscoverSymbols(string &symbols[])
       ++count;
    }
 
+   ASC_Market_Internal::SortSymbols(symbols);
+   ASC_Market_Internal::UniqueInPlace(symbols);
+
    return (count > 0);
 }
 
@@ -2415,7 +2482,7 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    record.MarketTruth.LastQuoteTime   = tick_evidence.HasTimestamp ? tick_evidence.QuoteTime : last_quote_time;
 
    if(trade_mode_ok)
-      record.MarketTruth.TradeAllowed = (trade_mode == SYMBOL_TRADE_MODE_FULL);
+      record.MarketTruth.TradeAllowed = ASC_Market_Internal::TradeModePermitsNewExposure(trade_mode);
 
    if(!(selected_ok && visible_ok && trade_mode_ok))
    {

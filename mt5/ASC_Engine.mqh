@@ -11,6 +11,8 @@
 static ASC_SymbolRecord  g_asc_universe_records[];
 static int               g_asc_universe_count = 0;
 static ASC_RuntimeConfig g_asc_runtime_config;
+static int               g_asc_init_cursor = 0;
+static int               g_asc_timer_cursor = 0;
 
 void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
   {
@@ -39,15 +41,25 @@ void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
 
    record.ConditionsTruth.SpecsReadable = false;
    record.ConditionsTruth.SpecsReason = "";
+   record.ConditionsTruth.DigitsReadable = false;
    record.ConditionsTruth.Digits = -1;
+   record.ConditionsTruth.SpreadPointsReadable = false;
    record.ConditionsTruth.SpreadPoints = -1;
+   record.ConditionsTruth.SpreadFloatReadable = false;
    record.ConditionsTruth.SpreadFloat = false;
+   record.ConditionsTruth.PointReadable = false;
    record.ConditionsTruth.Point = 0.0;
+   record.ConditionsTruth.TickSizeReadable = false;
    record.ConditionsTruth.TickSize = 0.0;
+   record.ConditionsTruth.TickValueReadable = false;
    record.ConditionsTruth.TickValue = 0.0;
+   record.ConditionsTruth.ContractSizeReadable = false;
    record.ConditionsTruth.ContractSize = 0.0;
+   record.ConditionsTruth.VolumeMinReadable = false;
    record.ConditionsTruth.VolumeMin = 0.0;
+   record.ConditionsTruth.VolumeMaxReadable = false;
    record.ConditionsTruth.VolumeMax = 0.0;
+   record.ConditionsTruth.VolumeStepReadable = false;
    record.ConditionsTruth.VolumeStep = 0.0;
 
    record.SurfaceTruth.ScanState = ASC_SURFACE_NOT_RUN;
@@ -136,20 +148,44 @@ void ASC_Engine_PreserveUniverseMembership(const string &symbols[],const int tot
       placeholder_record.Identity.NormalizedSymbol = symbol;
       placeholder_record.Identity.ClassificationReason = "PENDING_INIT_PASS";
       placeholder_record.MarketTruth.Exists = true;
-      placeholder_record.MarketTruth.IneligibleReason = "PENDING_INIT_PASS";
+      placeholder_record.MarketTruth.IneligibleReason = "PENDING_DISCOVERY_HYDRATION";
       placeholder_record.ConditionsTruth.SpecsReason = "PENDING_INIT_PASS";
       ASC_Engine_UpsertRecord(placeholder_record);
      }
   }
 
-void ASC_Engine_ProcessSymbols(const string &symbols[],const int total_symbols,const int max_to_process)
+int ASC_Engine_AdvanceCursor(const int cursor,const int total_symbols,const int step)
   {
+   if(total_symbols <= 0)
+      return(0);
+
+   int normalized_cursor = cursor % total_symbols;
+   if(normalized_cursor < 0)
+      normalized_cursor += total_symbols;
+
+   if(step <= 0)
+      return(normalized_cursor);
+
+   return((normalized_cursor + step) % total_symbols);
+  }
+
+void ASC_Engine_ProcessSymbols(const string &symbols[],
+                               const int total_symbols,
+                               const int max_to_process,
+                               int &cursor)
+  {
+   if(total_symbols <= 0)
+      return;
+
    int limit = total_symbols;
-   if(max_to_process > 0 && max_to_process < limit)
+   if(max_to_process > 0 && max_to_process < total_symbols)
       limit = max_to_process;
 
-   for(int index = 0; index < limit; ++index)
+   cursor = ASC_Engine_AdvanceCursor(cursor,total_symbols,0);
+
+   for(int processed = 0; processed < limit; ++processed)
      {
+      const int index = (cursor + processed) % total_symbols;
       ASC_SymbolRecord built_record;
       if(!ASC_Market_BuildIdentityAndTruth(symbols[index],g_asc_runtime_config,built_record))
          continue;
@@ -173,6 +209,8 @@ void ASC_Engine_ProcessSymbols(const string &symbols[],const int total_symbols,c
 
       ASC_Engine_UpsertRecord(merged_record);
      }
+
+   cursor = ASC_Engine_AdvanceCursor(cursor,total_symbols,limit);
   }
 
 bool ASC_Engine_RunInit(ASC_RuntimeConfig &config)
@@ -186,10 +224,10 @@ bool ASC_Engine_RunInit(ASC_RuntimeConfig &config)
      {
       g_asc_universe_count = ArraySize(g_asc_universe_records);
       return(restore_succeeded && g_asc_universe_count > 0);
-     }
+   }
 
    ASC_Engine_PreserveUniverseMembership(symbols,ArraySize(symbols));
-   ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerInitPass);
+   ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerInitPass,g_asc_init_cursor);
 
    ASC_Storage_SaveUniverseSnapshot(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
    if(g_asc_runtime_config.UseCommonFiles)
@@ -205,7 +243,7 @@ void ASC_Engine_RunTimer()
       return;
 
    ASC_Engine_PreserveUniverseMembership(symbols,ArraySize(symbols));
-   ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerTimerPass);
+   ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerTimerPass,g_asc_timer_cursor);
 
    ASC_Storage_SaveUniverseSnapshot(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
    if(g_asc_runtime_config.UseCommonFiles)
