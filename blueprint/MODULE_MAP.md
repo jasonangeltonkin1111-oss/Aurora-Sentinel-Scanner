@@ -1,7 +1,7 @@
 # MODULE MAP
 
 ## Product Modules
-Aurora Sentinel product code is divided into:
+Aurora Sentinel product code is divided logically into:
 - Common
 - Engine
 - Market
@@ -12,6 +12,11 @@ Aurora Sentinel product code is divided into:
 - Storage
 - UI
 - Diagnostics
+
+## Physical MT5 Layout Rule
+Logical module separation does not require nested deployment folders.
+The production MT5 layout is flat: all `.mq5` and `.mqh` files live directly in one EA folder.
+Module separation is preserved by file naming and ownership, not by terminal subfolders.
 
 ## Responsibilities
 ### Common

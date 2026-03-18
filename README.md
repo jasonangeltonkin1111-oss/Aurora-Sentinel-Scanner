@@ -15,3 +15,4 @@ Aurora Sentinel Scanner is a broker-aware MT5 market intelligence system.
 - writers format only
 - top 5 per bucket only in summary output
 - no dev/task wording in MT5 product code
+- MT5 product deployment is one flat EA folder

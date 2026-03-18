@@ -11,6 +11,8 @@
 8. No fake zero values for missing data.
 9. No giant catch-all module.
 10. No cross-module redesign without blueprint updates.
+11. MT5 product code and files must contain no dev/task/phase/worker wording.
+12. MT5 terminal deployment uses one flat EA folder, not nested module folders.
 
 ## Forbidden Patterns
 - scan -> writer -> calculate
