@@ -40,16 +40,19 @@ Approves or blocks stage progression.
 
 ### Stage 1 — Layer 1
 Verify:
-- open/closed truth per symbol
-- next-recheck scheduling
+- open/closed truth per broker symbol
+- session-truth sub-states are distinguished honestly (`CLOSED_SESSION`, `TRADE_DISABLED`, `NO_QUOTE`, `STALE_FEED`, `UNKNOWN`, etc.)
+- next-recheck scheduling follows broker-symbol-specific truth rather than one generic retry loop
 - broker/session edge cases
-- no closed symbol treated as surface-eligible
+- no closed or uncertain symbol treated as surface-eligible by default
 
 ### Stage 2 — Layer 1.2
 Verify:
 - all discoverable symbols appear in snapshot
+- required minimum record fields are preserved when readable
 - specs/session/classification snapshot truth is preserved honestly
 - missing fields remain explicit
+- raw broker identity is not overwritten by translated identity
 - snapshot does not accumulate hidden ranking/deep fields
 
 ### Stage 3 — Layer 2
@@ -76,7 +79,8 @@ Verify:
 - gap-fill only
 - rolling edge refresh only
 - atomic write protection
-- corruption triggers suspension, not destructive overwrite
+- fallback acceptance is explicit and conservative
+- corruption triggers fallback/suspension, not destructive overwrite
 
 ### Stage 6 — Layer 4
 Verify:

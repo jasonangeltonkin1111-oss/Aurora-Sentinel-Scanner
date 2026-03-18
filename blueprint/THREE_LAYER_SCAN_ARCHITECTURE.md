@@ -30,29 +30,69 @@ Determine whether a broker symbol is eligible to be scanned now.
 
 ### Required truth sources
 - broker session schedule
-- symbol session quote/trade windows
+- symbol session quote windows
+- symbol session trade windows
 - symbol trade mode / enabled state
+- symbol-specific quote/tick evidence
 - symbol-specific market state
 
-### Output of Layer 1
-Per symbol:
+### Required Layer 1 outputs
+Per symbol, Layer 1 must produce at minimum:
 - `MarketOpenNow`
 - `NextMarketOpenTime` or `NextRecheckTime`
 - `SessionTruthStatus`
 - `Layer1Eligible`
+- explicit reason if the symbol is not currently eligible
+
+### Session truth sub-states
+Layer 1 truth must distinguish at least these states:
+- `OPEN_TRADABLE`
+- `CLOSED_SESSION`
+- `QUOTE_ONLY`
+- `TRADE_DISABLED`
+- `NO_QUOTE`
+- `STALE_FEED`
+- `UNKNOWN`
+
+Interpretation:
+- `OPEN_TRADABLE` means quote/trade/session truth is sufficiently consistent to allow Layer 2 work.
+- `CLOSED_SESSION` means the symbol should be deferred until a later session-aware recheck.
+- `QUOTE_ONLY` means some market activity may be visible, but trade-session truth is not sufficient for normal promotion flow.
+- `TRADE_DISABLED` means the broker currently does not permit normal trading for that symbol.
+- `NO_QUOTE` means required quote evidence is absent.
+- `STALE_FEED` means quote evidence exists but is too old to treat as current market truth.
+- `UNKNOWN` means ASC could not determine truth safely without guessing.
+
+These names are blueprint-facing truth classes.
+Product-facing output may translate them into domain language later, but implementation must preserve the distinctions.
+
+### Layer 1 recheck law
+Layer 1 must not use one generic retry loop for every non-open symbol.
+Recheck handling must remain broker-symbol specific.
+
+Minimum behavior:
+- `CLOSED_SESSION` -> recheck by next known open boundary when available, otherwise bounded delayed retry
+- `QUOTE_ONLY` -> bounded retry because session truth is incomplete
+- `TRADE_DISABLED` -> bounded slower retry; do not treat as tradable by default
+- `NO_QUOTE` -> bounded retry; do not infer open market from classification or asset family
+- `STALE_FEED` -> bounded freshness retry; do not silently treat stale as live
+- `UNKNOWN` -> bounded retry with explicit uncertainty preserved
 
 ### Hard laws
 - If market is closed, do not run Layer 2 or Layer 3 for that symbol.
 - Closed symbols must be rescheduled, not repeatedly rescanned.
 - This truth is broker-symbol specific.
+- Quote-session truth and trade-session truth must not be collapsed into one guessed state.
 - No generic asset-class assumptions are allowed.
 - If truth is uncertain, mark uncertain. Do not guess.
+- Layer 1 determines eligibility truth only; it does not rank, score, or publish shortlist authority.
 
 ### Completion condition
 Layer 1 is complete only when ASC can reliably:
-- detect open vs closed per symbol
-- determine next recheck time for closed symbols
-- skip unnecessary scanning work
+- detect open vs closed per broker symbol
+- separate closed-session, disabled, no-quote, stale-feed, and unknown states
+- determine next recheck time for deferred symbols
+- skip unnecessary scanning work without guessing
 
 ---
 
@@ -64,26 +104,54 @@ Capture a startup snapshot of the full broker universe.
 ### Scope
 All discoverable broker symbols.
 
+### Required minimum snapshot content
+Every snapshot record must preserve, where truth is available:
+- raw broker symbol name
+- normalized/canonical identity fields if resolved
+- display/description/path metadata if available
+- exchange/country/sector/industry metadata if the broker exposes it
+- classification fields if resolved
+- contract/spec fields needed for later conditions work
+- margin/calc/trade/filling/order mode fields needed for truthful runtime interpretation
+- volume min/max/step/limit fields where available
+- session metadata or session-availability markers
+- snapshot timestamp
+- explicit unknown/missing markers where fields could not be read
+
 ### Allowed data
 - broker symbol name
+- canonical symbol identity if resolved
 - description
+- path
 - exchange
 - sector / industry if broker provides it
 - contract specs
 - volume limits
-- calc / margin modes
+- calc / margin / trade / filling / order modes
 - session metadata
 - classification result if available
+- explicit read-status / missing-status markers
 
 ### Forbidden at Layer 1.2
 - no rolling dossier writes
 - no Layer 2 calculations
+- no ranking or promotion scores
+- no activation-only fields
 - no deep history persistence
 - no atomic dossier continuation logic required here
+- no hidden carry-forward of Layer 3 continuation metadata
 
 ### Nature of this layer
 This is an updateable broker-universe snapshot.
 It is not the rolling intelligence dossier system.
+It exists to preserve broad broker truth, not shortlist intelligence.
+
+### Snapshot write law
+Layer 1.2 writes may be simpler than Layer 3 atomic dossier writes, but they must still:
+- preserve truthful structure
+- preserve prior valid snapshot truth unless replacement is intentional and verified
+- keep missing values explicit
+- avoid destructive reset for routine refreshes
 
 ---
 
@@ -133,6 +201,7 @@ It must respect:
 - Summary grouping uses `PrimaryBucket` from classification.
 - Ranking must not invent buckets.
 - If classification fails, bucket = `UNKNOWN`.
+- Layer 2 may consume Layer 1.2 snapshot truth, but must not silently mutate Layer 1.2 into a hidden dossier.
 
 ### Completion condition
 Layer 2 is complete only when ASC can reliably:

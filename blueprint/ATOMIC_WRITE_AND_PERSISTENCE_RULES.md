@@ -41,6 +41,7 @@ Characteristics:
 - not deep rolling intelligence
 - may be updated in simpler fashion
 - does not grant deep dossier rights
+- must still preserve prior valid structure when refreshed
 
 ### 2. Active Dossier Persistence
 Applies only to ACTIVE symbols.
@@ -81,6 +82,25 @@ On EA restart:
 - inspect integrity status
 - continue from last valid boundary
 
+If the most recent active file is unreadable or structurally broken:
+- do not treat that as permission to wipe history
+- search for the most recent still-valid fallback representation if policy provides one
+- if no valid fallback exists, preserve corruption visibility and start from an explicit clean-state decision instead of a silent reset
+
+---
+
+## Fallback Acceptance Rule
+Fallback use must be explicit and conservative.
+
+A prior persisted representation may be accepted only if:
+- it parses successfully
+- required structural sections exist
+- timestamp ordering is sane enough for continuation
+- identity/classification ownership is not materially contradictory
+- accepting it is safer than pretending there is no prior truth
+
+Fallback must not be used to smuggle in incompatible schema or contradictory symbol identity.
+
 ---
 
 ## Gap Fill Rule
@@ -106,6 +126,20 @@ If persisted dossier data is corrupt:
 - mark integrity failure explicitly
 - suspend continuation if necessary
 - preserve forensic visibility where possible
+- do not silently promote a new file over the corrupt record unless the replacement has been fully validated
+
+Possible outcomes when corruption is detected:
+- continue from last valid fallback if one exists
+- suspend the symbol if continuation safety is not trustworthy
+- start an explicit clean-state rebuild only when no trustworthy prior boundary remains and policy allows it
+
+---
+
+## Universe Snapshot Recovery Rule
+Universe snapshot persistence may use simpler write flow than active dossier persistence, but recovery still must:
+- prefer valid prior snapshot truth over destructive rebuild
+- keep missing/unknown fields explicit during recovery
+- avoid erasing valid symbol membership because one refresh pass is incomplete
 
 ---
 
@@ -121,3 +155,4 @@ Persistence is only considered correct when restart tests prove:
 - only gaps are filled
 - rolling edge updates correctly
 - partial-write failure cannot destroy active truth
+- corruption handling prefers explicit fallback/suspension over silent destructive reset
