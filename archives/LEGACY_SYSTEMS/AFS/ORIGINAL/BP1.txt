@@ -1,0 +1,2364 @@
+AEGIS FORGE SCANNER
+PHASE 5 STANDALONE GOVERNING BLUEPRINT
+MASTER IMPLEMENTATION CONSTITUTION
+SYSTEM SAFETY, INTERLINK MAP, PUBLICATION LAW,
+DOWNSTREAM ANALYTICS, TACTICAL LAYER, HUD VISIBILITY,
+SETTINGS OVERHAUL, VERSIONING, AND FUTURE-PHASE PRESERVATION
+HARD-LOCKED IMPLEMENTATION BLUEPRINT
+============================================================
+
+DOCUMENT ROLE
+============================================================
+
+This document is the current active governing blueprint for the safe
+continued evolution of Aegis Forge Scanner (AFS) under Phase 5.
+
+This Phase 5 blueprint is now the standalone governing implementation
+document for current work.
+
+It absorbs and preserves all still-relevant governing requirements from:
+- the older Master Governing Blueprint
+- the trader package governing rules
+- the safety constitution
+- the interlink/dependency map
+- the versioning and git evolution rules
+- the stateful scanner / freshness / completion addenda
+- the tactical active-symbol and microstructure addenda
+- earlier Trader HUD trust notes
+- earlier Phase 2 system improvement notes
+
+Result:
+The older governing blueprint is now obsolete as an active working
+document and must no longer be used as a parallel authority source.
+
+Nothing important is discarded.
+Relevant old rules are transferred here.
+Retired or unsafe ideas are preserved here with explicit classification.
+
+This is not a brainstorming memo.
+This is the active bounded implementation constitution for Phase 5.
+
+============================================================
+PRIME DIRECTIVE
+============================================================
+
+AFS must remain operational.
+
+No change is successful if it improves architecture, readability, or
+feature depth but breaks any of the following:
+
+- startup continuity
+- output shell construction
+- classification load
+- universe loading
+- symbol enumeration
+- active scope formation
+- Step 8 truth inputs
+- Step 9 shortlist inputs
+- Step 10 finalist correlation inputs
+- runtime heartbeat
+- shared-state continuity
+- warm-state continuity
+- publication continuity
+- dossier continuity
+- summary routing continuity
+- HUD truthfulness
+- existing operational dependencies
+
+Operational safety outranks elegance, cleanup, modernization, and
+feature ambition.
+
+A cleaner design that breaks the live scanner is a failed change.
+
+============================================================
+FOUNDATIONAL INTERPRETATION
+============================================================
+
+AFS must be interpreted as a tightly interlinked, timer-driven,
+shared-state system with a strict architectural spine.
+
+The live system spine is:
+
+1. SHARED STATE SPINE
+   - g_state is the live mutable runtime spine
+   - AFS_RuntimeState is the system-level contract
+   - AFS_UniverseSymbol is the cross-stage symbol contract
+   - AFS_MemoryShell is the runtime counts/diagnostics shell
+   - AFS_OutputPathState is the publication/path continuity shell
+
+2. SCANNER CORE
+   - universe loading
+   - surface truth
+   - spec/economics truth
+   - history truth
+   - friction truth
+   - Step 8 tradability truth
+   - Step 9 selection truth
+   - Step 10 finalist correlation truth
+
+3. PUBLICATION LAYER
+   - active publication set determination from scanner truth
+   - dossier lifecycle
+   - summary routing file
+   - atomic writes
+   - active/inactive file continuity
+   - changed-only or materially changed write discipline
+
+4. ANALYTICS / TACTICAL LAYER
+   - downstream-only derived features
+   - bounded history-depth enrichment
+   - higher-timeframe completion
+   - active-symbol tactical context
+   - recent intraday and microstructure context
+   - cadence-controlled enrichment
+   - no feedback into scanner truth
+
+5. PRESENTATION LAYER
+   - summary file
+   - dossier files
+   - Dev HUD
+   - Trader HUD
+   - trust indicators
+   - diagnostics visibility
+   - readiness visibility
+
+Hard architectural rule:
+
+Scanner core generates truth.
+Publication packages truth.
+Analytics generates downstream features.
+Presentation explains current state.
+
+No downstream layer may feed back into:
+- Step 8 truth
+- Step 9 ranking or shortlist truth
+- Step 10 finalist correlation truth
+- bucket placement
+- active publication membership
+
+unless a later formal blueprint revision explicitly authorizes it.
+
+============================================================
+SYSTEM REALITY RULE
+============================================================
+
+AFS is not a loose collection of independent modules.
+
+Future work must assume:
+
+- execution order is operationally meaningful
+- carry-forward behavior is operationally meaningful
+- path helpers may have state consequences
+- publication helpers may preserve continuity state
+- legacy-looking code may still be operationally coupled
+- a function that looks cosmetic may still affect live state
+- a folder that looks downstream may still preserve continuity
+- a path is not just a path
+- a field is not local just because it is written nearby
+- shared structs are cross-stage contracts, not private storage
+
+No future implementation may assume a component is safe to edit simply
+because:
+
+- it looks old
+- it looks redundant
+- it looks trader-facing
+- it looks output-only
+- it looks cosmetic
+- it looks like a helper
+- it looks legacy
+- it looks downstream
+
+Proof is required.
+
+============================================================
+PROTECTED SYSTEM ZONES
+============================================================
+
+The following zones are protected by default.
+
+ZONE A — STARTUP CHAIN
+------------------------------------------------------------
+Protected components include:
+- OnInit()
+- AFS_SetupStepShell()
+- AFS_InitMemoryShell()
+- AFS_InitViewState() if present
+- AFS_ResolveEffectiveMode()
+- AFS_ValidateInputs()
+- AFS_OD_BuildOutputShell()
+- AFS_CL_LoadEmbedded()
+- AFS_RefreshOutputRoute()
+- AFS_ApplyStep2ModuleStates()
+- AFS_RunStep3UniverseLoader()
+- initial stage reset calls
+- initial surface/spec bootstrap
+- AFS_LoadStep8WarmState()
+- initial selection bootstrap
+- initial correlation bootstrap
+- timer start sequencing
+- HUD/chart initialization reflecting runtime truth
+
+ZONE B — UNIVERSE LOADING
+------------------------------------------------------------
+Protected components include:
+- AFS_RunStep3UniverseLoader()
+- SymbolsTotal(...)
+- SymbolName(...)
+- AFS_CaptureUniverseSymbol()
+- AFS_IsUniverseSymbolTradable()
+- AFS_RecordMatchesScope()
+- AFS_RefreshScopeInclusion()
+- AFS_CopyCarryForwardRuntime()
+- universe counters in MemoryShell
+- diagnostics feeding HUD values
+
+ZONE C — STEP 8 / 9 / 10 CORE PIPELINE
+------------------------------------------------------------
+Protected components include:
+- AFS_RunHistoryScanCycle()
+- AFS_HF_RefreshHistoryRecord()
+- AFS_RunFrictionScanCycle()
+- AFS_HF_RefreshFrictionRecord()
+- AFS_SaveStep8WarmState()
+- AFS_LoadStep8WarmState()
+- AFS_RunSelectionCycle()
+- AFS_Selection_Rebuild()
+- AFS_RunCorrelationCycle()
+- AFS_Correlation_Rebuild()
+- any AFS_UniverseSymbol field consumed across those stages
+
+ZONE D — FILE / PATH / ROUTE / CONTINUITY
+------------------------------------------------------------
+Protected components include:
+- AFS_OD_BuildOutputShell()
+- AFS_RefreshOutputRoute()
+- AFS_OD_SetActiveRoute()
+- AFS_OD_SanitizePathPart()
+- AFS_GetStep8WarmStateFile()
+- server-key path rules
+- temp write/promote helpers
+- carry-forward file readers
+- any helper affecting continuity of published outputs
+
+ZONE E — SHARED STATE CONTRACTS
+------------------------------------------------------------
+Protected components include:
+- AFS_RuntimeState
+- AFS_MemoryShell
+- AFS_UniverseSymbol
+- AFS_OutputPathState
+- cadence globals
+- cursor globals
+- signature globals
+- route/status globals
+- any cross-stage field semantics
+
+ZONE F — EXECUTION ORDER
+------------------------------------------------------------
+Protected ordering includes:
+- output shell before classification load
+- classification load before universe load
+- universe load before runtime scans
+- initial surface/spec bootstrap before warm-dependent logic
+- Step 8 warm load before initial selection
+- selection before correlation
+- warm save before final teardown
+- dossier publication before summary publication
+
+============================================================
+NON-ASSUMPTION RULE
+============================================================
+
+No future implementation may assume without proof that:
+
+- a folder is non-core
+- a file is output-only
+- a helper is cosmetic
+- a route flag is harmless
+- a warm-state file is optional
+- a path field is dead
+- a setting is unused
+- a struct field can be removed safely
+- a field can be renamed safely
+- a legacy path can be retired safely
+- a dossier/summary function is purely presentation
+- a publication helper cannot affect continuity
+- a carry-forward reader is expendable
+
+If proof is incomplete, the safer classification must be used:
+- operationally coupled
+or
+- unknown / preserve for now
+
+============================================================
+LEGACY CLASSIFICATION RULE
+============================================================
+
+Legacy classification has three mandatory states:
+
+STATE 1 — LEGACY BUT OPERATIONALLY COUPLED
+Action:
+- preserve
+- annotate if useful
+- do not disable casually
+
+STATE 2 — LEGACY AND DOWNSTREAM-ONLY
+Action:
+- may be disabled later only after dependency trace
+
+STATE 3 — UNKNOWN LEGACY STATUS
+Action:
+- preserve until proven safe
+
+No future implementation may collapse all old code into one generic
+"dead legacy" bucket.
+
+============================================================
+CHANGE PERMISSION MODEL
+============================================================
+
+All future changes must be classified before coding.
+
+TYPE 1 — COMMENT / DOCUMENTATION CHANGE
+------------------------------------------------------------
+Examples:
+- comments
+- notes
+- architecture annotations
+- TODO labels
+- risk labels
+
+Default:
+- generally safe
+
+Still required:
+- no behavior changes
+- no accidental string-sensitive contract damage
+
+TYPE 2 — COSMETIC / PRESENTATION CHANGE
+------------------------------------------------------------
+Examples:
+- HUD wording
+- summary wording
+- dossier prose formatting
+- labels
+- debug wording
+
+Default:
+- low risk
+
+Still required:
+- verify no parser or downstream consumer depends on exact text
+
+TYPE 3 — DOWNSTREAM OUTPUT CHANGE
+------------------------------------------------------------
+Examples:
+- summary layout
+- dossier layout
+- downstream publication behavior
+- analytics formatting
+- log organization
+
+Default:
+- medium risk
+
+Required:
+- prove no effect on startup
+- prove no effect on universe loading
+- prove no effect on Step 8/9/10 inputs
+- prove no effect on warm-state behavior
+- prove no effect on route/path shell required by runtime
+- prove no effect on carry-forward continuity
+
+TYPE 4 — OPERATIONAL CHANGE
+------------------------------------------------------------
+Examples:
+- startup changes
+- universe-loading changes
+- path changes
+- route changes
+- state-struct changes
+- field meaning changes
+- lifecycle logic changes
+- cadence changes
+- warm-state changes
+- selection/correlation boundary changes
+
+Default:
+- high risk
+- forbidden unless dependency proof supports safety
+
+============================================================
+REQUIRED DEPENDENCY TRACE RULE
+============================================================
+
+Before changing any function, field, path, file, route, helper,
+struct member, or lifecycle rule, the following must be traced:
+
+1. who writes it
+2. who reads it
+3. who depends on its side effects
+4. whether startup touches it
+5. whether universe loading touches it
+6. whether Step 8 touches it
+7. whether Step 9 touches it
+8. whether Step 10 touches it
+9. whether deinit/save touches it
+10. whether HUD/status values reflect it
+11. whether publication continuity depends on it
+12. whether carry-forward depends on it
+
+If this is not known sufficiently, preserve it.
+
+============================================================
+SYSTEMWIDE RENAME / REMOVE RULE
+============================================================
+
+No rename, move, disable, or removal may occur on any potentially
+coupled component without a systemwide reference update and continuity
+check.
+
+This includes:
+- functions
+- filenames
+- path constants
+- folders
+- struct fields
+- route labels
+- output fields
+- dossier fields
+- summary fields
+- warm-state schema fields
+- helper names if string-based references exist
+
+If a rename cannot be proven safe across runtime and continuity
+dependencies, it must not happen.
+
+============================================================
+EXECUTION ORDER PRESERVATION RULE
+============================================================
+
+Execution order is part of the working system.
+
+No future work may casually reorder:
+- path shell construction
+- classification load
+- universe load
+- initial stage resets
+- initial surface/spec bootstrap
+- warm-state load
+- selection
+- correlation
+- timer start
+- deinit warm save
+- dossier-first then summary-last publication order
+
+Any reordering is an operational change and must prove preservation of:
+- counts
+- active scope
+- selection eligibility
+- correlation eligibility
+- warm restore semantics
+- publication continuity
+- HUD truthfulness
+
+============================================================
+SHARED STATE CONTRACT RULE
+============================================================
+
+AFS_UniverseSymbol and related runtime structs are cross-stage system
+contracts.
+
+They must not be casually:
+- renamed
+- repurposed
+- re-semanticked
+- partly replaced
+- reset more aggressively
+- stopped from carrying forward
+- split into new storage without proof
+- interpreted differently by downstream features
+
+If a field appears old but is still reused across stages, preserve it.
+
+============================================================
+WARM-STATE SAFETY RULE
+============================================================
+
+Warm-state behavior is protected.
+
+Warm-state file location, schema, load timing, save timing, semantics,
+and continuity role must not be changed casually.
+
+Future work must not:
+- move warm-state casually
+- rename warm-state columns casually
+- disable warm-state casually
+- change load timing casually
+- change save timing casually
+- treat warm-state as trader-only or retired
+- rewrite warm-state semantics without formal revision
+
+Warm-state is a high-risk protected subsystem.
+
+============================================================
+FILE / PATH SAFETY RULE
+============================================================
+
+In AFS, a path may affect:
+- startup success
+- route selection
+- server isolation
+- continuity state
+- carry-forward reads
+- runtime diagnostics
+- HUD values
+- publication trust
+- selection continuity indirectly
+
+Therefore:
+- no path helper may be changed casually
+- no folder may be disabled casually
+- no output path may be moved casually
+- no filename may be changed casually
+
+Particularly sensitive until proven otherwise:
+- dev/
+- dev/warm_state/
+- trader/
+- logs/
+- FINAL_OUTPUT/
+- Trader-Data/
+- runtime/
+- server-key folders
+- temp write/promote targets
+
+============================================================
+STATEFUL SCANNER PRINCIPLE
+============================================================
+
+AFS is a stateful scanner.
+
+It should reuse valid known state where safe instead of rebuilding
+everything from zero on every startup.
+
+Startup interpretation:
+
+EA Startup
+-> inspect existing runtime/published state where relevant
+-> load valid warm-state
+-> preserve continuity
+-> reuse known scanner knowledge where appropriate
+-> fill gaps where stale or missing
+-> rebuild only when necessary
+
+This exists to preserve:
+- faster restart behavior
+- continuity of knowledge
+- reduced unnecessary recomputation
+- stable long-running operation
+
+State reuse must never fabricate truth.
+Reuse must preserve correctness over performance.
+
+============================================================
+DATA FRESHNESS MODEL
+============================================================
+
+AFS must maintain explicit freshness awareness across runtime and
+publication behavior.
+
+Freshness must be interpreted at multiple levels:
+
+SYMBOL LEVEL
+- quote freshness
+- tick age
+- history freshness
+- tactical freshness
+- dossier freshness
+
+UNIVERSE LEVEL
+- universe snapshot timing
+- scope refresh timing
+- shortlist refresh timing
+
+SYSTEM LEVEL
+- heartbeat timing
+- cadence timing
+- publication timing
+- warm-state timing
+
+Known data must not be presented as pending.
+Pending data must not be presented as real.
+Unavailable data must not be shown as fake zero.
+Stale data must not be implied as fresh.
+
+============================================================
+KNOWN VS PENDING DATA RULE
+============================================================
+
+AFS must distinguish between:
+
+1. KNOWN DATA
+2. PENDING DATA
+3. UNAVAILABLE DATA
+
+Known data should be written honestly.
+Pending data should be marked explicitly.
+Unavailable data should be marked honestly, not masked as 0.00.
+
+Typical categories include:
+
+STATIC DATA
+- symbol identity
+- specs
+- classification
+- canonical naming
+
+SCANNER DATA
+- tradability truth
+- selection status
+- score
+- role
+- correlation status
+
+HISTORY-DERIVED DATA
+- ATR
+- expected move
+- trend/range regime
+- OHLC blocks
+
+LIVE DATA
+- quote state
+- spread now
+- freshness
+- tick age
+- session state
+
+DOWNSTREAM DATA
+- dossiers
+- analytics
+- tactical features
+- trust indicators
+
+============================================================
+SYMBOL COMPLETION / MATURITY MODEL
+============================================================
+
+AFS must preserve a completion and maturity interpretation for symbols
+and for the scanner as a whole.
+
+Recommended conceptual maturity states include:
+- CREATED
+- STATIC_READY
+- SURFACE_READY
+- SPEC_READY
+- HISTORY_READY
+- TRADABILITY_READY
+- SELECTION_READY
+- CORRELATION_READY
+- PUBLICATION_READY
+- TACTICAL_READY where applicable
+
+Presentation layers may compress these into safer trader-facing labels:
+- WARMING
+- PARTIAL
+- READY
+
+Pending reasons may include:
+- PENDING_HISTORY
+- PENDING_QUOTE
+- PENDING_CORRELATION
+- PENDING_BATCH
+- PENDING_PUBLICATION
+- PENDING_HTF
+- PENDING_TACTICAL
+
+These maturity concepts are visibility aids only unless explicitly
+used upstream by already-existing scanner logic.
+
+============================================================
+BUCKET / ACTIVE PUBLICATION RULE
+============================================================
+
+Active publication must follow scanner truth.
+
+The active publication set must come from Step 9 selection truth and
+must not be re-ranked downstream.
+
+The active publication model remains bounded:
+
+Top 5 per selected grouping rule
+- bucket or sector, whichever is formally locked in the live system
+
+The implementation must use one consistent grouping rule and state it
+clearly.
+Future work must not silently switch grouping logic.
+
+Downstream publication may harden eligibility safely, but may not
+replace scanner ranking truth.
+
+============================================================
+BATCH PROCESSING PRINCIPLE
+============================================================
+
+Heavy downstream work such as dossier publication or deeper enrichment
+may be processed in bounded batches where needed.
+
+Batching rules:
+- batch size must remain bounded
+- batch progress must remain visible
+- batching must not alter scanner truth
+- batching must not alter active set truth
+- batching must not stall heartbeat safety
+- batching must not create false readiness impressions
+
+Useful batch metadata may include:
+- CurrentBatchIndex
+- TotalBatches
+- CurrentGroup
+- CurrentSymbol
+- LastWriteTimestamp
+- LastWrittenFile
+
+============================================================
+HUD SEPARATION PRINCIPLE
+============================================================
+
+AFS maintains two distinct HUD layers:
+
+DEV HUD
+------------------------------------------------------------
+Purpose:
+- scanner diagnostics
+- batch completion visibility
+- symbol progress visibility
+- pipeline visibility
+- publication lifecycle visibility
+- pending reason visibility
+
+TRADER HUD
+------------------------------------------------------------
+Purpose:
+- trader-facing trust and readiness visibility
+- active symbol overview
+- shortlist trustworthiness
+- dossier freshness
+- correlation readiness
+- bounded tactical readiness visibility
+
+The Trader HUD must remain simpler than the Dev HUD.
+The Trader HUD must not become a deep diagnostics console.
+
+HUD rule:
+Scanner logic produces truth.
+HUD logic displays truth.
+HUD must not invent, simulate, or recompute heavy state.
+
+============================================================
+CURRENT SYSTEM REALITY
+============================================================
+
+Observed live reality indicates:
+
+- scanner warm-state and runtime continuity are functioning
+- universe hydration matures over time
+- dossier engine is live and downstream-safe
+- current dossiers already expose materially more scanner knowledge
+- M15 and H1 history are available for many live symbols
+- ATR M15 and ATR H1 are available where history is hydrated
+- PDH / PDL / PWH / PWL / TodayOpen / WeekOpen are working where data exists
+- OHLC_M1_RECENT / M5 / M15 / H1 are present in bounded form
+- H4 / D1 / W1 remain too often deferred
+- weak/no-quote/dead symbols can still leak into active publication
+- trader-facing depth remains too thin for strong execution review
+- menu/settings no longer reflect the real architecture sufficiently
+- trust/readiness visibility is still too implicit
+- tactical active-symbol context is not complete enough yet
+
+Therefore:
+Phase 5 must complete the missing bounded depth and control layer
+without redesigning scanner core truth.
+
+============================================================
+PHASE 5 PRIME PURPOSE
+============================================================
+
+Phase 5 means:
+
+1. harden active publication eligibility
+2. improve dossier clarity and runtime honesty
+3. add a safe downstream analytics engine
+4. complete bounded higher-timeframe coverage materially
+5. add active-symbol tactical context safely
+6. add HUD trust/readiness visibility safely
+7. overhaul settings so the menu reflects real architecture
+8. preserve deferred future ideas explicitly without mixing them into
+   current unsafe scope
+
+Phase 5 does NOT mean:
+- scanner-core redesign
+- startup chain redesign
+- universe-loading redesign
+- hidden auto-trader construction
+- Step 8 truth rewrite
+- Step 9 ranking rewrite
+- Step 10 role rewrite
+- full-universe tactical engine
+- broad portfolio/execution manager
+- giant trader-file architecture
+- external macro/news architecture
+
+============================================================
+NON-NEGOTIABLE PHASE 5 SAFETY RULES
+============================================================
+
+All transferred governing rules above remain binding.
+
+Additionally, Phase 5 hard-locks the following:
+
+1. publication fixes must not change scanner truth
+2. analytics must remain downstream-only
+3. tactical enrichment must remain active-symbol-only
+4. HUD indicators must remain display-only
+5. settings cleanup must not quietly alter live scanner behavior
+6. higher-timeframe completion must remain bounded
+7. tactical microstructure must remain bounded
+8. future advanced execution/risk/cluster layers must remain deferred
+   until stable bounded data and visibility already exist
+9. summary remains routing-first, not a dump
+10. dossiers remain bounded review packages, not hidden ranking engines
+
+============================================================
+HIGH-LEVEL INTERLINK MAP
+============================================================
+
+MAIN EA WRAPPER
+------------------------------------------------------------
+- Aegis_Forge_Scanner.mq5
+
+KNOWN CORE MODULE FAMILIES
+------------------------------------------------------------
+- Core types / runtime state
+- Output / debug / route shell
+- Classification
+- Market core / surface / spec
+- History / friction
+- Selection
+- Correlation
+- Trader intel / dossier / summary
+- future TraderAnalyticsEngine downstream module
+- future tactical active-symbol downstream layer
+
+MAIN ENTRY POINTS
+------------------------------------------------------------
+- OnInit()
+- OnDeinit(const int reason)
+- OnTimer()
+- OnTick()
+- OnChartEvent(...)
+
+RUNTIME ARCHITECTURE SUMMARY
+------------------------------------------------------------
+- timer-driven
+- single mutable shared state object: g_state
+- shared symbol contract: AFS_UniverseSymbol
+- downstream behavior typically reuses g_state.Universe[]
+
+============================================================
+STARTUP FLOW MAP
+============================================================
+
+Observed / protected startup chain:
+
+1. zero or initialize shared runtime state
+2. populate runtime identity
+3. reset HUD globals
+4. AFS_SetupStepShell()
+5. AFS_InitViewState() where applicable
+6. AFS_ResolveEffectiveMode()
+7. AFS_ValidateInputs()
+8. AFS_OD_BuildOutputShell(...)
+9. AFS_InitMemoryShell()
+10. AFS_CL_LoadEmbedded(...)
+11. AFS_RefreshOutputRoute()
+12. AFS_ApplyStep2ModuleStates()
+13. if step >= 3: AFS_RunStep3UniverseLoader()
+14. initial stage resets where applicable
+15. initial surface bootstrap
+16. initial spec bootstrap where applicable
+17. if step >= 8: AFS_LoadStep8WarmState()
+18. if step >= 9: AFS_RunSelectionCycle()
+19. if step >= 10: AFS_RunCorrelationCycle()
+20. AFS_WriteArtifactsForCurrentStep()
+21. chart/HUD prep
+22. EventSetTimer(...)
+23. mark initialized
+24. draw HUD
+
+Important protected facts:
+- output shell is a hard startup dependency
+- classification load is a hard startup dependency
+- universe loading happens before runtime scans
+- warm-state loads before initial selection
+- startup ordering is operationally meaningful
+
+============================================================
+RUNTIME FLOW MAP
+============================================================
+
+Protected steady-state timer order:
+
+OnTimer()
+- if not initialized: return
+- if disabled: refresh minimal state and HUD
+- else: heartbeat
+
+Canonical live heartbeat ordering remains:
+
+1. stamp LastTimerAt
+2. refresh server/chart/touch shell
+3. if paused, HUD-only path
+4. increment timer count
+5. surface scan cycle
+6. spec scan cycle
+7. history scan cycle
+8. friction scan cycle
+9. selection cycle
+10. correlation cycle
+11. publication write cycle
+12. runtime state line updates
+13. HUD refresh
+
+Manual refresh may also:
+- rerun universe loader
+- rerun runtime stages
+- reset cadences
+- rewrite artifacts
+
+Deinit must preserve:
+- Step 8 warm save before teardown where applicable
+- timer shutdown
+- HUD cleanup
+- cadence reset
+- reason logging
+
+============================================================
+UNIVERSE LOADING MAP
+============================================================
+
+Protected universe-loading sequence conceptually includes:
+
+- run universe loader
+- preserve prior universe array where needed
+- reset current universe runtime
+- enumerate via SymbolsTotal / SymbolName
+- capture per-symbol record
+- carry forward runtime where available
+- compute tradability eligibility
+- append to g_state.Universe
+- refresh scope inclusion
+- compute active scope count
+- restore timing counters
+- refresh diagnostics
+- write exports/artifacts as applicable
+
+Important truths:
+- raw enumeration source is broker symbol enumeration
+- Active Scope count is not the same as total loaded count
+- scope inclusion and tradeability are related but not identical
+- carry-forward continuity is operationally meaningful
+
+============================================================
+STEP 8 / 9 / 10 HARD BOUNDARY
+============================================================
+
+STEP 8
+------------------------------------------------------------
+Final tradability-truth stage before ranking.
+Depends on:
+- surface
+- spec
+- history
+- prior Step 8 carry-forward/warm-state where applicable
+
+Writes back into AFS_UniverseSymbol fields such as:
+- tradability truth
+- freshness
+- liveliness
+- spread
+- session/evidence
+- hydration/history readiness
+- related scanner truth context
+
+STEP 9
+------------------------------------------------------------
+Selection and shortlist construction only.
+Depends on:
+- classification
+- scope inclusion
+- Step 8 truth
+- freshness/liveliness/economics trust as already defined upstream
+
+Writes:
+- ranking
+- shortlist/finalist selection fields
+
+STEP 10
+------------------------------------------------------------
+Finalist correlation only.
+Depends on:
+- Step 9 finalist set
+
+Writes:
+- finalist correlation context only
+
+HARD-LOCKED RULE
+------------------------------------------------------------
+- Step 8 stays truth
+- Step 9 stays selection
+- Step 10 stays finalist correlation
+- downstream dossier/analytics/tactical/HUD logic must never mutate
+  those roles
+
+============================================================
+TRADER PACKAGE GOVERNING LAW
+============================================================
+
+The canonical live trader package remains the per-server text package.
+
+Canonical package structure:
+
+AFS/
+  <ServerKey or ServerName>/
+    trader/
+      SUMMARY.txt
+      <Symbol1>.txt
+      <Symbol2>.txt
+      ...
+    logs/
+      runtime.log
+      write_failures.log
+      debug.log
+
+This remains the canonical live trader-facing package.
+
+Important nuance:
+Canonical does not authorize unsafe forced migration if legacy paths are
+still operationally coupled.
+Safety still outranks cleanup.
+
+============================================================
+RETIRED OUTPUT ARCHITECTURE STATUS
+============================================================
+
+The following remain non-canonical live architecture:
+- FINAL_OUTPUT as primary live package
+- root-level giant final files
+- live JSON dossier architecture
+- duplicated trader TXT/JSON exports
+- giant combined trader package files
+- always-on export clutter
+- runtime folder outputs as canonical trader architecture
+
+However:
+If any retired-looking output path remains operationally coupled in the
+live codebase, it must be preserved until safely decoupled.
+
+============================================================
+SUMMARY GOVERNING CONTRACT
+============================================================
+
+SUMMARY.txt is the routing file.
+
+It exists to answer:
+- what symbol deserves attention now
+- what file should be opened next
+- what is active
+- what is weak / caution / blocked
+- what is redundant by correlation
+- which dossiers belong to currently active symbols
+
+SUMMARY.txt is not:
+- a giant scanner dump
+- a dossier replacement
+- a full OHLC container
+- a raw debug export
+- a full-universe report
+
+SUMMARY.txt must remain:
+- compact
+- deterministic
+- bounded
+- routing-first
+- parseable
+- trader-chat-friendly
+
+Required section order remains:
+
+1. HEADER / PACKAGE STATUS
+2. TOP NEXT SYMBOLS
+3. TOP 5 PER SECTOR / BUCKET
+4. CORRELATION CLUSTERS
+5. DO NOT PRIORITIZE / CAUTION
+6. DOSSIER FILE INDEX
+
+============================================================
+DOSSIER GOVERNING CONTRACT
+============================================================
+
+Each dossier file is one self-contained symbol review package.
+
+Trader review should primarily be possible through:
+1. SUMMARY.txt
+2. the chosen symbol dossier
+
+The dossier is downstream review context only.
+It is not scanner truth.
+It is not selection logic.
+It is not a hidden signal engine.
+
+Required dossier block order remains:
+
+1. HEADER / IDENTITY
+2. LIFECYCLE STATUS
+3. TRADABILITY BLOCK
+4. STRUCTURE BLOCK
+5. VOLATILITY BLOCK
+6. LIQUIDITY BLOCK
+7. RISK / ECONOMICS BLOCK
+8. FINAL DECISION BLOCK
+9. OHLC BLOCKS
+
+Tactical and analytics additions must fit this order without turning
+dossiers into giant dumps.
+
+============================================================
+ACTIVE / INACTIVE DOSSIER LIFECYCLE LAW
+============================================================
+
+ACTIVE SET RULE
+------------------------------------------------------------
+Only symbols in the current active publication set may receive active
+dossier refresh.
+
+NEW ENTRY RULE
+------------------------------------------------------------
+If a symbol newly enters the active set:
+- create dossier immediately
+- write atomically
+- include lifecycle fields
+
+ACTIVE REFRESH RULE
+------------------------------------------------------------
+If a symbol remains active:
+- refresh by atomic overwrite
+- do not append indefinitely
+- do not create version chains by default
+
+DROP-OUT RULE
+------------------------------------------------------------
+If a symbol leaves the active set:
+- stop refreshing its dossier
+- do not auto-delete it
+- preserve last good file as frozen snapshot
+
+INACTIVE FILE RULE
+------------------------------------------------------------
+Inactive retained dossier files:
+- may remain on disk
+- must not be treated as active
+- must not be refreshed while inactive
+- must not appear as active in summary
+
+RE-ENTRY RULE
+------------------------------------------------------------
+If an inactive symbol re-enters:
+- reuse same dossier file
+- resume refresh safely
+- do not create duplicate copies by default
+
+============================================================
+ATOMIC WRITE LAW
+============================================================
+
+All canonical trader-facing files must be written atomically.
+
+Applies to:
+- SUMMARY.txt
+- all active dossier files
+- any later-approved canonical publication file
+
+Required write flow:
+1. build content in memory
+2. write temp file in same folder
+3. flush
+4. close
+5. promote/replace final
+6. preserve prior good file if write fails
+7. preserve prior good file if promotion fails
+8. never expose a partial canonical file
+
+Direct unsafe overwrite into final canonical path is not allowed.
+
+============================================================
+PUBLICATION ORDER LAW
+============================================================
+
+Canonical publication order remains:
+
+1. determine active set
+2. write active dossiers first
+3. write SUMMARY.txt last
+
+Reason:
+summary must only route to dossiers already successfully published.
+
+============================================================
+ROLLING / CARRY-FORWARD LAW
+============================================================
+
+Publication must be rolling-safe.
+
+Required behavior:
+- incomplete current refresh must not wipe prior good published
+  evidence unless correctness requires invalidation
+- same-symbol carry-forward is allowed where safe
+- carry-forward must remain bounded
+- carry-forward must not resurrect inactive symbols as active
+- carry-forward must not alter ranking/selection truth
+- carry-forward must not fabricate scanner truth
+
+============================================================
+CHANGE-DETECTION / WRITE BUDGET LAW
+============================================================
+
+Canonical files should not be rewritten unnecessarily.
+
+Preferred model:
+- changed-only writes
+or
+- materially changed promotion only
+
+Tactical enrichment, analytics, and heavy HTF additions must respect:
+- write budgets
+- changed-only logic
+- bounded cadence
+- active-only publication scope
+
+============================================================
+PERFORMANCE BOUNDARY LAW
+============================================================
+
+AFS trader-facing output and downstream enrichments must remain bounded.
+
+Hard rules:
+- no full-universe dossier generation
+- no unbounded OHLC publication
+- no unbounded tick dumps
+- no giant combined trader file
+- no repeated heavy disk scanning each frame
+- no full-universe tactical engine
+- no broad write storms caused by noisy downstream metrics
+- runtime stability outranks downstream richness
+
+============================================================
+PHASE 5 IMPLEMENTATION MODEL
+============================================================
+
+Phase 5 is split into bounded deployable steps.
+
+Each step must:
+- be independently deployable
+- preserve runtime safety
+- preserve scanner truth
+- preserve publication continuity
+- increase version Y and reset Z according to the versioning law
+
+Mandatory order:
+
+Phase 5 Step 1
+Publication Eligibility Hardening
+
+Phase 5 Step 2
+Dossier Clarity and Missing Runtime Exposure
+
+Phase 5 Step 3
+Trader Analytics Engine Foundation
+
+Phase 5 Step 4
+History Coverage and Higher-Timeframe Completion
+
+Phase 5 Step 5
+Active-Symbol Tactical Layer Foundation
+
+Phase 5 Step 6
+HUD Trust Indicators and Readiness Visibility
+
+Phase 5 Step 7
+Settings / Menu Overhaul
+
+Phase 5 Step 8
+Deferred Future Feature Preservation Layer
+
+============================================================
+PHASE 5 STEP 1
+PUBLICATION ELIGIBILITY HARDENING
+============================================================
+
+GOAL
+------------------------------------------------------------
+Stop obviously dead or unusable symbols from receiving active
+publication refresh.
+
+WHY
+------------------------------------------------------------
+Runtime evidence shows:
+- no-quote symbols can still appear in active publication
+- stale/dead-feed symbols can still linger as weak fillers
+- this damages trader trust even when scanner truth itself is correct
+
+SCOPE
+------------------------------------------------------------
+Publication-scope hardening only.
+Not a scanner truth redesign.
+
+ALLOWED TARGETS
+------------------------------------------------------------
+- active publication filtering helpers
+- summary active-set inclusion helpers
+- active dossier refresh eligibility checks
+- downstream lifecycle gating
+- caution surfacing
+
+MUST NOT CHANGE
+------------------------------------------------------------
+- Step 8 truth computation
+- Step 9 ranking formula
+- Step 10 correlation logic
+- warm-state semantics
+- universe loading
+- scanner scoring
+
+REQUIRED HARD BLOCKS FOR ACTIVE PUBLICATION
+------------------------------------------------------------
+A symbol must not receive active publication refresh if any are true:
+
+- QuoteState == NO_QUOTE
+- FrictionTruthState == NO_QUOTE
+- NoTradeReason == DEAD_FEED
+- FinalTradabilityStatus == FAIL
+- Bid <= 0
+- Ask <= 0
+- QuotePresent == false
+
+OPTIONAL LATER SOFT RULES
+------------------------------------------------------------
+A symbol may remain eligible as WEAK if:
+- quote is present
+- market is live enough
+- history/spec are usable
+- weakness is due to friction/spread/thinness rather than death
+
+SUCCESS
+------------------------------------------------------------
+- dead/no-quote symbols stop appearing in active publication
+- inactive retained dossiers remain preserved
+- summary becomes more trustworthy
+- no Step 8/9/10 logic is altered
+
+============================================================
+PHASE 5 STEP 2
+DOSSIER CLARITY AND MISSING RUNTIME EXPOSURE
+============================================================
+
+GOAL
+------------------------------------------------------------
+Make dossier content cleaner, more readable, and more honest without
+adding heavy new data yet.
+
+BUILD
+------------------------------------------------------------
+1. enum decode presentation
+2. better pending / n/a handling
+3. clearer economics validation wording
+4. clearer session state wording
+5. history coverage visibility from existing runtime facts
+6. selection diagnostics visibility where safe
+7. build/version line cleanup
+8. downstream-readable trust labels
+9. clearer lifecycle / activity explanation
+10. clearer active / weak / blocked reasoning
+
+REQUIRED IMPROVEMENTS
+------------------------------------------------------------
+- decode TradeMode / ExecMode / FillingMode / CalcMode / SwapMode
+- distinguish 0.00 from unavailable
+- expose HistoryCoverage block if data exists
+- expose why symbol is active / weak / blocked more clearly
+- keep raw values where useful, but add human-readable names
+- expose dossier freshness and lifecycle fields honestly
+- expose pending/deferred HTF and tactical states honestly
+
+MUST NOT CHANGE
+------------------------------------------------------------
+- scanner truth
+- publication membership beyond Step 1 gating
+- history loading behavior
+- heavy refresh cadences
+
+SUCCESS
+------------------------------------------------------------
+- fewer ambiguous zeros
+- enum values become understandable
+- existing runtime knowledge is surfaced honestly
+- readiness/trust clarity improves without heavy new dependencies
+
+============================================================
+PHASE 5 STEP 3
+TRADER ANALYTICS ENGINE FOUNDATION
+============================================================
+
+GOAL
+------------------------------------------------------------
+Create a new downstream analytics module that computes bounded derived
+feature depth without touching scanner truth.
+
+NEW MODULE
+------------------------------------------------------------
+AFS_TraderAnalyticsEngine.mqh
+
+ROLE
+------------------------------------------------------------
+This module is:
+- downstream-only
+- feature-generation only
+- additive to dossier/summary explanation
+- optional to scanner truth
+
+This module must never:
+- alter g_state.Universe[] truth fields
+- alter shortlist membership
+- alter ranking
+- alter correlation truth
+- alter bucket placement
+- alter active publication truth
+
+FOUNDATION OUTPUT STRUCTURE
+------------------------------------------------------------
+Use a parallel derived structure, e.g.:
+AFS_TraderAnalytics
+or bounded active-symbol analytics cache
+without re-semanticking core scanner structs
+
+FOUNDATION FIELDS FOR INITIAL IMPLEMENTATION
+------------------------------------------------------------
+History coverage
+- BarsM1
+- BarsM5
+- BarsM15
+- BarsH1
+- BarsH4
+- BarsD1
+- BarsW1
+
+ATR stack
+- AtrM5
+- AtrM15
+- AtrH1
+- AtrH4
+- AtrD1
+
+Expected move
+- ExpectedMoveM15
+- ExpectedMoveH1
+- ExpectedMoveH4
+- ExpectedMoveD1
+
+Trend / regime foundation
+- TrendStrengthM15
+- TrendStrengthH1
+- HTFTrend
+- VolatilityRegime
+- RangePositionDaily
+- RangePositionWeekly
+
+Optional bounded quality metrics
+- AtrEfficiency
+- SpreadToAtr
+- HistoryCompleteness
+- DataIntegrityScore
+
+DO NOT IMPLEMENT YET
+------------------------------------------------------------
+- DOM / order book layer
+- slippage estimation requiring fills
+- execution latency infrastructure
+- macro feed integration
+- external news dependencies
+- auto-execution logic
+- hidden trade signals
+
+SUCCESS
+------------------------------------------------------------
+- analytics module exists
+- reads only trusted runtime/historical inputs
+- does not mutate scanner truth
+- integrates safely into dossiers later
+
+============================================================
+PHASE 5 STEP 4
+HISTORY COVERAGE AND HIGHER-TIMEFRAME COMPLETION
+============================================================
+
+GOAL
+------------------------------------------------------------
+Fill the largest remaining trader-facing depth gap:
+bounded HTF and recent intraday completion.
+
+WHY
+------------------------------------------------------------
+Current dossiers show:
+- M1 / M5 / M15 / H1 recent bars
+- M15 / H1 hydrated history for many symbols
+- H4 / D1 / W1 remain too often deferred
+- explicit coverage visibility is still too weak
+
+BUILD
+------------------------------------------------------------
+1. bounded history coverage visibility
+2. bounded H4 / D1 enrichment
+3. optional W1 enrichment where safe
+4. controlled bar-count settings
+5. higher-timeframe ATR extension
+6. clearer completeness / deferred state updates
+
+CANONICAL TARGETS
+------------------------------------------------------------
+Add safe bounded support for:
+- OHLC_H4
+- OHLC_D1
+- optional OHLC_W1
+
+Also expose:
+- BarsH4
+- BarsD1
+- BarsW1
+- HTF refresh status
+- deferred heavy refresh state when not yet hydrated
+
+RECOMMENDED DEFAULT BOUNDS
+------------------------------------------------------------
+M1  : 60 to 300
+M5  : 100 to 300
+M15 : 200 to 500
+H1  : 200 to 500
+H4  : 100 to 300
+D1  : 100 to 300
+W1  : 52 to 150
+
+These are engineering bounds, not hardcoded law.
+
+MUST REMAIN BOUNDED
+------------------------------------------------------------
+- no full-history dumps
+- no full-universe heavy pulls
+- no unbounded dossier OHLC arrays
+
+SUCCESS
+------------------------------------------------------------
+- trader sees real HTF context
+- analytics can compute HTF features safely
+- dossiers remain bounded and readable
+
+============================================================
+PHASE 5 STEP 5
+ACTIVE-SYMBOL TACTICAL LAYER FOUNDATION
+============================================================
+
+GOAL
+------------------------------------------------------------
+Add a bounded tactical layer for active symbols only, giving recent
+execution context beyond the slower strategic scanner view.
+
+ROLE
+------------------------------------------------------------
+This is the official place for indicator/tactical active-symbol
+enrichment suggested by trader workflow.
+
+This is NOT a full-universe indicator engine.
+
+SCOPE
+------------------------------------------------------------
+Only current active publication symbols:
+Top 5 per locked grouping rule
+
+TACTICAL SEPARATION LAW
+------------------------------------------------------------
+Strategic Scanner Layer
+-> decides which instruments matter
+
+Tactical Active-Symbol Layer
+-> explains recent execution context for already selected instruments
+
+The tactical layer must never alter:
+- Step 8 truth
+- Step 9 ranking
+- Step 10 correlation
+- bucket membership
+- shortlist membership
+- active publication truth
+
+CADENCE MODEL
+------------------------------------------------------------
+LIGHT
+- about 10 seconds
+- very recent tactical state
+
+MEDIUM
+- about 60 seconds
+- M1 tactical context
+
+HEAVY
+- about 300 seconds
+- H4/D1 and slower tactical enrichment
+
+TACTICAL FOUNDATION DATA
+------------------------------------------------------------
+Tier 1 Light
+- recent spread band
+- recent freshness band
+- recent movement band
+- recent execution quality state
+- TICK_MICRO_10S rolling series
+
+Tier 2 Medium
+- OHLC_M1_RECENT expanded to bounded 30-60 bars
+- recent tactical M1 summaries
+- short-window movement statistics
+- intraday tactical bias
+
+Tier 3 Heavy
+- deeper HTF context
+- slower tactical regime updates
+- richer breakout / compression / expansion notes
+
+TACTICAL SERIES CONTRACTS
+------------------------------------------------------------
+TICK_MICRO_10S
+- 10-second bars
+- 30 bars
+- 5-minute rolling window
+- active symbols only
+- in-memory bounded representation preferred
+
+OHLC_M1_RECENT
+- 30 to 60 bars
+- active symbols only
+- deterministic ordering
+- bounded output only
+
+TACTICAL CACHE RULE
+------------------------------------------------------------
+A bounded in-memory active tactical cache may hold:
+- last light refresh
+- last medium refresh
+- last heavy refresh
+- deferred heavy state
+- recent micro bars
+- recent M1 bars
+- tactical state labels
+- tactical freshness timestamps/signatures
+
+TACTICAL PUBLICATION RULE
+------------------------------------------------------------
+Initially:
+- dossier enrichment only
+
+Later if proven useful:
+- compact summary hints
+- trader HUD tactical hints
+
+TACTICAL MATERIAL-CHANGE RULE
+------------------------------------------------------------
+Prefer bounded state/band transitions over noisy raw twitch writes.
+
+Examples of meaningful changes:
+- spread band changed
+- freshness band changed
+- movement band changed
+- new micro bar rolled in
+- new M1 candle arrived
+- heavy HTF section refreshed materially
+
+SUCCESS
+------------------------------------------------------------
+- active symbols gain real recent execution context
+- tactical freshness is explicit
+- performance remains safe because scope is active-only
+
+============================================================
+PHASE 5 STEP 6
+HUD TRUST INDICATORS AND READINESS VISIBILITY
+============================================================
+
+GOAL
+------------------------------------------------------------
+Add trader-visible trust/readiness indicators now that publication and
+dossiers are more mature.
+
+IMPORTANT
+------------------------------------------------------------
+This remains display-only work.
+No HUD indicator may recompute truth or affect scanner logic.
+
+HUD SOURCE RULE
+------------------------------------------------------------
+HUD indicators must read only:
+- trusted runtime memory
+- publication counters
+- existing timestamps
+- active-set state
+- existing diagnostics
+- bounded cached state
+
+HUD must not:
+- scan filesystem every frame
+- reread all dossiers each draw
+- recompute correlation
+- recompute selection
+- simulate readiness
+
+DEV HUD LAYER
+------------------------------------------------------------
+- scanner diagnostics
+- batch completion
+- pipeline internals
+- symbol progress
+- lifecycle visibility
+- pending reason visibility
+
+TRADER HUD LAYER
+------------------------------------------------------------
+- trust indicators
+- shortlist trustworthiness
+- dossier freshness
+- correlation readiness
+- simplified active-symbol readiness
+- bounded tactical freshness visibility
+
+TRADER HUD TRUST INDICATORS
+------------------------------------------------------------
+1. PIPELINE MATURITY
+   Example:
+   Surface Ready
+   Spec Ready
+   History Ready
+   Tradability Ready
+
+   Bands:
+   - WARMING
+   - PARTIAL
+   - READY
+
+2. SHORTLIST STABILITY
+   Example:
+   finalist churn over last N passes
+   PASS / WEAK churn visibility
+
+   Bands:
+   - UNSTABLE
+   - STABILIZING
+   - STABLE
+
+3. CORRELATION RESOLUTION
+   Example:
+   resolved / pending finalist correlation coverage
+
+4. DOSSIER FRESHNESS
+   Example:
+   dossiers published
+   last summary update
+   refresh state
+
+5. SCANNER CONFIDENCE
+   Example display:
+   - WARMING
+   - STABILIZING
+   - READY
+
+6. TACTICAL READINESS
+   Example:
+   light / medium / heavy freshness visibility
+   deferred heavy refresh indication
+
+SUCCESS
+------------------------------------------------------------
+- trader can tell if scanner is warmed up
+- trader can tell if shortlist is trustworthy
+- trader can tell if dossiers are fresh
+- trader can tell if correlation is ready enough
+- trader can distinguish strategic readiness from tactical freshness
+
+============================================================
+PHASE 5 STEP 7
+SETTINGS / MENU OVERHAUL
+============================================================
+
+GOAL
+------------------------------------------------------------
+Make the menu reflect real architecture, remove dead controls, expose
+safe bounded controls, and centralize tuning transparently.
+
+RULE
+------------------------------------------------------------
+This is a settings organization and visibility step first.
+It must not become a stealth scanner behavior rewrite.
+
+BUILD
+------------------------------------------------------------
+1. remove dead output settings
+2. remove retired FINAL_OUTPUT settings
+3. remove retired JSON export settings
+4. expose dossier richness controls
+5. expose bounded OHLC / history coverage controls
+6. expose ATR timeframe controls where appropriate
+7. expose tactical cadence controls
+8. expose tactical window controls
+9. expose debug logging controls
+10. expose trust/HUD display controls
+11. centralize thresholds already operationally real
+12. group settings by architecture layer
+
+RECOMMENDED SETTINGS GROUPS
+------------------------------------------------------------
+A. Scanner Core Controls
+- existing safe scanner controls only
+
+B. Publication Controls
+- write budgets
+- summary refresh policy
+- dossier refresh richness toggles
+
+C. Analytics Controls
+- analytics enable/disable
+- ATR timeframe toggles
+- HTF enrichment toggles
+- bar-count bounds
+
+D. Tactical Controls
+- active-symbol tactical layer enable
+- light cadence
+- medium cadence
+- heavy cadence
+- micro window size
+- M1 recent window size
+
+E. HUD / Display Controls
+- Dev HUD toggles
+- Trader HUD toggles
+- trust indicators toggle
+- detail level
+
+F. Debug / Logging Controls
+- runtime verbosity
+- debug logging enable
+- write-failure logging enable
+
+MUST NOT DO
+------------------------------------------------------------
+- expose confusing dead controls
+- secretly alter selection truth
+- secretly alter publication truth
+- merge tactical controls into scanner-core controls confusingly
+- casually move operational semantics under renamed settings
+
+SUCCESS
+------------------------------------------------------------
+- menu matches architecture
+- dead settings are removed
+- useful controls are visible
+- safe tuning is understandable
+
+============================================================
+PHASE 5 STEP 8
+DEFERRED FUTURE FEATURE PRESERVATION LAYER
+============================================================
+
+GOAL
+------------------------------------------------------------
+Preserve all useful ideas not yet safe or appropriate for current
+implementation so nothing is lost and nothing unsafe is mixed in early.
+
+8A. CORRELATION CLUSTER FILTER
+------------------------------------------------------------
+PRESERVED IDEA
+- cluster highly correlated instruments
+- avoid stacking multiple trades from same cluster
+
+STATUS
+- deferred future feature
+
+CURRENT SAFE ACTION
+- expose cluster metadata downstream better
+- do not implement trade blocking
+
+8B. ATR EFFICIENCY SCORE
+------------------------------------------------------------
+PRESERVED IDEA
+- ATR relative to spread
+
+STATUS
+- safe as analytics metric only
+- not a current Step 9 input
+
+8C. TRADE CANDIDATE GENERATION
+------------------------------------------------------------
+PRESERVED IDEA
+- best tradable next markets shortlist overlay
+
+STATUS
+- deferred downstream trader-assistance layer
+- not a second selector engine now
+
+8D. SPREAD-TO-VOLATILITY FILTER
+------------------------------------------------------------
+PRESERVED IDEA
+- reject markets where spread consumes too much movement
+
+STATUS
+- analytics/display metric now
+- scanner-core rule rewrite deferred
+
+8E. SESSION QUALITY FILTER
+------------------------------------------------------------
+PRESERVED IDEA
+- avoid quiet/stale/unknown conditions
+
+STATUS
+- preserved in publication hardening and tactical diagnostics
+- scanner-core rewrite deferred
+
+8F. MAX TRADE PER ASSET CLASS
+------------------------------------------------------------
+STATUS
+- deferred execution / portfolio layer
+
+8G. POSITION RISK MODEL
+------------------------------------------------------------
+PRESERVED IDEA
+- ATR-based stops / TP / RR consistency
+
+STATUS
+- deferred execution-assistance layer
+- advisory context only for now
+
+8H. FINAL TRADE PIPELINE
+------------------------------------------------------------
+STATUS
+- deferred future architecture
+- outside current scanner scope
+
+8I. ORDER BOOK / DEPTH DATA
+------------------------------------------------------------
+STATUS
+- deferred optional microstructure enhancement
+- broker support inconsistency acknowledged
+
+8J. EXECUTION QUALITY METRICS
+------------------------------------------------------------
+STATUS
+- deferred future phase requiring fills/latency measurement
+
+8K. MARKET REGIME DETECTION
+------------------------------------------------------------
+STATUS
+- partially included in analytics foundation
+- deeper models deferred
+
+8L. STATISTICAL PROFILE
+------------------------------------------------------------
+STATUS
+- deferred later analytics extension
+
+8M. TRADE FEASIBILITY METRICS
+------------------------------------------------------------
+STATUS
+- partially preserved in analytics expected-move foundation
+- deeper scoring deferred
+
+8N. ECONOMIC / MACRO CONTEXT
+------------------------------------------------------------
+STATUS
+- deferred external-data architecture
+- not part of current MT5-local build
+
+8O. DATA QUALITY / CONFIDENCE LAYER
+------------------------------------------------------------
+STATUS
+- partially preserved in analytics foundation and dossier clarity
+- may expand gradually later
+
+============================================================
+WHAT REMAINS EXPLICITLY UNTOUCHED
+============================================================
+
+Unless formally revised later, this blueprint does NOT authorize:
+
+- redesign of universe loading
+- redesign of startup order
+- changes to Step 8 truth logic except publication-scope gating
+- Step 9 ranking formula redesign
+- Step 10 role redesign
+- warm-state schema/path/timing redesign
+- full-universe tactical processing
+- auto-trading engine implementation
+- portfolio/risk/execution manager implementation
+- trade blocking by cluster in live execution
+- external macro/news integrations
+- hidden candidate engine replacing summary routing truth
+- giant combined final trader file architecture
+- unbounded tactical history publication
+
+============================================================
+PHASE 5 SUCCESS CHECKLIST
+============================================================
+
+Phase 5 is complete only when all are true:
+
+1. active publication excludes dead/no-quote names reliably
+2. dossiers are clearer and less ambiguous
+3. a downstream analytics engine exists and integrates safely
+4. bounded HTF enrichment exists materially beyond current thin state
+5. active-symbol tactical layer exists in bounded form
+6. HUD trust indicators exist and remain display-only
+7. menu/settings reflect the real architecture
+8. all deferred future ideas are preserved explicitly
+9. no scanner-core truth contamination has occurred
+10. startup, universe load, warm-state, selection, correlation, and
+    publication continuity remain intact
+
+============================================================
+VALIDATION LAW AFTER ANY CHANGE
+============================================================
+
+After any code change, validation must report at minimum:
+
+1. startup still intact
+2. output shell still intact
+3. classification load still intact
+4. universe loading still intact
+5. broker total path still intact
+6. eligible count path still intact
+7. active scope path still intact
+8. Step 8 warm-state path/schema/timing unchanged unless explicitly and
+   safely revised
+9. Step 9 inputs unchanged unless intentionally changed
+10. Step 10 inputs unchanged unless intentionally changed
+11. timer heartbeat intact
+12. dossier-first then summary-last publication order intact
+13. compile stability preserved
+14. active/inactive dossier lifecycle preserved
+15. no protected-zone regression introduced
+
+If any cannot be confirmed, that must be stated honestly.
+
+============================================================
+NO SPECULATIVE CLEANUP RULE
+============================================================
+
+Do not:
+- delete code because it looks old
+- remove a field because it seems unused nearby
+- collapse helpers because they feel redundant
+- merge path logic because it looks duplicative
+- rename files/folders for neatness
+- delete carry-forward because new output is cleaner
+- delete warm-state because trader output is downstream-only
+- mass-delete legacy code before safe replacement is proven
+
+Cleanup follows proof, not preference.
+
+Disable before delete.
+Prove before retire.
+
+============================================================
+SAFE EVOLUTION RULE
+============================================================
+
+AFS may evolve only through bounded, reversible, dependency-aware
+changes.
+
+Safe evolution means:
+- one narrow change at a time
+- version increment every code change
+- preserve current working behavior unless safely replaced
+- disable before delete
+- prove before retire
+- classify before modify
+- trace before rename
+- validate before claiming success
+
+Compile success is not enough.
+The standard is live operational continuity.
+
+============================================================
+VERSIONING AND GIT EVOLUTION STANDARD
+============================================================
+
+VERSION FORMAT
+------------------------------------------------------------
+AFS uses:
+
+vX.YZ
+
+Where:
+- X = Phase number
+- Y = Step number
+- Z = Fix / revision number
+
+For current blueprint:
+- X = 5
+
+Examples:
+- v5.101
+- v5.102
+- v5.109
+- v5.120
+- v5.130
+
+MEANING
+------------------------------------------------------------
+PHASE (X)
+- major architectural stage
+
+STEP (Y)
+- implementation step inside the phase
+
+FIX / REVISION (Z)
+- bounded fixes/improvements within the same step
+
+VERSION PROGRESSION RULES
+------------------------------------------------------------
+1. every code change increments version
+2. fixes increase Z only
+3. when next step begins, Y increases and Z resets to 0
+4. phase changes increase X
+5. version must appear in EA wrapper
+6. version must appear in SUMMARY.txt where applicable
+7. version must appear in dossier headers where applicable
+8. commit messages must reflect the version
+
+COMMIT MESSAGE STANDARD
+------------------------------------------------------------
+Format:
+vX.YZ - Short Description
+
+Examples:
+- v5.101 - Phase5 Step1 publication eligibility hardening
+- v5.102 - Fix active publication no-quote gating
+- v5.120 - Phase5 Step2 dossier clarity foundation
+
+GROUND ZERO RULE
+------------------------------------------------------------
+The rollback commit titled:
+"Roll back to stable version"
+remains the trusted preservation baseline.
+
+It is the operational baseline, not permission for aggressive cleanup.
+
+============================================================
+REQUIRED FUTURE CHAT START FRAME
+============================================================
+
+Every future implementation chat under this Phase 5 blueprint must
+begin with this exact frame:
+
+Project Track:
+- AFS Live System Safety
+
+Current Version:
+- [version]
+
+Current Phase:
+- Phase 5
+
+Current Step:
+- [exact step number]
+
+Requested Change:
+- [single bounded change]
+
+Change Safety Classification:
+- Requested Change:
+- Change Type: [Type 1 / Type 2 / Type 3 / Type 4]
+- Target Components:
+- Protected Zones Touched:
+- Operational Risk: [Low / Medium / High]
+- Dependency Trace Status: [Complete / Partial / Incomplete]
+- Safe To Proceed: [Yes / Limited / No]
+- Safer Alternative:
+- What Must Remain Untouched:
+
+Phase 5 Step Target:
+- [Step 1 / Step 2 / Step 3 / Step 4 / Step 5 / Step 6 / Step 7 / Step 8]
+
+Current Operationally Critical Components:
+- [list]
+
+Legacy But Still Coupled:
+- [list]
+
+Safe Downstream-Only Candidates:
+- [list]
+
+Preserved Deferred Ideas Touched:
+- [list if any]
+
+Validation Requirements For This Change:
+- [list]
+
+Next Exact Safe Action:
+- [single action only]
+
+This frame is mandatory.
+
+============================================================
+REQUIRED CHANGE REPORT FORMAT
+============================================================
+
+After implementation, the report must include:
+
+Project Track:
+- AFS Live System Safety
+
+Current Version:
+- [old version]
+
+Requested Change:
+- [change]
+
+Change Safety Classification:
+- Requested Change:
+- Change Type:
+- Target Components:
+- Protected Zones Touched:
+- Operational Risk:
+- Dependency Trace Status:
+- Safe To Proceed:
+- Safer Alternative:
+- What Must Remain Untouched:
+
+Version Update:
+- from [old]
+- to [new]
+
+Files Changed:
+- [list]
+
+Validation Performed:
+- [list]
+
+Risks / Follow-Up:
+- [list]
+
+============================================================
+IMPLEMENTATION PRIORITY ORDER
+============================================================
+
+The hard-locked safe order remains:
+
+1. Phase 5 Step 1
+   Publication Eligibility Hardening
+
+2. Phase 5 Step 2
+   Dossier Clarity and Missing Runtime Exposure
+
+3. Phase 5 Step 3
+   Trader Analytics Engine Foundation
+
+4. Phase 5 Step 4
+   History Coverage and Higher-Timeframe Completion
+
+5. Phase 5 Step 5
+   Active-Symbol Tactical Layer Foundation
+
+6. Phase 5 Step 6
+   HUD Trust Indicators and Readiness Visibility
+
+7. Phase 5 Step 7
+   Settings / Menu Overhaul
+
+8. Phase 5 Step 8
+   Deferred Future Feature Preservation Layer
+
+This order is mandatory unless formally revised by a later proof-driven
+blueprint.
+
+============================================================
+WHAT MUST NEVER HAPPEN AGAIN
+============================================================
+
+Do not:
+- break universe loading while changing trader output
+- break startup while changing paths
+- break warm-state while changing folder structure
+- break selection inputs while changing dossiers
+- break correlation inputs while changing summaries
+- disable a legacy path without proof
+- rename an interlinked helper without full tracing
+- treat compile success as runtime success
+- let dossiers feed ranking or selection
+- let analytics contaminate scanner truth
+- let tactical data become full-universe heartbeat burden
+- reintroduce giant final trader files
+- reintroduce JSON as canonical live trader dependency
+- mass-delete legacy code before proven replacement
+- mix multiple risky operational changes into one step
+- replace working behavior with assumptions
+
+============================================================
+FUTURE PHASE OUTLOOK
+============================================================
+
+After Phase 5, later work may include:
+
+Phase 6
+- bounded legacy cleanup after downstream layers and settings stabilize
+
+Potential later phases
+- trader-assistance candidate overlays
+- optional portfolio exposure layer
+- optional execution-assistance layer
+- optional external macro context
+- deeper analytics/regime/statistical extensions
+
+None of those are part of mandatory current Phase 5 completion unless
+formally revised later.
+
+============================================================
+FINAL GOVERNING RULE
+============================================================
+
+AFS Phase 5 must complete the system by adding trustworthy active
+publication, clearer dossier truthfulness, bounded analytics depth,
+higher-timeframe completion, active-symbol tactical enrichment, HUD
+trust visibility, and settings clarity WITHOUT contaminating scanner
+truth or destabilizing runtime.
+
+Growth in this phase must mean:
+- more trustworthy active publication
+- deeper but bounded trader context
+- clearer readiness and trust visibility
+- cleaner operator controls
+- preserved future optionality
+- zero scanner self-harm
+
+The old blueprint is now obsolete as a working implementation guide.
+
+This standalone Phase 5 blueprint is the governing constitution for all
+next implementation chats unless formally revised.
+
+END OF AFS PHASE 5 STANDALONE GOVERNING BLUEPRINT
+============================================================
