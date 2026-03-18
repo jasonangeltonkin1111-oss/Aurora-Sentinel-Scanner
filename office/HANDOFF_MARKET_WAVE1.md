@@ -1,39 +1,31 @@
 # MARKET WAVE 1 HANDOFF
 
-## Files Changed
+### 1. CHANGED FILES
 - `mt5/ASC_Market.mqh`
 - `office/HANDOFF_MARKET_WAVE1.md`
 
-## Exact Fixes Applied
-- Added `mt5/ASC_Market.mqh` using the shared `ASC_Common.mqh` contract names directly instead of introducing alternate Market-side types.
-- Implemented `ASC_Market_DiscoverSymbols(string &symbols[])` using broker symbol discovery from the terminal symbol list.
-- Implemented `ASC_Market_BuildIdentityAndTruth(const string symbol, const ASC_RuntimeConfig &config, ASC_SymbolRecord &record)` so identity and market truth populate only the shared struct fields.
-- Removed string-based session-state handling by using only `ASC_SessionTruthStatus` enum values in Market truth resolution.
+### 2. SCOPE CHECK
+- Domain remained inside Market-owned symbol discovery, identity truth, classification translation, and session-truth handling.
+- No Storage, Output, ranking, or execution logic was added.
+- No writer-side computation was introduced.
+- No later-layer summary or dossier logic was introduced.
 
-## Session Truth Alignment
-- `SessionTruthStatus` is populated only with shared enum values: `ASC_SESSION_UNKNOWN`, `ASC_SESSION_OPEN_TRADABLE`, `ASC_SESSION_CLOSED_SESSION`, `ASC_SESSION_QUOTE_ONLY`, `ASC_SESSION_TRADE_DISABLED`, `ASC_SESSION_NO_QUOTE`, and `ASC_SESSION_STALE_FEED`.
-- `Layer1Eligible` is true only when Market resolves `ASC_SESSION_OPEN_TRADABLE`.
-- `IneligibleReason` stays explicit for unknown, closed, quote-only, disabled, no-quote, and stale-feed outcomes.
-- `NextRecheckTime` uses a bounded timer-based retry and does not guess a synthetic market-open boundary.
-
-## Shared Contract Alignment
-- `ASC_SymbolIdentity` fields are populated exactly from the shared contract surface.
-- `PrimaryBucket` remains `"UNKNOWN"` when classification is unresolved.
-- `ClassificationReason` remains explicit instead of inventing a fallback bucket.
-- `ASC_MarketTruth` fields are populated without adding string-based duplicate state.
-
-## Classification Handling
-- The file preserves unresolved classification truth explicitly.
-- `CanonicalSymbol` currently follows the normalized symbol because the archive translation table has not yet been loaded into active product code.
-- No guessed asset-class, sector, industry, theme, or bucket replacement logic was added.
-
-## Remaining Dependency Risks
-- `mt5/ASC_Common.mqh` is still absent in the repository, so full compile validation of the shared contract remains blocked.
-- The archive classification table has not yet been translated into active Market lookup code, so classification remains explicitly unresolved instead of being guessed.
-- Session APIs can differ across brokers; unreadable or missing session data currently fail fast into `ASC_SESSION_UNKNOWN` as required by the contract.
-
-## ARCHIVE USE NOTE
-- `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` — TRANSLATE. Extracted only the rule that Market owns broker symbol identity/classification truth and must preserve unresolved outcomes explicitly.
-- `archives/LEGACY_SYSTEMS/AFS/AFS_CoreTypes.mqh` — REFERENCE ONLY. Used only as naming/state-surface reference to avoid inventing non-contract Market fields.
+### 3. ARCHIVE USE NOTE
+- `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` — TRANSLATE. Used to activate archive-backed classification translation into current Market identity truth.
+- `archives/LEGACY_SYSTEMS/AFS/AFS_CoreTypes.mqh` — REFERENCE ONLY. Used only as structural reference to avoid inventing non-contract fields.
 - Legacy scope rejected: old scanner-wide shared structs, publication scaffolding, HUD/runtime modes, ranking logic, and any output/storage/execution behavior.
-- Active files changed as a result: `mt5/ASC_Market.mqh`, `office/HANDOFF_MARKET_WAVE1.md`.
+
+### 4. COMPLETION CHECK
+- `ASC_Market_DiscoverSymbols(string &symbols[])` is active in live product code.
+- `ASC_Market_BuildIdentityAndTruth(const string symbol, const ASC_RuntimeConfig &config, ASC_SymbolRecord &record)` now populates shared contract fields only.
+- Archive-backed classification translation is now active in live product code.
+- `CanonicalSymbol`, `AssetClass`, `PrimaryBucket`, `Sector`, `Industry`, and `Theme` now receive translated truth when translation exists.
+- Unresolved cases remain explicit as `UNKNOWN` with explicit unresolved reason rather than guessed replacements.
+- `SessionTruthStatus` uses shared enum values only.
+- Layer 1 eligibility is no longer falsified by unresolved classification.
+- Non-eligible and unknown symbols are preserved into Layer 1.2 snapshot truth instead of being dropped.
+
+### 5. OPEN RISKS
+- Non-blocking follow-up remains around finer `ClassificationResolved` granularity if later layers need partial-vs-full classification quality.
+- Non-blocking follow-up remains around more state-specific `NextRecheckTime` behavior.
+- Market success in Wave 1 does not imply later ranking or summary layers are complete.
