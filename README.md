@@ -170,19 +170,20 @@ Only after that are deeper modules expanded.
 2. `INDEX.md`
 3. `office/HQ_OPERATOR_MANUAL.md`
 4. `blueprint/SYSTEM_OVERVIEW.md`
-5. `blueprint/ARCHITECTURE_RULES.md`
-6. `blueprint/MODULE_MAP.md`
-7. `blueprint/PERSISTENCE_CONTRACT.md`
-8. `blueprint/OUTPUT_CONTRACT.md`
-9. relevant `office/` governance files
+5. `office/HQ_STATE.md`
+6. `office/HQ_TASK_FLOW.md`
+7. `office/HQ_DECISION_LOG.md`
+8. `office/MODULE_OWNERSHIP.md`
+9. `office/TASK_BOARD.md`
+10. the active blueprint law named in `office/HQ_OPERATOR_MANUAL.md`
 
 ### If you are a worker chat
 1. `README.md`
 2. `INDEX.md`
 3. relevant `blueprint/` contract files
 4. `office/WORKER_RULES.md`
-5. `office/FILE_LOCKS.md`
-6. your assigned project packet in `office/ACTIVE_PROJECTS/`
+5. `office/ARCHIVE_REFERENCE_MAP.md`
+6. your HQ-assigned packet or review scope
 
 ---
 

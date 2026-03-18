@@ -4,12 +4,12 @@
 Aurora Sentinel Core
 
 ## Core Definition
-Aurora Sentinel Core is a single-EA, broker-aware, rolling market intelligence engine. It reads existing broker state first, fills gaps instead of rebuilding blindly, maintains layered market awareness, ranks symbols inside their buckets, and publishes truthful broker-level outputs for trader review.
+Aurora Sentinel Core is a single-EA, broker-aware, rolling market intelligence engine. It reads existing broker state first, fills gaps instead of rebuilding blindly, maintains layered market awareness, ranks symbols inside their `PrimaryBucket`, and publishes truthful broker-level outputs for trader review.
 
 ## Role
 Aurora Sentinel Core is:
 - a scanner
-- a classifier
+- a classification-aware market intelligence engine
 - a market-awareness engine
 - a ranking and shortlisting engine
 - a structured output publisher
@@ -25,7 +25,7 @@ Aurora Sentinel Core is not:
 2. On start, read existing broker state from Common Files.
 3. Refresh only what is missing or stale.
 4. Rebuild broker-level summary truthfully.
-5. Open the broker summary file and inspect the top 5 per bucket.
+5. Open the broker summary file and inspect the top 5 per `PrimaryBucket`.
 6. Open broker symbol files for deeper symbol review.
 
 ## Non-Negotiables
@@ -34,5 +34,5 @@ Aurora Sentinel Core is not:
 - rolling persistence first
 - truthful values only
 - writers format only
-- top 5 per bucket only in summary output
+- top 5 per `PrimaryBucket` only in summary output
 - symbol detail files have exactly 3 major sections

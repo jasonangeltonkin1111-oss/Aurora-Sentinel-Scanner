@@ -46,3 +46,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: treat missing required files in one fix worker checkout as synchronization/state failure, not as worker permission to improvise
 - Why: a Conditions fix worker correctly reported missing owned files/review files and refused to freestyle outside scope
 - Result: repo-state precheck and sync discipline became an explicit HQ concern before future worker execution
+
+### 2026-03-18 — Blueprint integrity hardening run completed
+- Decision: strengthen blueprint law before another debug cycle
+- Why: live Wave 1 failures exposed remaining ambiguity around unresolved classification handling, partial snapshot overwrite risk, tie-handling determinism, and front-door recovery references
+- Result: active blueprint law and front-door navigation were tightened, and HQ now has an explicit integrity audit to enforce before rerunning Debug

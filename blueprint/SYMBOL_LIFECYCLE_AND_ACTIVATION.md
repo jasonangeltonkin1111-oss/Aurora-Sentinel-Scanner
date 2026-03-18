@@ -161,7 +161,8 @@ Suspension blocks continuation until resolved.
 `SUMMARY.txt` is not just an informational report.
 It is the visible activation authority list.
 
-Summary determines which symbols are currently promoted and therefore eligible for active dossier continuation.
+Summary reflects which symbols are currently promoted and therefore eligible for active dossier continuation.
+Writers publish the promoted set; they do not compute or expand activation rights on their own.
 
 ---
 

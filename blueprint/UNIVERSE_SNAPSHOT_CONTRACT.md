@@ -92,6 +92,7 @@ Minimum write behavior:
 - avoid destructive reset during routine refresh
 - keep unreadable fields explicit instead of dropping them silently
 - do not rewrite the snapshot as if missing became valid by assumption
+- do not let a bounded or partial refresh overwrite a previously larger valid universe snapshot unless the replacement pass is explicitly known to be complete and verified
 
 ---
 

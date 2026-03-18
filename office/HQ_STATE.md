@@ -16,10 +16,10 @@ Do not create endless new HQ state files per wave.
 ---
 
 ## Current System Status
-- Foundation status: materially locked and implementation-ready
+- Foundation status: blueprint hardened further, but live product still not implementation-stable
 - Current implementation wave: Wave 1 Fix
-- Current stage family: first-slice implementation
-- Current focus: Layer 1 / Layer 1.2 / storage-output foundation alignment
+- Current stage family: first-slice implementation correction
+- Current focus: blueprint integrity hardening completed; MT5 Wave 1 contract/runtime fixes still required
 
 ---
 
@@ -87,6 +87,7 @@ Current decision:
 3. rerun Clerk after fix wave
 4. rerun Debug after fix wave
 5. do not advance to new features until post-fix reviews pass
+6. do not rerun Debug until the documented MT5 fix packet is completed against the hardened blueprint law
 
 ---
 
@@ -104,7 +105,7 @@ Before any worker continues:
    - `office/CLERK_REVIEW_WAVE1.md`
    - `office/DEBUG_REVIEW_WAVE1.md`
    - all 4 worker handoff files
-3. rerun the 4 Wave 1 Fix packets
+3. apply the required MT5 Wave 1 correction packet(s) against the current Clerk/Debug findings and the blueprint integrity audit
 4. rerun Clerk
 5. rerun Debug
 6. only then decide whether Wave 1 passes or requires another correction pass
@@ -114,6 +115,7 @@ Before any worker continues:
 ## Allowed Next
 - worker fix packets inside owned files only
 - repo sync / precheck enforcement
+- blueprint-law enforcement from `office/BLUEPRINT_INTEGRITY_AUDIT.md`
 - Clerk and Debug reruns after fixes
 - HQ correction-wave orchestration
 
