@@ -14,5 +14,19 @@ Aurora Sentinel Scanner is a broker-aware MT5 market intelligence system.
 - rolling persistence: read existing state first, then fill gaps
 - writers format only
 - top 5 per bucket only in summary output
-- no dev/task wording in MT5 product code
+- symbol files contain exactly 3 major sections:
+  - `[BROKER_SPEC]`
+  - `[OHLC_HISTORY]`
+  - `[CALCULATIONS]`
+- no dev/task/phase/worker wording in MT5 product code
 - MT5 product deployment is one flat EA folder
+
+## Read Order
+1. `README.md`
+2. `INDEX.md`
+3. relevant `blueprint/` contract files
+4. relevant `office/` governance files
+5. `mt5/` product docs and code
+
+## Authority Rule
+If a navigation file and a blueprint contract ever disagree, the blueprint contract wins.

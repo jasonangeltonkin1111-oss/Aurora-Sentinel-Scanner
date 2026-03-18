@@ -10,4 +10,8 @@ It defines:
 - persistence contract
 - output contract
 
-No worker coordination lives here. No MT5 code lives here.
+No worker coordination lives here.
+No MT5 code lives here.
+
+## Authority Rule
+If a file in `README.md`, `INDEX.md`, `office/`, or `mt5/` ever disagrees with a `blueprint/` contract, the relevant `blueprint/` contract wins.

@@ -18,6 +18,12 @@ Logical module separation does not require nested deployment folders.
 The production MT5 layout is flat: all `.mq5` and `.mqh` files live directly in one EA folder.
 Module separation is preserved by file naming and ownership, not by terminal subfolders.
 
+## Ownership Interpretation
+Module names are logical ownership domains, not folder requirements.
+For example:
+- `Engine` means the engine domain
+- not a required `Engine/` folder in terminal deployment
+
 ## Responsibilities
 ### Common
 Shared types, constants, statuses, and truth states.

@@ -5,6 +5,9 @@ This file is the permanent navigation map for the Aurora Sentinel Scanner reposi
 It explains what each major area is for, what belongs there, and what does **not** belong there.
 It is intended to remain stable even as implementation grows.
 
+This is a navigation and orientation file.
+If any detail here ever conflicts with a contract inside `blueprint/`, the relevant `blueprint/` file wins.
+
 ---
 
 # 1. REPOSITORY PURPOSE
@@ -149,6 +152,20 @@ The MT5 deployment layout is flat.
 That means all product `.mq5` and `.mqh` files live directly in one EA folder when used in the terminal.
 No nested product module folders are used in terminal deployment.
 
+### Flat deployment clarification
+The repo may contain the single deployment folder `mt5/AuroraSentinelCore/`.
+Inside that folder, product `.mq5` and `.mqh` files must still remain flat.
+
+Allowed:
+- `mt5/AuroraSentinelCore/AuroraSentinel.mq5`
+- `mt5/AuroraSentinelCore/ASC_Engine.mqh`
+- `mt5/AuroraSentinelCore/ASC_Market.mqh`
+
+Not allowed:
+- `mt5/AuroraSentinelCore/market/`
+- `mt5/AuroraSentinelCore/storage/`
+- `mt5/AuroraSentinelCore/dev/`
+
 ### Contents
 - `README.md` — product rules
 - `AuroraSentinelCore/` — the flat deployment folder that maps to:
@@ -270,8 +287,11 @@ These rules define what the whole repository is trying to protect.
 - fill gaps, refresh stale, avoid blind rebuilds
 - writers format only
 - summary shows top 5 per bucket only
-- symbol files contain exactly 3 major sections
-- MT5 product code contains no dev/task/phase wording
+- symbol files contain exactly 3 major sections:
+  - `[BROKER_SPEC]`
+  - `[OHLC_HISTORY]`
+  - `[CALCULATIONS]`
+- MT5 product code contains no dev/task/phase/worker wording
 - UI is isolated from internal logic
 
 ---
@@ -309,6 +329,7 @@ Read in this order:
 Then stay inside your assigned product area.
 Do not freeload across roots.
 Do not put dev wording into MT5 product code.
+Do not modify files already locked by another worker.
 
 ---
 

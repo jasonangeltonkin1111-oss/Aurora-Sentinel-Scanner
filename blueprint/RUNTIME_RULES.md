@@ -10,6 +10,22 @@ Run cheaply across the full broker universe, deepen only where justified, and pe
 - deep work remains scarce
 - demotion should prefer freeze over forgetting when safe
 
+## First Working Slice
+The first working implementation target is:
+1. Common
+2. Engine
+3. Market
+4. Conditions
+5. Storage
+6. Output
+
+That slice must reach:
+- clean EA startup
+- broker symbol discovery
+- broker-level persistence restore
+- safe write path to Common Files
+- truthful summary output without crashes
+
 ## Build Order Intent
 1. Common
 2. Engine

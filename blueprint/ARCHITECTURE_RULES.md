@@ -13,6 +13,11 @@
 10. No cross-module redesign without blueprint updates.
 11. MT5 product code and files must contain no dev/task/phase/worker wording.
 12. MT5 terminal deployment uses one flat EA folder, not nested module folders.
+13. Symbol detail files must preserve the exact major section names:
+   - `[BROKER_SPEC]`
+   - `[OHLC_HISTORY]`
+   - `[CALCULATIONS]`
+14. `archives/` is reference-only and must not be silently treated as active product implementation.
 
 ## Forbidden Patterns
 - scan -> writer -> calculate
@@ -22,6 +27,7 @@
 - duplicated business logic across module families
 - account-specific logic leaking into broker-level outputs
 - overloading Layer 1 with surface or deep calculations
+- nested MT5 deployment folders used as module boundaries
 
 ## Design Priorities
 1. truthfulness

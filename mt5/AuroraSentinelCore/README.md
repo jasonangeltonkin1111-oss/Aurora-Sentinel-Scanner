@@ -8,6 +8,16 @@ This is the flat deployment folder that is copied into:
 All `.mq5` and `.mqh` files live directly in this one folder.
 No nested product subfolders are used in terminal deployment.
 
+Allowed examples:
+- `AuroraSentinel.mq5`
+- `ASC_Engine.mqh`
+- `ASC_Market.mqh`
+
+Not allowed:
+- `market/`
+- `storage/`
+- `dev/`
+
 ## Naming Rule
 Use product/domain names only.
 Do not use dev/task/phase/worker wording in MT5 file names.
