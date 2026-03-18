@@ -16,10 +16,10 @@ Do not create endless new HQ state files per wave.
 ---
 
 ## Current System Status
-- Foundation status: blueprint hardened further, but live product still not implementation-stable
-- Current implementation wave: Wave 1 Fix
-- Current stage family: first-slice implementation correction
-- Current focus: blueprint integrity hardening completed; MT5 Wave 1 contract/runtime fixes still required
+- Foundation status: blueprint hardened and Wave 1 fix commits merged, but post-fix review normalization is still in progress
+- Current implementation wave: Wave 1 Post-Fix Review
+- Current stage family: first-slice implementation correction review
+- Current focus: control-layer truth normalization plus fresh Debug verification against the merged Wave 1 fix state
 
 ---
 
@@ -30,48 +30,41 @@ Do not create endless new HQ state files per wave.
 - Role: orchestration, contradiction resolution, next packet control
 
 ### Engine Worker
-- Status: FIX PACKET ISSUED
-- Scope: include wiring, shared contract ownership discipline, runtime shell correction
+- Status: FIX COMMIT MERGED
+- Scope delivered in repo: include wiring, restore continuity, bounded upsert preservation, runtime shell correction
 
 ### Market Worker
-- Status: FIX PACKET ISSUED
-- Scope: enum alignment, shared contract alignment, classification/session truth correction
+- Status: FIX COMMIT MERGED
+- Scope delivered in repo: classification translation wiring plus market/session truth alignment
 
 ### Conditions Worker
-- Status: BLOCKED IN ONE CHECKOUT / REQUIRES REPO SYNC
-- Scope: struct alignment and handoff correction only
-- Blocker: worker reported required files/review docs missing in its checkout view
+- Status: FIX COMMIT MERGED
+- Scope delivered in repo: partial conditions truth preservation and unreadable vs invalid handling
 
 ### Storage + Output Worker
-- Status: FIX PACKET ISSUED
-- Scope: serialization/recovery/output-language correction
+- Status: PARTIALLY MERGED VIA ENGINE/STORAGE FIX
+- Scope delivered in repo: snapshot shrink guard and temp-file cleanup; Output handoff/log state still needs normalization
 
 ### Clerk
-- Status: COMPLETED WAVE 1 REVIEW
-- Verdict: FAIL
+- Status: ACTIVE POST-FIX REVIEW
+- Verdict: pending current review writeback
 
 ### Debug
-- Status: COMPLETED WAVE 1 REVIEW
-- Verdict: FAIL
+- Status: RERUN REQUIRED
+- Verdict: last completed review was FAIL against pre-fix state
 
 ---
 
 ## Current Blocking Findings
 
-### Clerk blocking findings
-- MT5 flat-layout compliance issue was reported
-- shared-contract ownership issue around `ASC_Common.mqh` was reported
-- handoff format violations were reported
+### Control-layer findings now active
+- `HQ_STATE.md` must reflect that the Wave 1 fix commits are merged and that HQ is in post-fix review, not pre-fix issuance
+- Wave 1 handoff files still lag the merged fix state and still miss the required handoff heading format
+- the earlier Clerk flat-layout failure is no longer truthful under the active navigation law
 
-### Debug blocking findings
-- compile/integration risk remains
-- shared contract mismatch was reported
-- session status enum vs string drift was reported
-- additional logic/safety corrections were required before progression
-
-### Conditions-specific sync blocker
-A Conditions fix worker reported that required owned files/review files were not visible in its checkout state.
-HQ must treat this as a repo-state synchronization problem, not as permission to freestyle outside worker ownership.
+### Debug-state findings now active
+- `office/DEBUG_REVIEW_WAVE1.md` is now historically important but stale against the current merged MT5 state
+- a fresh Debug rerun is required before HQ interprets any pre-fix Debug blocker as still active
 
 ---
 
@@ -82,41 +75,27 @@ The system is in:
 - not feature expansion phase
 
 Current decision:
-1. keep the 4 build workers on Wave 1 Fix only
-2. require repo-state precheck/synchronization before fix execution
-3. rerun Clerk after fix wave
-4. rerun Debug after fix wave
-5. do not advance to new features until post-fix reviews pass
-6. do not rerun Debug until the documented MT5 fix packet is completed against the hardened blueprint law
+1. treat the merged Wave 1 fix commits as landed repo state
+2. normalize control-layer truth so handoffs and live HQ state match the merged code
+3. rerun Debug against the current merged repo state
+4. do not advance to new features until post-fix Clerk and Debug review truth is current
+5. keep progression blocked if control docs or Debug truth still lag the repo
 
 ---
 
 ## Required Next Action
-Before any worker continues:
-1. confirm latest repository state is visible in the worker checkout
-2. confirm these files are present where required:
-   - `mt5/AuroraSentinel.mq5`
-   - `mt5/ASC_Common.mqh`
-   - `mt5/ASC_Engine.mqh`
-   - `mt5/ASC_Market.mqh`
-   - `mt5/ASC_Conditions.mqh`
-   - `mt5/ASC_Storage.mqh`
-   - `mt5/ASC_Output.mqh`
-   - `office/CLERK_REVIEW_WAVE1.md`
-   - `office/DEBUG_REVIEW_WAVE1.md`
-   - all 4 worker handoff files
-3. apply the required MT5 Wave 1 correction packet(s) against the current Clerk/Debug findings and the blueprint integrity audit
-4. rerun Clerk
-5. rerun Debug
-6. only then decide whether Wave 1 passes or requires another correction pass
+1. write back the post-fix Clerk review and normalize live control docs
+2. refresh or normalize the four active Wave 1 handoff files so they truthfully describe the merged fix state
+3. rerun Debug against the merged MT5 files
+4. only then decide whether Wave 1 passes or requires another correction pass
 
 ---
 
 ## Allowed Next
-- worker fix packets inside owned files only
-- repo sync / precheck enforcement
+- control-doc normalization by Clerk where truthful
+- handoff normalization under HQ/worker ownership
 - blueprint-law enforcement from `office/BLUEPRINT_INTEGRITY_AUDIT.md`
-- Clerk and Debug reruns after fixes
+- fresh Debug rerun after merged fixes
 - HQ correction-wave orchestration
 
 ---
@@ -144,4 +123,4 @@ For HQ continuity and review hygiene:
 ---
 
 ## Short HQ Resume Sentence
-Wave 1 foundation build ran in parallel, Clerk and Debug both failed correctly, Wave 1 Fix was issued, and the immediate next step is synchronized rerun of the 4 fix workers followed by Clerk and Debug reruns before any progression.
+Wave 1 fix commits are merged, Clerk is normalizing the control record, and the immediate next step is a fresh Debug rerun against the merged repo before any progression decision.
