@@ -1,0 +1,48 @@
+# HQ DECISION LOG
+
+## Purpose
+This file is append-only HQ memory for major decisions.
+
+Use it to preserve:
+- why a wave advanced
+- why a wave failed
+- why a correction wave was opened
+- why scope was blocked
+- why a HOLD was issued
+
+This is not a full diary.
+Only record load-bearing decisions that matter for future HQ recovery.
+
+---
+
+## Entries
+
+### 2026-03-18 — Control-layer harmonization locked
+- Decision: harmonize the office/control layer before implementation
+- Why: worker model, module ownership, and summary grouping still had contradictory wording
+- Result: locked 7-role control model, clarified `PrimaryBucket` truth, and strengthened HQ handoff behavior
+
+### 2026-03-18 — Archive surgical mapping completed
+- Decision: perform deep archive review before further implementation planning
+- Why: needed exact separation of TRANSLATE vs REFERENCE ONLY vs DO NOT USE legacy truth
+- Result: first-slice and later-slice archive truth became clearer, and remaining blueprint gaps were identified explicitly
+
+### 2026-03-18 — Foundation gap closure completed
+- Decision: close remaining first-slice blueprint/control gaps before product implementation
+- Why: Layer 1 sub-states, Layer 1.2 minimum snapshot shape, and persistence fallback/corruption behavior were still too weak for precise worker packets
+- Result: foundation became materially implementation-ready
+
+### 2026-03-18 — Parallel Wave 1 build approved
+- Decision: run the 4 build workers in parallel
+- Why: the 7-role worker model and ownership boundaries were now strong enough for a bounded parallel build wave
+- Result: Engine, Market, Conditions, and Storage + Output foundation code was produced in parallel
+
+### 2026-03-18 — Clerk and Debug both failed Wave 1
+- Decision: do not advance; open Wave 1 Fix
+- Why: Clerk found structural/compliance problems and Debug found integration/contract/logic problems, including compile-risk and shared-contract drift
+- Result: progression blocked pending targeted fix packets
+
+### 2026-03-18 — Worker-checkout sync issue recognized
+- Decision: treat missing required files in one fix worker checkout as synchronization/state failure, not as worker permission to improvise
+- Why: a Conditions fix worker correctly reported missing owned files/review files and refused to freestyle outside scope
+- Result: repo-state precheck and sync discipline became an explicit HQ concern before future worker execution
