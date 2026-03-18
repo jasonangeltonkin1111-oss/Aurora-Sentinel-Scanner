@@ -68,6 +68,12 @@ int ASC_Storage_OpenFlags(const bool use_common_files)
    return(flags);
   }
 
+bool ASC_Storage_DeleteFile(const ASC_RuntimeConfig &config,const string file_name)
+  {
+   ResetLastError();
+   return(FileDelete(file_name,config.UseCommonFiles ? FILE_COMMON : 0));
+  }
+
 bool ASC_Storage_ReadAllLines(const ASC_RuntimeConfig &config,const string file_name,string &lines[])
   {
    ArrayResize(lines,0);
@@ -302,25 +308,46 @@ bool ASC_Storage_SaveUniverseSnapshot(const ASC_RuntimeConfig &config,const ASC_
    string prior_lines[];
    const bool prior_exists = ASC_Storage_ReadAllLines(config,ASC_STORAGE_SNAPSHOT_FILE_NAME,prior_lines);
 
+   int prior_count = 0;
+   if(prior_exists)
+     {
+      ASC_SymbolRecord prior_records[];
+      if(!ASC_Storage_ParseSnapshotLines(prior_lines,prior_records,prior_count))
+         prior_count = 0;
+     }
+
+   if(prior_exists && count < prior_count)
+      return(false);
+
    if(!ASC_Storage_WriteAllLines(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME,new_lines))
       return(false);
 
    string staged_lines[];
    if(!ASC_Storage_ReadAllLines(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME,staged_lines))
+     {
+      ASC_Storage_DeleteFile(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME);
       return(false);
+     }
 
    if(!ASC_Storage_ParseSnapshotLines(staged_lines,validation_records,validation_count) || validation_count != count)
+     {
+      ASC_Storage_DeleteFile(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME);
       return(false);
+     }
 
    if(prior_exists)
       ASC_Storage_WriteAllLines(config,ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME,prior_lines);
 
    if(ASC_Storage_WriteAllLines(config,ASC_STORAGE_SNAPSHOT_FILE_NAME,new_lines))
+     {
+      ASC_Storage_DeleteFile(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME);
       return(true);
+     }
 
    if(prior_exists)
       ASC_Storage_WriteAllLines(config,ASC_STORAGE_SNAPSHOT_FILE_NAME,prior_lines);
 
+   ASC_Storage_DeleteFile(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME);
    return(false);
   }
 

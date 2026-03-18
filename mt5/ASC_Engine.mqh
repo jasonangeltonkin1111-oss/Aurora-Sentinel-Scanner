@@ -46,45 +46,96 @@ void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
    record.ConditionsTruth.VolumeStep = 0.0;
   }
 
-void ASC_Engine_ProcessSymbols(const string &symbols[],const int discovered_count,const int max_pass)
+int ASC_Engine_FindRecordIndexBySymbol(const string symbol)
   {
-   const int bounded_count = MathMin(discovered_count,max_pass);
+   if(StringLen(symbol) == 0)
+      return(-1);
 
-   if(bounded_count <= 0)
-      return;
-
-   ArrayResize(g_asc_universe_records,bounded_count);
-   g_asc_universe_count = 0;
-
-   for(int index = 0; index < bounded_count; ++index)
+   for(int index = 0; index < g_asc_universe_count; ++index)
      {
-      ASC_SymbolRecord record;
-      ASC_Engine_ResetRecord(record);
+      if(g_asc_universe_records[index].Identity.RawSymbol == symbol)
+         return(index);
 
-      if(!ASC_Market_BuildIdentityAndTruth(symbols[index],g_asc_runtime_config,record))
-         continue;
+      if(g_asc_universe_records[index].Identity.NormalizedSymbol == symbol)
+         return(index);
 
-      if(record.MarketTruth.Exists)
-         ASC_Conditions_Load(symbols[index],record);
+      if(g_asc_universe_records[index].Identity.CanonicalSymbol == symbol)
+         return(index);
+     }
 
-      g_asc_universe_records[g_asc_universe_count] = record;
+   return(-1);
+  }
+
+int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
+  {
+   int index = ASC_Engine_FindRecordIndexBySymbol(record.Identity.RawSymbol);
+   if(index >= 0)
+      return(index);
+
+   index = ASC_Engine_FindRecordIndexBySymbol(record.Identity.NormalizedSymbol);
+   if(index >= 0)
+      return(index);
+
+   return(ASC_Engine_FindRecordIndexBySymbol(record.Identity.CanonicalSymbol));
+  }
+
+void ASC_Engine_UpsertRecord(const ASC_SymbolRecord &record)
+  {
+   int target_index = ASC_Engine_FindRecordIndex(record);
+   if(target_index < 0)
+     {
+      target_index = g_asc_universe_count;
+      ArrayResize(g_asc_universe_records,target_index + 1);
       ++g_asc_universe_count;
      }
 
-   ArrayResize(g_asc_universe_records,g_asc_universe_count);
+   g_asc_universe_records[target_index] = record;
+  }
+
+void ASC_Engine_ProcessSymbols(const string &symbols[],const int discovered_count,const int max_pass)
+  {
+   const int bounded_count = MathMin(discovered_count,max_pass);
+   if(bounded_count <= 0)
+      return;
+
+   for(int index = 0; index < bounded_count; ++index)
+     {
+      ASC_SymbolRecord built_record;
+      ASC_Engine_ResetRecord(built_record);
+
+      if(!ASC_Market_BuildIdentityAndTruth(symbols[index],g_asc_runtime_config,built_record))
+         continue;
+
+      ASC_SymbolRecord merged_record = built_record;
+      const int existing_index = ASC_Engine_FindRecordIndex(built_record);
+      if(existing_index >= 0)
+         merged_record = g_asc_universe_records[existing_index];
+
+      merged_record.Identity = built_record.Identity;
+      merged_record.MarketTruth = built_record.MarketTruth;
+
+      ASC_SymbolRecord conditions_record = merged_record;
+      if(merged_record.MarketTruth.Exists)
+        {
+         if(ASC_Conditions_Load(symbols[index],conditions_record) || existing_index < 0)
+            merged_record.ConditionsTruth = conditions_record.ConditionsTruth;
+        }
+
+      ASC_Engine_UpsertRecord(merged_record);
+     }
   }
 
 bool ASC_Engine_RunInit(ASC_RuntimeConfig &config)
   {
    g_asc_runtime_config = config;
 
-   ASC_Storage_LoadUniverseSnapshot(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
+   const bool restore_succeeded = ASC_Storage_LoadUniverseSnapshot(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
 
    string symbols[];
    if(!ASC_Market_DiscoverSymbols(symbols))
      {
       g_asc_universe_count = ArraySize(g_asc_universe_records);
-      return false;
+      return(restore_succeeded && g_asc_universe_count > 0);
      }
 
    ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerInitPass);
@@ -93,7 +144,7 @@ bool ASC_Engine_RunInit(ASC_RuntimeConfig &config)
    if(g_asc_runtime_config.UseCommonFiles)
       ASC_Output_WriteUniverseSnapshotMirror(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
 
-   return true;
+   return(true);
   }
 
 void ASC_Engine_RunTimer()
