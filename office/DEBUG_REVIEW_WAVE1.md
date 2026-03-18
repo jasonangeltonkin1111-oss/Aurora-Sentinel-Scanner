@@ -1,10 +1,10 @@
 # DEBUG REVIEW — WAVE 1
 
 ## 1. Debug Scope
-- Post-run Debug audit only.
-- Live-repo truth checked in the mandated order: office control files -> current review/hardening state -> active blueprint law -> live MT5 product files -> limited archive references.
+- Post-run Debug review only.
+- Live product state was checked against the mandated office control files, active blueprint law, current review/handoff documents, live MT5 product files, and the named archive classification references.
 - MT5 product files were inspected directly and were **not edited** in this run.
-- Target of this review: current Wave 1 MT5 implementation safety, contract alignment, restore/persistence safety, and readiness for another correction step.
+- This review specifically re-checked the previously blocked areas: compile/integration wiring, restore-first continuity, bounded-pass shrink behavior, Layer 1 vs Layer 1.2 separation, archive-backed classification translation, canonical identity / `PrimaryBucket` truth, preservation of non-eligible and unknown symbols, conditions partial-truth handling, fail-fast handling, and blueprint-vs-product alignment.
 
 ## 2. Files Inspected
 - `office/HQ_OPERATOR_MANUAL.md`
@@ -25,11 +25,11 @@
 - `office/FOUNDATION_GAP_CLOSURE_REPORT.md`
 - `office/CLERK_REVIEW_WAVE1.md`
 - `office/DEBUG_REVIEW_WAVE1.md` (prior state)
+- `office/BLUEPRINT_INTEGRITY_AUDIT.md`
 - `office/HANDOFF_ENGINE_WAVE1.md`
 - `office/HANDOFF_MARKET_WAVE1.md`
 - `office/HANDOFF_CONDITIONS_WAVE1.md`
 - `office/HANDOFF_STORAGE_OUTPUT_WAVE1.md`
-- `office/BLUEPRINT_INTEGRITY_AUDIT.md`
 - `blueprint/SYSTEM_OVERVIEW.md`
 - `blueprint/MODULE_MAP.md`
 - `blueprint/MARKET_IDENTITY_MAP.md`
@@ -53,191 +53,193 @@
 - `archives/LEGACY_SYSTEMS/AFS/AFS_CoreTypes.mqh`
 
 ## 3. Compile / Integration Findings
-- **CRITICAL — confirmed from live code**  
-  **What is wrong:** The compiled EA unit still does not include the implementation headers for Market, Conditions, Storage, or Output. `mt5/AuroraSentinel.mq5` includes only `ASC_Common.mqh` and `ASC_Engine.mqh`, while `mt5/ASC_Engine.mqh` itself includes only `ASC_Common.mqh`. The engine then calls `ASC_Market_*`, `ASC_Conditions_Load`, `ASC_Storage_*`, and `ASC_Output_*` functions that are declared in Common but not brought into the translation unit by any include chain.  
-  **Why it is wrong:** MQL compile integration requires the implementations to be included into the EA build unit; declarations alone are not sufficient for a working product compile boundary.  
-  **What breaks if left unfixed:** Compile/link boundary remains broken or likely broken; Wave 1 cannot be considered runnable.  
-  **Worker/domain to fix:** Engine domain, with shared-contract awareness from Common ownership discipline.  
-  **Blocks rerun / compile / advancement:** Yes; blocks compile and blocks Wave 1 advancement.
+- **PASS**  
+  **What is right:** The EA build unit is now wired as one compiled chain. `mt5/AuroraSentinel.mq5` includes `ASC_Common.mqh`, `ASC_Market.mqh`, `ASC_Conditions.mqh`, `ASC_Storage.mqh`, `ASC_Output.mqh`, and `ASC_Engine.mqh` directly, so the implementation headers used by Engine are present in the live translation unit.  
+  **Why it is right:** This closes the prior compile/integration blocker where declarations existed without the implementation include chain.  
+  **What breaks if left unfixed:** Previously this blocked build safety; in the current state that specific blocker is no longer present.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MINOR — confirmed from live code**  
-  **What is wrong:** `g_runtime_config` is defined in `mt5/AuroraSentinel.mq5` but not used by the engine runtime path after `ASC_Engine_RunInit` copies the values into `g_asc_runtime_config`.  
-  **Why it is wrong:** It is dead product-state surface and adds confusion at the runtime boundary.  
-  **What breaks if left unfixed:** No direct logic break, but it weakens integration clarity.  
-  **Worker/domain to fix:** Engine domain.  
-  **Blocks rerun / compile / advancement:** No.
+- **MINOR**  
+  **What is wrong:** There is still no repository-local MT5 compiler or automated compile artifact proving the code in this environment compiled end-to-end. This review could confirm wiring and syntax-consistency patterns from live source, but not execute a native MetaEditor build.  
+  **Why it is wrong:** Compile safety is materially improved, but not mechanically proven inside this container.  
+  **What breaks if left unfixed:** Nothing in source logic immediately breaks, but final signoff still relies on source inspection rather than a native MT5 compile result.  
+  **Worker/domain to fix:** Engine / verification workflow, if HQ wants a later native compile confirmation.  
+  **Blocks rerun / advancement:** No.
 
 ## 4. Layer / Contract Findings
-- **CRITICAL — confirmed from live code**  
-  **What is wrong:** Engine orchestration still destroys restored universe continuity. `ASC_Engine_ProcessSymbols` resizes `g_asc_universe_records` to the current bounded pass, sets `g_asc_universe_count = 0`, and rebuilds only the first `max_pass` discovered symbols.  
-  **Why it is wrong:** The office and blueprint law require restore first, never wipe, and gap-fill only. A bounded discovery pass may update part of the universe, but it may not replace the restored larger universe in memory before save.  
-  **What breaks if left unfixed:** Valid prior snapshot truth is routinely lost during init/timer passes; universe continuity is not trustworthy.  
-  **Worker/domain to fix:** Engine domain, coordinated with Storage domain because save semantics depend on merge behavior.  
-  **Blocks rerun / compile / advancement:** Yes; blocks safe rerun and advancement.
+- **PASS**  
+  **What is right:** Restore-first continuity now actually exists in engine flow. `ASC_Engine_RunInit` loads the universe snapshot before discovery, keeps restored records in memory, and only upserts records discovered in the current pass instead of rebuilding the array from scratch.  
+  **Why it is right:** This matches the office/blueprint law of restore first, never wipe, and gap-fill only.  
+  **What breaks if left unfixed:** This was a prior destructive continuity blocker; current live code materially resolves it.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **CRITICAL — confirmed from live code**  
-  **What is wrong:** The engine records only symbols for which `ASC_Market_BuildIdentityAndTruth` returns `true`, but that function returns `record.MarketTruth.Layer1Eligible`. Closed-session, quote-only, stale-feed, trade-disabled, or unknown-session symbols are therefore dropped from the in-memory universe instead of remaining in the Layer 1.2 snapshot with explicit state.  
-  **Why it is wrong:** Layer 1 decides eligibility; Layer 1.2 preserves broad universe truth. Snapshot law explicitly forbids dropping symbols merely because some session/spec fields are unavailable or the symbol is not currently eligible.  
-  **What breaks if left unfixed:** The supposed universe snapshot becomes an open-tradable subset, collapsing Layer 1 and Layer 1.2 into a destructive filter.  
-  **Worker/domain to fix:** Engine + Market domains.  
-  **Blocks rerun / compile / advancement:** Yes; blocks contract-aligned Wave 1 behavior.
+- **PASS**  
+  **What is right:** Layer 1 and Layer 1.2 are no longer collapsed together. `ASC_Market_BuildIdentityAndTruth` now returns `true` for discoverable symbols even when market truth is closed, quote-only, stale, trade-disabled, or unreadable, and Engine upserts those records into the snapshot.  
+  **Why it is right:** Layer 1 eligibility remains explicit in `SessionTruthStatus` / `Layer1Eligible`, while Layer 1.2 still preserves the symbol in the universe snapshot.  
+  **What breaks if left unfixed:** This used to drop non-eligible symbols; the current code now preserves them.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MAJOR — confirmed from live code**  
-  **What is wrong:** `ASC_Engine_RunInit` returns `false` whenever discovery fails, even if a prior snapshot was successfully restored at startup.  
-  **Why it is wrong:** Restore-first continuity exists specifically to keep the product alive when broker discovery is temporarily unavailable.  
-  **What breaks if left unfixed:** Temporary broker discovery failure forces init failure instead of degraded continuity from restored truth.  
-  **Worker/domain to fix:** Engine domain.  
-  **Blocks rerun / compile / advancement:** Blocks safe rerun behavior; not the only blocker, but still material.
+- **MINOR**  
+  **What is wrong:** `NextRecheckTime` is still a simple bounded timer offset for all non-open outcomes instead of a more state-specific recheck schedule.  
+  **Why it is wrong:** The blueprint prefers more specific recheck behavior for closed-session vs stale-feed vs trade-disabled states.  
+  **What breaks if left unfixed:** Recheck behavior is conservative but coarse; it does not presently violate the first-slice safety floor, yet it is less expressive than the blueprint’s fuller Layer 1 recheck intent.  
+  **Worker/domain to fix:** Market domain.  
+  **Blocks rerun / advancement:** No.
 
 ## 5. Market / Classification Findings
-- **CRITICAL — confirmed from live code**  
-  **What is wrong:** Market classification translation is still not implemented in live product code. `ASC_Market_BuildIdentityAndTruth` hardcodes normalized symbol as canonical symbol, leaves `AssetClass`, `PrimaryBucket`, `Sector`, `Industry`, and `Theme` as `"UNKNOWN"`, and writes `ClassificationReason = "classification unresolved: archive translation not loaded"` for every symbol.  
-  **Why it is wrong:** Active blueprint law says Market owns archive-classification translation and `PrimaryBucket` truth. Unresolved classification may remain explicit when genuinely unresolved, but the active product cannot treat the entire universe as unresolved because the translation layer was never connected.  
-  **What breaks if left unfixed:** `PrimaryBucket` truth is absent across the universe, downstream ranking/summary cannot be trusted, and the live product materially lags the hardened blueprint.  
-  **Worker/domain to fix:** Market domain.  
-  **Blocks rerun / compile / advancement:** Yes; blocks Wave 1 readiness because classification ownership remains materially unimplemented.
+- **PASS**  
+  **What is right:** Archive-backed classification translation is now active in live product code. `ASC_Market.mqh` embeds archive-derived classification rows, normalizes broker symbols, resolves server-specific matches first, falls back to cross-server symbol matches when needed, and applies translated `CanonicalSymbol`, `AssetClass`, `PrimaryBucket`, `Sector`, `Industry`, and `Theme` into live identity truth.  
+  **Why it is right:** This materially satisfies the blueprint rule that Market owns archive translation and `PrimaryBucket` truth.  
+  **What breaks if left unfixed:** This was a prior advancement blocker; it is materially resolved in the current live state.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **PASS — confirmed from live code**  
-  **What is right:** Layer 1 eligibility is no longer falsified by unresolved classification. `Layer1Eligible` is derived from session-truth status only, not `ClassificationResolved`.  
-  **Why it matters:** This matches the hardened blueprint rule that unresolved classification must stay explicit but must not itself falsify open-market truth.  
-  **Worker/domain:** No immediate fix required.  
-  **Blocks rerun / compile / advancement:** No.
+- **PASS**  
+  **What is right:** Canonical identity and `PrimaryBucket` now have meaningful truth when translation exists, while unresolved cases remain explicit as `UNKNOWN` with a clear unresolved reason.  
+  **Why it is right:** This matches the blueprint requirement that unresolved classification stay explicit only when genuine and that downstream layers must not invent replacement buckets.  
+  **What breaks if left unfixed:** The prior “everything unresolved” state is no longer true in live product code.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MAJOR — confirmed from live code**  
-  **What is wrong:** `ASC_Market_BuildIdentityAndTruth` returns `false` for empty symbols, non-existent symbols, unreadable session/property state, and any non-open outcome. That return value is being used by Engine as an inclusion gate rather than a narrow function-success indicator.  
-  **Why it is wrong:** Market correctly populates explicit ineligible reasons and session states, but the return contract is too aggressive for Layer 1.2 consumption because it converts many explicit outcomes into dropped records.  
-  **What breaks if left unfixed:** Explicit unknown/closed/ineligible market truth never reaches the snapshot for many symbols.  
-  **Worker/domain to fix:** Market domain, with Engine call-site correction.  
-  **Blocks rerun / compile / advancement:** Yes, because it contributes directly to destructive shrink behavior.
+- **PASS**  
+  **What is right:** Non-eligible and unknown symbols are preserved instead of filtered away. Market writes explicit `SessionTruthStatus` and `IneligibleReason`, while Engine retains those records in the universe snapshot.  
+  **Why it is right:** This restores truthful Layer 1.2 preservation behavior for visibility-only symbols and unknown-state symbols.  
+  **What breaks if left unfixed:** This was previously a direct layer-separation blocker; in the current state it is resolved.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MINOR — confirmed from live code**  
-  **What is wrong:** `TradeAllowed` is treated as `SYMBOL_TRADE_MODE_FULL` only. Other broker trade modes are collapsed into disabled for current logic.  
-  **Why it is wrong:** This may be intentionally conservative for Wave 1, but the contract meaning should be explicit because MT5 trade-mode semantics can be broader than one exact full-trade mode.  
-  **What breaks if left unfixed:** Potential over-conservative eligibility classification on some brokers.  
-  **Worker/domain to fix:** Market domain.  
-  **Blocks rerun / compile / advancement:** Not by itself.
+- **MINOR**  
+  **What is wrong:** `ClassificationResolved` is currently treated as true when either asset class, primary bucket, or canonical translation meaningfully differs from the normalized symbol. That is workable for Wave 1, but it still compresses “partially translated identity” and “fully translated identity” into one boolean.  
+  **Why it is wrong:** The blueprint tolerates explicit unresolved/unknown handling, but a single boolean cannot express partial-vs-full classification quality if later layers need that distinction.  
+  **What breaks if left unfixed:** No immediate Wave 1 contract break; it is mainly a future fidelity limitation.  
+  **Worker/domain to fix:** Market / shared Common contract if later granularity is required.  
+  **Blocks rerun / advancement:** No.
 
 ## 6. Conditions Findings
-- **PASS — confirmed from live code**  
-  **What is right:** Conditions reset uses explicit invalid sentinels (`-1`, `-1.0`) instead of fake valid zeros for unreadable state.  
-  **Why it matters:** This aligns with the fail-fast/no-fake-values rule better than the prior all-zero reset pattern.  
-  **Worker/domain:** No immediate fix required.  
-  **Blocks rerun / compile / advancement:** No.
+- **PASS**  
+  **What is right:** Conditions no longer discard readable fields just because one sibling field failed. Each spec field is read independently and applied independently into the record, so partial truth is now preserved in memory and in storage.  
+  **Why it is right:** This materially resolves the earlier all-or-nothing conditions-truth blocker and aligns with the fail-fast rule to preserve readable truth while marking unreadable/invalid truth explicitly.  
+  **What breaks if left unfixed:** The prior “partial read collapses to full reset sentinel” behavior is no longer the live product behavior.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MAJOR — confirmed from live code**  
-  **What is wrong:** Conditions still preserve truth as an all-or-nothing block. The code copies broker spec fields into the record only inside `if(all_readable)`, so if any one read fails then every otherwise-readable field stays at the reset sentinels.  
-  **Why it is wrong:** Fail-fast law requires explicit unknown/unreadable handling, not silent destruction of readable partial truth. Snapshot law also says do not drop or falsify available fields just because others are unavailable.  
-  **What breaks if left unfixed:** Conditions truth is understated and the snapshot cannot distinguish partially readable specs from totally unreadable specs.  
-  **Worker/domain to fix:** Conditions domain.  
-  **Blocks rerun / compile / advancement:** Yes for contract alignment; not a compile blocker, but still a required logic fix.
+- **PASS**  
+  **What is right:** Unreadable and invalid states are handled more truthfully. Read failures append explicit unreadable reasons; validation failures append explicit invalid reasons; reset sentinels remain explicit invalid markers rather than fake zeros.  
+  **Why it is right:** This materially improves fail-fast honesty and avoids fake values.  
+  **What breaks if left unfixed:** The prior conditions-truth distortion is materially reduced.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MAJOR — confirmed from live code**  
-  **What is wrong:** `SpecsReadable` conflates unreadable fields with readable-but-invalid values into one final boolean and one concatenated reason string. There is no per-field validity/readability surface.  
-  **Why it is wrong:** The blueprint requires explicit handling of unknown vs invalid vs usable truth. The current shape preserves only a collapsed final status.  
-  **What breaks if left unfixed:** Downstream consumers cannot tell whether a field was unreadable, structurally invalid, or simply absent.  
-  **Worker/domain to fix:** Conditions domain, potentially with Common contract coordination if field-level markers are needed.  
-  **Blocks rerun / compile / advancement:** Material logic blocker for truthful Wave 1 conditions handling.
+- **MINOR**  
+  **What is wrong:** `SpecsReadable` still means “every requested field was readable,” not “some meaningful conditions truth exists,” and `SpecsReason` collapses unreadable and invalid details into one aggregate string.  
+  **Why it is wrong:** The snapshot is now materially more truthful internally, but the contract surface still does not expose per-field readability/validity flags.  
+  **What breaks if left unfixed:** Downstream consumers and mirror output cannot perfectly distinguish partial readability from fully unreadable state using only the current summary fields.  
+  **Worker/domain to fix:** Conditions / shared Common contract.  
+  **Blocks rerun / advancement:** No.
 
 ## 7. Storage / Restore / Atomicity Findings
-- **CRITICAL — confirmed from live code**  
-  **What is wrong:** `ASC_Storage_SaveUniverseSnapshot` will save any non-negative `count`, including a bounded partial subset smaller than a previously valid full snapshot. There is no conservative guard against non-zero shrink replacement.  
-  **Why it is wrong:** Hardened snapshot law explicitly forbids bounded/partial refresh overwrites of a previously larger valid universe unless completeness is intentionally verified.  
-  **What breaks if left unfixed:** A normal timer pass can atomically replace a good large universe snapshot with a smaller partial subset, silently destroying continuity while still appearing structurally valid.  
-  **Worker/domain to fix:** Storage domain, but only together with Engine merge semantics.  
-  **Blocks rerun / compile / advancement:** Yes; this is a direct FAIL condition.
+- **PASS**  
+  **What is right:** Storage now supports restore-first continuity safely enough for Wave 1. Load prefers the primary snapshot, falls back to backup if needed, and save validates serialized lines before promotion. Engine restores before discovery and preserves those restored records in memory during bounded update passes.  
+  **Why it is right:** This materially aligns with the restore-first / gap-fill continuity requirement for the universe snapshot layer.  
+  **What breaks if left unfixed:** The prior restore-destructive behavior is no longer present in the live product path.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MAJOR — confirmed from live code**  
-  **What is wrong:** Storage temp/backup flow validates structure before promotion, but it does not clean up or roll back the temp file when staged validation fails after temp write.  
-  **Why it is wrong:** This does not break the active snapshot immediately, but it weakens operational hygiene and leaves stale temp artifacts behind.  
-  **What breaks if left unfixed:** Confusing stale temp state; lower operational clarity during recovery/debug.  
+- **PASS**  
+  **What is right:** Smaller bounded refreshes are now blocked from replacing a larger previously valid universe snapshot. `ASC_Storage_SaveUniverseSnapshot` compares the new count to the prior parsed count and refuses a shrink replacement when the new count is smaller.  
+  **Why it is right:** This directly addresses the blueprint rule that a bounded or partial refresh must not overwrite a larger valid universe snapshot unless full replacement is intentionally verified.  
+  **What breaks if left unfixed:** This was a direct persistence blocker; in current live code it is resolved.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
+
+- **MINOR**  
+  **What is wrong:** Universe-snapshot promotion is structurally conservative, but it is not a fully atomic rename-based swap. The module writes temp and backup files, validates staged content, then rewrites the active file rather than performing a true filesystem-atomic replace.  
+  **Why it is wrong:** The blueprint’s strict atomic write law is primarily for active rolling dossier persistence, and Layer 1.2 allows simpler writes; still, the current pattern is “conservative staged rewrite” rather than literal atomic replacement.  
+  **What breaks if left unfixed:** This does not look like a Wave 1 blocker for the snapshot layer, but it remains a lower-grade durability risk under abnormal write interruption.  
   **Worker/domain to fix:** Storage domain.  
-  **Blocks rerun / compile / advancement:** No, not by itself.
-
-- **PASS — confirmed from live code**  
-  **What is right:** Load prefers the active snapshot first and falls back to the backup snapshot only if the primary cannot be parsed. Save also validates staged content before attempting promotion.  
-  **Why it matters:** The storage module itself is directionally conservative; the larger restore-first break is caused by orchestration and shrink acceptance, not by primary/backup ordering.  
-  **Worker/domain:** No immediate fix required on this specific point.  
-  **Blocks rerun / compile / advancement:** No.
+  **Blocks rerun / advancement:** No.
 
 ## 8. Output / Writer-Boundary Findings
-- **PASS — confirmed from live code**  
-  **What is right:** `ASC_Output.mqh` formats fields already present on the record and does not compute classification, ranking, or bucket replacement logic.  
-  **Why it matters:** Writer purity is preserved in the current output implementation.  
-  **Worker/domain:** No immediate fix required.  
-  **Blocks rerun / compile / advancement:** No.
+- **PASS**  
+  **What is right:** Writers still do not compute. `ASC_Output.mqh` formats and persists already-populated record fields only; it does not invent classification, eligibility, or ranking truth.  
+  **Why it is right:** This preserves the writer boundary required by the blueprint and office law.  
+  **What breaks if left unfixed:** No active writer-side logic contamination was found.  
+  **Worker/domain to fix:** None.  
+  **Blocks rerun / advancement:** No.
 
-- **MINOR — confirmed from live code**  
-  **What is wrong:** The only current published file is `UniverseSnapshotMirror.txt`, which is a verification-style artifact rather than the canonical broker summary/symbol outputs described in README and later-layer contracts.  
-  **Why it is wrong:** This is acceptable only as an incomplete Wave 1 internal verification artifact, not as evidence that the product has reached canonical summary/dossier publication.  
-  **What breaks if left unfixed:** Progress reporting can overstate milestone completeness.  
-  **Worker/domain to fix:** Storage + Output domain, but not before current Wave 1 blockers are resolved.  
-  **Blocks rerun / compile / advancement:** Not by itself.
+- **MINOR**  
+  **What is wrong:** The mirror output still gates all floating-point conditions fields behind the single `SpecsReadable` boolean. When some fields were readable and preserved but not all fields were readable, the mirror prints `UNKNOWN` for every gated float field even though partial truth exists in the record and serialized snapshot.  
+  **Why it is wrong:** This is an output-surface fidelity loss, not a storage/logic loss. It understates partial conditions truth in the verification mirror.  
+  **What breaks if left unfixed:** Operators reading only the mirror may believe conditions truth is more absent than it really is.  
+  **Worker/domain to fix:** Storage + Output / Conditions contract coordination.  
+  **Blocks rerun / advancement:** No.
 
-- **PASS — confirmed from live code**  
-  **What is right:** Product-facing mirror labels use domain language and do not leak worker/task/debug wording.  
-  **Why it matters:** The product-language boundary is currently respected in the visible mirror surface.  
-  **Worker/domain:** No immediate fix required.  
-  **Blocks rerun / compile / advancement:** No.
+- **MINOR**  
+  **What is wrong:** The only current publication surface is still `UniverseSnapshotMirror.txt`, not the later canonical broker summary and symbol outputs.  
+  **Why it is wrong:** This is acceptable for the current Wave 1 hardening loop, but it is not evidence that later summary/dossier publication milestones are complete.  
+  **What breaks if left unfixed:** Nothing for the current decision about exiting the present fix loop, but HQ should not misread this as Layer 2 publication completion.  
+  **Worker/domain to fix:** Storage + Output domain in a later bounded slice.  
+  **Blocks rerun / advancement:** No.
 
 ## 9. Blueprint vs Product Mismatches
-- **CRITICAL — confirmed from live code**  
-  **Mismatch:** Blueprint/office law says restore first, never wipe, gap-fill only, and preserve prior valid universe truth unless replacement completeness is verified. Live Engine + Storage behavior still allows bounded-pass rebuild and smaller replacement saves.  
-  **Why it matters:** This is a direct contradiction of hardened persistence and Layer 1.2 law.  
-  **What breaks:** Universe continuity and trustworthy recovery.  
-  **Worker/domain to fix:** Engine + Storage.  
-  **Blocks rerun / compile / advancement:** Yes.
+- **MINOR**  
+  **Mismatch:** Layer 1 recheck behavior is still generic rather than differentiated by closure/quote-only/stale/disabled state.  
+  **Why it matters:** The blueprint describes more state-specific recheck intent.  
+  **What breaks:** Mainly efficiency and semantic precision, not current truth safety.  
+  **Worker/domain to fix:** Market domain.  
+  **Blocks rerun / advancement:** No.
 
-- **CRITICAL — confirmed from live code**  
-  **Mismatch:** Blueprint says Layer 1.2 captures the full broker universe with explicit unknown/missing markers. Live product stores only records that passed the Market function’s success/eligibility gate.  
-  **Why it matters:** The product is still behaving like a filtered shortlist precursor rather than a broad universe snapshot.  
-  **What breaks:** Layer separation and snapshot contract meaning.  
-  **Worker/domain to fix:** Engine + Market.  
-  **Blocks rerun / compile / advancement:** Yes.
+- **MINOR**  
+  **Mismatch:** Conditions truth preservation is materially improved, but the current contract surface still exposes one aggregate readability boolean and one aggregate reason string rather than per-field truth flags.  
+  **Why it matters:** This leaves some blueprint-level fail-fast granularity unexpressed in the current first-slice record schema.  
+  **What breaks:** Partial-truth interpretation is less precise for downstream consumers and mirror readers.  
+  **Worker/domain to fix:** Conditions / Common.  
+  **Blocks rerun / advancement:** No.
 
-- **CRITICAL — confirmed from live code**  
-  **Mismatch:** Blueprint and office law say Market owns archive-classification translation and `PrimaryBucket` truth. Live Market code still leaves the entire active universe unresolved because archive translation is not loaded.  
-  **Why it matters:** The hardened blueprint is now stronger than the product; live code still materially lags that law.  
-  **What breaks:** Classification-aware product identity and future summary/ranking continuity.  
-  **Worker/domain to fix:** Market.  
-  **Blocks rerun / compile / advancement:** Yes.
-
-- **MAJOR — confirmed from live code**  
-  **Mismatch:** Fail-fast law distinguishes unknown, invalid, and unusable truth, but current Conditions implementation collapses partial reads into full sentinel fallback.  
-  **Why it matters:** Truth granularity is lost.  
-  **What breaks:** Contract-aligned conditions persistence and downstream interpretability.  
-  **Worker/domain to fix:** Conditions.  
-  **Blocks rerun / compile / advancement:** Yes for Wave 1 correctness.
+- **MINOR**  
+  **Mismatch:** Universe snapshot saving is conservative and validated, but not a true atomic replace operation.  
+  **Why it matters:** The blueprint’s strictest atomicity language applies most strongly to active rolling dossier persistence; Layer 1.2 permits simpler writes, so this is not a direct contradiction severe enough to block advancement.  
+  **What breaks:** Only abnormal interruption durability remains less-than-ideal.  
+  **Worker/domain to fix:** Storage domain.  
+  **Blocks rerun / advancement:** No.
 
 ## 10. Critical Risks
-1. **Compile boundary risk remains open.** The EA still appears unable to compile as a fully wired unit until implementation headers are actually included.
-2. **Restore-first law is still violated in practice.** Restored snapshot truth is overwritten by bounded-pass in-memory rebuilds.
-3. **Bounded snapshot shrink is still possible.** A smaller partial pass can replace a larger valid prior universe snapshot.
-4. **Layer 1.2 is still not a full universe snapshot.** Non-eligible or partially unreadable symbols are dropped instead of preserved explicitly.
-5. **Classification ownership is still materially unimplemented.** Market does not yet load archive translation into active product code.
-6. **Conditions truth still loses readable partial fields.** This weakens fail-fast and snapshot fidelity.
+1. No live source-level CRITICAL blocker remains in the Wave 1 fix targets that were explicitly assigned for this post-fix review.
+2. The main residual risks are second-order fidelity and durability issues, not core logic-collapse issues:
+   - mirror output understates partial conditions truth;
+   - conditions contract surface is still aggregate rather than per-field;
+   - Layer 1 recheck scheduling is coarse;
+   - snapshot persistence is conservative but not a literal atomic replace.
+3. A native MT5 compile was not executable in this container, so source inspection—not a MetaEditor build artifact—supports the compile safety judgment.
 
 ## 11. Required Fix Targets
-1. **Engine / CRITICAL / blocks compile:** Wire the live EA include chain so Market, Conditions, Storage, and Output implementations are part of the compiled unit.
-2. **Engine + Storage / CRITICAL / blocks rerun:** Rework restore-first runtime behavior so restored universe records are retained and updated incrementally; do not rebuild the whole in-memory universe from the bounded current pass.
-3. **Engine + Market / CRITICAL / blocks advancement:** Separate “record construction succeeded” from “symbol is currently Layer-1-eligible” so Layer 1.2 can preserve non-eligible, unknown, and closed symbols explicitly.
-4. **Storage / CRITICAL / blocks rerun:** Add conservative protection against non-zero partial shrink overwrites of a previously larger valid universe snapshot unless completeness is explicitly verified.
-5. **Market / CRITICAL / blocks advancement:** Implement active archive classification translation so Market owns real canonical identity and `PrimaryBucket` truth instead of leaving the whole universe unresolved.
-6. **Conditions / MAJOR / blocks advancement:** Preserve readable spec fields even when other fields fail, and keep unreadable vs invalid state explicit rather than collapsing everything into reset sentinels.
-7. **Engine / MAJOR / blocks safe continuity:** Allow startup to continue from restored snapshot truth when broker discovery fails transiently after a valid restore.
+1. **Storage + Output / MINOR / non-blocking:** Make mirror rendering reflect preserved partial conditions truth per field instead of hiding all float fields behind the aggregate `SpecsReadable` flag.
+2. **Conditions + Common / MINOR / non-blocking:** If later layers need stronger fail-fast introspection, extend the contract to preserve per-field readability/validity markers instead of only `SpecsReadable` plus `SpecsReason`.
+3. **Market / MINOR / non-blocking:** Refine `NextRecheckTime` policy by session truth subtype when HQ schedules the next bounded Market hardening slice.
+4. **Storage / MINOR / non-blocking:** Consider a stronger replace strategy for universe-snapshot writes if HQ wants higher interruption durability before later persistence layers expand.
 
 ## 12. Explicit Non-Findings
-- I did **not** find writer-side ranking, bucket invention, or score computation in `mt5/ASC_Output.mqh`.
-- I did **not** find worker/task/debug wording leaking into the visible output mirror labels.
-- I did **not** find unresolved classification being used directly to falsify `Layer1Eligible` in the current Market code.
-- I did **not** find any active Layer 3 rolling dossier implementation in the current MT5 Wave 1 slice.
-- I did **not** edit MT5 product files during this debug run.
+- I did **not** find the prior compile/include-chain blocker still present in the live EA build unit.
+- I did **not** find the prior restore-destructive in-memory rebuild behavior still present in Engine.
+- I did **not** find the prior bounded-pass shrink overwrite still allowed in Storage.
+- I did **not** find the prior “all symbols unresolved” classification state still present in Market.
+- I did **not** find unresolved classification being used to falsify Layer 1 eligibility.
+- I did **not** find writer-side bucket computation, ranking computation, or fake-value invention in Output.
+- I did **not** find worker/task/debug wording leaking into the inspected MT5 output surface.
+- I did **not** edit MT5 product files during this Debug run.
 
 ## 13. Debug Verdict
-**FAIL — FIX WAVE REQUIRED**
+**PASS WITH NON-BLOCKING FIXES**
 
 Reason:
-- compile/integration is still broken or likely broken due to missing implementation include wiring;
-- restore-first law is still violated by bounded-pass in-memory rebuild behavior;
-- bounded snapshot processing can still destroy prior valid universe truth;
-- Layer 1.2 snapshot behavior is still contract-broken because non-eligible/unreadable symbols are dropped;
-- live Market code still materially lags the active blueprint by not loading archive classification translation into product truth.
+- compile/integration wiring is now source-level safe;
+- restore-first continuity is materially active;
+- bounded-pass shrink replacement is guarded;
+- Layer 1 vs Layer 1.2 separation is materially restored;
+- archive-backed classification translation and `PrimaryBucket` truth are materially active;
+- non-eligible / unknown symbols are preserved explicitly;
+- conditions partial truth is materially preserved;
+- remaining issues are secondary fidelity/durability cleanups rather than advancement blockers.
