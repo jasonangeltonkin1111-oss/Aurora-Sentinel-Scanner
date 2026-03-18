@@ -8,6 +8,7 @@
 #define ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.bak"
 #define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V1"
 #define ASC_STORAGE_RECORD_FIELD_COUNT 33
+#define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
   {
@@ -247,6 +248,23 @@ bool ASC_Storage_ParseSnapshotLines(const string &lines[],ASC_SymbolRecord &reco
    return(true);
   }
 
+
+int ASC_Storage_ReadSnapshotRecordCount(const string &lines[])
+  {
+   const int line_count = ArraySize(lines);
+   if(line_count < 2)
+      return(ASC_STORAGE_COUNT_UNKNOWN);
+
+   if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER)
+      return(ASC_STORAGE_COUNT_UNKNOWN);
+
+   const int expected_count = (int)StringToInteger(lines[1]);
+   if(expected_count < 0 || line_count != expected_count + 2)
+      return(ASC_STORAGE_COUNT_UNKNOWN);
+
+   return(expected_count);
+  }
+
 bool ASC_Storage_LoadSnapshotFromFile(const ASC_RuntimeConfig &config,const string file_name,ASC_SymbolRecord &records[],int &count)
   {
    string lines[];
@@ -308,15 +326,19 @@ bool ASC_Storage_SaveUniverseSnapshot(const ASC_RuntimeConfig &config,const ASC_
    string prior_lines[];
    const bool prior_exists = ASC_Storage_ReadAllLines(config,ASC_STORAGE_SNAPSHOT_FILE_NAME,prior_lines);
 
-   int prior_count = 0;
+   int largest_prior_count = ASC_STORAGE_COUNT_UNKNOWN;
    if(prior_exists)
+      largest_prior_count = ASC_Storage_ReadSnapshotRecordCount(prior_lines);
+
+   string backup_lines[];
+   if(ASC_Storage_ReadAllLines(config,ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME,backup_lines))
      {
-      ASC_SymbolRecord prior_records[];
-      if(!ASC_Storage_ParseSnapshotLines(prior_lines,prior_records,prior_count))
-         prior_count = 0;
+      const int backup_count = ASC_Storage_ReadSnapshotRecordCount(backup_lines);
+      if(backup_count > largest_prior_count)
+         largest_prior_count = backup_count;
      }
 
-   if(prior_exists && count < prior_count)
+   if(largest_prior_count != ASC_STORAGE_COUNT_UNKNOWN && count < largest_prior_count)
       return(false);
 
    if(!ASC_Storage_WriteAllLines(config,ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME,new_lines))
