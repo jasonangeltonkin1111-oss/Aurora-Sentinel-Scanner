@@ -2426,11 +2426,11 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    }
 
    if(!quote_time_ok && !tick_evidence.HasTimestamp)
-      AppendReason(read_reason, "no broker quote timestamp");
+      ASC_Market_Internal::AppendReason(read_reason, "no broker quote timestamp");
    if(StringLen(quote_probe.Issue) > 0)
-      AppendReason(read_reason, quote_probe.Issue);
+      ASC_Market_Internal::AppendReason(read_reason, quote_probe.Issue);
    if(StringLen(trade_probe.Issue) > 0)
-      AppendReason(read_reason, trade_probe.Issue);
+      ASC_Market_Internal::AppendReason(read_reason, trade_probe.Issue);
 
    string ineligible_reason = "";
    record.MarketTruth.SessionTruthStatus = ASC_Market_Internal::ResolveSessionStatus(config,
