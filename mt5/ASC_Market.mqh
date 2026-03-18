@@ -1998,6 +1998,23 @@ namespace ASC_Market_Internal
       return true;
    }
 
+   struct SessionWindowProbe
+   {
+      bool Readable;
+      bool HasData;
+      bool IsOpen;
+      string Issue;
+   };
+
+   struct TickEvidence
+   {
+      bool Readable;
+      bool HasQuote;
+      bool HasTimestamp;
+      datetime QuoteTime;
+      int AgeSeconds;
+   };
+
    bool LoadTickTime(const string symbol, datetime &last_quote_time, string &reason)
    {
       long raw_time = 0;
@@ -2010,6 +2027,63 @@ namespace ASC_Market_Internal
 
       last_quote_time = (datetime)raw_time;
       return true;
+   }
+
+   void LoadTickEvidence(const string symbol,
+                         const datetime current_time,
+                         TickEvidence &evidence)
+   {
+      evidence.Readable     = false;
+      evidence.HasQuote     = false;
+      evidence.HasTimestamp = false;
+      evidence.QuoteTime    = 0;
+      evidence.AgeSeconds   = -1;
+
+      MqlTick tick;
+      if(!SymbolInfoTick(symbol, tick))
+         return;
+
+      evidence.Readable     = true;
+      evidence.HasTimestamp = ((datetime)tick.time > 0);
+      evidence.QuoteTime    = (datetime)tick.time;
+      evidence.HasQuote     = (evidence.HasTimestamp && tick.bid > 0.0 && tick.ask > 0.0 && tick.ask >= tick.bid);
+
+      if(evidence.HasTimestamp)
+         evidence.AgeSeconds = (int)MathMax(0, (long)(current_time - evidence.QuoteTime));
+   }
+
+   bool HasSessionReference(const string symbol)
+   {
+      ResetLastError();
+      const double session_open = SymbolInfoDouble(symbol, SYMBOL_SESSION_OPEN);
+      const bool open_ok = (GetLastError() == 0);
+
+      ResetLastError();
+      const double session_close = SymbolInfoDouble(symbol, SYMBOL_SESSION_CLOSE);
+      const bool close_ok = (GetLastError() == 0);
+
+      ResetLastError();
+      const double bid_high = SymbolInfoDouble(symbol, SYMBOL_BIDHIGH);
+      const bool bid_high_ok = (GetLastError() == 0);
+
+      ResetLastError();
+      const double bid_low = SymbolInfoDouble(symbol, SYMBOL_BIDLOW);
+      const bool bid_low_ok = (GetLastError() == 0);
+
+      ResetLastError();
+      const double ask_high = SymbolInfoDouble(symbol, SYMBOL_ASKHIGH);
+      const bool ask_high_ok = (GetLastError() == 0);
+
+      ResetLastError();
+      const double ask_low = SymbolInfoDouble(symbol, SYMBOL_ASKLOW);
+      const bool ask_low_ok = (GetLastError() == 0);
+
+      return ((open_ok && session_open > 0.0) ||
+              (close_ok && session_close > 0.0) ||
+              (bid_high_ok && bid_high > 0.0) ||
+              (bid_low_ok && bid_low > 0.0) ||
+              (ask_high_ok && ask_high > 0.0) ||
+              (ask_low_ok && ask_low > 0.0));
    }
 
    datetime CurrentServerTime()
@@ -2041,75 +2115,68 @@ namespace ASC_Market_Internal
       return (now_seconds >= from_seconds || now_seconds < to_seconds);
    }
 
-   bool SessionWindowOpen(const string symbol,
-                          const bool quote_window,
-                          bool &is_open,
-                          string &reason)
+   void ProbeSessionWindow(const string symbol,
+                           const bool quote_window,
+                           SessionWindowProbe &probe)
    {
+      probe.Readable = true;
+      probe.HasData  = false;
+      probe.IsOpen   = false;
+      probe.Issue    = "";
+
       datetime current_time = CurrentServerTime();
       const int now_seconds = SecondsOfDay(current_time);
       MqlDateTime current_time_struct;
       TimeToStruct(current_time, current_time_struct);
       const ENUM_DAY_OF_WEEK day = (ENUM_DAY_OF_WEEK)current_time_struct.day_of_week;
 
-      is_open = false;
-      bool any_session_data = false;
-
       for(uint session_index = 0; session_index < 16; ++session_index)
       {
          datetime from_time = 0;
          datetime to_time   = 0;
-         bool ok = quote_window
-                   ? SymbolInfoSessionQuote(symbol, day, session_index, from_time, to_time)
-                   : SymbolInfoSessionTrade(symbol, day, session_index, from_time, to_time);
+         const bool ok = quote_window
+                         ? SymbolInfoSessionQuote(symbol, day, session_index, from_time, to_time)
+                         : SymbolInfoSessionTrade(symbol, day, session_index, from_time, to_time);
 
          if(!ok)
          {
             if(session_index == 0)
             {
-               AppendReason(reason, quote_window ? "quote_session unreadable" : "trade_session unreadable");
-               return false;
+               probe.Readable = false;
+               probe.Issue = quote_window ? "quote_session missing_or_unreadable" : "trade_session missing_or_unreadable";
             }
             break;
          }
 
-         any_session_data = true;
+         probe.HasData = true;
          if(IsWithinSessionRange(now_seconds, from_time, to_time))
          {
-            is_open = true;
-            return true;
+            probe.IsOpen = true;
+            return;
          }
       }
 
-      if(!any_session_data)
-      {
-         AppendReason(reason, quote_window ? "quote_session missing" : "trade_session missing");
-         return false;
-      }
-
-      return true;
+      if(!probe.HasData && StringLen(probe.Issue) == 0)
+         probe.Issue = quote_window ? "quote_session missing" : "trade_session missing";
    }
 
    ASC_SessionTruthStatus ResolveSessionStatus(const ASC_RuntimeConfig &config,
-                                               const bool quote_window_open,
-                                               const bool trade_window_open,
+                                               const SessionWindowProbe &quote_probe,
+                                               const SessionWindowProbe &trade_probe,
                                                const bool trade_allowed,
                                                const datetime last_quote_time,
+                                               const TickEvidence &tick_evidence,
+                                               const bool has_session_reference,
                                                string &ineligible_reason)
    {
-      const datetime current_time = CurrentServerTime();
-
-      if(last_quote_time <= 0)
-      {
-         ineligible_reason = "no quote timestamp";
-         return ASC_SESSION_NO_QUOTE;
-      }
-
-      if(config.StaleFeedSeconds > 0 && (current_time - last_quote_time) > config.StaleFeedSeconds)
-      {
-         ineligible_reason = "stale feed";
-         return ASC_SESSION_STALE_FEED;
-      }
+      const bool have_quote_timestamp = (last_quote_time > 0 || tick_evidence.HasTimestamp);
+      const datetime effective_quote_time = (tick_evidence.HasTimestamp ? tick_evidence.QuoteTime : last_quote_time);
+      const bool stale_quote = (have_quote_timestamp && config.StaleFeedSeconds > 0 && (CurrentServerTime() - effective_quote_time) > config.StaleFeedSeconds);
+      const bool fresh_live_quote = (tick_evidence.HasQuote && !stale_quote);
+      const bool explicit_session_open = (quote_probe.HasData && quote_probe.IsOpen && trade_probe.HasData && trade_probe.IsOpen);
+      const bool explicit_quote_only = (quote_probe.HasData && quote_probe.IsOpen && trade_probe.HasData && !trade_probe.IsOpen);
+      const bool explicit_session_closed = (quote_probe.HasData && !quote_probe.IsOpen && trade_probe.HasData && !trade_probe.IsOpen);
+      const bool session_truth_missing = (!quote_probe.HasData || !trade_probe.HasData);
 
       if(!trade_allowed)
       {
@@ -2117,20 +2184,101 @@ namespace ASC_Market_Internal
          return ASC_SESSION_TRADE_DISABLED;
       }
 
-      if(quote_window_open && trade_window_open)
+      if(explicit_session_open)
       {
-         ineligible_reason = "";
-         return ASC_SESSION_OPEN_TRADABLE;
+         if(fresh_live_quote)
+         {
+            ineligible_reason = "";
+            return ASC_SESSION_OPEN_TRADABLE;
+         }
+
+         if(have_quote_timestamp && stale_quote)
+         {
+            ineligible_reason = "stale feed during open session";
+            return ASC_SESSION_STALE_FEED;
+         }
+
+         ineligible_reason = "open session but no usable quote";
+         return ASC_SESSION_NO_QUOTE;
       }
 
-      if(quote_window_open)
+      if(explicit_quote_only)
       {
-         ineligible_reason = "quote window open but trade window closed";
+         if(fresh_live_quote)
+            ineligible_reason = "quote window open but trade window closed";
+         else if(have_quote_timestamp && stale_quote)
+            ineligible_reason = "quote window open but feed stale and trade window closed";
+         else
+            ineligible_reason = "quote window open but no usable trade quote";
          return ASC_SESSION_QUOTE_ONLY;
       }
 
-      ineligible_reason = "session closed";
-      return ASC_SESSION_CLOSED_SESSION;
+      if(fresh_live_quote)
+      {
+         if(session_truth_missing)
+         {
+            ineligible_reason = "";
+            return ASC_SESSION_OPEN_TRADABLE;
+         }
+
+         if(has_session_reference)
+         {
+            ineligible_reason = "";
+            return ASC_SESSION_OPEN_TRADABLE;
+         }
+      }
+
+      if(have_quote_timestamp && stale_quote)
+      {
+         if(explicit_session_closed)
+            ineligible_reason = "session closed and last quote is stale";
+         else if(has_session_reference)
+            ineligible_reason = "session reference present but feed stale";
+         else
+            ineligible_reason = "stale feed";
+         return ASC_SESSION_STALE_FEED;
+      }
+
+      if(explicit_session_closed)
+      {
+         if(have_quote_timestamp)
+            ineligible_reason = "session closed; no live quote evidence";
+         else
+            ineligible_reason = "session closed; no quote evidence";
+         return ASC_SESSION_CLOSED_SESSION;
+      }
+
+      if(!have_quote_timestamp)
+      {
+         if(has_session_reference)
+         {
+            ineligible_reason = "session reference present but no quote evidence";
+            return ASC_SESSION_NO_QUOTE;
+         }
+
+         ineligible_reason = "market truth unresolved: no quote evidence";
+         return ASC_SESSION_UNKNOWN;
+      }
+
+      if(session_truth_missing)
+      {
+         string details = "market truth unresolved";
+         if(StringLen(quote_probe.Issue) > 0)
+            details += "; " + quote_probe.Issue;
+         if(StringLen(trade_probe.Issue) > 0)
+            details += "; " + trade_probe.Issue;
+         ineligible_reason = details;
+         return ASC_SESSION_UNKNOWN;
+      }
+
+      if(has_session_reference)
+      {
+         ineligible_reason = "session reference present but quote is not usable yet";
+         return ASC_SESSION_NO_QUOTE;
+      }
+
+      ineligible_reason = "market truth unresolved: mixed session and quote evidence";
+      return ASC_SESSION_UNKNOWN;
    }
 }
 
@@ -2189,26 +2337,30 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    bool visible = false;
    long trade_mode = 0;
    datetime last_quote_time = 0;
-   bool quote_window_open = false;
-   bool trade_window_open = false;
+   ASC_Market_Internal::SessionWindowProbe quote_probe;
+   ASC_Market_Internal::SessionWindowProbe trade_probe;
+   ASC_Market_Internal::TickEvidence tick_evidence;
+   const datetime current_time = ASC_Market_Internal::CurrentServerTime();
 
    const bool selected_ok = ASC_Market_Internal::LoadFlag(symbol, SYMBOL_SELECT, selected, "selected", read_reason);
    const bool visible_ok = ASC_Market_Internal::LoadFlag(symbol, SYMBOL_VISIBLE, visible, "visible", read_reason);
    const bool trade_mode_ok = ASC_Market_Internal::LoadInteger(symbol, SYMBOL_TRADE_MODE, trade_mode, "trade_mode", read_reason);
    const bool quote_time_ok = ASC_Market_Internal::LoadTickTime(symbol, last_quote_time, read_reason);
-   const bool quote_session_ok = ASC_Market_Internal::SessionWindowOpen(symbol, true, quote_window_open, read_reason);
-   const bool trade_session_ok = ASC_Market_Internal::SessionWindowOpen(symbol, false, trade_window_open, read_reason);
+   ASC_Market_Internal::ProbeSessionWindow(symbol, true, quote_probe);
+   ASC_Market_Internal::ProbeSessionWindow(symbol, false, trade_probe);
+   ASC_Market_Internal::LoadTickEvidence(symbol, current_time, tick_evidence);
+   const bool has_session_reference = ASC_Market_Internal::HasSessionReference(symbol);
 
    record.MarketTruth.Selected        = selected;
    record.MarketTruth.Visible         = visible;
-   record.MarketTruth.QuoteWindowOpen = quote_window_open;
-   record.MarketTruth.TradeWindowOpen = trade_window_open;
-   record.MarketTruth.LastQuoteTime   = last_quote_time;
+   record.MarketTruth.QuoteWindowOpen = quote_probe.IsOpen;
+   record.MarketTruth.TradeWindowOpen = trade_probe.IsOpen;
+   record.MarketTruth.LastQuoteTime   = tick_evidence.HasTimestamp ? tick_evidence.QuoteTime : last_quote_time;
 
    if(trade_mode_ok)
       record.MarketTruth.TradeAllowed = (trade_mode == SYMBOL_TRADE_MODE_FULL);
 
-   if(!(selected_ok && visible_ok && trade_mode_ok && quote_time_ok && quote_session_ok && trade_session_ok))
+   if(!(selected_ok && visible_ok && trade_mode_ok))
    {
       record.MarketTruth.SessionTruthStatus = ASC_SESSION_UNKNOWN;
       record.MarketTruth.Layer1Eligible = false;
@@ -2216,12 +2368,21 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
       return true;
    }
 
+   if(!quote_time_ok && !tick_evidence.HasTimestamp)
+      AppendReason(read_reason, "no broker quote timestamp");
+   if(StringLen(quote_probe.Issue) > 0)
+      AppendReason(read_reason, quote_probe.Issue);
+   if(StringLen(trade_probe.Issue) > 0)
+      AppendReason(read_reason, trade_probe.Issue);
+
    string ineligible_reason = "";
    record.MarketTruth.SessionTruthStatus = ASC_Market_Internal::ResolveSessionStatus(config,
-                                                                                      quote_window_open,
-                                                                                      trade_window_open,
+                                                                                      quote_probe,
+                                                                                      trade_probe,
                                                                                       record.MarketTruth.TradeAllowed,
-                                                                                      last_quote_time,
+                                                                                      record.MarketTruth.LastQuoteTime,
+                                                                                      tick_evidence,
+                                                                                      has_session_reference,
                                                                                       ineligible_reason);
 
    record.MarketTruth.Layer1Eligible = (record.MarketTruth.SessionTruthStatus == ASC_SESSION_OPEN_TRADABLE);
