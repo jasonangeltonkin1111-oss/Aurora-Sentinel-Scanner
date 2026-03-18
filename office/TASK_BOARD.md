@@ -22,7 +22,7 @@ Product naming must stay domain-based, not task-number-based.
   - Clerk
   - Debug
 - first milestone remains the active implementation target
-- blueprint integrity hardening is complete; MT5 correction work remains open before progression
+- blueprint integrity hardening is complete; merged MT5 Wave 1 fixes now require post-fix review normalization before progression
 - later product domains are acknowledged but not opened as separate worker classes:
   - Surface
   - Ranking
@@ -112,9 +112,11 @@ No build worker may overlap with Clerk or Debug.
 ---
 
 ## Current Correction Gate
-Before another Debug pass, HQ must require:
-1. MT5 Wave 1 fixes aligned to `office/DEBUG_REVIEW_WAVE1.md`
-2. compliance with `office/BLUEPRINT_INTEGRITY_AUDIT.md`
-3. no new feature or later-slice expansion
+Before any progression decision, HQ must require:
+1. live control docs aligned to the merged Wave 1 fix state
+2. handoff normalization for the active Wave 1 worker records
+3. a fresh Debug rerun against the merged MT5 files
+4. compliance with `office/BLUEPRINT_INTEGRITY_AUDIT.md`
+5. no new feature or later-slice expansion
 
-Blueprint hardening reduced ambiguity. It did not clear the live product for progression by itself.
+Blueprint hardening reduced ambiguity. The merged fix wave improved the live product, but progression still depends on truthful post-fix review state.

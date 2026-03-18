@@ -51,3 +51,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: strengthen blueprint law before another debug cycle
 - Why: live Wave 1 failures exposed remaining ambiguity around unresolved classification handling, partial snapshot overwrite risk, tie-handling determinism, and front-door recovery references
 - Result: active blueprint law and front-door navigation were tightened, and HQ now has an explicit integrity audit to enforce before rerunning Debug
+
+### 2026-03-18 — Wave 1 fix merges require post-fix review normalization
+- Decision: treat the merged Engine/Storage, Market, and Conditions fix commits as the new live repo baseline and shift HQ into post-fix review mode
+- Why: the fix wave has landed in product code, but `HQ_STATE.md`, worker handoffs, and the last Debug review no longer fully describe the current repo truth
+- Result: Clerk must normalize control docs, Debug must rerun against the merged MT5 state, and HQ must keep progression blocked until those records are current
