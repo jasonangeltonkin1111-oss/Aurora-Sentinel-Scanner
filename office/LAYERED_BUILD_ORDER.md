@@ -12,12 +12,15 @@ No later stage may assume truth from an unfinished earlier stage.
 Build and verify:
 - broker symbol discovery hooks needed for session checks
 - market-open truth per broker symbol
+- session quote-window vs trade-window distinction
+- session-truth sub-state handling for closed/disabled/no-quote/stale/unknown cases
 - next-open / next-recheck scheduling
-- deferred handling for closed symbols
+- deferred handling for closed or uncertain symbols
 
 ### Exit criteria
 - open/closed truth is correct
-- closed symbols are not treated as open
+- closed/disabled/no-quote/stale/unknown states are not collapsed into false openness
+- closed or uncertain symbols are not treated as open
 - recheck scheduling works
 
 ---
@@ -28,9 +31,11 @@ Build and verify:
 - broker spec snapshot
 - classification snapshot where available
 - session metadata snapshot
+- explicit missing/unknown preservation for unreadable fields
 
 ### Exit criteria
 - full universe captured truthfully
+- required minimum snapshot fields are preserved when readable
 - snapshot does not become hidden dossier logic
 - missing fields remain explicit, not guessed
 

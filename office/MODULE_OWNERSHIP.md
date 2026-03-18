@@ -40,8 +40,10 @@ Primary ownership:
 Typical concerns:
 - startup sequence
 - timer cadence
-- guarded orchestration order
+- bounded scheduling and next-recheck orchestration
+- guarded call order between Layer 1, Layer 1.2, Layer 2, Activation, and Layer 3
 - stage-safe runtime control
+- retry/backoff discipline for non-ready work
 - engine-side shared call flow
 
 ### Market Worker
@@ -54,7 +56,8 @@ Typical concerns:
 - suffix stripping and alias resolution
 - classification translation from archive truth
 - `PrimaryBucket` and related identity fields
-- Layer 1 session/market-truth inputs
+- Layer 1 session/trade-window/quote-window truth
+- Layer 1 session-truth status and next-recheck inputs
 - Layer 1.2 identity-side universe snapshot truth
 
 ### Conditions Worker
@@ -64,6 +67,7 @@ Primary ownership:
 Typical concerns:
 - spec intake
 - spread/tradability/contract-condition truth
+- spec integrity / missing-field truth
 - conditions validity needed by Layer 2 eligibility
 - condition fields used by ranking and output consumers
 
@@ -76,6 +80,7 @@ Typical concerns:
 - broker path and naming rules
 - restore/read/merge logic
 - stale detection and persistence guards
+- fallback/corruption recovery handling
 - atomic write flow
 - summary rendering
 - symbol dossier rendering
