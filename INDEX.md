@@ -40,7 +40,7 @@ Contains architecture, contracts, boundaries, schemas, and system meaning.
 
 ## `office/`
 The master/worker governance space.
-Contains decisions, locks, project ownership, handoffs, and build sequencing.
+Contains decisions, locks, project ownership, handoffs, build sequencing, execution protocol, and post-run control.
 
 ## `mt5/`
 The production MT5 product space.
@@ -103,6 +103,8 @@ Use `office/` when you need to answer:
 - what is locked
 - what decisions are already locked
 - what order modules should be built in
+- how execution is sequenced
+- when Clerk or Debug may run
 - what the master should assign next
 
 `office/` is the internal operating floor.
@@ -119,6 +121,9 @@ No MT5 code belongs here.
 - `MASTER_RULES.md` — master discipline and boundaries
 - `MODULE_OWNERSHIP.md` — which worker/project owns which product area
 - `BUILD_ORDER.md` — intended module build sequence
+- `EXECUTION_PROTOCOL.md` — one-worker execution law and post-run sequencing
+- `CLERK_RULES.md` — Clerk role and limits
+- `DEBUG_RULES.md` — Debug role and limits
 - `SHA_LEDGER.md` — old/new SHA tracking guidance for updates
 - `ACTIVE_PROJECTS/` — current bounded project packets or active project notes
 - `HANDOFFS/` — internal worker handoffs only
@@ -130,6 +135,8 @@ No MT5 code belongs here.
 - locks
 - decisions
 - handoffs
+- execution control
+- post-run rules
 
 ### Does not belong here
 - MT5 product code
@@ -293,6 +300,8 @@ These rules define what the whole repository is trying to protect.
   - `[CALCULATIONS]`
 - MT5 product code contains no dev/task/phase/worker wording
 - UI is isolated from internal logic
+- only one build worker may run at a time
+- Clerk and Debug are idle-only post-run workers
 
 ---
 
@@ -310,7 +319,8 @@ Read in this order:
 9. `office/MASTER_RULES.md`
 10. `office/MODULE_OWNERSHIP.md`
 11. `office/BUILD_ORDER.md`
-12. `office/TASK_BOARD.md`
+12. `office/EXECUTION_PROTOCOL.md`
+13. `office/TASK_BOARD.md`
 
 Use `archives/` only when you need source provenance or no-drift checking.
 

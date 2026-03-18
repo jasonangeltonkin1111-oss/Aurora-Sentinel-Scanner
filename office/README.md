@@ -9,5 +9,7 @@ It contains:
 - handoffs
 - build order
 - coordination state
+- execution protocol
+- post-run controls
 
 No MT5 code belongs here.
