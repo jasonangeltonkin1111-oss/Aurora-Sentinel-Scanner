@@ -7,7 +7,7 @@
 - MT5 deployment remains one flat EA folder
 - output is broker-level, not account-level
 - startup reads existing broker persistence first and fills gaps instead of blind rebuilding
-- summary is top 5 per bucket only
+- summary is top 5 per `PrimaryBucket` only
 - symbol files have exactly 3 major sections:
   - `[BROKER_SPEC]`
   - `[OHLC_HISTORY]`
@@ -18,12 +18,7 @@
 - Clerk and Debug must not run while a build worker is active
 
 ## First Scanner Milestone Locks
-- summary is grouped by asset-class buckets only:
-  - `FOREX`
-  - `METALS`
-  - `INDICES`
-  - `CRYPTO`
-  - `OTHER`
+- summary is grouped by `PrimaryBucket` truth from Market classification
 - ranking inside each bucket uses one balanced scanner score
 - first milestone timeframe set is fixed to:
   - `M15`

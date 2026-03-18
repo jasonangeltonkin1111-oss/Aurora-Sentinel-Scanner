@@ -1,34 +1,65 @@
 # TASK BOARD
 
 ## Rule
-The master assigns bounded projects by module or product concern.
+HQ assigns bounded projects by domain concern and verified stage readiness.
 Product naming must stay domain-based, not task-number-based.
 
-## Current State
+---
+
+## Current Control-State Summary
 - root layout locked
-- archive remains static reference only
-- blueprint baseline is coherent
+- archive layer remains static reference only
+- blueprint baseline is active system truth
 - MT5 flat deployment rule is locked
 - execution protocol is locked
-- Clerk and Debug are added as idle-only post-run workers
-- first scanner milestone specifics are now locked
-- next active build slice is:
-  - Engine
-  - Market
-  - Conditions
-  - Storage + Output
+- Clerk and Debug are idle-only post-run workers
+- the real control roster is the locked 7-role system:
+  - HQ
+  - Engine Worker
+  - Market Worker
+  - Conditions Worker
+  - Storage + Output Worker
+  - Clerk
+  - Debug
+- first milestone remains the active implementation target
+- later product domains are acknowledged but not opened as separate worker classes:
+  - Surface
+  - Ranking
+  - Diagnostics
+  - UI
+
+---
 
 ## Current Objective
-Reach the first working EA slice that:
+Reach the first working scanner slice that:
 - starts cleanly
 - discovers broker symbols
 - reads broker conditions
 - restores broker state first
 - writes truthful broker-level outputs
 
-## First Milestone Locked Shape
-- summary grouped by asset-class buckets only
-- top 5 per bucket only
+---
+
+## First Milestone Locked Scope
+
+### Active first-slice ownership domains
+- Engine
+- Market
+- Conditions
+- Storage
+- Output
+
+### Stage sequence
+1. Layer 1 = Market Truth
+2. Layer 1.2 = Universe Snapshot
+3. Layer 2 = Surface scan foundations required for the first shortlist
+4. Activation Gate
+5. Layer 3 = ACTIVE-only rolling dossier persistence
+
+### Locked first-milestone runtime shape
+- summary grouping uses `PrimaryBucket`
+- promotion/activation also use `PrimaryBucket`
+- top 5 per `PrimaryBucket` only
 - first milestone timeframe set:
   - `M15`
   - `H1`
@@ -37,7 +68,42 @@ Reach the first working EA slice that:
   - `OnTimer` bounded refresh passes
   - `OnTick` no heavy scanner work
 
+### Hard first-milestone laws
+- classification is upstream truth
+- writers never compute
+- no fake values
+- restore first
+- never wipe
+- gap-fill only
+- atomic writes protect active dossier continuation
+- only ACTIVE symbols may receive rolling dossier continuation
+
+---
+
+## Later-Slice Domains (Recognized, Not Open by Default)
+These domains are part of the system map, but they must not leak into first-slice implementation unless HQ explicitly opens a later packet:
+- Surface refinement
+- Ranking refinement
+- Diagnostics product features
+- UI product features
+- Layer 4 expansion work
+
+Recognition does not equal active build authorization.
+
+---
+
+## Blocking Rules
+The following are blocked until prior truth is verified:
+- Activation Gate work before Layer 2 shortlist truth exists
+- Layer 3 rolling dossier continuation before ACTIVE rights are defined and verified
+- Layer 4 expansion before Layers 1, 1.2, 2, Activation Gate, and Layer 3 are stable
+- Diagnostics/UI product work before first-slice scanner truth is working
+
+---
+
 ## Post-Run Sequence
-After each completed worker run, the master may invoke in order:
+After each completed build-worker run, HQ may invoke in order:
 1. Clerk
 2. Debug
+
+No build worker may overlap with Clerk or Debug.
