@@ -1,18 +1,33 @@
 # ENGINE WAVE 1 HANDOFF
-
 ## Files Changed
-- `mt5/AuroraSentinel.mq5`
-- `mt5/ASC_Common.mqh`
-- `mt5/ASC_Engine.mqh`
-- `office/HANDOFF_ENGINE_WAVE1.md`
+- mt5/AuroraSentinel.mq5
+- mt5/ASC_Common.mqh
+- mt5/ASC_Engine.mqh
+- office/HANDOFF_ENGINE_WAVE1.md
 
-## Exact Fixes Applied
-- Added `mt5/ASC_Common.mqh` as the single shared contract surface for the current frozen first-slice integration, defining only the shared types and function signatures required by `ASC_Market.mqh` and Engine wiring.
-- Added `mt5/ASC_Engine.mqh` with a minimal Engine orchestration entrypoint that calls Market discovery and Market truth-building without introducing ranking, storage, output, or cross-domain logic.
-- Added `mt5/AuroraSentinel.mq5` with flat-layout includes for the shared contract, Market module, and Engine module so the EA is structurally wired for MT5 integration in one folder.
-- Normalized this handoff file to the required format and restricted it to Engine-owned integration fixes.
+## What Was Implemented
+- Added the frozen shared enum and struct contract in `mt5/ASC_Common.mqh`.
+- Added compile-oriented engine orchestration entrypoints in `mt5/ASC_Engine.mqh`.
+- Added a minimal EA shell in `mt5/AuroraSentinel.mq5` with `OnInit`, `OnTimer`, `OnTick`, and `OnDeinit`.
+- Wired the engine flow to snapshot load, bounded symbol processing, snapshot save, and optional mirror output refresh using the frozen shared function names.
 
-## Remaining Dependency Risks
-- `office/CLERK_REVIEW_WAVE1.md` and `office/DEBUG_REVIEW_WAVE1.md` were referenced by the task packet but are not present in the repository, so this fix wave could not address any file-specific inline comments from those documents.
-- `mt5/ASC_Conditions.mqh`, `mt5/ASC_Storage.mqh`, and `mt5/ASC_Output.mqh` are still absent from the repository, so full end-to-end module include integration remains dependent on future worker-owned deliveries.
-- `mt5/ASC_Market.mqh` remains owned by Market and was intentionally left unchanged, including any unresolved compile or behavior risks inside that file.
+## What Was Intentionally Not Implemented
+- No ranking flow.
+- No deep dossier flow.
+- No execution or strategy logic.
+- No direct market classification logic inside the engine.
+- No direct conditions/spec reading inside the engine.
+- No direct storage/output rendering logic inside the engine.
+- No changes to Market, Conditions, Storage, or Output module files.
+
+## Contract Compliance Check
+- MT5 product layout kept flat under `mt5/`.
+- Only engine-owned product files were created/updated.
+- Frozen shared types and function names were preserved exactly.
+- Engine orchestration follows the required init/timer order at a bounded level.
+- `OnTick` remains free of heavy scanner work.
+
+## Risks / Dependencies
+- Engine calls depend on Market, Conditions, Storage, and Output implementations being supplied in their own module files under the locked function names.
+- Because those neighboring module files were not authored in this wave, full end-to-end compilation depends on their arrival matching the frozen contract.
+- Timer/default pass sizes are conservative runtime defaults and may need later tuning after integrated verification.

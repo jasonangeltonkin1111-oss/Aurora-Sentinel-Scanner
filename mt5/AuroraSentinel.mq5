@@ -1,27 +1,36 @@
 #property strict
 
 #include "ASC_Common.mqh"
-#include "ASC_Market.mqh"
 #include "ASC_Engine.mqh"
 
-ASC_RuntimeConfig g_asc_runtime_config;
+ASC_RuntimeConfig g_runtime_config;
 
 int OnInit()
   {
-   EventSetTimer(60);
+   g_runtime_config.TimerSeconds = 60;
+   g_runtime_config.MaxSymbolsPerInitPass = 200;
+   g_runtime_config.MaxSymbolsPerTimerPass = 50;
+   g_runtime_config.StaleFeedSeconds = 300;
+   g_runtime_config.UseCommonFiles = true;
+
+   EventSetTimer(g_runtime_config.TimerSeconds);
+
+   if(!ASC_Engine_RunInit(g_runtime_config))
+      return(INIT_FAILED);
+
    return(INIT_SUCCEEDED);
   }
 
-void OnDeinit(const int reason)
+void OnTimer()
   {
-   EventKillTimer();
+   ASC_Engine_RunTimer();
   }
 
 void OnTick()
   {
   }
 
-void OnTimer()
+void OnDeinit(const int reason)
   {
-   ASC_Engine_RunOnce(g_asc_runtime_config);
+   EventKillTimer();
   }
