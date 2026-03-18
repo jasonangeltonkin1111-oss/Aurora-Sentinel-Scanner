@@ -18,12 +18,12 @@ Aurora Sentinel Scanner is designed to:
 - classify symbols into usable buckets
 - read truthful broker conditions and symbol state
 - build bounded symbol dossiers
-- rank symbols inside their buckets
+- rank symbols inside their `PrimaryBucket`
 - publish compact trader-facing outputs
 
 The intended operator flow is:
 1. open `SUMMARY.txt`
-2. inspect the top 5 symbols per bucket
+2. inspect the top 5 symbols per `PrimaryBucket`
 3. choose a symbol
 4. open `SYMBOLS/<symbol>.txt`
 5. review broker specs, OHLC history, and calculations
@@ -59,7 +59,7 @@ Purpose:
 - show which symbols deserve attention now
 
 Rules:
-- top 5 per bucket only
+- top 5 per `PrimaryBucket` only
 - compact and readable
 - no raw OHLC dump
 - no writer-side calculations
@@ -84,7 +84,7 @@ Rules:
 - broker-level output, not account-level output
 - rolling persistence first: read existing broker state, then fill gaps
 - writers format only
-- top 5 per bucket only in summary output
+- top 5 per `PrimaryBucket` only in summary output
 - symbol files contain exactly 3 major sections
 - no fake zero values for missing truth
 - no dev/task/phase/worker wording in MT5 product code
@@ -124,19 +124,16 @@ The intended repo flow is:
 
 The project uses a controlled master/worker model.
 
-### Build workers
-- Engine
-- Market
-- Conditions
-- Storage + Output
-- Surface
-- Ranking
-- Diagnostics
-- UI
-
-### Post-run workers
+### Locked 7-role control model
+- HQ
+- Engine Worker
+- Market Worker
+- Conditions Worker
+- Storage + Output Worker
 - Clerk
 - Debug
+
+Additional product domains such as Surface, Ranking, Diagnostics, and UI may exist in the blueprint/module map, but they do not automatically create extra worker roles in the control layer.
 
 Execution law:
 - only one build worker may run at a time
