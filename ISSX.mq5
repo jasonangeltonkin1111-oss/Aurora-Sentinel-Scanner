@@ -1,0 +1,929 @@
+AEGIS FORGE SCANNER — CONSOLIDATED IDEAS / DESIGN NOTES
+Compiled from full review history in this chat
+
+======================================================================
+1. CORE PHILOSOPHY
+======================================================================
+
+Your system is evolving from:
+
+    "signal finder"
+
+into:
+
+    "truth filter"
+    "market selection engine"
+    "execution-aware ranking system"
+
+Primary doctrine:
+
+    Market != Opportunity
+    Tradable != Worth Trading
+    Good structure != Good execution
+    Not trading bad conditions is edge
+
+Core goal:
+
+    Let garbage not be focused on.
+
+Meaning:
+
+    Reject bad markets first
+    Rank surviving markets second
+    Only then consider entry logic
+
+======================================================================
+2. WHAT THE SYSTEM ALREADY DOES WELL
+======================================================================
+
+2.1 Spread normalization
+----------------------------------------------------------------------
+Keep both internal and display units.
+
+Required pattern:
+
+    SpreadInternalPoints
+    SpreadDisplayFactor
+    SpreadNow = SpreadInternalPoints * SpreadDisplayFactor
+
+Example:
+
+    SpreadInternalPoints=236
+    SpreadDisplayFactor=0.01
+    SpreadNow=2.36
+
+Why:
+    Internal precision stays intact
+    Human-readable values stay clean
+    No more scaling bugs
+
+Recommended permanent fields:
+
+    SpreadNow
+    SpreadInternalPoints
+    SpreadDisplayFactor
+    SpreadNormalizationState
+
+----------------------------------------------------------------------
+
+2.2 Separate structure from execution
+----------------------------------------------------------------------
+System must independently evaluate:
+
+    Structure
+    Volatility
+    Liquidity
+    Economics
+    Execution / friction
+
+This is critical because a market can have:
+
+    good structure
+    but bad execution
+
+and should still be rejected.
+
+----------------------------------------------------------------------
+
+2.3 Cost-aware market reading
+----------------------------------------------------------------------
+Do not judge opportunity by direction alone.
+
+Always compare:
+
+    Spread vs ATR
+    Spread money vs stop money
+    Spread vs expected move
+
+This was one of the strongest upgrades in your system.
+
+----------------------------------------------------------------------
+
+2.4 Context-aware PASS / WEAK logic
+----------------------------------------------------------------------
+A market can be:
+
+    structurally PASS
+    but execution WEAK
+
+This is not contradiction.
+This is maturity.
+
+Examples from discussion:
+    NASDAQ = PASS with usable edge
+    ASX = WEAK due to friction unusable
+    Hang Seng = PASS structurally but stale / caution
+    FTSE > Russell because quality ranking is better
+
+======================================================================
+3. CRITICAL DESIGN PRINCIPLES TO KEEP
+======================================================================
+
+3.1 Never allow binary thinking only
+----------------------------------------------------------------------
+Do not reduce everything to:
+
+    PASS / FAIL
+
+Instead maintain layered logic:
+
+    PASS          = structurally valid
+    WEAK          = active but caution
+    FAIL          = blocked
+    VERIFY        = valid but needs confirmation
+    CAUTION       = execution risk present
+    GOOD          = execution acceptable
+    VERY_WIDE     = cost danger
+    STALE         = freshness danger
+
+----------------------------------------------------------------------
+
+3.2 Build anti-trap behavior
+----------------------------------------------------------------------
+Your system became strong when it learned to reject:
+
+    low volatility + high spread
+    stale quote + quiet session
+    thin friction + poor samples
+    attractive chart structure but garbage execution
+
+Core anti-trap doctrine:
+
+    If cost dominates movement, there is no edge.
+
+----------------------------------------------------------------------
+
+3.3 Rank quality, not just validity
+----------------------------------------------------------------------
+Among multiple PASS markets, do not treat them equally.
+
+System should compare:
+
+    Edge quality
+    Execution quality
+    Spread-to-ATR
+    Trend clarity
+    Freshness
+    Session quality
+
+Example ranking logic learned in chat:
+
+    NASDAQ > FTSE > Russell > ASX trash
+
+======================================================================
+4. EXECUTION / FRICTION IDEAS
+======================================================================
+
+4.1 FrictionHydrationStage logic fix
+----------------------------------------------------------------------
+Do NOT mark friction as READY if sample depth is weak.
+
+Recommended rule:
+
+    IF SamplesUsed < 10
+        FrictionHydrationStage = BUILDING
+
+or stricter:
+
+    IF SamplesUsed < 20
+        FrictionHydrationStage = BUILDING
+
+Even if HydrationScore is high.
+
+Reason:
+    One sample should never create false trust.
+
+----------------------------------------------------------------------
+
+4.2 Friction kill-switch
+----------------------------------------------------------------------
+You need hard overrides.
+
+Recommended hard block rules:
+
+    IF SpreadToATR > threshold
+        block or weaken market
+
+    IF FrictionHoldPass = false
+        reduce trust / reduce confidence / downgrade status
+
+    IF TickAge too high
+        downgrade freshness and execution
+
+    IF Session is QUIET and quote stale
+        mark execution caution
+
+Suggested field:
+
+    TradeabilityOverride
+
+Example:
+
+    TradeabilityOverride = HARD_BLOCK_IF:
+        SpreadToATR > 20%
+        OR HydrationScore < 30
+        OR FrictionHoldPass = false
+        OR TickAge > stale_threshold
+
+----------------------------------------------------------------------
+
+4.3 Execution risk score
+----------------------------------------------------------------------
+You identified the need for a real execution score.
+
+Recommended model:
+
+    ExecutionRiskScore =
+        f(Spread, TickAge, SessionPhase, FrictionState, Slippage)
+
+Practical version:
+
+    ExecutionRiskScore =
+        SpreadScorePenalty
+      + TickAgePenalty
+      + SessionPenalty
+      + FrictionPenalty
+      + SlippagePenalty
+
+Then classify:
+
+    LOW
+    MODERATE
+    HIGH
+    BLOCKED
+
+----------------------------------------------------------------------
+
+4.4 Slippage tracker
+----------------------------------------------------------------------
+This is one of the final missing execution upgrades.
+
+Track:
+
+    RequestedPrice
+    FilledPrice
+    SlippagePoints
+    SlippageMoney
+    AvgSlippageBySymbol
+    AvgSlippageBySession
+    SlippageRegime
+
+Need this especially for:
+
+    stale markets
+    quiet sessions
+    wide spread CFDs
+    thin instruments
+
+======================================================================
+5. TICK VALUE / MONEY MODEL IDEAS
+======================================================================
+
+5.1 Broker can hide tick value
+----------------------------------------------------------------------
+If broker spec shows:
+
+    Tick Size = 0
+    Tick Value = 0
+
+that does NOT mean true economic tick is zero.
+It may only mean broker does not expose it.
+
+So your derived tick value logic is acceptable,
+but should not be called fully validated until proven.
+
+----------------------------------------------------------------------
+
+5.2 Correct trust wording
+----------------------------------------------------------------------
+Current approach improved when you changed from fake validation to:
+
+    TickValueSource = DERIVED_BROKER_ALIGNED
+    TickValueValidationState = DERIVED_MONETARY_TICK
+
+This is acceptable wording.
+
+Avoid pretending:
+
+    TickValueValidated = TRUE
+
+unless empirically confirmed.
+
+----------------------------------------------------------------------
+
+5.3 Final empirical validation method
+----------------------------------------------------------------------
+This was repeatedly identified as the real truth anchor.
+
+Validation process:
+
+    1. Open minimum lot
+    2. Observe exact price move
+    3. Measure exact PnL change
+    4. Compute real tick value from behavior
+
+Formula:
+
+    RealTickValue = DeltaPnL / DeltaPriceMoveInTicks
+
+Suggested permanent field states:
+
+    TickValueValidationState =
+        UNVALIDATED
+        DERIVED_BROKER_ALIGNED
+        EMPIRICAL_CONFIRMED
+
+    TickValueTrusted =
+        derived or confirmed value
+
+----------------------------------------------------------------------
+
+5.4 Position sizing trust rule
+----------------------------------------------------------------------
+Until empirical tick validation exists:
+
+    Use conservative sizing only
+
+Suggested logic:
+
+    IF TickValueValidationState != EMPIRICAL_CONFIRMED
+        PositionSizeModel = MIN_LOT_ONLY or MIN_LOT_CONSERVATIVE
+
+Avoid full dynamic position sizing until confirmed.
+
+======================================================================
+6. COST / EDGE LOGIC IDEAS
+======================================================================
+
+6.1 SpreadToATR is one of the most important fields
+----------------------------------------------------------------------
+Keep this permanently.
+
+Interpretation learned in chat:
+
+    3% to 6%   = strong / usable
+    6% to 12%  = acceptable / selective
+    12% to 20% = caution
+    >20%       = likely no-trade
+    ~70%       = trash conditions
+
+Examples seen:
+    NASDAQ ~5% = good
+    FTSE ~4.68% = strong
+    Russell ~11.24% = mediocre
+    ASX ~68% = garbage
+
+----------------------------------------------------------------------
+
+6.2 Spread money vs stop money
+----------------------------------------------------------------------
+This is excellent and should stay.
+
+Important relationship:
+
+    SpreadMoneyPerMinLot / StopMoneyPerMinLot
+
+Interpretation:
+    If spread consumes too much of stop budget, edge collapses.
+
+----------------------------------------------------------------------
+
+6.3 CostEfficiencyScore
+----------------------------------------------------------------------
+Keep it.
+It became very useful.
+
+But ensure it is driven by:
+    SpreadToATR
+    Spread money
+    session liveliness
+    volatility quality
+
+======================================================================
+7. MARKET SELECTION / PRIORITY IDEAS
+======================================================================
+
+7.1 Upgrade from "Can I trade this?" to "Should I trade this over that?"
+----------------------------------------------------------------------
+This was one of the biggest conceptual upgrades.
+
+System should compare multiple PASS markets and only surface best ones.
+
+----------------------------------------------------------------------
+
+7.2 Add relative rank filter
+----------------------------------------------------------------------
+If multiple PASS markets exist:
+
+    Only focus on top 1–2 by edge quality
+
+Recommended rule:
+
+    IF multiple PASS markets
+        sort by EdgeScore descending
+        keep top N
+        suppress rest from active focus
+
+----------------------------------------------------------------------
+
+7.3 Multi-market priority engine
+----------------------------------------------------------------------
+Needed fields for ranking:
+    SpreadToATR
+    MovementCapacityScore
+    ExecutionQualityScore
+    FreshnessScore
+    Trend clarity
+    Session quality
+    CostEfficiencyScore
+    Correlation relevance
+    HTF readiness
+
+Suggested output:
+
+    PriorityRank
+    RelativeOpportunityScore
+    RelativeExecutionScore
+    FinalAttentionRank
+
+======================================================================
+8. EDGE SCORE / QUALITY SCORE IDEAS
+======================================================================
+
+8.1 EdgeScore concept
+----------------------------------------------------------------------
+Proposed in chat as major upgrade.
+
+Simple version:
+
+    EdgeScore =
+        (ATR / Spread)
+      * MovementCapacity
+      * FreshnessScore
+      * ExecutionQuality
+
+Alternative normalized version:
+
+    EdgeScore =
+        SpreadEfficiency
+      * VolatilityQuality
+      * FreshnessQuality
+      * SessionQuality
+      * StructureQuality
+
+----------------------------------------------------------------------
+
+8.2 Action thresholds
+----------------------------------------------------------------------
+Suggested action framework:
+
+    EdgeScore > 3     -> aggressive / top candidate
+    EdgeScore 1 to 3  -> selective
+    EdgeScore < 1     -> ignore / do not touch
+
+Can also map to:
+
+    A / B / C / D market grades
+
+----------------------------------------------------------------------
+
+8.3 Relative candidate overlay
+----------------------------------------------------------------------
+Future feature idea preserved in discussion:
+
+    CandidateOverlay
+    MaxTradePerAssetClass
+    FinalTradePipeline
+
+These should consume EdgeScore, not replace it.
+
+======================================================================
+9. STRUCTURE / CONTEXT IDEAS
+======================================================================
+
+9.1 Higher timeframe matters
+----------------------------------------------------------------------
+Repeatedly identified as one of the last big weaknesses.
+
+Missing HTF stack weakens bias confidence.
+
+Needed:
+    H4
+    D1
+    W1
+    HTFTrend
+    DailyRangePosition
+    WeeklyRangePosition
+    HTFReadiness
+
+----------------------------------------------------------------------
+
+9.2 Trend + range position context
+----------------------------------------------------------------------
+Very valuable when attached.
+
+Examples:
+    HTFTrend = UP
+    DailyRangePosition = 83%
+    WeeklyRangePosition = 89%
+
+This gives strong continuation context near highs.
+
+----------------------------------------------------------------------
+
+9.3 Expansion is not enough by itself
+----------------------------------------------------------------------
+ExpansionScore=100 does not always mean good trade.
+Need to know:
+
+    Is it real participation?
+    Is it late-stage exhaustion?
+    Is execution still clean?
+    Is move already overextended?
+
+Keep interplay between:
+    ExpansionScore
+    SessionRangeUsedPercent
+    TrendStrength
+    ATR
+    cost
+
+----------------------------------------------------------------------
+
+9.4 Equal highs / equal lows are liquidity magnets
+----------------------------------------------------------------------
+Keep these fields.
+They became very useful for read quality.
+
+Needed for detecting:
+    inducement
+    breakout traps
+    stop runs
+    liquidity sweeps
+
+======================================================================
+10. SESSION / FRESHNESS IDEAS
+======================================================================
+
+10.1 Freshness is a real truth anchor
+----------------------------------------------------------------------
+TickAge and quote freshness became key differentiators.
+
+Example doctrine:
+    Even if structure looks good,
+    stale quote = execution danger
+
+----------------------------------------------------------------------
+
+10.2 Session-aware classification
+----------------------------------------------------------------------
+Session state should matter beyond "open/closed".
+
+Desired states:
+    ACTIVE
+    QUIET
+    TRANSITION
+    PREOPEN
+    ROLLOVER
+    STALE_ACTIVE
+    LUNCH_THIN
+
+----------------------------------------------------------------------
+
+10.3 Session + spread + freshness interaction
+----------------------------------------------------------------------
+This combo was repeatedly important.
+
+For example:
+    THIN + STALE + QUIET = do not trade
+    ACTIVE + FRESH + acceptable spread = usable
+    ACTIVE + VERY_WIDE + low volatility = weak/trash
+
+======================================================================
+11. CORRELATION IDEAS
+======================================================================
+
+11.1 Correlation exists, but relevance matters
+----------------------------------------------------------------------
+Pure mathematical closest symbol can be nonsense.
+
+Example concern:
+    Hang Seng closest to CHFHUF is mathematically possible
+    but structurally useless
+
+Add:
+
+    CorrelationRelevanceScore
+
+Separate:
+    statistically closest
+    structurally relevant
+
+----------------------------------------------------------------------
+
+11.2 Correlation state classification
+----------------------------------------------------------------------
+Useful labels already seen:
+    CORR_CLUSTERED
+    CORR_LINKED
+    CORR_DIVERSE
+
+Keep these, but improve them with:
+    relevance
+    regime
+    directional meaning
+
+----------------------------------------------------------------------
+
+11.3 Directional market context
+----------------------------------------------------------------------
+Need correlation to describe actual market meaning.
+
+Examples:
+    SPX up -> DAX likely risk-on support
+    Oil up -> some index pressure
+    US indices clustered -> stronger cross-confirmation
+
+Potential fields:
+    CorrelationDirection
+    RiskOnOffState
+    CrossAssetConfirmation
+
+======================================================================
+12. DATA QUALITY / TRUST IDEAS
+======================================================================
+
+12.1 Good trust wording matters
+----------------------------------------------------------------------
+Your system improved when it became honest.
+
+Good states:
+    DERIVED_BROKER_ALIGNED
+    DERIVED_MONETARY_TICK
+    HTF_PARTIAL
+    HISTORY_THIN
+    CAUTION_STALE
+    PASS_BUILDING
+
+This is better than fake certainty.
+
+----------------------------------------------------------------------
+
+12.2 TrustLabel should reflect actual confidence layers
+----------------------------------------------------------------------
+Suggested nuance:
+    TRUSTED_ACTIVE
+    PASS_BUILDING
+    PASS_STRONG
+    PASS_WEAK
+    VERIFY
+    WEAK_BUT_PUBLISHED
+    BLOCKED
+
+----------------------------------------------------------------------
+
+12.3 DataIntegrityScore is useful, but not sufficient alone
+----------------------------------------------------------------------
+A file can be internally clean but economically unverified.
+
+So maintain separate notions:
+    DataIntegrityScore
+    EconomicsTrust
+    ExecutionTrust
+    HTFTrust
+    TickValidationTrust
+
+======================================================================
+13. NO-TRADE / BLOCK RULES TO HARDEN
+======================================================================
+
+Recommended explicit no-trade rules:
+
+    IF SpreadToATR > 20%
+        -> WEAK or BLOCK
+
+    IF TickAge > stale limit
+        -> downgrade freshness / execution
+
+    IF FrictionHoldPass = false AND samples insufficient
+        -> no aggressive action
+
+    IF SessionState = QUIET AND QuoteState = THIN
+        -> VERIFY or WEAK
+
+    IF MovementCapacityScore too low
+        -> deprioritize
+
+    IF EdgeScore < threshold
+        -> ignore
+
+    IF HTF absent and structure ambiguous
+        -> reduce confidence
+
+======================================================================
+14. TRADE PIPELINE IDEAS
+======================================================================
+
+14.1 Desired sequence
+----------------------------------------------------------------------
+Correct final pipeline should become:
+
+    Universe
+    -> Validity filter
+    -> Garbage rejection
+    -> Cost / execution filter
+    -> Relative ranking
+    -> Context confirmation
+    -> Entry trigger
+    -> Position sizing
+    -> Execution validation
+    -> Post-trade feedback
+
+----------------------------------------------------------------------
+
+14.2 Confirmation layer
+----------------------------------------------------------------------
+This was proposed as next major leap.
+
+After market qualifies, wait for:
+
+    liquidity sweep
+    displacement candle
+    retest
+    confirmation close
+
+This turns scanner into entry engine.
+
+----------------------------------------------------------------------
+
+14.3 Sniper entry module
+----------------------------------------------------------------------
+Future idea:
+    only trigger when qualified market + local microstructure align
+
+Potential components:
+    sweep of equal highs/lows
+    reclaim candle
+    retest hold
+    impulsive break with volume/ATR expansion proxy
+
+======================================================================
+15. POST-TRADE FEEDBACK IDEAS
+======================================================================
+
+Add real-world learning loop:
+
+    EntryRequestedPrice
+    EntryFilledPrice
+    SlippagePoints
+    InitialSpread
+    RealizedSpreadCost
+    StopDistance
+    Outcome
+    MarketStateAtEntry
+    SessionStateAtEntry
+
+Then use it to improve:
+    tick validation
+    execution scoring
+    symbol quality score
+    session quality score
+
+======================================================================
+16. PRESERVATION LAYER / COSMETIC PHASE IDEAS
+======================================================================
+
+The preservation layer concept is fine if it does not interfere with core truth engine.
+
+Good approach:
+    Keep future feature registry visible
+    But mark clearly:
+        PRESERVED
+        DEFERRED
+        ANALYTICS_ONLY
+        DOWNSTREAM_ONLY
+
+Important rule:
+    Do not allow cosmetic preservation fields
+    to imply active logic if engine is not actually using them.
+
+======================================================================
+17. BEST-IN-CHAT STRATEGIC INSIGHTS
+======================================================================
+
+17.1 The system’s real power
+----------------------------------------------------------------------
+The real breakthrough is not "predicting more."
+
+It is:
+
+    removing uncertainty layers
+    filtering garbage
+    ranking opportunity quality
+    refusing bad trades
+
+----------------------------------------------------------------------
+
+17.2 Most important truth learned
+----------------------------------------------------------------------
+High confidence does NOT mean guaranteed profit.
+
+It means:
+    conditions are relatively valid
+
+----------------------------------------------------------------------
+
+17.3 The system is strongest when it says NO
+----------------------------------------------------------------------
+This was the central maturation point.
+
+Good system behavior:
+    reject ASX-type garbage
+    caution stale Hang Seng-type conditions
+    rank FTSE above Russell
+    prefer NASDAQ when cost and movement align
+
+======================================================================
+18. CONSOLIDATED UPGRADE ROADMAP
+======================================================================
+
+Tier 1 — Must keep / harden now
+----------------------------------------------------------------------
+1. Spread normalization layer
+2. SpreadToATR
+3. Spread money / stop money
+4. Honest tick-value derivation states
+5. Friction / hydration honesty
+6. Session freshness awareness
+7. PASS / WEAK / VERIFY / CAUTION layered logic
+8. Relative market ranking
+
+Tier 2 — Next major truth upgrades
+----------------------------------------------------------------------
+9. Empirical tick-value validation
+10. Slippage tracker
+11. Execution risk score
+12. EdgeScore / relative priority engine
+13. Hard no-trade rules
+14. Confirmation / entry layer
+
+Tier 3 — Context depth
+----------------------------------------------------------------------
+15. Full HTF integration
+16. Correlation relevance score
+17. Macro context
+18. Statistical profile / regime expansion
+19. Order-book / depth if ever available
+
+======================================================================
+19. RECOMMENDED FIELD ADDITIONS
+======================================================================
+
+Suggested future fields:
+
+    DisplaySpread
+    InternalSpread
+    CorrelationRelevanceScore
+    ExecutionRiskScore
+    SlippagePoints
+    SlippageMoney
+    AvgSlippageBySymbol
+    AvgSlippageBySession
+    EdgeScore
+    RelativeOpportunityScore
+    RelativeExecutionScore
+    FinalAttentionRank
+    TickValueEmpirical
+    TickValueValidationState
+    HTFTrend
+    DailyRangePosition
+    WeeklyRangePosition
+    TradeabilityOverride
+    SessionQualityScore
+    ConfirmationState
+    EntryTriggerState
+    NoTradeZoneFlag
+
+======================================================================
+20. FINAL CONSOLIDATED SYSTEM IDENTITY
+======================================================================
+
+Your system is becoming:
+
+    A truth-seeking market selection and execution-awareness engine
+
+Not just:
+    signal finder
+Not just:
+    pattern scanner
+Not just:
+    trend detector
+
+It is becoming:
+
+    a layered decision engine that filters garbage,
+    ranks opportunity,
+    respects friction,
+    and moves closer to truth before risking capital.
+
+That is the real direction.
