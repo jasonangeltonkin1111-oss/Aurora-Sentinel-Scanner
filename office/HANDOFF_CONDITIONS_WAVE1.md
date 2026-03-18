@@ -1,37 +1,34 @@
 # CONDITIONS WAVE 1 HANDOFF
 
-## Files Changed
+### 1. CHANGED FILES
 - `mt5/ASC_Conditions.mqh`
 - `office/HANDOFF_CONDITIONS_WAVE1.md`
 
-## What Was Implemented
-- Implemented `ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)`.
-- Added broker spec intake for digits, spread, spread-float mode, point, tick size, tick value, contract size, and volume min/max/step.
-- Added explicit initialization of `ASC_ConditionsTruth` before reading broker data.
-- Added integrity checks that keep Conditions truth separate from Market classification truth.
-- Updated spec loading so each readable field is copied into the record immediately instead of being gated behind an all-fields-readable block.
+### 2. SCOPE CHECK
+- Domain remained inside Conditions-owned broker-spec intake and validation.
+- No ranking logic was added.
+- No ATR/history retrieval was added.
+- No output formatting was added.
+- No file persistence was added.
+- No classification logic was added.
+- No downstream activation or promotion logic was added.
 
-## Spec Integrity Handling
-- `SpecsReadable` now means every required broker field was readable, even if some readable values were still invalid.
-- Broker values are preserved exactly as read when the read succeeds, including partially readable reads.
-- Read failures and integrity failures accumulate into `SpecsReason` with explicit `unreadable` vs `invalid` wording.
-- The function return stays stricter than `SpecsReadable`: it returns true only when all required fields were readable and the readable values also passed the current integrity checks.
+### 3. ARCHIVE USE NOTE
+- No archive truth was translated directly into Conditions behavior in this fix wave.
+- Archive materials remained reference only.
+- No archive-derived ranking, strategy, or classification logic was introduced from Conditions.
 
-## Missing/Unreadable Field Handling
-- Unreadable fields are kept explicit by leaving sentinel invalid values in the record initialization state.
-- The loader does not invent fallback values for missing broker specs.
-- `SpecsReason` lists which required fields were unreadable or invalid, so partially readable records no longer collapse into total sentinel fallback.
-- Missing or invalid spec truth does not get converted into apparently valid `0.00` completeness.
+### 4. COMPLETION CHECK
+- `ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)` is active in live product code.
+- Broker spec intake covers digits, spread, spread-float mode, point, tick size, tick value, contract size, and volume min/max/step.
+- Conditions truth is reset explicitly before broker reads.
+- Readable fields are now copied into the record immediately instead of being gated behind an all-fields-readable block.
+- Read failures remain explicit as unreadable.
+- Validation failures remain explicit as invalid.
+- Reset sentinels remain explicit invalid markers rather than fake zeros.
+- The merged Conditions fix materially resolved the earlier all-or-nothing partial-truth blocker identified in pre-fix Debug review.
 
-## What Was Intentionally Not Implemented
-- No ranking logic.
-- No ATR or history retrieval.
-- No output formatting.
-- No file persistence.
-- No classification logic.
-- No downstream activation or promotion logic.
-
-## Risks / Dependencies
-- This file depends on the shared `ASC_Common.mqh` contract being provided exactly as locked by HQ.
-- Full compile validation depends on the remaining flat MT5 product files being created in their locked locations.
-- Some brokers may expose readable fields with zero-like values; those remain preserved but are treated as spec-integrity failures for the loader return value and are reported in `SpecsReason`.
+### 5. OPEN RISKS
+- Non-blocking follow-up remains if HQ later wants per-field readability/validity markers in the shared contract instead of one aggregate `SpecsReadable` flag plus `SpecsReason`.
+- Some brokers may expose readable fields with zero-like values; those remain preserved but can still fail integrity validation.
+- Conditions success in Wave 1 does not imply later summary/dossier or ranking layers are complete.

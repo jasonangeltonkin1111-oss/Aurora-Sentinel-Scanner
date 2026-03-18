@@ -56,3 +56,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: treat the merged Engine/Storage, Market, and Conditions fix commits as the new live repo baseline and shift HQ into post-fix review mode
 - Why: the fix wave has landed in product code, but `HQ_STATE.md`, worker handoffs, and the last Debug review no longer fully describe the current repo truth
 - Result: Clerk must normalize control docs, Debug must rerun against the merged MT5 state, and HQ must keep progression blocked until those records are current
+
+### 2026-03-19 — Post-fix review loop completed and normalized
+- Decision: treat blueprint hardening, merged Wave 1 fix commits, post-fix Clerk review, and post-fix Debug review as the new live repo baseline
+- Why: the product layer no longer reflects the earlier Wave 1 blocker state, and the remaining lag was in office/control continuity rather than unresolved core MT5 blockers
+- Result: Clerk recorded `PASS WITH CLERK CORRECTIONS`, Debug recorded `PASS WITH NON-BLOCKING FIXES`, control-layer normalization became the final active office task, and HQ may now prepare to advance beyond the current fix loop without rewriting later layers as complete

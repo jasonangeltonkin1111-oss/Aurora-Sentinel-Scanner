@@ -22,7 +22,10 @@ Product naming must stay domain-based, not task-number-based.
   - Clerk
   - Debug
 - first milestone remains the active implementation target
-- blueprint integrity hardening is complete; merged MT5 Wave 1 fixes now require post-fix review normalization before progression
+- blueprint integrity hardening is complete
+- Wave 1 fix wave landed in live MT5 product code
+- post-fix Clerk review completed: PASS WITH CLERK CORRECTIONS
+- post-fix Debug review completed: PASS WITH NON-BLOCKING FIXES
 - later product domains are acknowledged but not opened as separate worker classes:
   - Surface
   - Ranking
@@ -32,12 +35,7 @@ Product naming must stay domain-based, not task-number-based.
 ---
 
 ## Current Objective
-Reach the first working scanner slice that:
-- starts cleanly
-- discovers broker symbols
-- reads broker conditions
-- restores broker state first
-- writes truthful broker-level outputs
+Move from completed Wave 1 hardening into the next bounded HQ-controlled stage without reopening already-resolved blocker packets.
 
 ---
 
@@ -111,12 +109,14 @@ No build worker may overlap with Clerk or Debug.
 
 ---
 
-## Current Correction Gate
-Before any progression decision, HQ must require:
-1. live control docs aligned to the merged Wave 1 fix state
-2. handoff normalization for the active Wave 1 worker records
-3. a fresh Debug rerun against the merged MT5 files
-4. compliance with `office/BLUEPRINT_INTEGRITY_AUDIT.md`
-5. no new feature or later-slice expansion
+## Current Gate
+Before any progression decision, HQ must preserve these truths:
+1. the merged Wave 1 fix wave is complete
+2. the control layer reflects the merged Wave 1 fix state truthfully
+3. the latest Clerk verdict is `PASS WITH CLERK CORRECTIONS`
+4. the latest Debug verdict is `PASS WITH NON-BLOCKING FIXES`
+5. no new feature or later-slice expansion should be implied merely because Wave 1 is healthier
 
-Blueprint hardening reduced ambiguity. The merged fix wave improved the live product, but progression still depends on truthful post-fix review state.
+Wave 1 is now review-passed for bounded advancement.
+The next step is not reissuing the same fix packets.
+The next step is selecting the next bounded HQ-controlled stage.

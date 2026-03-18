@@ -1,33 +1,31 @@
 # ENGINE WAVE 1 HANDOFF
-## Files Changed
-- mt5/AuroraSentinel.mq5
-- mt5/ASC_Common.mqh
-- mt5/ASC_Engine.mqh
-- office/HANDOFF_ENGINE_WAVE1.md
 
-## What Was Implemented
-- Added the frozen shared enum and struct contract in `mt5/ASC_Common.mqh`.
-- Added compile-oriented engine orchestration entrypoints in `mt5/ASC_Engine.mqh`.
-- Added a minimal EA shell in `mt5/AuroraSentinel.mq5` with `OnInit`, `OnTimer`, `OnTick`, and `OnDeinit`.
-- Wired the engine flow to snapshot load, bounded symbol processing, snapshot save, and optional mirror output refresh using the frozen shared function names.
+### 1. CHANGED FILES
+- `mt5/AuroraSentinel.mq5`
+- `mt5/ASC_Engine.mqh`
+- `mt5/ASC_Storage.mqh`
+- `office/HANDOFF_ENGINE_WAVE1.md`
 
-## What Was Intentionally Not Implemented
-- No ranking flow.
-- No deep dossier flow.
-- No execution or strategy logic.
-- No direct market classification logic inside the engine.
-- No direct conditions/spec reading inside the engine.
-- No direct storage/output rendering logic inside the engine.
-- No changes to Market, Conditions, Storage, or Output module files.
+### 2. SCOPE CHECK
+- Domain remained inside Engine-owned runtime orchestration and Engine-owned continuity fixes.
+- No Market-domain classification logic was moved into Engine.
+- No Conditions-domain broker-spec reading logic was moved into Engine.
+- No Output-domain computation or ranking logic was added.
+- Storage was touched only where the merged Engine + Storage fix packet required persistence continuity protection for restore-first behavior and snapshot-shrink blocking.
 
-## Contract Compliance Check
-- MT5 product layout kept flat under `mt5/`.
-- Only engine-owned product files were created/updated.
-- Frozen shared types and function names were preserved exactly.
-- Engine orchestration follows the required init/timer order at a bounded level.
-- `OnTick` remains free of heavy scanner work.
+### 3. ARCHIVE USE NOTE
+- No archive truth was translated directly into Engine runtime behavior in this fix wave.
+- Archive materials remained reference only for continuity intent and prior system-shape comparison.
+- No archive-derived classification, ranking, or strategy logic was added from Engine.
 
-## Risks / Dependencies
-- Engine calls depend on Market, Conditions, Storage, and Output implementations being supplied in their own module files under the locked function names.
-- Because those neighboring module files were not authored in this wave, full end-to-end compilation depends on their arrival matching the frozen contract.
-- Timer/default pass sizes are conservative runtime defaults and may need later tuning after integrated verification.
+### 4. COMPLETION CHECK
+- EA build wiring now includes `ASC_Common.mqh`, `ASC_Market.mqh`, `ASC_Conditions.mqh`, `ASC_Storage.mqh`, `ASC_Output.mqh`, and `ASC_Engine.mqh` directly in `mt5/AuroraSentinel.mq5`.
+- Engine now restores the universe snapshot before discovery and retains restored records in memory.
+- Engine now upserts current-pass records into the restored universe instead of destructively rebuilding the in-memory universe from the bounded pass only.
+- Startup continuity no longer treats restored state as disposable when current discovery is incomplete.
+- The merged Engine-side continuity fixes materially resolved the earlier restore-first and compile-boundary blockers identified in pre-fix Debug review.
+
+### 5. OPEN RISKS
+- No active Engine-domain Wave 1 blocker remains from the named fix packet.
+- Non-blocking follow-up remains possible around finer recheck policy coordination and later-stage runtime polish.
+- Engine success in Wave 1 does not imply later summary/dossier layers are complete.
