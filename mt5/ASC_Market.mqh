@@ -2160,7 +2160,39 @@ namespace ASC_Market_Internal
          probe.Issue = quote_window ? "quote_session missing" : "trade_session missing";
    }
 
+   bool IsContinuousMarketClass(const string asset_class)
+   {
+      return (asset_class == "CRYPTO");
+   }
+
+   datetime ResolveNextRecheckTime(const ASC_RuntimeConfig &config,
+                                   const ASC_SessionTruthStatus status)
+   {
+      const datetime now = CurrentServerTime();
+      const int base_gap = MathMax(config.TimerSeconds, 1);
+
+      switch(status)
+      {
+         case ASC_SESSION_OPEN_TRADABLE:
+            return now + base_gap;
+         case ASC_SESSION_QUOTE_ONLY:
+            return now + MathMax(base_gap, 15);
+         case ASC_SESSION_NO_QUOTE:
+            return now + MathMax(base_gap, 30);
+         case ASC_SESSION_STALE_FEED:
+            return now + MathMax(base_gap, 20);
+         case ASC_SESSION_CLOSED_SESSION:
+            return now + MathMax(base_gap, 60);
+         case ASC_SESSION_TRADE_DISABLED:
+            return now + MathMax(base_gap, 120);
+         case ASC_SESSION_UNKNOWN:
+         default:
+            return now + MathMax(base_gap, 20);
+      }
+   }
+
    ASC_SessionTruthStatus ResolveSessionStatus(const ASC_RuntimeConfig &config,
+                                               const string asset_class,
                                                const SessionWindowProbe &quote_probe,
                                                const SessionWindowProbe &trade_probe,
                                                const bool trade_allowed,
@@ -2169,14 +2201,19 @@ namespace ASC_Market_Internal
                                                const bool has_session_reference,
                                                string &ineligible_reason)
    {
+      const bool continuous_market_class = IsContinuousMarketClass(asset_class);
       const bool have_quote_timestamp = (last_quote_time > 0 || tick_evidence.HasTimestamp);
       const datetime effective_quote_time = (tick_evidence.HasTimestamp ? tick_evidence.QuoteTime : last_quote_time);
       const bool stale_quote = (have_quote_timestamp && config.StaleFeedSeconds > 0 && (CurrentServerTime() - effective_quote_time) > config.StaleFeedSeconds);
       const bool fresh_live_quote = (tick_evidence.HasQuote && !stale_quote);
+      const bool recent_quote_timestamp = (have_quote_timestamp && !stale_quote);
       const bool explicit_session_open = (quote_probe.HasData && quote_probe.IsOpen && trade_probe.HasData && trade_probe.IsOpen);
       const bool explicit_quote_only = (quote_probe.HasData && quote_probe.IsOpen && trade_probe.HasData && !trade_probe.IsOpen);
       const bool explicit_session_closed = (quote_probe.HasData && !quote_probe.IsOpen && trade_probe.HasData && !trade_probe.IsOpen);
       const bool session_truth_missing = (!quote_probe.HasData || !trade_probe.HasData);
+      const bool session_windows_unreadable = (!quote_probe.Readable || !trade_probe.Readable);
+      const bool strong_live_evidence = (fresh_live_quote && (has_session_reference || session_truth_missing || continuous_market_class));
+      const bool weak_recent_evidence = (recent_quote_timestamp && (has_session_reference || continuous_market_class));
 
       if(!trade_allowed)
       {
@@ -2213,25 +2250,18 @@ namespace ASC_Market_Internal
          return ASC_SESSION_QUOTE_ONLY;
       }
 
-      if(fresh_live_quote)
+      if(strong_live_evidence)
       {
-         if(session_truth_missing)
-         {
-            ineligible_reason = "";
-            return ASC_SESSION_OPEN_TRADABLE;
-         }
-
-         if(has_session_reference)
-         {
-            ineligible_reason = "";
-            return ASC_SESSION_OPEN_TRADABLE;
-         }
+         ineligible_reason = "";
+         return ASC_SESSION_OPEN_TRADABLE;
       }
 
       if(have_quote_timestamp && stale_quote)
       {
-         if(explicit_session_closed)
-            ineligible_reason = "session closed and last quote is stale";
+         if(explicit_session_closed && !continuous_market_class)
+            ineligible_reason = "session windows closed and last quote is stale";
+         else if(continuous_market_class)
+            ineligible_reason = "continuous market quote is stale";
          else if(has_session_reference)
             ineligible_reason = "session reference present but feed stale";
          else
@@ -2241,10 +2271,18 @@ namespace ASC_Market_Internal
 
       if(explicit_session_closed)
       {
+         if(weak_recent_evidence)
+         {
+            ineligible_reason = continuous_market_class
+                                ? "recent quote evidence conflicts with closed session windows"
+                                : "recent quote evidence conflicts with closed session windows; holding quote state, not closed certainty";
+            return ASC_SESSION_NO_QUOTE;
+         }
+
          if(have_quote_timestamp)
-            ineligible_reason = "session closed; no live quote evidence";
+            ineligible_reason = "session windows closed; no live quote evidence";
          else
-            ineligible_reason = "session closed; no quote evidence";
+            ineligible_reason = "session windows closed; no quote evidence";
          return ASC_SESSION_CLOSED_SESSION;
       }
 
@@ -2256,12 +2294,31 @@ namespace ASC_Market_Internal
             return ASC_SESSION_NO_QUOTE;
          }
 
+         if(session_windows_unreadable)
+         {
+            string details = "market truth unresolved: no quote evidence";
+            if(StringLen(quote_probe.Issue) > 0)
+               details += "; " + quote_probe.Issue;
+            if(StringLen(trade_probe.Issue) > 0)
+               details += "; " + trade_probe.Issue;
+            ineligible_reason = details;
+            return ASC_SESSION_UNKNOWN;
+         }
+
          ineligible_reason = "market truth unresolved: no quote evidence";
          return ASC_SESSION_UNKNOWN;
       }
 
       if(session_truth_missing)
       {
+         if(weak_recent_evidence)
+         {
+            ineligible_reason = tick_evidence.HasQuote
+                                ? "live quote present but session windows missing"
+                                : "recent quote timestamp present but session windows missing";
+            return ASC_SESSION_NO_QUOTE;
+         }
+
          string details = "market truth unresolved";
          if(StringLen(quote_probe.Issue) > 0)
             details += "; " + quote_probe.Issue;
@@ -2377,6 +2434,7 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
 
    string ineligible_reason = "";
    record.MarketTruth.SessionTruthStatus = ASC_Market_Internal::ResolveSessionStatus(config,
+                                                                                      record.Identity.AssetClass,
                                                                                       quote_probe,
                                                                                       trade_probe,
                                                                                       record.MarketTruth.TradeAllowed,
@@ -2386,7 +2444,8 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
                                                                                       ineligible_reason);
 
    record.MarketTruth.Layer1Eligible = (record.MarketTruth.SessionTruthStatus == ASC_SESSION_OPEN_TRADABLE);
-   record.MarketTruth.NextRecheckTime = ASC_Market_Internal::CurrentServerTime() + MathMax(config.TimerSeconds, 1);
+   record.MarketTruth.NextRecheckTime = ASC_Market_Internal::ResolveNextRecheckTime(config,
+                                                                                     record.MarketTruth.SessionTruthStatus);
    record.MarketTruth.IneligibleReason = record.MarketTruth.Layer1Eligible ? "" : ineligible_reason;
 
    return true;
