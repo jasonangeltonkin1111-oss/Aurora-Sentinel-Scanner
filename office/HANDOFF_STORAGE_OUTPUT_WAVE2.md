@@ -22,3 +22,8 @@
 ## OPEN RISKS
 - True shortlist publication remains blocked on fields that do not yet exist in the shared record contract, including ranking/promotion outputs and Layer 2 history/calculation payloads.
 - Because those fields are outside this worker's ownership and `ASC_Common.mqh` is locked, the new summary and symbol files intentionally stop at truthful publication scaffolding rather than pretending shortlist completion.
+
+
+## WAVE 2 OUTPUT PATH FOLLOW-UP
+- Publication broker-path naming now resolves from live runtime identity in `ASC_Output.mqh`, preferring `ACCOUNT_SERVER`, then `ACCOUNT_COMPANY`, then `TERMINAL_COMPANY`, then `ACCOUNT_LOGIN` before sanitizing to a filesystem-safe stem.
+- The previous generic broker fallback could still collapse publication naming to a non-domain placeholder when runtime broker metadata was unavailable; this follow-up keeps the output path tied to a real runtime identity source whenever one exists and caches the resolved broker stem for stable use across the run.
