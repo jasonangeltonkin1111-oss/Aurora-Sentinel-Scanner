@@ -44,6 +44,18 @@ void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
    record.ConditionsTruth.VolumeMin = 0.0;
    record.ConditionsTruth.VolumeMax = 0.0;
    record.ConditionsTruth.VolumeStep = 0.0;
+
+   record.SurfaceTruth.ScanState = ASC_SURFACE_NOT_RUN;
+   record.SurfaceTruth.SurfaceEligible = false;
+   record.SurfaceTruth.RankingEligible = false;
+   record.SurfaceTruth.SurfaceReason = "";
+   record.SurfaceTruth.BarsM15 = -1;
+   record.SurfaceTruth.BarsH1 = -1;
+   record.SurfaceTruth.LastBarTimeM15 = 0;
+   record.SurfaceTruth.LastBarTimeH1 = 0;
+   record.SurfaceTruth.QuoteAgeSeconds = -1.0;
+   record.SurfaceTruth.SpreadCostPoints = -1.0;
+   record.SurfaceTruth.SurfaceScore = -1.0;
   }
 
 int ASC_Engine_FindRecordIndexBySymbol(const string symbol)
@@ -120,6 +132,8 @@ void ASC_Engine_ProcessSymbols(const string &symbols[],const int discovered_coun
          if(ASC_Conditions_Load(symbols[index],conditions_record) || existing_index < 0)
             merged_record.ConditionsTruth = conditions_record.ConditionsTruth;
         }
+
+      ASC_Surface_Evaluate(g_asc_runtime_config,merged_record);
 
       ASC_Engine_UpsertRecord(merged_record);
      }
