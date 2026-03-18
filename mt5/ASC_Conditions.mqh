@@ -59,6 +59,30 @@ namespace ASC_Conditions_Internal
       AppendReason(reason, field_name + " unreadable");
       return false;
    }
+
+   void ApplyIntegerSpec(const bool readable,
+                         const long value,
+                         int &target)
+   {
+      if(readable)
+         target = (int)value;
+   }
+
+   void ApplyBooleanSpec(const bool readable,
+                         const long value,
+                         bool &target)
+   {
+      if(readable)
+         target = (value != 0);
+   }
+
+   void ApplyDoubleSpec(const bool readable,
+                        const double value,
+                        double &target)
+   {
+      if(readable)
+         target = value;
+   }
 }
 
 bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
@@ -67,6 +91,7 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
 
    string reason = "";
    bool all_readable = true;
+   bool all_valid = true;
 
    if(StringLen(symbol) == 0)
    {
@@ -85,65 +110,115 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
    double volume_max = 0.0;
    double volume_step = 0.0;
 
-   all_readable = ASC_Conditions_Internal::ReadIntegerSpec(symbol, SYMBOL_DIGITS, digits, "digits", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadIntegerSpec(symbol, SYMBOL_SPREAD, spread_points, "spread_points", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadIntegerSpec(symbol, SYMBOL_SPREAD_FLOAT, spread_float, "spread_float", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_POINT, point, "point", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_TRADE_TICK_SIZE, tick_size, "tick_size", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_TRADE_TICK_VALUE, tick_value, "tick_value", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_TRADE_CONTRACT_SIZE, contract_size, "contract_size", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_VOLUME_MIN, volume_min, "volume_min", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_VOLUME_MAX, volume_max, "volume_max", reason) && all_readable;
-   all_readable = ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_VOLUME_STEP, volume_step, "volume_step", reason) && all_readable;
+   const bool digits_readable =
+      ASC_Conditions_Internal::ReadIntegerSpec(symbol, SYMBOL_DIGITS, digits, "digits", reason);
+   const bool spread_points_readable =
+      ASC_Conditions_Internal::ReadIntegerSpec(symbol, SYMBOL_SPREAD, spread_points, "spread_points", reason);
+   const bool spread_float_readable =
+      ASC_Conditions_Internal::ReadIntegerSpec(symbol, SYMBOL_SPREAD_FLOAT, spread_float, "spread_float", reason);
+   const bool point_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_POINT, point, "point", reason);
+   const bool tick_size_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_TRADE_TICK_SIZE, tick_size, "tick_size", reason);
+   const bool tick_value_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_TRADE_TICK_VALUE, tick_value, "tick_value", reason);
+   const bool contract_size_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_TRADE_CONTRACT_SIZE, contract_size, "contract_size", reason);
+   const bool volume_min_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_VOLUME_MIN, volume_min, "volume_min", reason);
+   const bool volume_max_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_VOLUME_MAX, volume_max, "volume_max", reason);
+   const bool volume_step_readable =
+      ASC_Conditions_Internal::ReadDoubleSpec(symbol, SYMBOL_VOLUME_STEP, volume_step, "volume_step", reason);
 
-   if(all_readable)
-   {
-      record.ConditionsTruth.Digits       = (int)digits;
-      record.ConditionsTruth.SpreadPoints = (int)spread_points;
-      record.ConditionsTruth.SpreadFloat  = (spread_float != 0);
-      record.ConditionsTruth.Point        = point;
-      record.ConditionsTruth.TickSize     = tick_size;
-      record.ConditionsTruth.TickValue    = tick_value;
-      record.ConditionsTruth.ContractSize = contract_size;
-      record.ConditionsTruth.VolumeMin    = volume_min;
-      record.ConditionsTruth.VolumeMax    = volume_max;
-      record.ConditionsTruth.VolumeStep   = volume_step;
+   all_readable = digits_readable &&
+                  spread_points_readable &&
+                  spread_float_readable &&
+                  point_readable &&
+                  tick_size_readable &&
+                  tick_value_readable &&
+                  contract_size_readable &&
+                  volume_min_readable &&
+                  volume_max_readable &&
+                  volume_step_readable;
 
-      if(record.ConditionsTruth.Digits < 0)
-         ASC_Conditions_Internal::AppendReason(reason, "digits invalid");
+   ASC_Conditions_Internal::ApplyIntegerSpec(digits_readable, digits, record.ConditionsTruth.Digits);
+   ASC_Conditions_Internal::ApplyIntegerSpec(spread_points_readable, spread_points, record.ConditionsTruth.SpreadPoints);
+   ASC_Conditions_Internal::ApplyBooleanSpec(spread_float_readable, spread_float, record.ConditionsTruth.SpreadFloat);
+   ASC_Conditions_Internal::ApplyDoubleSpec(point_readable, point, record.ConditionsTruth.Point);
+   ASC_Conditions_Internal::ApplyDoubleSpec(tick_size_readable, tick_size, record.ConditionsTruth.TickSize);
+   ASC_Conditions_Internal::ApplyDoubleSpec(tick_value_readable, tick_value, record.ConditionsTruth.TickValue);
+   ASC_Conditions_Internal::ApplyDoubleSpec(contract_size_readable, contract_size, record.ConditionsTruth.ContractSize);
+   ASC_Conditions_Internal::ApplyDoubleSpec(volume_min_readable, volume_min, record.ConditionsTruth.VolumeMin);
+   ASC_Conditions_Internal::ApplyDoubleSpec(volume_max_readable, volume_max, record.ConditionsTruth.VolumeMax);
+   ASC_Conditions_Internal::ApplyDoubleSpec(volume_step_readable, volume_step, record.ConditionsTruth.VolumeStep);
 
-      if(record.ConditionsTruth.SpreadPoints < 0)
-         ASC_Conditions_Internal::AppendReason(reason, "spread_points invalid");
+   if(digits_readable && record.ConditionsTruth.Digits < 0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "digits invalid");
+     }
 
-      if(record.ConditionsTruth.Point <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "point invalid");
+   if(spread_points_readable && record.ConditionsTruth.SpreadPoints < 0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "spread_points invalid");
+     }
 
-      if(record.ConditionsTruth.TickSize <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "tick_size invalid");
+   if(point_readable && record.ConditionsTruth.Point <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "point invalid");
+     }
 
-      if(record.ConditionsTruth.TickValue <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "tick_value invalid");
+   if(tick_size_readable && record.ConditionsTruth.TickSize <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "tick_size invalid");
+     }
 
-      if(record.ConditionsTruth.ContractSize <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "contract_size invalid");
+   if(tick_value_readable && record.ConditionsTruth.TickValue <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "tick_value invalid");
+     }
 
-      if(record.ConditionsTruth.VolumeMin <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "volume_min invalid");
+   if(contract_size_readable && record.ConditionsTruth.ContractSize <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "contract_size invalid");
+     }
 
-      if(record.ConditionsTruth.VolumeMax <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "volume_max invalid");
+   if(volume_min_readable && record.ConditionsTruth.VolumeMin <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "volume_min invalid");
+     }
 
-      if(record.ConditionsTruth.VolumeStep <= 0.0)
-         ASC_Conditions_Internal::AppendReason(reason, "volume_step invalid");
+   if(volume_max_readable && record.ConditionsTruth.VolumeMax <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "volume_max invalid");
+     }
 
-      if(record.ConditionsTruth.VolumeMax < record.ConditionsTruth.VolumeMin)
-         ASC_Conditions_Internal::AppendReason(reason, "volume_max below volume_min");
-   }
+   if(volume_step_readable && record.ConditionsTruth.VolumeStep <= 0.0)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "volume_step invalid");
+     }
 
-   record.ConditionsTruth.SpecsReadable = (StringLen(reason) == 0);
-   record.ConditionsTruth.SpecsReason = record.ConditionsTruth.SpecsReadable ? "ok" : reason;
+   if(volume_min_readable &&
+      volume_max_readable &&
+      record.ConditionsTruth.VolumeMax < record.ConditionsTruth.VolumeMin)
+     {
+      all_valid = false;
+      ASC_Conditions_Internal::AppendReason(reason, "volume_max below volume_min");
+     }
 
-   return record.ConditionsTruth.SpecsReadable;
+   record.ConditionsTruth.SpecsReadable = all_readable;
+   record.ConditionsTruth.SpecsReason = (all_readable && all_valid) ? "ok" : reason;
+
+   return(all_readable && all_valid);
 }
 
 #endif
