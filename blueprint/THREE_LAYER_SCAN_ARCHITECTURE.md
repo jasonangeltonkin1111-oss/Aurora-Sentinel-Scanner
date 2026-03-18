@@ -86,6 +86,7 @@ Minimum behavior:
 - No generic asset-class assumptions are allowed.
 - If truth is uncertain, mark uncertain. Do not guess.
 - Layer 1 determines eligibility truth only; it does not rank, score, or publish shortlist authority.
+- Layer 1 eligibility is market/session truth, not classification truth. Unresolved classification may remain explicit at this stage, but it must not by itself falsify open-market eligibility.
 
 ### Completion condition
 Layer 1 is complete only when ASC can reliably:
@@ -152,6 +153,7 @@ Layer 1.2 writes may be simpler than Layer 3 atomic dossier writes, but they mus
 - preserve prior valid snapshot truth unless replacement is intentional and verified
 - keep missing values explicit
 - avoid destructive reset for routine refreshes
+- do not let a bounded refresh pass shrink the known universe unless a full replacement pass was intentionally completed and verified
 
 ---
 
@@ -173,7 +175,7 @@ Only symbols with `Layer1Eligible = true`.
 - measure spread and friction surface
 - compute shortlist-relevant metrics
 - rank by `PrimaryBucket`
-- output top 5 per bucket
+- output top 5 per `PrimaryBucket`
 
 ### Layer 2 is NOT trivial
 It must respect:

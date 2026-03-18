@@ -16,6 +16,7 @@ Ranking is the promotion mechanism that decides which symbols are worthy of acti
 
 ## What "Top 5" Means
 Within each `PrimaryBucket`, the top 5 are the symbols that most deserve activation for deeper computation at the current surface-scan stage.
+If fewer than five symbols in a bucket meet ranking validity, the promoted set for that bucket is the truthful smaller count, not padded output.
 
 This does not mean:
 - the five best trades
@@ -93,6 +94,7 @@ A symbol remains INACTIVE if:
 ## Tie / Overflow Rule
 If more than five symbols appear equivalent near the boundary, the implementation must apply deterministic tie handling.
 Do not let unstable ordering create random activation churn.
+At minimum, ties that remain after score comparison must fall back to a stable symbol-identity order: canonical symbol ascending when available, otherwise normalized/raw symbol ascending.
 
 ---
 
@@ -101,6 +103,7 @@ Do not let unstable ordering create random activation churn.
 - a trader-facing shortlist view
 - the visible activation authority surface
 
+The promoted set is decided by ranking truth before writing. Writers publish that promoted set but do not decide it.
 Only promoted symbols may gain active dossier continuation rights.
 
 ---

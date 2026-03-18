@@ -69,17 +69,16 @@ Use `blueprint/` when you need to answer:
 ### Contents
 - `README.md` — overview of the blueprint folder
 - `SYSTEM_OVERVIEW.md` — high-level definition of Aurora Sentinel Core
-- `ARCHITECTURE_RULES.md` — hard system rules and forbidden patterns
-- `LAYER_MODEL.md` — 3-layer rolling runtime model
+- `THREE_LAYER_SCAN_ARCHITECTURE.md` — locked layer model and stage separation
 - `MODULE_MAP.md` — logical module separation and responsibilities
 - `MARKET_IDENTITY_MAP.md` — contract-level explanation of broker symbol identity and bucket mapping
-- `PERSISTENCE_CONTRACT.md` — startup restore, stale detection, and gap-fill behavior
-- `OUTPUT_CONTRACT.md` — canonical output definitions
-- `SUMMARY_SCHEMA.md` — trader-facing summary rules
-- `SYMBOL_FILE_SCHEMA.md` — per-symbol deep file contract
+- `ATOMIC_WRITE_AND_PERSISTENCE_RULES.md` — restore-first, gap-fill, fallback, and atomicity law
+- `SUMMARY_SCHEMA.md` — canonical summary definition
+- `PRODUCT_NAMING_AND_OUTPUT_LANGUAGE_RULES.md` — naming/output boundary law
 - `RUNTIME_RULES.md` — runtime behavior and build-order intent
-- `UI_BOUNDARY.md` — separation between internal logic and HUD/menu/display
-- `CHANGELOG.md` — blueprint-era changes worth preserving
+- `SYMBOL_LIFECYCLE_AND_ACTIVATION.md` — state transitions and activation rights
+- `UNIVERSE_SNAPSHOT_CONTRACT.md` — Layer 1.2 snapshot law
+- `RANKING_AND_PROMOTION_CONTRACT.md` — ranking and activation law
 
 ### Does belong here
 - rules
@@ -113,20 +112,16 @@ No MT5 code belongs here.
 
 ### Contents
 - `README.md` — overview of office purpose
-- `TASK_BOARD.md` — current project/build state
-- `FILE_LOCKS.md` — lock register for safe parallel work
-- `DECISIONS.md` — locked operational/project decisions
-- `MASTER_LOG.md` — master-level running notes
+- `HQ_OPERATOR_MANUAL.md` — HQ continuity and architectural truths
+- `HQ_STATE.md` — current live control state
+- `HQ_TASK_FLOW.md` — HQ task sequencing rules
+- `HQ_DECISION_LOG.md` — append-only load-bearing HQ decisions
 - `WORKER_RULES.md` — worker discipline and boundaries
-- `MASTER_RULES.md` — master discipline and boundaries
-- `MODULE_OWNERSHIP.md` — which worker/project owns which product area
-- `BUILD_ORDER.md` — intended module build sequence
-- `EXECUTION_PROTOCOL.md` — one-worker execution law and post-run sequencing
-- `CLERK_RULES.md` — Clerk role and limits
-- `DEBUG_RULES.md` — Debug role and limits
-- `SHA_LEDGER.md` — old/new SHA tracking guidance for updates
-- `ACTIVE_PROJECTS/` — current bounded project packets or active project notes
-- `HANDOFFS/` — internal worker handoffs only
+- `MODULE_OWNERSHIP.md` — which worker/domain owns which product area
+- `TASK_BOARD.md` — current build target and stage locks
+- `WORKER_EXECUTION_PROTOCOL.md` — one-worker execution law and handoff protocol
+- `LAYERED_BUILD_ORDER.md` — intended layer build sequence
+- `TEST_AND_VERIFICATION_PLAN.md` — stage verification expectations
 
 ### Does belong here
 - coordination
@@ -174,9 +169,7 @@ Not allowed:
 - `mt5/AuroraSentinelCore/dev/`
 
 ### Contents
-- `README.md` — product rules
-- `AuroraSentinelCore/` — the flat deployment folder that maps to:
-  - `MQL5/Experts/AuroraSentinelCore/`
+- the current flat MT5 product files stored directly under `mt5/`
 
 ### File naming rule
 Product files must use domain/system naming only.
@@ -238,10 +231,8 @@ Use `archives/` when you need to answer:
 
 ### Contents
 - `README.md` — overview of archive purpose
-- `blueprints/` — old blueprint material
-- `maps/` — preserved raw maps and classification assets
-- `legacy_systems/` — older systems preserved for reference
-- `extracted_reference/` — extracted materials worth keeping visible
+- `LEGACY_SYSTEMS/` — older systems preserved for reference
+- additional archive subtrees preserved as historical source material
 
 ### Important archive role
 The historical classification map is a foundational source asset.
@@ -293,7 +284,7 @@ These rules define what the whole repository is trying to protect.
 - read existing broker state before doing new work
 - fill gaps, refresh stale, avoid blind rebuilds
 - writers format only
-- summary shows top 5 per bucket only
+- summary shows top 5 per `PrimaryBucket` only
 - symbol files contain exactly 3 major sections:
   - `[BROKER_SPEC]`
   - `[OHLC_HISTORY]`
@@ -310,17 +301,13 @@ These rules define what the whole repository is trying to protect.
 Read in this order:
 1. `README.md`
 2. `INDEX.md`
-3. `blueprint/README.md`
-4. `blueprint/SYSTEM_OVERVIEW.md`
-5. `blueprint/ARCHITECTURE_RULES.md`
-6. `blueprint/MODULE_MAP.md`
-7. `blueprint/PERSISTENCE_CONTRACT.md`
-8. `blueprint/OUTPUT_CONTRACT.md`
-9. `office/MASTER_RULES.md`
-10. `office/MODULE_OWNERSHIP.md`
-11. `office/BUILD_ORDER.md`
-12. `office/EXECUTION_PROTOCOL.md`
-13. `office/TASK_BOARD.md`
+3. `office/HQ_OPERATOR_MANUAL.md`
+4. `office/HQ_STATE.md`
+5. `office/HQ_TASK_FLOW.md`
+6. `office/HQ_DECISION_LOG.md`
+7. `office/MODULE_OWNERSHIP.md`
+8. `office/TASK_BOARD.md`
+9. the active blueprint law set named by HQ
 
 Use `archives/` only when you need source provenance or no-drift checking.
 
@@ -333,8 +320,8 @@ Read in this order:
 2. `INDEX.md`
 3. relevant blueprint file(s)
 4. `office/WORKER_RULES.md`
-5. `office/FILE_LOCKS.md`
-6. your assigned project packet in `office/ACTIVE_PROJECTS/`
+5. `office/ARCHIVE_REFERENCE_MAP.md`
+6. your assigned HQ scope or handoff
 
 Then stay inside your assigned product area.
 Do not freeload across roots.
