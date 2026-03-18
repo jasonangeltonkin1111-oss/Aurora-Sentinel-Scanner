@@ -4,7 +4,7 @@
 #include <ISSX/issx_core.mqh>
 
 // ============================================================================
-// ISSX REGISTRY v1.7.2
+// ISSX REGISTRY v1.732
 // Central ownership metadata for fields, enum surfaces, comparator contracts,
 // policy-sensitive fingerprints, owner-surface inventory, semantic warnings,
 // and EA5 legend support.
@@ -757,18 +757,29 @@ public:
       return true;
      }
 
-   ISSX_ValidationResult Validate() const
+      ISSX_ValidationResult Validate() const
      {
       for(int i=0;i<ArraySize(m_items);i++)
         {
-         if(ISSX_Util::IsEmpty(m_items[i].surface_name))
-            return ISSX_Validate::Fail(2301,"inventory surface_name empty");
-         if(m_items[i].surface_kind==issx_surface_kind_unknown)
-            return ISSX_Validate::Fail(2302,"inventory surface_kind unknown");
-         if(ISSX_Util::IsEmpty(m_items[i].owner_module))
-            return ISSX_Validate::Fail(2303,"inventory owner_module empty");
-         if(m_items[i].compatibility_alias_state==issx_alias_state_unknown)
-            return ISSX_Validate::Fail(2304,"inventory compatibility_alias_state unknown");
+         if(ISSX_Util::IsEmpty(m_items[i].field_name))
+            return ISSX_Validate::Fail(2001,"field_name empty");
+         if(!ISSX_Enum::StageIsValid(m_items[i].owner_ea))
+            return ISSX_Validate::Fail(2002,"owner_ea invalid");
+         if(ISSX_Util::IsEmpty(m_items[i].semantic_type))
+            return ISSX_Validate::Fail(2003,"semantic_type empty");
+         if(ISSX_Util::IsEmpty(m_items[i].projection_policy))
+            return ISSX_Validate::Fail(2004,"projection_policy empty");
+         if(ISSX_Util::IsEmpty(m_items[i].runtime_state_kind))
+            return ISSX_Validate::Fail(2005,"runtime_state_kind empty");
+         if(m_items[i].stale_policy==issx_stale_policy_unknown)
+            return ISSX_Validate::Fail(2006,"stale_policy unknown");
+         if(m_items[i].authority_level==issx_authority_advisory
+            && m_items[i].direct_or_derived==issx_direct_field
+            && !IsDebugField(m_items[i].field_name))
+            return ISSX_Validate::Fail(2007,"advisory field may not be direct factual market truth");
+         if(IsHistoryOrWarehouseField(m_items[i].field_name)
+            && !m_items[i].cache_provenance_required)
+            return ISSX_Validate::Fail(2008,"warehouse/history field missing cache provenance");
         }
       return ISSX_Validate::Ok();
      }
@@ -1139,29 +1150,16 @@ public:
       return true;
      }
 
-   ISSX_ValidationResult Validate() const
+      ISSX_ValidationResult Validate() const
      {
       for(int i=0;i<ArraySize(m_items);i++)
         {
-         if(ISSX_Util::IsEmpty(m_items[i].field_name))
-            return ISSX_Validate::Fail(2001,"field_name empty");
-         if(!ISSX_Enum::StageIsValid(m_items[i].owner_ea))
-            return ISSX_Validate::Fail(2002,"owner_ea invalid");
-         if(ISSX_Util::IsEmpty(m_items[i].semantic_type))
-            return ISSX_Validate::Fail(2003,"semantic_type empty");
-         if(ISSX_Util::IsEmpty(m_items[i].projection_policy))
-            return ISSX_Validate::Fail(2004,"projection_policy empty");
-         if(ISSX_Util::IsEmpty(m_items[i].runtime_state_kind))
-            return ISSX_Validate::Fail(2005,"runtime_state_kind empty");
-         if(m_items[i].stale_policy==issx_stale_policy_unknown)
-            return ISSX_Validate::Fail(2006,"stale_policy unknown");
-         if(m_items[i].authority_level==issx_authority_advisory
-            && m_items[i].direct_or_derived==issx_direct_field
-            && !IsDebugField(m_items[i].field_name))
-            return ISSX_Validate::Fail(2007,"advisory field may not be direct factual market truth");
-         if(IsHistoryOrWarehouseField(m_items[i].field_name)
-            && !m_items[i].cache_provenance_required)
-            return ISSX_Validate::Fail(2008,"warehouse/history field missing cache provenance");
+         if(ISSX_Util::IsEmpty(m_items[i].enum_name))
+            return ISSX_Validate::Fail(2101,"enum_name empty");
+         if(ISSX_Util::IsEmpty(m_items[i].allowed_values_csv))
+            return ISSX_Validate::Fail(2102,"allowed_values_csv empty");
+         if(ISSX_Util::IsEmpty(m_items[i].compact_description))
+            return ISSX_Validate::Fail(2103,"compact_description empty");
         }
       return ISSX_Validate::Ok();
      }
@@ -1615,7 +1613,7 @@ public:
       Add("shared_semantic_enums",
           issx_surface_kind_enum,
           "issx_core.mqh",
-          "issx_registry.mqh,issx_runtime.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_registry.mqh,issx_runtime.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           true,
           true,
           false,
@@ -1627,7 +1625,7 @@ public:
       Add("shared_dtos",
           issx_surface_kind_dto,
           "issx_core.mqh",
-          "issx_registry.mqh,issx_runtime.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_registry.mqh,issx_runtime.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           true,
           true,
           false,
@@ -1639,7 +1637,7 @@ public:
       Add("shared_field_keys",
           issx_surface_kind_constant,
           "issx_core.mqh",
-          "issx_registry.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_registry.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           true,
           true,
           false,
@@ -1663,7 +1661,7 @@ public:
       Add("manifest_keys",
           issx_surface_kind_manifest_field,
           "issx_core.mqh",
-          "issx_persistence.mqh,issx_runtime.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_persistence.mqh,issx_runtime.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           true,
           true,
           false,
@@ -1687,7 +1685,7 @@ public:
       Add("json_writer_helper_family",
           issx_surface_kind_helper,
           "issx_core.mqh",
-          "issx_registry.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_registry.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           false,
           true,
           false,
@@ -1699,7 +1697,7 @@ public:
       Add("shared_compatibility_aliases",
           issx_surface_kind_helper,
           "issx_core.mqh",
-          "issx_registry.mqh,issx_runtime.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_registry.mqh,issx_runtime.mqh,issx_persistence.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           true,
           true,
           false,
@@ -1711,7 +1709,7 @@ public:
       Add("ea5_external_field_keys",
           issx_surface_kind_json_field,
           "issx_core.mqh",
-          "issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_contracts.mqh,issx_ui.mqh",
           false,
           true,
           false,
@@ -1723,7 +1721,7 @@ public:
       Add("shared_debug_trace_hud_keys",
           issx_surface_kind_debug_key,
           "issx_core.mqh",
-          "issx_registry.mqh,issx_runtime.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_registry.mqh,issx_runtime.mqh,issx_market_engine.mqh,issx_history_engine.mqh,issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           false,
           true,
           true,
@@ -1735,7 +1733,7 @@ public:
       Add("field_registry_metadata",
           issx_surface_kind_serializer,
           "issx_registry.mqh",
-          "issx_runtime.mqh,issx_persistence.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_runtime.mqh,issx_persistence.mqh,issx_contracts.mqh,issx_ui.mqh",
           false,
           true,
           false,
@@ -1747,7 +1745,7 @@ public:
       Add("enum_registry_metadata",
           issx_surface_kind_serializer,
           "issx_registry.mqh",
-          "issx_runtime.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_runtime.mqh,issx_contracts.mqh,issx_ui.mqh",
           false,
           true,
           false,
@@ -1759,7 +1757,7 @@ public:
       Add("comparator_registry_metadata",
           issx_surface_kind_serializer,
           "issx_registry.mqh",
-          "issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui_test.mqh",
+          "issx_selection_engine.mqh,issx_correlation_engine.mqh,issx_contracts.mqh,issx_ui.mqh",
           false,
           true,
           false,
@@ -1771,7 +1769,7 @@ public:
       Add("owner_surface_inventory",
           issx_surface_kind_serializer,
           "issx_registry.mqh",
-          "issx_runtime.mqh,issx_ui_test.mqh,issx_contracts.mqh",
+          "issx_runtime.mqh,issx_ui.mqh,issx_contracts.mqh",
           false,
           true,
           false,
@@ -1794,6 +1792,658 @@ public:
    void SeedBlueprintV150()
      {
       SeedBlueprintV172();
+     }
+  };
+
+// ============================================================================
+// SECTION 05B: STAGE STATE REGISTRY (RUNTIME STATE ONLY)
+// ============================================================================
+
+enum ISSX_StageStateCode
+  {
+   STAGE_OFF      =0,
+   STAGE_INIT     =1,
+   STAGE_RUNNING  =2,
+   STAGE_READY    =3,
+   STAGE_DEGRADED =4,
+   STAGE_FAILED   =5,
+   STAGE_SKIPPED  =6
+  };
+
+enum ISSX_StageHealthCode
+  {
+   STAGE_HEALTH_UNKNOWN  =0,
+   STAGE_HEALTH_HEALTHY  =1,
+   STAGE_HEALTH_DEGRADED =2,
+   STAGE_HEALTH_FAILED   =3
+  };
+
+struct ISSXStageState
+  {
+   string   stage_name;
+   int      state;
+   string   reason;
+   long     elapsed_ms;
+   int      health_state;
+   datetime last_update;
+
+   void Reset()
+     {
+      stage_name="";
+      state=STAGE_OFF;
+      reason="none";
+      elapsed_ms=0;
+      health_state=STAGE_HEALTH_UNKNOWN;
+      last_update=(datetime)0;
+     }
+  };
+
+struct ISSXStageRegistration
+  {
+   string stage_name;
+   bool   required_stage;
+   bool   registered_flag;
+   bool   enabled_flag;
+   int    priority_order;
+   string dependency_csv;
+   string disabled_reason;
+   datetime registered_at;
+
+   void Reset()
+     {
+      stage_name="";
+      required_stage=false;
+      registered_flag=false;
+      enabled_flag=false;
+      priority_order=0;
+      dependency_csv="";
+      disabled_reason="none";
+      registered_at=(datetime)0;
+     }
+  };
+
+class ISSX_StageStateRegistry
+  {
+private:
+   ISSXStageState        m_items[];
+   ISSXStageRegistration m_specs[];
+   long                  m_update_seq;
+
+   int FindIndex(const string stage_name) const
+     {
+      const int n=ArraySize(m_items);
+      for(int i=0;i<n;i++)
+        {
+         if(m_items[i].stage_name==stage_name)
+            return i;
+        }
+      return -1;
+     }
+
+   int EnsureIndex(const string stage_name)
+     {
+      if(ISSX_Util::IsEmpty(stage_name))
+         return -1;
+
+      int idx=FindIndex(stage_name);
+      if(idx>=0)
+         return idx;
+
+      const int n=ArraySize(m_items);
+      if(ArrayResize(m_items,n+1)!=(n+1))
+         return -1;
+
+      idx=n;
+      m_items[idx].Reset();
+      m_items[idx].stage_name=stage_name;
+      m_items[idx].last_update=TimeLocal();
+      return idx;
+     }
+
+   int FindSpecIndex(const string stage_name) const
+     {
+      const int n=ArraySize(m_specs);
+      for(int i=0;i<n;i++)
+        {
+         if(m_specs[i].stage_name==stage_name)
+            return i;
+        }
+      return -1;
+     }
+
+   int EnsureSpecIndex(const string stage_name)
+     {
+      if(ISSX_Util::IsEmpty(stage_name))
+         return -1;
+
+      int idx=FindSpecIndex(stage_name);
+      if(idx>=0)
+         return idx;
+
+      const int n=ArraySize(m_specs);
+      if(ArrayResize(m_specs,n+1)!=(n+1))
+         return -1;
+
+      idx=n;
+      m_specs[idx].Reset();
+      m_specs[idx].stage_name=stage_name;
+      return idx;
+     }
+
+   bool IsStateValid(const int state) const
+     {
+      return (state>=STAGE_OFF && state<=STAGE_SKIPPED);
+     }
+
+   bool IsHealthValid(const int health_state) const
+     {
+      return (health_state>=STAGE_HEALTH_UNKNOWN && health_state<=STAGE_HEALTH_FAILED);
+     }
+
+   string NormalizeReason(const string reason) const
+     {
+      if(ISSX_Util::IsEmpty(reason))
+         return "none";
+      return reason;
+     }
+
+   void Touch(const int idx)
+     {
+      if(idx<0 || idx>=ArraySize(m_items))
+         return;
+      m_items[idx].last_update=TimeLocal();
+      m_update_seq++;
+     }
+
+   static string CanonicalRequiredStageName(const int idx)
+     {
+      switch(idx)
+        {
+         case 0: return "ea1_market";
+         case 1: return "ea2_history";
+         case 2: return "ea3_selection";
+         case 3: return "ea4_correlation";
+         case 4: return "ea5_contracts";
+        }
+      return "";
+     }
+
+   static string CanonicalDependenciesFor(const string stage_name)
+     {
+      if(stage_name=="ea1_market")
+         return "runtime_ready,symbol_valid,live_tick,recent_tick,rates_valid";
+      if(stage_name=="ea2_history")
+         return "ea1_market,history_access";
+      if(stage_name=="ea3_selection")
+         return "ea1_market,ea2_history";
+      if(stage_name=="ea4_correlation")
+         return "ea3_selection";
+      if(stage_name=="ea5_contracts")
+         return "ea1_market,ea2_history,ea3_selection,ea4_correlation";
+      return "";
+     }
+
+   bool ValidateOneRequiredStage(const string stage_name,string &reason) const
+     {
+      const int spec_idx=FindSpecIndex(stage_name);
+      if(spec_idx<0)
+        {
+         reason="stage_missing";
+         return false;
+        }
+
+      if(!m_specs[spec_idx].registered_flag)
+        {
+         reason="stage_not_registered";
+         return false;
+        }
+
+      const int state_idx=FindIndex(stage_name);
+      if(state_idx<0)
+        {
+         reason="stage_state_missing";
+         return false;
+        }
+
+      if(!IsStateValid(m_items[state_idx].state))
+        {
+         reason="stage_state_invalid";
+         return false;
+        }
+
+      if(m_specs[spec_idx].priority_order<=0)
+        {
+         reason="stage_priority_missing";
+         return false;
+        }
+
+      if(ISSX_Util::IsEmpty(m_specs[spec_idx].dependency_csv))
+        {
+         reason="stage_dependency_missing";
+         return false;
+        }
+
+      if(!m_specs[spec_idx].enabled_flag && ISSX_Util::IsEmpty(m_specs[spec_idx].disabled_reason))
+        {
+         reason="stage_disabled_reason_missing";
+         return false;
+        }
+
+      reason="ok";
+      return true;
+     }
+
+public:
+   ISSX_StageStateRegistry()
+     {
+      Reset();
+     }
+
+   void Reset()
+     {
+      ArrayResize(m_items,0);
+      ArrayResize(m_specs,0);
+      m_update_seq=0;
+     }
+
+   void SeedCanonicalRequiredStages(const bool ea1_enabled,
+                                    const bool ea2_enabled,
+                                    const bool ea3_enabled,
+                                    const bool ea4_enabled,
+                                    const bool ea5_enabled)
+     {
+      Reset();
+
+      RegisterStage("ea1_market",1,ea1_enabled,true,CanonicalDependenciesFor("ea1_market"),(ea1_enabled?"none":"requested_off"));
+      RegisterStage("ea2_history",2,ea2_enabled,true,CanonicalDependenciesFor("ea2_history"),(ea2_enabled?"none":"requested_off"));
+      RegisterStage("ea3_selection",3,ea3_enabled,true,CanonicalDependenciesFor("ea3_selection"),(ea3_enabled?"none":"requested_off"));
+      RegisterStage("ea4_correlation",4,ea4_enabled,true,CanonicalDependenciesFor("ea4_correlation"),(ea4_enabled?"none":"requested_off"));
+      RegisterStage("ea5_contracts",5,ea5_enabled,true,CanonicalDependenciesFor("ea5_contracts"),(ea5_enabled?"none":"requested_off"));
+
+      EnsureIndex("ea1_market");
+      EnsureIndex("ea2_history");
+      EnsureIndex("ea3_selection");
+      EnsureIndex("ea4_correlation");
+      EnsureIndex("ea5_contracts");
+     }
+
+   int Count() const
+     {
+      return ArraySize(m_items);
+     }
+
+   int RegisteredStageCount() const
+     {
+      int total=0;
+      for(int i=0;i<ArraySize(m_specs);i++)
+         if(m_specs[i].registered_flag)
+            total++;
+      return total;
+     }
+
+   int RequiredStageCount() const
+     {
+      int total=0;
+      for(int i=0;i<ArraySize(m_specs);i++)
+         if(m_specs[i].required_stage)
+            total++;
+      return total;
+     }
+
+   bool Exists(const string stage_name) const
+     {
+      return (FindIndex(stage_name)>=0 || FindSpecIndex(stage_name)>=0);
+     }
+
+   bool RegisterStage(const string stage_name,
+                      const int priority_order,
+                      const bool enabled_flag,
+                      const bool required_stage=true,
+                      const string dependency_csv="",
+                      const string disabled_reason="none")
+     {
+      if(ISSX_Util::IsEmpty(stage_name))
+         return false;
+
+      const int spec_idx=EnsureSpecIndex(stage_name);
+      if(spec_idx<0)
+         return false;
+
+      m_specs[spec_idx].stage_name=stage_name;
+      m_specs[spec_idx].required_stage=required_stage;
+      m_specs[spec_idx].registered_flag=true;
+      m_specs[spec_idx].enabled_flag=enabled_flag;
+      m_specs[spec_idx].priority_order=priority_order;
+      m_specs[spec_idx].dependency_csv=(ISSX_Util::IsEmpty(dependency_csv) ? CanonicalDependenciesFor(stage_name) : dependency_csv);
+      m_specs[spec_idx].disabled_reason=(enabled_flag ? "none" : NormalizeReason(disabled_reason));
+      m_specs[spec_idx].registered_at=TimeLocal();
+
+      EnsureIndex(stage_name);
+      return true;
+     }
+
+   bool SetEnabled(const string stage_name,const bool enabled_flag,const string disabled_reason="none")
+     {
+      const int spec_idx=EnsureSpecIndex(stage_name);
+      if(spec_idx<0)
+         return false;
+
+      m_specs[spec_idx].enabled_flag=enabled_flag;
+      m_specs[spec_idx].disabled_reason=(enabled_flag ? "none" : NormalizeReason(disabled_reason));
+      m_specs[spec_idx].registered_flag=true;
+      if(m_specs[spec_idx].registered_at<=0)
+         m_specs[spec_idx].registered_at=TimeLocal();
+      return true;
+     }
+
+   bool SetPriority(const string stage_name,const int priority_order)
+     {
+      const int spec_idx=EnsureSpecIndex(stage_name);
+      if(spec_idx<0)
+         return false;
+      m_specs[spec_idx].priority_order=priority_order;
+      m_specs[spec_idx].registered_flag=true;
+      return true;
+     }
+
+   bool SetDependencies(const string stage_name,const string dependency_csv)
+     {
+      const int spec_idx=EnsureSpecIndex(stage_name);
+      if(spec_idx<0)
+         return false;
+      m_specs[spec_idx].dependency_csv=NormalizeReason(dependency_csv);
+      m_specs[spec_idx].registered_flag=true;
+      return true;
+     }
+
+   bool SetState(const string stage_name,const int state)
+     {
+      if(!IsStateValid(state))
+         return false;
+
+      const int idx=EnsureIndex(stage_name);
+      if(idx<0)
+         return false;
+
+      if(m_items[idx].state==state)
+         return false;
+
+      m_items[idx].state=state;
+      Touch(idx);
+      return true;
+     }
+
+   bool SetReason(const string stage_name,const string reason)
+     {
+      const int idx=EnsureIndex(stage_name);
+      if(idx<0)
+         return false;
+
+      const string value=NormalizeReason(reason);
+      if(m_items[idx].reason==value)
+         return false;
+
+      m_items[idx].reason=value;
+      Touch(idx);
+      return true;
+     }
+
+   bool SetElapsed(const string stage_name,const long elapsed_ms)
+     {
+      const int idx=EnsureIndex(stage_name);
+      if(idx<0)
+         return false;
+
+      const long value=(elapsed_ms<0 ? 0 : elapsed_ms);
+      if(m_items[idx].elapsed_ms==value)
+         return false;
+
+      m_items[idx].elapsed_ms=value;
+      Touch(idx);
+      return true;
+     }
+
+   bool SetHealth(const string stage_name,const int health_state)
+     {
+      if(!IsHealthValid(health_state))
+         return false;
+
+      const int idx=EnsureIndex(stage_name);
+      if(idx<0)
+         return false;
+
+      if(m_items[idx].health_state==health_state)
+         return false;
+
+      m_items[idx].health_state=health_state;
+      Touch(idx);
+      return true;
+     }
+
+   int GetState(const string stage_name) const
+     {
+      const int idx=FindIndex(stage_name);
+      if(idx<0)
+         return STAGE_OFF;
+      return m_items[idx].state;
+     }
+
+   string GetReason(const string stage_name) const
+     {
+      const int idx=FindIndex(stage_name);
+      if(idx<0)
+         return "none";
+      return m_items[idx].reason;
+     }
+
+   long GetElapsed(const string stage_name) const
+     {
+      const int idx=FindIndex(stage_name);
+      if(idx<0)
+         return 0;
+      return m_items[idx].elapsed_ms;
+     }
+
+   int GetHealth(const string stage_name) const
+     {
+      const int idx=FindIndex(stage_name);
+      if(idx<0)
+         return STAGE_HEALTH_UNKNOWN;
+      return m_items[idx].health_state;
+     }
+
+   datetime GetLastUpdate(const string stage_name) const
+     {
+      const int idx=FindIndex(stage_name);
+      if(idx<0)
+         return (datetime)0;
+      return m_items[idx].last_update;
+     }
+
+   bool GetSnapshot(const string stage_name,ISSXStageState &out_state) const
+     {
+      out_state.Reset();
+      const int idx=FindIndex(stage_name);
+      if(idx<0)
+         return false;
+
+      out_state=m_items[idx];
+      return true;
+     }
+
+   bool IsRegistered(const string stage_name) const
+     {
+      const int spec_idx=FindSpecIndex(stage_name);
+      if(spec_idx<0)
+         return false;
+      return m_specs[spec_idx].registered_flag;
+     }
+
+   bool IsEnabled(const string stage_name) const
+     {
+      const int spec_idx=FindSpecIndex(stage_name);
+      if(spec_idx<0)
+         return false;
+      return m_specs[spec_idx].enabled_flag;
+     }
+
+   int GetPriority(const string stage_name) const
+     {
+      const int spec_idx=FindSpecIndex(stage_name);
+      if(spec_idx<0)
+         return 0;
+      return m_specs[spec_idx].priority_order;
+     }
+
+   string GetDependencies(const string stage_name) const
+     {
+      const int spec_idx=FindSpecIndex(stage_name);
+      if(spec_idx<0)
+         return "";
+      return m_specs[spec_idx].dependency_csv;
+     }
+
+   string GetDisabledReason(const string stage_name) const
+     {
+      const int spec_idx=FindSpecIndex(stage_name);
+      if(spec_idx<0)
+         return "stage_missing";
+      return m_specs[spec_idx].disabled_reason;
+     }
+
+   bool ValidateRequiredStages(string &reason) const
+     {
+      reason="ok";
+
+      for(int i=0;i<5;i++)
+        {
+         const string stage_name=CanonicalRequiredStageName(i);
+         if(ISSX_Util::IsEmpty(stage_name))
+            continue;
+
+         string local_reason="ok";
+         if(!ValidateOneRequiredStage(stage_name,local_reason))
+           {
+            reason=stage_name+"_"+local_reason;
+            return false;
+           }
+        }
+
+      return true;
+     }
+
+   string BuildRegistrySummary() const
+     {
+      string names="";
+      string missing="";
+      string disabled="";
+
+      for(int i=0;i<5;i++)
+        {
+         const string stage_name=CanonicalRequiredStageName(i);
+         if(i>0)
+            names+=",";
+         names+=stage_name;
+
+         const int spec_idx=FindSpecIndex(stage_name);
+         if(spec_idx<0 || !m_specs[spec_idx].registered_flag)
+           {
+            if(StringLen(missing)>0)
+               missing+=",";
+            missing+=stage_name;
+            continue;
+           }
+
+         if(!m_specs[spec_idx].enabled_flag)
+           {
+            if(StringLen(disabled)>0)
+               disabled+=",";
+            disabled+=stage_name+"("+m_specs[spec_idx].disabled_reason+")";
+           }
+        }
+
+      if(StringLen(missing)<=0)
+         missing="none";
+      if(StringLen(disabled)<=0)
+         disabled="none";
+
+      return "required_stage_count="+IntegerToString(5)+
+             " registered_stage_count="+IntegerToString(RegisteredStageCount())+
+             " names="+names+
+             " missing_stages="+missing+
+             " disabled_stages="+disabled;
+     }
+
+   void DumpRegistrySummary() const
+     {
+      Print("ISSX: stage_registry_summary ",BuildRegistrySummary());
+
+      for(int i=0;i<5;i++)
+        {
+         const string stage_name=CanonicalRequiredStageName(i);
+         const int spec_idx=FindSpecIndex(stage_name);
+         const int state_idx=FindIndex(stage_name);
+
+         string state_text="missing";
+         string health_text="unknown";
+         string reason_text="none";
+         if(state_idx>=0)
+           {
+            state_text=StateToString(m_items[state_idx].state);
+            health_text=HealthToString(m_items[state_idx].health_state);
+            reason_text=m_items[state_idx].reason;
+           }
+
+         if(spec_idx<0)
+           {
+            Print("ISSX: stage_registry_item stage=",stage_name,
+                  " registered=no state=",state_text,
+                  " priority=0 enabled=unknown dependencies=missing reason=",reason_text);
+            continue;
+           }
+
+         Print("ISSX: stage_registry_item stage=",stage_name,
+               " registered=",(m_specs[spec_idx].registered_flag?"yes":"no"),
+               " required=",(m_specs[spec_idx].required_stage?"yes":"no"),
+               " enabled=",(m_specs[spec_idx].enabled_flag?"yes":"no"),
+               " priority=",IntegerToString(m_specs[spec_idx].priority_order),
+               " dependencies=",m_specs[spec_idx].dependency_csv,
+               " disabled_reason=",m_specs[spec_idx].disabled_reason,
+               " state=",state_text,
+               " health=",health_text,
+               " reason=",reason_text);
+        }
+     }
+
+   long UpdateSequence() const
+     {
+      return m_update_seq;
+     }
+
+   static string StateToString(const int state)
+     {
+      switch(state)
+        {
+         case STAGE_OFF:      return "off";
+         case STAGE_INIT:     return "init";
+         case STAGE_RUNNING:  return "running";
+         case STAGE_READY:    return "ready";
+         case STAGE_DEGRADED: return "degraded";
+         case STAGE_FAILED:   return "failed";
+         case STAGE_SKIPPED:  return "skipped";
+        }
+      return "off";
+     }
+
+   static string HealthToString(const int health_state)
+     {
+      switch(health_state)
+        {
+         case STAGE_HEALTH_HEALTHY:  return "healthy";
+         case STAGE_HEALTH_DEGRADED: return "degraded";
+         case STAGE_HEALTH_FAILED:   return "failed";
+        }
+      return "unknown";
      }
   };
 
@@ -1855,5 +2505,18 @@ public:
                                       +"|"+owner_surfaces.FingerprintHex());
      }
   };
+
+
+
+string ISSX_RegistryDiagTag()
+  {
+   return "registry_diag_v174f";
+  }
+
+
+string ISSX_RegistryDebugSignature()
+  {
+   return ISSX_RegistryDiagTag();
+  }
 
 #endif // __ISSX_REGISTRY_MQH__

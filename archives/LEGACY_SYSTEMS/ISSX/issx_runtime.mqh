@@ -4,7 +4,7 @@
 #include <ISSX/issx_core.mqh>
 
 // ============================================================================
-// ISSX RUNTIME v1.7.2
+// ISSX RUNTIME v1.734
 // Canonical runtime owner for scheduler / timer-lossiness / budgets / fairness /
 // resumable phase state in the single-wrapper five-stage ISSX architecture.
 //
@@ -339,6 +339,56 @@ struct ISSX_RuntimeState
    ISSX_KernelSchedulerState kernel;
 
    // ------------------------------------------------------------------------
+   // Requested vs effective gate truth surface
+   // ------------------------------------------------------------------------
+   bool   requested_runtime_scheduler_enabled;
+   bool   requested_timer_heavy_work_enabled;
+   bool   requested_tick_heavy_work_enabled;
+   bool   requested_menu_engine_enabled;
+   bool   requested_chart_ui_updates_enabled;
+   bool   requested_ui_projection_enabled;
+
+   bool   effective_runtime_scheduler_enabled;
+   bool   effective_timer_heavy_work_enabled;
+   bool   effective_tick_heavy_work_enabled;
+   bool   effective_menu_engine_enabled;
+   bool   effective_chart_ui_updates_enabled;
+   bool   effective_ui_projection_enabled;
+
+   string effective_runtime_scheduler_reason;
+   string effective_timer_heavy_work_reason;
+   string effective_tick_heavy_work_reason;
+   string effective_menu_engine_reason;
+   string effective_chart_ui_updates_reason;
+   string effective_ui_projection_reason;
+
+      // ------------------------------------------------------------------------
+   // Runtime readiness truth surface
+   // ------------------------------------------------------------------------
+   bool   runtime_ready;
+   bool   market_ready;
+   bool   history_ready;
+   bool   analysis_ready;
+   bool   scheduler_ready;
+   bool   projection_ready;
+   bool   telemetry_ready;
+
+   string runtime_reason;
+   string market_reason;
+   string history_reason;
+   string analysis_reason;
+   string scheduler_reason;
+   string projection_reason;
+   string telemetry_reason;
+
+   // ------------------------------------------------------------------------
+   // Requested vs effective stage state
+   // ------------------------------------------------------------------------
+   bool   stage_requested_enabled[ISSX_STAGE_COUNT];
+   bool   stage_effective_enabled[ISSX_STAGE_COUNT];
+   string stage_effective_reason[ISSX_STAGE_COUNT];
+
+   // ------------------------------------------------------------------------
    // Legacy compatibility surface still consumed by older stage modules.
    // Keep these mirrors here instead of forcing consumer-local hacks.
    // ------------------------------------------------------------------------
@@ -361,6 +411,50 @@ struct ISSX_RuntimeState
 
    void Reset()
      {
+      requested_runtime_scheduler_enabled=false;
+      requested_timer_heavy_work_enabled=false;
+      requested_tick_heavy_work_enabled=false;
+      requested_menu_engine_enabled=false;
+      requested_chart_ui_updates_enabled=false;
+      requested_ui_projection_enabled=false;
+
+      effective_runtime_scheduler_enabled=false;
+      effective_timer_heavy_work_enabled=false;
+      effective_tick_heavy_work_enabled=false;
+      effective_menu_engine_enabled=false;
+      effective_chart_ui_updates_enabled=false;
+      effective_ui_projection_enabled=false;
+
+      effective_runtime_scheduler_reason="runtime_not_initialized";
+      effective_timer_heavy_work_reason="runtime_not_initialized";
+      effective_tick_heavy_work_reason="runtime_not_initialized";
+      effective_menu_engine_reason="runtime_not_initialized";
+      effective_chart_ui_updates_reason="runtime_not_initialized";
+      effective_ui_projection_reason="runtime_not_initialized";
+
+      runtime_ready=false;
+      market_ready=false;
+      history_ready=false;
+      analysis_ready=false;
+      scheduler_ready=false;
+      projection_ready=false;
+      telemetry_ready=false;
+
+      runtime_reason="runtime_not_initialized";
+      market_reason="market_not_initialized";
+      history_reason="history_not_initialized";
+      analysis_reason="analysis_not_initialized";
+      scheduler_reason="scheduler_not_initialized";
+      projection_reason="projection_not_initialized";
+      telemetry_reason="telemetry_not_initialized";
+
+      for(int i=0;i<ISSX_STAGE_COUNT;i++)
+        {
+         stage_requested_enabled[i]=false;
+         stage_effective_enabled[i]=false;
+         stage_effective_reason[i]="stage_not_requested";
+        }
+
       scheduler_cycle_no=0;
       local_phase_id=(int)issx_phase_none;
       current_phase=issx_phase_none;
@@ -412,6 +506,13 @@ int ISSX_Runtime_ClampDoubleToIntFloor(const double v)
    return (int)MathFloor(v);
   }
 
+int ISSX_Runtime_SaturatingIncInt(const int value)
+  {
+   if(value>=2147483647)
+      return 2147483647;
+   return (value+1);
+  }
+
 long ISSX_Runtime_MaxLong(const long a,const long b)
   {
    return (a>b ? a : b);
@@ -433,6 +534,11 @@ int ISSX_Runtime_AbsDatetimeDiffSec(const datetime a,const datetime b)
 bool ISSX_Runtime_IsKernelPhase(const ISSX_PhaseId value)
   {
    return (value>=issx_phase_kernel_boot_restore && value<=issx_phase_kernel_publish_fastlane);
+  }
+
+bool ISSX_Runtime_IsStagePhase(const ISSX_PhaseId value)
+  {
+   return (ISSX_Runtime_StageOfPhase(value)>=issx_stage_ea1 && ISSX_Runtime_StageOfPhase(value)<=issx_stage_ea5);
   }
 
 bool ISSX_Runtime_IsPublishPhase(const ISSX_PhaseId value)
@@ -903,6 +1009,14 @@ public:
                           const int phase_budget_ms,
                           const string progress_key="")
      {
+      if(phase_id!=issx_phase_none && !ISSX_Runtime_IsKernelPhase(phase_id) && !ISSX_Runtime_IsStagePhase(phase_id))
+        {
+         state.scheduler.phase_aborted_reason=issx_phase_abort_compatibility_fail;
+         state.budgets.degraded_cycle_flag=true;
+         state.kernel.kernel_degraded_cycle_flag=true;
+         return false;
+        }
+
       const long now_ms=(long)GetTickCount64();
       long minute_id=state.kernel.kernel_minute_id;
       if(minute_id<=0)
@@ -910,8 +1024,8 @@ public:
 
       if(state.scheduler.phase_id==phase_id && state.scheduler.phase_epoch_minute==minute_id)
         {
-         state.scheduler.phase_resume_count++;
-         state.scheduler.phase_attempt_no++;
+         state.scheduler.phase_resume_count=ISSX_Runtime_SaturatingIncInt(state.scheduler.phase_resume_count);
+         state.scheduler.phase_attempt_no=ISSX_Runtime_SaturatingIncInt(state.scheduler.phase_attempt_no);
         }
       else
         {
@@ -919,6 +1033,7 @@ public:
          state.scheduler.phase_epoch_minute=minute_id;
          state.scheduler.phase_attempt_no=1;
          state.scheduler.phase_resume_count=0;
+         state.scheduler.phase_work_cap=0;
          state.scheduler.phase_work_used=0;
         }
 
@@ -990,7 +1105,7 @@ public:
      {
       state.scheduler.phase_last_completed=state.scheduler.phase_id;
       state.scheduler.phase_aborted_reason=issx_phase_abort_none;
-      state.scheduler.stage_finished_this_minute=true;
+      state.scheduler.stage_finished_this_minute=(state.scheduler.stage_slot>=issx_stage_ea1 && state.scheduler.stage_slot<=issx_stage_ea5);
 
       if(state.scheduler.stage_slot>=issx_stage_ea1 && state.scheduler.stage_slot<=issx_stage_ea5)
         {
@@ -1276,7 +1391,7 @@ public:
 
       state.kernel.stage_last_attempted_service_mono_ms[idx]=now_ms;
       if(state.kernel.stage_last_successful_service_mono_ms[idx]<=0)
-         state.kernel.stage_missed_due_cycles[idx]++;
+         state.kernel.stage_missed_due_cycles[idx]=ISSX_Runtime_SaturatingIncInt(state.kernel.stage_missed_due_cycles[idx]);
 
       SyncKernelBudgetSurface(state);
      }
@@ -1521,6 +1636,29 @@ private:
    ISSX_RuntimeState m_state;
    ISSX_RuntimeClock m_clock;
 
+   static string BoolStateText(const bool value)
+     {
+      return (value ? "ready" : "degraded");
+     }
+
+   static string NormalizeReason(const bool ready,const string reason,const string fallback_when_not_ready)
+     {
+      if(ready)
+         return "ok";
+      if(StringLen(reason)>0)
+         return reason;
+      return fallback_when_not_ready;
+     }
+
+   void SetAnalysisReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.analysis_ready;
+      m_state.analysis_ready=ready;
+      m_state.analysis_reason=NormalizeReason(ready,reason,"analysis_not_ready");
+      LogTransition("analysis_ready",before,m_state.analysis_ready,m_state.analysis_reason);
+      RecomputeEffectiveSurface();
+     }
+     
    static void SyncKernelBudgetSurface(ISSX_RuntimeState &state)
      {
       state.kernel.kernel_budget_total_ms=(long)state.budgets.budget_total_ms;
@@ -1532,12 +1670,396 @@ private:
       state.kernel.kernel_degraded_cycle_flag=(state.kernel.kernel_degraded_cycle_flag || state.budgets.degraded_cycle_flag);
      }
 
+   static void LogTransition(const string subsystem,const bool from_state,const bool to_state,const string reason)
+     {
+      if(from_state==to_state)
+         return;
+
+      Print("ISSX: runtime_transition subsystem=",subsystem,
+            " from=",BoolStateText(from_state),
+            " to=",BoolStateText(to_state),
+            " reason=",reason);
+     }
+
+   static void LogStageTransition(const ISSX_StageId stage_id,const bool from_state,const bool to_state,const string reason)
+     {
+      if(from_state==to_state)
+         return;
+
+      Print("ISSX: runtime_transition subsystem=",ISSX_StageIdToString(stage_id),
+            " from=",BoolStateText(from_state),
+            " to=",BoolStateText(to_state),
+            " reason=",reason);
+     }
+
+   void RecomputeAggregateReadiness()
+     {
+      if(!m_state.runtime_ready)
+        {
+         m_state.analysis_ready=false;
+         m_state.analysis_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "runtime_not_ready");
+        }
+      else if(!m_state.scheduler_ready)
+        {
+         m_state.analysis_ready=false;
+         m_state.analysis_reason=(StringLen(m_state.scheduler_reason)>0 ? m_state.scheduler_reason : "scheduler_disabled_runtime_gate");
+        }
+      else if(!m_state.market_ready)
+        {
+         m_state.analysis_ready=false;
+         m_state.analysis_reason=(StringLen(m_state.market_reason)>0 ? m_state.market_reason : "analysis_disabled_market_not_ready");
+        }
+      else if(!m_state.history_ready)
+        {
+         m_state.analysis_ready=false;
+         m_state.analysis_reason=(StringLen(m_state.history_reason)>0 ? m_state.history_reason : "history_disabled_insufficient_rates");
+        }
+      else
+        {
+         m_state.analysis_ready=true;
+         m_state.analysis_reason="ok";
+        }
+
+      if(!m_state.runtime_ready)
+        {
+         m_state.projection_ready=false;
+         m_state.projection_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "projection_disabled_runtime_not_ready");
+        }
+      else if(!m_state.telemetry_ready)
+        {
+         m_state.projection_ready=false;
+         m_state.projection_reason=(StringLen(m_state.telemetry_reason)>0 ? m_state.telemetry_reason : "projection_disabled_telemetry_not_ready");
+        }
+      else if(!m_state.analysis_ready)
+        {
+         m_state.projection_ready=false;
+         if(m_state.market_reason=="stale_tick_detected" || m_state.analysis_reason=="stale_tick_detected" || m_state.analysis_reason=="analysis_disabled_stale_tick")
+            m_state.projection_reason="projection_disabled_stale_tick";
+         else
+            m_state.projection_reason="projection_disabled_no_valid_snapshot";
+        }
+      else
+        {
+         m_state.projection_ready=true;
+         m_state.projection_reason="ok";
+        }
+     }
+
+   void RecomputeEffectiveSurface()
+     {
+      const bool prev_runtime_scheduler=m_state.effective_runtime_scheduler_enabled;
+      const bool prev_timer_heavy=m_state.effective_timer_heavy_work_enabled;
+      const bool prev_tick_heavy=m_state.effective_tick_heavy_work_enabled;
+      const bool prev_menu=m_state.effective_menu_engine_enabled;
+      const bool prev_chart=m_state.effective_chart_ui_updates_enabled;
+      const bool prev_projection=m_state.effective_ui_projection_enabled;
+
+      bool prev_stage_effective[ISSX_STAGE_COUNT];
+      for(int i=0;i<ISSX_STAGE_COUNT;i++)
+         prev_stage_effective[i]=m_state.stage_effective_enabled[i];
+
+      RecomputeAggregateReadiness();
+
+      // runtime scheduler
+      if(!m_state.requested_runtime_scheduler_enabled)
+        {
+         m_state.effective_runtime_scheduler_enabled=false;
+         m_state.effective_runtime_scheduler_reason="scheduler_disabled_runtime_gate";
+        }
+      else if(!m_state.runtime_ready)
+        {
+         m_state.effective_runtime_scheduler_enabled=false;
+         m_state.effective_runtime_scheduler_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "runtime_not_ready");
+        }
+      else if(!m_state.scheduler_ready)
+        {
+         m_state.effective_runtime_scheduler_enabled=false;
+         m_state.effective_runtime_scheduler_reason=(StringLen(m_state.scheduler_reason)>0 ? m_state.scheduler_reason : "scheduler_disabled_runtime_gate");
+        }
+      else
+        {
+         m_state.effective_runtime_scheduler_enabled=true;
+         m_state.effective_runtime_scheduler_reason="ok";
+        }
+
+      // timer heavy work
+      if(!m_state.requested_timer_heavy_work_enabled)
+        {
+         m_state.effective_timer_heavy_work_enabled=false;
+         m_state.effective_timer_heavy_work_reason="timer_heavy_disabled_runtime_gate";
+        }
+      else if(!m_state.runtime_ready)
+        {
+         m_state.effective_timer_heavy_work_enabled=false;
+         m_state.effective_timer_heavy_work_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "runtime_not_ready");
+        }
+      else if(!m_state.scheduler_ready)
+        {
+         m_state.effective_timer_heavy_work_enabled=false;
+         m_state.effective_timer_heavy_work_reason=(StringLen(m_state.scheduler_reason)>0 ? m_state.scheduler_reason : "scheduler_disabled_runtime_gate");
+        }
+      else
+        {
+         m_state.effective_timer_heavy_work_enabled=true;
+         m_state.effective_timer_heavy_work_reason="ok";
+        }
+
+      // tick heavy work
+      if(!m_state.requested_tick_heavy_work_enabled)
+        {
+         m_state.effective_tick_heavy_work_enabled=false;
+         m_state.effective_tick_heavy_work_reason="tick_heavy_disabled_runtime_gate";
+        }
+      else if(!m_state.runtime_ready)
+        {
+         m_state.effective_tick_heavy_work_enabled=false;
+         m_state.effective_tick_heavy_work_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "runtime_not_ready");
+        }
+      else if(!m_state.market_ready)
+        {
+         m_state.effective_tick_heavy_work_enabled=false;
+         m_state.effective_tick_heavy_work_reason=(StringLen(m_state.market_reason)>0 ? m_state.market_reason : "market_not_ready");
+        }
+      else
+        {
+         m_state.effective_tick_heavy_work_enabled=true;
+         m_state.effective_tick_heavy_work_reason="ok";
+        }
+
+      // menu engine
+      if(!m_state.requested_menu_engine_enabled)
+        {
+         m_state.effective_menu_engine_enabled=false;
+         m_state.effective_menu_engine_reason="menu_disabled_runtime_gate";
+        }
+      else if(!m_state.telemetry_ready)
+        {
+         m_state.effective_menu_engine_enabled=false;
+         m_state.effective_menu_engine_reason=(StringLen(m_state.telemetry_reason)>0 ? m_state.telemetry_reason : "telemetry_not_ready");
+        }
+      else
+        {
+         m_state.effective_menu_engine_enabled=true;
+         m_state.effective_menu_engine_reason="ok";
+        }
+
+      // chart ui updates
+      if(!m_state.requested_chart_ui_updates_enabled)
+        {
+         m_state.effective_chart_ui_updates_enabled=false;
+         m_state.effective_chart_ui_updates_reason="chart_ui_disabled_runtime_gate";
+        }
+      else if(!m_state.telemetry_ready)
+        {
+         m_state.effective_chart_ui_updates_enabled=false;
+         m_state.effective_chart_ui_updates_reason=(StringLen(m_state.telemetry_reason)>0 ? m_state.telemetry_reason : "telemetry_not_ready");
+        }
+      else if(!m_state.runtime_ready)
+        {
+         m_state.effective_chart_ui_updates_enabled=false;
+         m_state.effective_chart_ui_updates_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "runtime_not_ready");
+        }
+      else
+        {
+         m_state.effective_chart_ui_updates_enabled=true;
+         m_state.effective_chart_ui_updates_reason="ok";
+        }
+
+      // projection
+      if(!m_state.requested_ui_projection_enabled)
+        {
+         m_state.effective_ui_projection_enabled=false;
+         m_state.effective_ui_projection_reason="projection_disabled_runtime_gate";
+        }
+      else if(!m_state.runtime_ready)
+        {
+         m_state.effective_ui_projection_enabled=false;
+         m_state.effective_ui_projection_reason=(StringLen(m_state.runtime_reason)>0 ? m_state.runtime_reason : "runtime_not_ready");
+        }
+      else if(!m_state.telemetry_ready)
+        {
+         m_state.effective_ui_projection_enabled=false;
+         m_state.effective_ui_projection_reason=(StringLen(m_state.telemetry_reason)>0 ? m_state.telemetry_reason : "telemetry_not_ready");
+        }
+      else if(!m_state.projection_ready)
+        {
+         m_state.effective_ui_projection_enabled=false;
+         m_state.effective_ui_projection_reason=(StringLen(m_state.projection_reason)>0 ? m_state.projection_reason : "projection_disabled_no_valid_snapshot");
+        }
+      else
+        {
+         m_state.effective_ui_projection_enabled=true;
+         m_state.effective_ui_projection_reason="ok";
+        }
+
+      // default stage effective state follows requested state until a stronger reason is known
+      for(int i=0;i<ISSX_STAGE_COUNT;i++)
+        {
+         if(!m_state.stage_requested_enabled[i])
+           {
+            m_state.stage_effective_enabled[i]=false;
+            m_state.stage_effective_reason[i]="requested_off";
+           }
+         else if(StringLen(m_state.stage_effective_reason[i])<=0 || m_state.stage_effective_reason[i]=="stage_not_requested")
+           {
+            m_state.stage_effective_enabled[i]=true;
+            m_state.stage_effective_reason[i]="ok";
+           }
+        }
+
+      const int idx_ea1=StageIdToIndex(issx_stage_ea1);
+      const int idx_ea2=StageIdToIndex(issx_stage_ea2);
+      const int idx_ea3=StageIdToIndex(issx_stage_ea3);
+      const int idx_ea4=StageIdToIndex(issx_stage_ea4);
+      const int idx_ea5=StageIdToIndex(issx_stage_ea5);
+
+      if(idx_ea1>=0 && m_state.stage_requested_enabled[idx_ea1] && !m_state.market_ready)
+        {
+         m_state.stage_effective_enabled[idx_ea1]=false;
+         m_state.stage_effective_reason[idx_ea1]=(StringLen(m_state.market_reason)>0 ? m_state.market_reason : "market_not_ready");
+        }
+
+      if(idx_ea2>=0 && m_state.stage_requested_enabled[idx_ea2] && !m_state.history_ready)
+        {
+         m_state.stage_effective_enabled[idx_ea2]=false;
+         m_state.stage_effective_reason[idx_ea2]=(StringLen(m_state.history_reason)>0 ? m_state.history_reason : "history_disabled_insufficient_rates");
+        }
+
+      if(idx_ea3>=0 && m_state.stage_requested_enabled[idx_ea3] && !m_state.analysis_ready)
+        {
+         m_state.stage_effective_enabled[idx_ea3]=false;
+         m_state.stage_effective_reason[idx_ea3]=(StringLen(m_state.analysis_reason)>0 ? m_state.analysis_reason : "analysis_not_ready");
+        }
+
+      if(idx_ea4>=0 && m_state.stage_requested_enabled[idx_ea4] && !m_state.analysis_ready)
+        {
+         m_state.stage_effective_enabled[idx_ea4]=false;
+         m_state.stage_effective_reason[idx_ea4]=(StringLen(m_state.analysis_reason)>0 ? m_state.analysis_reason : "analysis_not_ready");
+        }
+
+      if(idx_ea5>=0 && m_state.stage_requested_enabled[idx_ea5] && !m_state.analysis_ready)
+        {
+         m_state.stage_effective_enabled[idx_ea5]=false;
+         m_state.stage_effective_reason[idx_ea5]=(StringLen(m_state.analysis_reason)>0 ? m_state.analysis_reason : "analysis_not_ready");
+        }
+
+      LogTransition("runtime_scheduler_effective",prev_runtime_scheduler,m_state.effective_runtime_scheduler_enabled,m_state.effective_runtime_scheduler_reason);
+      LogTransition("timer_heavy_effective",prev_timer_heavy,m_state.effective_timer_heavy_work_enabled,m_state.effective_timer_heavy_work_reason);
+      LogTransition("tick_heavy_effective",prev_tick_heavy,m_state.effective_tick_heavy_work_enabled,m_state.effective_tick_heavy_work_reason);
+      LogTransition("menu_engine_effective",prev_menu,m_state.effective_menu_engine_enabled,m_state.effective_menu_engine_reason);
+      LogTransition("chart_ui_effective",prev_chart,m_state.effective_chart_ui_updates_enabled,m_state.effective_chart_ui_updates_reason);
+      LogTransition("projection_effective",prev_projection,m_state.effective_ui_projection_enabled,m_state.effective_ui_projection_reason);
+
+      for(int i=0;i<ISSX_STAGE_COUNT;i++)
+         LogStageTransition(StageIndexToId(i),prev_stage_effective[i],m_state.stage_effective_enabled[i],m_state.stage_effective_reason[i]);
+     }
+
 public:
    void Init()
      {
       m_state.Reset();
       m_clock.Reset();
       SyncKernelBudgetSurface(m_state);
+      RecomputeEffectiveSurface();
+     }
+
+   void SetRequestedGateStates(const bool req_runtime_scheduler,
+                               const bool req_timer_heavy,
+                               const bool req_tick_heavy,
+                               const bool req_menu_engine,
+                               const bool req_chart_ui_updates,
+                               const bool req_ui_projection)
+     {
+      m_state.requested_runtime_scheduler_enabled=req_runtime_scheduler;
+      m_state.requested_timer_heavy_work_enabled=req_timer_heavy;
+      m_state.requested_tick_heavy_work_enabled=req_tick_heavy;
+      m_state.requested_menu_engine_enabled=req_menu_engine;
+      m_state.requested_chart_ui_updates_enabled=req_chart_ui_updates;
+      m_state.requested_ui_projection_enabled=req_ui_projection;
+      RecomputeEffectiveSurface();
+     }
+
+   void SetRuntimeReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.runtime_ready;
+      m_state.runtime_ready=ready;
+      m_state.runtime_reason=NormalizeReason(ready,reason,"runtime_not_ready");
+      LogTransition("runtime_ready",before,m_state.runtime_ready,m_state.runtime_reason);
+      RecomputeEffectiveSurface();
+     }
+
+   void SetMarketReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.market_ready;
+      m_state.market_ready=ready;
+      m_state.market_reason=NormalizeReason(ready,reason,"market_not_ready");
+      LogTransition("market_ready",before,m_state.market_ready,m_state.market_reason);
+      RecomputeEffectiveSurface();
+     }
+
+   void SetHistoryReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.history_ready;
+      m_state.history_ready=ready;
+      m_state.history_reason=NormalizeReason(ready,reason,"history_not_ready");
+      LogTransition("history_ready",before,m_state.history_ready,m_state.history_reason);
+      RecomputeEffectiveSurface();
+     }
+
+   void SetSchedulerReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.scheduler_ready;
+      m_state.scheduler_ready=ready;
+      m_state.scheduler_reason=NormalizeReason(ready,reason,"scheduler_not_ready");
+      LogTransition("scheduler_ready",before,m_state.scheduler_ready,m_state.scheduler_reason);
+      RecomputeEffectiveSurface();
+     }
+
+   void SetProjectionReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.projection_ready;
+      m_state.projection_ready=ready;
+      m_state.projection_reason=NormalizeReason(ready,reason,"projection_not_ready");
+      LogTransition("projection_ready",before,m_state.projection_ready,m_state.projection_reason);
+      RecomputeAggregateReadiness();
+      RecomputeEffectiveSurface();
+     }
+
+   void SetTelemetryReady(const bool ready,const string reason="")
+     {
+      const bool before=m_state.telemetry_ready;
+      m_state.telemetry_ready=ready;
+      m_state.telemetry_reason=NormalizeReason(ready,reason,"telemetry_not_ready");
+      LogTransition("telemetry_ready",before,m_state.telemetry_ready,m_state.telemetry_reason);
+      RecomputeEffectiveSurface();
+     }
+
+   void SetStageRequestedEnabled(const ISSX_StageId stage_id,const bool enabled)
+     {
+      const int idx=StageIdToIndex(stage_id);
+      if(idx<0)
+         return;
+
+      m_state.stage_requested_enabled[idx]=enabled;
+      if(!enabled)
+        {
+         m_state.stage_effective_enabled[idx]=false;
+         m_state.stage_effective_reason[idx]="requested_off";
+        }
+      RecomputeEffectiveSurface();
+     }
+
+   void SetStageEffectiveEnabled(const ISSX_StageId stage_id,const bool enabled,const string reason="ok")
+     {
+      const int idx=StageIdToIndex(stage_id);
+      if(idx<0)
+         return;
+
+      const bool before=m_state.stage_effective_enabled[idx];
+      m_state.stage_effective_enabled[idx]=enabled;
+      m_state.stage_effective_reason[idx]=(enabled ? "ok" : (StringLen(reason)>0 ? reason : "disabled"));
+      LogStageTransition(stage_id,before,m_state.stage_effective_enabled[idx],m_state.stage_effective_reason[idx]);
+      RecomputeEffectiveSurface();
      }
 
    void ApplyStageBudget(const ISSX_StageId stage_id)
@@ -1551,6 +2073,7 @@ public:
       m_clock.OnPulse(m_state);
       ISSX_RuntimePolicy::UpdatePublishDueFlags(m_state,(long)GetTickCount64());
       SyncKernelBudgetSurface(m_state);
+      RecomputeEffectiveSurface();
      }
 
    bool ShouldPublishNow(const ISSX_StageId stage_id) const
@@ -1561,6 +2084,26 @@ public:
       return m_state.kernel.stage_publish_due_flag[idx];
      }
 
+   bool RuntimeSchedulerEffective() const
+     {
+      return m_state.effective_runtime_scheduler_enabled;
+     }
+
+   bool TimerHeavyEffective() const
+     {
+      return m_state.effective_timer_heavy_work_enabled;
+     }
+
+   bool ProjectionEffective() const
+     {
+      return m_state.effective_ui_projection_enabled;
+     }
+
+   bool AnalysisReady() const
+     {
+      return m_state.analysis_ready;
+     }
+     
    ISSX_RuntimeState State() const
      {
       return m_state;
@@ -1602,5 +2145,18 @@ public:
       return ISSX_PhaseIdToString(phase_id);
      }
   };
+
+
+
+string ISSX_RuntimeDiagTag()
+  {
+   return "runtime_diag_v1750";
+  }
+
+
+string ISSX_RuntimeDebugSignature()
+  {
+   return ISSX_RuntimeDiagTag();
+  }
 
 #endif // __ISSX_RUNTIME_MQH__

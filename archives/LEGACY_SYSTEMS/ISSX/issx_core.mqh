@@ -1,11 +1,11 @@
 #ifndef __ISSX_CORE_MQH__
 #define __ISSX_CORE_MQH__
 // ============================================================================
-// ISSX CORE v1.7.2
+// ISSX CORE v1.723
 // Shared foundation for the consolidated single-EA / five-stage ISSX kernel.
 //
 // HARDENING NOTES
-// - upgraded owner surface to blueprint v1.7.2 governance
+// - upgraded owner surface to blueprint v1.723 governance
 // - preserved shared semantic ownership in core only
 // - expanded field-key ownership for manifest / scheduler / debug / EA5 surfaces
 // - added compatibility-alias lifecycle and external-contract stability enums
@@ -21,15 +21,15 @@
 
 #define ISSX_ENGINE_NAME                              "ISSX"
 #define ISSX_ENGINE_FAMILY                            "ISSX_PIPELINE"
-#define ISSX_ENGINE_VERSION                           "1.7.2"
-#define ISSX_SCHEMA_VERSION                           "1.7.2"
+#define ISSX_ENGINE_VERSION                           "1.733"
+#define ISSX_SCHEMA_VERSION                           "1.718"
 #define ISSX_SCHEMA_EPOCH                             10702
-#define ISSX_STORAGE_VERSION                          1720
-#define ISSX_STAGE_API_VERSION                        1720
-#define ISSX_SERIALIZER_VERSION                       1720
-#define ISSX_POLICY_FINGERPRINT_VERSION               1720
+#define ISSX_STORAGE_VERSION                          1721
+#define ISSX_STAGE_API_VERSION                        1721
+#define ISSX_SERIALIZER_VERSION                       1721
+#define ISSX_POLICY_FINGERPRINT_VERSION               1721
 #define ISSX_FINGERPRINT_ALGO_VERSION                 4
-#define ISSX_LEGEND_VERSION                           "1.7.2"
+#define ISSX_LEGEND_VERSION                           "1.718"
 #define ISSX_OWNER_MODULE_NAME_CORE                   "issx_core.mqh"
 #define ISSX_OWNER_MODULE_HASH_MEANING_VERSION        1
 
@@ -59,7 +59,7 @@
 #define ISSX_DIR_ROOT_NAME                            "ISSX"
 #define ISSX_DIR_FIRMS                                "FIRMS"
 #define ISSX_DIR_PERSISTENCE                          "persistence"
-#define ISSX_DIR_PERSISTENCE_SHARED                   "persistence/shared"
+#define ISSX_DIR_PERSISTENCE_SHARED                   "persistence"
 #define ISSX_DIR_PERSISTENCE_EA1                      "persistence/ea1"
 #define ISSX_DIR_PERSISTENCE_EA2                      "persistence/ea2"
 #define ISSX_DIR_PERSISTENCE_EA3                      "persistence/ea3"
@@ -177,6 +177,56 @@
 #define ISSX_ACCEPTANCE_ERR_THRESHOLD                 1025
 #define ISSX_ACCEPTANCE_ERR_INCLUDE_DRIFT             1026
 #define ISSX_ACCEPTANCE_ERR_ALIAS_DRIFT               1027
+
+// Canonical runtime/pipeline error classification for deterministic diagnostics.
+enum ISSX_ErrorCode
+  {
+   ISSX_ERR_NONE = 0,
+
+   // DISCOVERY
+   ISSX_ERR_SYMBOL_DISCOVERY,
+   ISSX_ERR_INVALID_SYMBOL,
+
+   // HISTORY
+   ISSX_ERR_COPYRATES,
+   ISSX_ERR_HISTORY_NOT_READY,
+
+   // MEMORY
+   ISSX_ERR_MEMORY_ALLOC,
+
+   // PERSISTENCE
+   ISSX_ERR_JSON_BUILD,
+   ISSX_ERR_FILE_WRITE,
+
+   // RUNTIME
+   ISSX_ERR_STAGE_DISABLED,
+   ISSX_ERR_STAGE_SKIPPED,
+   ISSX_ERR_RUNTIME_LIMIT,
+   ISSX_ERR_TIMEOUT,
+
+   ISSX_ERR_UNKNOWN
+  };
+
+string ISSX_ErrorToString(const ISSX_ErrorCode code)
+  {
+   switch(code)
+     {
+      case ISSX_ERR_NONE:              return "none";
+      case ISSX_ERR_SYMBOL_DISCOVERY:  return "symbol_discovery";
+      case ISSX_ERR_INVALID_SYMBOL:    return "invalid_symbol";
+      case ISSX_ERR_COPYRATES:         return "copyrates";
+      case ISSX_ERR_HISTORY_NOT_READY: return "history_not_ready";
+      case ISSX_ERR_MEMORY_ALLOC:      return "memory_alloc";
+      case ISSX_ERR_JSON_BUILD:        return "json_build";
+      case ISSX_ERR_FILE_WRITE:        return "file_write";
+      case ISSX_ERR_STAGE_DISABLED:    return "stage_disabled";
+      case ISSX_ERR_STAGE_SKIPPED:     return "stage_skipped";
+      case ISSX_ERR_RUNTIME_LIMIT:     return "runtime_limit";
+      case ISSX_ERR_TIMEOUT:           return "timeout";
+      case ISSX_ERR_UNKNOWN:           return "unknown";
+     }
+   return "unknown";
+  }
 
 #define ISSX_THRESHOLD_MIN_FRESHNESS                  "minimum_freshness"
 #define ISSX_THRESHOLD_CONTRADICTION_LIMIT            "contradiction_threshold"
@@ -459,6 +509,16 @@ enum ISSX_PublishabilityState
    issx_publishability_usable          = 5,
    issx_publishability_strong          = 6
   };
+
+// Legacy compatibility bridge for pre-v1.718 shared labels.
+// Shared compatibility aliases remain core-owned only.
+#define issx_publishability_publishable       issx_publishability_usable
+#define issx_publishability_degraded          issx_publishability_usable_degraded
+#define issx_stage_publishability_unknown     issx_publishability_unknown
+#define issx_stage_publishability_ready       issx_publishability_usable
+#define issx_stage_publishability_degraded    issx_publishability_usable_degraded
+#define issx_stage_publishability_blocked     issx_publishability_blocked
+#define issx_stage_kernel                     issx_stage_shared
 
 enum ISSX_CompatibilityClass
   {
@@ -1101,7 +1161,7 @@ enum ISSX_ThresholdBehavior
 
 // -----------------------------------------------------------------------------
 // Legacy compatibility aliases required by downstream stage files still using
-// pre-v1.7.2 shared names.
+// pre-v1.718 shared names.
 // -----------------------------------------------------------------------------
 
 // Compatibility-class legacy aliases
@@ -2385,6 +2445,11 @@ private:
    int    m_depth;
 
 public:
+   ISSX_JsonWriter()
+     {
+      Reset();
+     }
+
    static string Escape(const string s)
      {
       return ISSX_Util::EscapeJson(s);
@@ -3201,5 +3266,69 @@ public:
       return ISSX_DebugWeakLinkCodeToString(v);
      }
   };
+
+class ISSX_OperatorSurface
+  {
+public:
+   static string StageAlias(const ISSX_StageId stage_id)
+     {
+      switch(stage_id)
+        {
+         case issx_stage_ea1: return "Market";
+         case issx_stage_ea2: return "History";
+         case issx_stage_ea3: return "Selection";
+         case issx_stage_ea4: return "Correlation";
+         case issx_stage_ea5: return "Contracts";
+         default:             return "Unknown";
+        }
+     }
+
+   static string SanitizeServerName(const string raw_server)
+     {
+      string s=ISSX_Util::Trim(raw_server);
+      if(ISSX_Util::IsEmpty(s))
+         s="Unknown_Server";
+
+      StringReplace(s," ","_");
+      StringReplace(s,"-","_");
+      StringReplace(s,"/","_");
+      StringReplace(s,"\\","_");
+      StringReplace(s,":","_");
+      StringReplace(s,"*","_");
+      StringReplace(s,"?","_");
+      StringReplace(s,"\"","_");
+      StringReplace(s,"<","_");
+      StringReplace(s,">","_");
+      StringReplace(s,"|","_");
+
+      while(StringFind(s,"__")>=0)
+         StringReplace(s,"__","_");
+      if(StringLen(s)>0 && StringSubstr(s,0,1)=="_")
+         s=StringSubstr(s,1);
+      if(StringLen(s)>0 && StringSubstr(s,StringLen(s)-1,1)=="_")
+         s=StringSubstr(s,0,StringLen(s)-1);
+      if(ISSX_Util::IsEmpty(s))
+         s="Unknown_Server";
+      return s;
+     }
+
+   static string OperatorFileName(const ISSX_StageId stage_id,const string server_name,const string ext_with_dot)
+     {
+      return StageAlias(stage_id)+"_"+SanitizeServerName(server_name)+ext_with_dot;
+     }
+  };
+
+
+
+string ISSX_CoreDiagTag()
+  {
+   return "core_diag_v174f";
+  }
+
+
+string ISSX_CoreDebugSignature()
+  {
+   return ISSX_CoreDiagTag();
+  }
 
 #endif // __ISSX_CORE_MQH__

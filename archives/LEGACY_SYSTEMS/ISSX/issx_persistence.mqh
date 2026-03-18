@@ -3,9 +3,10 @@
 
 #include <ISSX/issx_core.mqh>
 #include <ISSX/issx_registry.mqh>
+#include <ISSX/issx_data_handler.mqh>
 
 // ============================================================================
-// ISSX PERSISTENCE v1.7.2
+// ISSX PERSISTENCE v1.732
 // Blueprint-aligned persistence / handoff / fallback / warehouse / lock helpers.
 // Authoritative truth remains: accepted internal current + coherent manifest chain.
 // ============================================================================
@@ -226,7 +227,24 @@ private:
          pos=p;
          p=StringFind(path,ISSX_PATH_SEP,p+1);
         }
-      return pos;
+     return pos;
+     }
+
+   static bool IsSafeRelativePath(const string relative_path)
+     {
+      if(ISSX_Util::IsEmpty(relative_path))
+         return false;
+
+      if(StringSubstr(relative_path,0,1)=="/" || StringSubstr(relative_path,0,1)=="\\")
+         return false;
+
+      if(StringFind(relative_path,":",0)>=0)
+         return false;
+
+      if(StringFind(relative_path,"..",0)>=0)
+         return false;
+
+      return true;
      }
 
 public:
@@ -264,40 +282,30 @@ public:
       return EnsureFolder(StringSubstr(relative_file_path,0,last));
      }
 
-   static bool WriteText(const string relative_path,const string text)
+   static bool WriteTextAtomic(const string relative_path,const string text)
      {
+      if(!IsSafeRelativePath(relative_path))
+         return false;
+
       if(!EnsureParentFolder(relative_path))
          return false;
 
-      ResetLastError();
-      const int h=FileOpen(relative_path,
-                           FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI,
-                           NoDelimiter(),
-                           Utf8Codepage());
-      if(h==INVALID_HANDLE)
-         return false;
+      ISSX_DataHandler::ForensicState fs;
+      fs.Reset();
+      return ISSX_DataHandler::WritePayloadAtomic(relative_path,text,fs,true);
+     }
 
-      const int wanted=StringLen(text);
-      const uint written=FileWriteString(h,text,wanted);
-
-      ResetLastError();
-      FileFlush(h);
-      const int flush_error=GetLastError();
-      FileClose(h);
-
-      if(((int)written!=wanted) || flush_error!=0)
-         return false;
-
-      string verify="";
-      if(!ReadText(relative_path,verify))
-         return false;
-
-      return (verify==text);
+   static bool WriteText(const string relative_path,const string text)
+     {
+      return WriteTextAtomic(relative_path,text);
      }
 
    static bool ReadText(const string relative_path,string &out_text)
      {
       out_text="";
+
+      if(!IsSafeRelativePath(relative_path))
+         return false;
 
       ResetLastError();
       const int h=FileOpen(relative_path,
@@ -314,15 +322,43 @@ public:
          return false;
         }
 
-      out_text=FileReadString(h,(int)sz);
+      ResetLastError();
+      out_text=FileReadString(h);
+      if(GetLastError()!=0)
+        {
+         FileClose(h);
+         return false;
+        }
 
-      out_text=FileReadString(h,(int)sz);
       FileClose(h);
       return true;
      }
 
+   // ---------------------------------------------------------------------
+   // Legacy compatibility bridge retained in owner file for older consumers.
+   // ---------------------------------------------------------------------
+   static bool WriteAllTextUtf8(const string relative_path,const string text)
+     {
+      return WriteText(relative_path,text);
+     }
+
+   static bool ReadAllTextUtf8(const string relative_path,string &out_text)
+     {
+      return ReadText(relative_path,out_text);
+     }
+
    static bool CopyText(const string src,const string dst)
      {
+      if(!IsSafeRelativePath(src) || !IsSafeRelativePath(dst))
+         return false;
+
+      if(!EnsureParentFolder(dst))
+         return false;
+      ISSX_DataHandler::ForensicState fs;
+      fs.Reset();
+      if(ISSX_DataHandler::CopyProjection(src,dst,fs))
+         return true;
+
       string s="";
       if(!ReadText(src,s))
          return false;
@@ -331,6 +367,9 @@ public:
 
    static bool DeleteIfExists(const string relative_path)
      {
+      if(!IsSafeRelativePath(relative_path))
+         return false;
+
       if(!FileIsExist(relative_path,FILE_COMMON))
          return true;
 
@@ -340,7 +379,18 @@ public:
 
    static bool Exists(const string relative_path)
      {
+      if(!IsSafeRelativePath(relative_path))
+         return false;
+
       return FileIsExist(relative_path,FILE_COMMON);
+     }
+
+   static bool WriteTextIfChanged(const string relative_path,const string text)
+     {
+      string existing="";
+      if(ReadText(relative_path,existing) && existing==text)
+         return true;
+      return WriteText(relative_path,text);
      }
   };
 
@@ -359,7 +409,7 @@ private:
 public:
    static string FirmRoot(const string firm_id)
      {
-      return ISSX_Util::JoinPath3(ISSX_DIR_FIRMS,firm_id,ISSX_DIR_ROOT_NAME);
+      return ISSX_DIR_ROOT_NAME;
      }
 
    static string RootFile(const string firm_id,const string filename)
@@ -371,6 +421,13 @@ public:
    static string RootDebug(const string firm_id)             { return RootFile(firm_id,ISSX_ROOT_DEBUG); }
    static string RootStageStatus(const string firm_id)       { return RootFile(firm_id,ISSX_ROOT_STAGE_STATUS); }
    static string RootUniverseSnapshot(const string firm_id)  { return RootFile(firm_id,ISSX_ROOT_UNIVERSE_SNAPSHOT); }
+
+   // ---------------------------------------------------------------------
+   // Legacy compatibility bridge retained in owner file for older UI callers.
+   // ---------------------------------------------------------------------
+   static string DebugRootFile(const string firm_id)         { return RootDebug(firm_id); }
+   static string StageStatusRootFile(const string firm_id)   { return RootStageStatus(firm_id); }
+   static string UniverseSnapshotFile(const string firm_id)  { return RootUniverseSnapshot(firm_id); }
 
    static string InternalDir(const string firm_id,const ISSX_StageId stage_id)
      {
@@ -384,12 +441,22 @@ public:
 
    static string SharedDir(const string firm_id)
      {
-      return ISSX_Util::JoinPath(FirmRoot(firm_id),ISSX_DIR_PERSISTENCE_SHARED);
+      return ISSX_Util::JoinPath(ISSX_DIR_ROOT_NAME,ISSX_DIR_PERSISTENCE_SHARED);
      }
 
    static string DebugDir(const string firm_id)
      {
       return ISSX_Util::JoinPath(FirmRoot(firm_id),ISSX_DIR_DEBUG);
+     }
+
+   static string DebugFolder(const string firm_id)
+     {
+      string dir=DebugDir(firm_id);
+      if(StringLen(dir)<=0)
+         return "";
+      if(StringSubstr(dir,StringLen(dir)-1,1)!=ISSX_PATH_SEP)
+         dir+=ISSX_PATH_SEP;
+      return dir;
      }
 
    static string LocksDir(const string firm_id)
@@ -405,6 +472,11 @@ public:
    static string HudDir(const string firm_id)
      {
       return ISSX_Util::JoinPath(FirmRoot(firm_id),ISSX_DIR_HUD);
+     }
+
+   static string HudTextFile(const string firm_id)
+     {
+      return ISSX_Util::JoinPath(HudDir(firm_id),"issx_hud.txt");
      }
 
    static string LockFile(const string firm_id)
@@ -1320,7 +1392,18 @@ public:
       ok=ok && ISSX_FileIO::WriteText(ISSX_PersistencePath::HeaderCandidate(firm_id,stage_id),header_json);
       ok=ok && ISSX_FileIO::WriteText(ISSX_PersistencePath::PayloadCandidate(firm_id,stage_id),payload_text);
       ok=ok && ISSX_FileIO::WriteText(ISSX_PersistencePath::ManifestCandidate(firm_id,stage_id),manifest_json);
-      return ok;
+      if(!ok)
+         return false;
+
+      ISSX_StageHeader verify_header;
+      ISSX_Manifest verify_manifest;
+      string verify_payload="";
+      verify_header.Reset();
+      verify_manifest.Reset();
+      if(!LoadCandidate(firm_id,stage_id,verify_header,verify_manifest,verify_payload))
+         return false;
+
+      return ISSX_Coherence::CandidateTrioCoherent(verify_header,verify_manifest,verify_payload);
      }
 
    static bool LoadCandidate(const string firm_id,
@@ -1426,14 +1509,14 @@ public:
          ok=ok && ISSX_FileIO::WriteText(mc,ISSX_PersistenceCodec::ManifestToJson(manifest));
 
       outcome.internal_commit_success=ok;
-      outcome.last_projection_reason=(ok ? "ok" : "promote_candidate_failed");
+      outcome.last_projection_reason=(ok ? "ok" : ISSX_ErrorToString(ISSX_ERR_FILE_WRITE));
 
       if(ok)
          ok=ok && ISSX_HandoffStore::WriteAccepted(firm_id,stage_id,verify_header,manifest,verify_payload);
 
       outcome.internal_commit_success=ok;
       if(!ok)
-         outcome.last_projection_reason="handoff_write_failed";
+         outcome.last_projection_reason=ISSX_ErrorToString(ISSX_ERR_FILE_WRITE);
 
       return ok;
      }
@@ -1466,7 +1549,7 @@ class ISSX_RootProjection
 public:
    static bool ProjectRootView(const string firm_id,const string target_file,const string payload_text)
      {
-      return ISSX_FileIO::WriteText(ISSX_PersistencePath::RootFile(firm_id,target_file),payload_text);
+      return ISSX_FileIO::WriteTextIfChanged(ISSX_PersistencePath::RootFile(firm_id,target_file),payload_text);
      }
 
    static bool ProjectFromAccepted(const string firm_id,
@@ -1507,7 +1590,7 @@ public:
       else
          outcome.last_projection_reason="projection_failed";
 
-      return export_ok;
+      return (export_ok && debug_ok && status_ok && universe_ok);
      }
   };
 
@@ -1665,7 +1748,8 @@ public:
       if(lock_state.lock_heartbeat_time<=0)
          return true;
 
-      return ((int)(nowv-lock_state.lock_heartbeat_time)>lock_state.stale_after_sec);
+      const int ttl=MathMax(1,lock_state.stale_after_sec);
+      return ((int)(nowv-lock_state.lock_heartbeat_time)>ttl);
      }
 
    static bool Acquire(const string firm_id,
@@ -1682,8 +1766,8 @@ public:
       const bool has_existing=Read(firm_id,existing);
 
       if(has_existing && !IsStale(existing) &&
-         existing.lock_owner_boot_id!=boot_id &&
-         existing.lock_owner_instance_guid!=instance_guid)
+         (existing.lock_owner_boot_id!=boot_id ||
+          existing.lock_owner_instance_guid!=instance_guid))
          return false;
 
       out_lock.lock_owner_boot_id=boot_id;
@@ -1691,7 +1775,7 @@ public:
       out_lock.lock_owner_terminal_identity=terminal_identity;
       out_lock.lock_acquired_time=ISSX_Time::BestScheduleClock();
       out_lock.lock_heartbeat_time=out_lock.lock_acquired_time;
-      out_lock.stale_after_sec=stale_after_sec;
+      out_lock.stale_after_sec=MathMax(1,stale_after_sec);
 
       return ISSX_FileIO::WriteText(ISSX_PersistencePath::LockFile(firm_id),ISSX_PersistenceCodec::LockToJson(out_lock));
      }
@@ -1877,5 +1961,18 @@ public:
       return manifest.accepted_promotion_verified;
      }
   };
+
+
+
+string ISSX_PersistenceDiagTag()
+  {
+   return "persistence_diag_v174g";
+  }
+
+
+string ISSX_PersistenceDebugSignature()
+  {
+   return ISSX_PersistenceDiagTag();
+  }
 
 #endif // __ISSX_PERSISTENCE_MQH__

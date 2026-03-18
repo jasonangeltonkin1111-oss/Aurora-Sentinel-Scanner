@@ -1,0 +1,897 @@
+AFS HUD MASTER BLUEPRINT
+Project Track: HUD / Visibility Architecture
+Status: Side Project Blueprint
+Scope: Long-horizon staged HUD overhaul
+Applies To: Aegis Forge Scanner (AFS) MT5 EA
+Priority: Visibility, truthfulness, operator usability, non-disruptive integration
+
+============================================================
+1. PURPOSE
+============================================================
+
+This blueprint defines the long-term HUD architecture for AFS.
+
+The purpose is to separate:
+- operator/developer scanner visibility
+from
+- trader-facing symbol/bucket visibility
+
+The HUD must become truthful, progress-aware, and dependency-safe.
+
+The HUD must not guess.
+The HUD must not compute heavy logic itself.
+The HUD must not become a runtime stall point.
+The HUD must render already-known scanner truth clearly.
+
+Core intent:
+- show what is already known instantly
+- show what is pending
+- show why it is pending
+- show progress at bucket level
+- show dossier/file completion state
+- keep trader-facing HUD clean
+- support future click navigation safely over time
+
+============================================================
+2. CORE HUD SPLIT
+============================================================
+
+AFS will use two distinct HUD tracks:
+
+A. DEV HUD
+Purpose:
+- scanner/developer/operator visibility
+- file-write visibility
+- publication progress
+- bucket completion
+- pending reasons
+- batch rotation status
+- dossier completion truth
+- runtime progress without opening files
+
+B. TRADER HUD
+Purpose:
+- trader-facing package view only
+- active buckets
+- symbols inside buckets
+- later drilldown into bucket symbols
+- later drilldown into symbol signal views
+- no heavy internal scanner diagnostics
+
+Rule:
+- Dev HUD and Trader HUD must not be blended again
+- Dev HUD is operational
+- Trader HUD is trader-facing
+
+============================================================
+3. PRIMARY DESIGN PRINCIPLES
+============================================================
+
+1. Scanner computes, HUD displays
+2. HUD must consume existing runtime state only
+3. HUD must never become a new scanner engine
+4. HUD must not change selection truth
+5. HUD must not change correlation truth
+6. HUD must not change publication truth
+7. HUD must not re-query heavy broker data every frame
+8. HUD must not iterate files expensively every repaint
+9. HUD must remain readable for a visually constrained operator
+10. HUD must emphasize completeness and pending causes
+11. HUD must be stage-aware, bucket-aware, and symbol-aware
+12. HUD must remain safe under partial data availability
+13. HUD must make “known now vs pending later” obvious
+14. HUD must support staged implementation
+15. HUD buttons must be simplified and stabilized before expansion
+
+============================================================
+4. WHAT THE HUD MUST SOLVE
+============================================================
+
+Current pain points:
+- files may look incomplete even when much data already exists
+- operator cannot easily see what has been written
+- operator cannot easily see which buckets are complete
+- operator cannot easily see which symbols are pending and why
+- trader HUD currently shows too much internal detail
+- button behavior is unreliable and should not be overcomplicated
+- visibility into rotation / batch progress is insufficient
+- operator needs completion percentages and concrete file status
+- scanner truth and dossier truth are not surfaced clearly enough
+
+Target outcome:
+- immediate visibility into what data is already present
+- explicit visibility into what data is still pending
+- bucket-level progress summaries
+- symbol-level readiness classification
+- clean trader-facing bucket/symbol HUD
+- future-safe drilldown design
+
+============================================================
+5. DATA CATEGORIES
+============================================================
+
+The HUD and dossier system must distinguish four classes of information.
+
+A. STATIC / BROKER / SYMBOL SPEC DATA
+This should appear instantly if known:
+- symbol
+- canonical
+- display name
+- asset
+- bucket
+- digits
+- point
+- tick size
+- tick value
+- contract size
+- volume min/max/step
+- stops level
+- freeze level
+- calc mode
+- currency fields
+- broker spec data
+- server/symbol specification fields
+
+B. SCANNER / UNIVERSE / STEP OUTPUT DATA
+This should appear instantly if already computed:
+- bucket rank
+- finalist selection state
+- role
+- score
+- route/status
+- scanner phase/step classification
+- publication state
+- updated timestamp
+- freshness metadata
+- known pending reasons
+- file-written state
+
+C. HISTORY-DERIVED DATA
+This should fill when history is available:
+- ATR
+- baseline move
+- volatility freshness
+- bar-derived values
+- history-dependent metrics
+
+D. LIVE / TICK / SESSION DATA
+This may legitimately wait:
+- spread now
+- spread median
+- spread max
+- SprATR
+- tick age
+- quote state
+- session live-state
+- live tradability fields
+
+E. DOWNSTREAM STEP DATA
+This should fill when its stage completes:
+- correlation
+- closest correlation symbol
+- signal stack (future)
+- downstream inference fields
+- later trade-setup fields
+
+Rule:
+The HUD and dossier must make category state visible:
+- available now
+- pending history
+- pending live quote
+- pending downstream stage
+
+============================================================
+6. HUD TRUTH MODEL
+============================================================
+
+The HUD must show truth in this form:
+
+Known Now:
+- data already available in memory or broker specs
+- should be displayed immediately
+
+Pending:
+- data not yet available
+- must be labeled with exact reason
+
+Pending reasons must be explicit, for example:
+- PENDING_HISTORY
+- PENDING_QUOTE
+- PENDING_CORRELATION
+- PENDING_BATCH
+- PENDING_PUBLICATION
+- PENDING_SESSION
+- PENDING_RETRY
+- PENDING_SYMBOL_INIT
+
+The HUD must not show “0.00” without context when the real state is “pending”.
+Prefer:
+- PendingHistory
+- PendingQuote
+- PendingCorrelation
+over misleading numeric zeroes
+
+============================================================
+7. SYMBOL COMPLETION MODEL
+============================================================
+
+Each symbol must eventually have a completion contract.
+
+Suggested symbol state ladder:
+- CREATED
+- STATIC_READY
+- SCANNER_READY
+- HISTORY_READY
+- LIVE_READY
+- CORRELATION_READY
+- COMPLETE
+
+Equivalent simplified model:
+- STATIC
+- SCANNER
+- HISTORY
+- LIVE
+- CORRELATION
+- COMPLETE
+
+Every active symbol should ultimately expose:
+- CompletionState
+- CompletionPercent
+- PendingReasons
+- FileWritten
+- FileLastUpdate
+- LastKnownCategoryReady states
+
+Example:
+- CompletionState: PARTIAL
+- CompletionPercent: 62
+- PendingReasons: HISTORY,QUOTE,CORRELATION
+
+Rule:
+Completion must reflect real readiness, not cosmetic fullness.
+
+============================================================
+8. SUGGESTED COMPLETION PERCENT WEIGHTING
+============================================================
+
+Completion percentages must be category-based and honest.
+
+Initial suggested weighting:
+- static/spec/identity data = 25%
+- scanner/universe/selection data = 20%
+- history-derived data = 20%
+- live/tradability data = 20%
+- correlation/downstream data = 15%
+
+This can be revised later, but must remain consistent.
+
+Example:
+If static + scanner complete, history partial, live pending, correlation pending,
+then symbol completion may be around 45%–65% depending on exact weighting logic.
+
+Rule:
+The percentage must help the operator understand reality quickly.
+
+============================================================
+9. BUCKET COMPLETION MODEL
+============================================================
+
+Each bucket must have an aggregate contract.
+
+Per bucket, track:
+- BucketName
+- TargetCount
+- WrittenCount
+- CompleteCount
+- PartialCount
+- PendingCount
+- CompletionPercent
+- CurrentBatchState
+- LastWriteTime
+- LastWriteSymbol
+- PendingReasonSummary
+
+Bucket completion should roll up symbol-level truth.
+
+Rule:
+The operator must be able to glance at the HUD and know:
+- which buckets are done
+- which buckets are partially done
+- which buckets are waiting
+- why they are waiting
+
+============================================================
+10. TOP-5-PER-BUCKET PUBLICATION RULE
+============================================================
+
+Trader folder publication must reflect:
+- top 5 symbols per bucket
+- same rotation truth as the scanner
+- no separate downstream re-ranking in the HUD
+
+Operational rule:
+- Step 9 decides the winners
+- publication follows those winners
+- HUD displays the same truth
+- HUD must not invent alternate active sets
+
+Performance note:
+Because dossier writing is heavier, publication and refresh may proceed in batches of 5.
+This is acceptable if:
+- the rotation truth remains aligned
+- the batch state is visible
+- pending batch status is visible on HUD
+
+============================================================
+11. BATCH MODEL
+============================================================
+
+Batching is allowed for heavy dossier work.
+
+Suggested batch principles:
+- publish/refresh in bounded groups
+- keep batch size fixed and visible
+- record current bucket being processed
+- record current symbol being processed
+- record last file written
+- record last write timestamp
+- expose progress count on HUD
+
+Example operator view:
+- Buckets Active: 7
+- Target Symbols: 35
+- Files Written: 23
+- Complete: 11
+- Partial: 12
+- Pending: 12
+- Current Batch: 5/7
+- Last File: HK_EQUITY_INDUSTRIALS -> 1800.HK
+
+Rule:
+Batching is acceptable only if visibility remains clear.
+
+============================================================
+12. DEV HUD OBJECTIVES
+============================================================
+
+The Dev HUD must answer the following at a glance:
+
+A. GLOBAL STATUS
+- current version
+- current phase
+- current step
+- current timer/runtime heartbeat state
+- current batch state
+- total active buckets
+- total target symbols
+- total files written
+- total complete
+- total partial
+- total pending
+- last file written
+- last write time
+- last progress update
+
+B. PIPELINE STATUS
+- static/spec data readiness
+- scanner/selection readiness
+- history-derived readiness
+- live/tick readiness
+- correlation readiness
+
+C. BUCKET STATUS
+Per bucket:
+- bucket name
+- target count
+- written count
+- complete count
+- partial count
+- pending count
+- completion %
+- current batch state
+- dominant pending reason
+
+D. CURRENT WORK STATUS
+- current bucket
+- current symbol
+- current action
+- current result
+- current wait reason if blocked
+
+E. FILE STATUS SUMMARY
+Not every file listed, but:
+- last file written
+- last completed file
+- last partial file
+- last pending file
+- last stale file
+- last error reason if any
+
+============================================================
+13. DEV HUD LAYOUT BLUEPRINT
+============================================================
+
+Recommended visual blocks:
+
+Panel 1: Global
+- version / phase / step
+- timer state
+- bucket count
+- target symbol count
+- written count
+- complete/partial/pending
+- last write event
+- last progress timestamp
+
+Panel 2: Batch / Rotation
+- active batch number
+- total batches
+- current bucket
+- current symbol
+- last file written
+- time since last write
+
+Panel 3: Bucket Progress
+One row per bucket:
+- bucket
+- target
+- written
+- complete
+- pending
+- completion %
+- dominant wait reason
+
+Panel 4: Pipeline Summary
+- static ready %
+- scanner ready %
+- history ready %
+- live ready %
+- correlation ready %
+
+Panel 5: Current Wait Reasons
+- waiting for quote
+- waiting for history
+- waiting for correlation
+- waiting for batch turn
+- waiting for session
+
+Readability rule:
+- do not crowd
+- do not show every symbol file
+- aggregate first
+- keep text large and high-contrast
+
+============================================================
+14. TRADER HUD OBJECTIVES
+============================================================
+
+The Trader HUD must become simpler.
+
+Immediate purpose:
+- show active buckets
+- show symbols inside those buckets
+- show compact status markers per symbol
+
+Future purpose:
+- click a bucket to expand bucket detail
+- click a symbol to open symbol detail
+- later show signal stack / regime / tradability / warnings
+
+Important:
+- Trader HUD must stop trying to show deep scanner diagnostics
+- Dev HUD owns internal scanner truth
+- Trader HUD owns trader-facing symbol/bucket visibility
+
+============================================================
+15. TRADER HUD INITIAL DESIGN
+============================================================
+
+Initial Trader HUD content should be limited to:
+- active bucket list
+- symbols within each active bucket
+- compact readiness/state marker for each symbol
+- optional compact score/role markers
+
+Example:
+Bucket: HK Industrials
+- 1800.HK   PARTIAL
+- 0388.HK   READY
+- 0005.HK   READY
+- 0016.HK   PENDING
+- 0027.HK   READY
+
+Rule:
+Keep Trader HUD concise and readable.
+
+============================================================
+16. FUTURE TRADER HUD EXPANSION
+============================================================
+
+Planned future interaction model:
+
+Step T1:
+- bucket list only
+
+Step T2:
+- click bucket -> expand symbols in bucket
+
+Step T3:
+- click symbol -> show symbol detail panel
+
+Step T4:
+- symbol detail panel shows:
+  - score
+  - role
+  - ATR
+  - tradability
+  - spread state
+  - correlation state
+  - pending reasons
+  - signals (future)
+
+Step T5:
+- signal drilldown / trade-setup detail
+
+Important:
+Interactive navigation must not be attempted all at once.
+
+============================================================
+17. BUTTON / INTERACTION SAFETY RULES
+============================================================
+
+Buttons are currently fragile and must be handled cautiously.
+
+Rules:
+1. Do not combine full navigation overhaul with data-contract overhaul
+2. First stabilize displayed truth
+3. Then simplify button count
+4. Then make bucket clicks reliable
+5. Then add symbol drilldown
+6. Then add signal detail view
+
+Button system goals:
+- fewer buttons
+- larger click targets
+- stable click state
+- explicit current selection state
+- no hidden overlapping click zones
+- no dependence on unstable redraw timing
+- no heavy recompute on button click
+
+============================================================
+18. DOSSIER COMPLETENESS CONTRACT
+============================================================
+
+Every symbol dossier should eventually expose the following visibility fields:
+
+Identity:
+- Symbol
+- Canonical
+- DisplayName
+- Asset
+- Bucket
+
+Lifecycle:
+- UpdatedAt
+- LastUpdateUTC
+- CompletionState
+- CompletionPercent
+- PendingReasons
+- FileWrittenState
+- PublicationState
+
+Static/Broker readiness:
+- StaticReady = Yes/No
+
+Scanner readiness:
+- ScannerReady = Yes/No
+
+History readiness:
+- HistoryReady = Yes/No
+
+Live readiness:
+- LiveReady = Yes/No
+
+Correlation readiness:
+- CorrelationReady = Yes/No
+
+Rule:
+A dossier must state not only values, but readiness.
+
+============================================================
+19. HUD DATA CONTRACTS
+============================================================
+
+A. SYMBOL HUD CONTRACT
+Each symbol should eventually expose:
+- Symbol
+- Bucket
+- Role
+- Score
+- FileWritten
+- FileLastUpdate
+- CompletionState
+- CompletionPercent
+- StaticReady
+- ScannerReady
+- HistoryReady
+- LiveReady
+- CorrelationReady
+- PendingReasons
+- LastKnownPendingReason
+- BatchState if applicable
+
+B. BUCKET HUD CONTRACT
+Each bucket should eventually expose:
+- BucketName
+- TargetCount
+- WrittenCount
+- CompleteCount
+- PartialCount
+- PendingCount
+- CompletionPercent
+- BatchState
+- CurrentSymbol
+- LastWriteTime
+- LastWriteSymbol
+- PendingReasonSummary
+
+C. GLOBAL HUD CONTRACT
+Global HUD should expose:
+- Version
+- Phase
+- Step
+- Runtime state
+- Active bucket count
+- Active symbol target count
+- Files written count
+- Complete count
+- Partial count
+- Pending count
+- Current batch
+- Last write time
+- Last write file
+- Last progress age
+
+============================================================
+20. IMPLEMENTATION PRINCIPLE: HUD MUST NOT SCAN FILESYSTEM HEAVILY
+============================================================
+
+The HUD must not become a filesystem crawler.
+
+Preferred data sources:
+- runtime state already in memory
+- publication index arrays
+- active symbol arrays
+- bucket aggregate arrays
+- write-status fields updated during publication
+- already known dossier state flags
+
+Avoid:
+- re-reading every dossier file every timer cycle
+- re-computing bucket aggregates from disk every repaint
+- expensive broker/spec calls every frame
+
+Rule:
+Maintain lightweight runtime mirrors for HUD display.
+
+============================================================
+21. STAGED IMPLEMENTATION PLAN
+============================================================
+
+HUD work must be staged.
+
+HUD Step A: Blueprint / Contract Layer
+- define HUD separation rules
+- define completion states
+- define bucket aggregate model
+- define pending reason vocabulary
+- define symbol/bucket/global contracts
+
+HUD Step B: Visibility Foundation
+- expose runtime write status
+- expose last write event
+- expose bucket target/written/partial/complete counts
+- expose pending reason counts
+- no advanced buttons yet
+
+HUD Step C: Dev HUD First Pass
+- implement global status block
+- implement bucket progress block
+- implement pipeline readiness block
+- implement last write / current work block
+
+HUD Step D: Dossier Completeness Alignment
+- ensure symbol completion fields are produced consistently
+- ensure bucket aggregates derive from real symbol states
+
+HUD Step E: Trader HUD Simplification
+- remove deep internal scanner detail
+- show bucket list + symbols only
+- show compact readiness markers
+
+HUD Step F: Stable Bucket Click Navigation
+- click bucket to expand bucket detail
+- maintain explicit selected bucket state
+
+HUD Step G: Stable Symbol Drilldown
+- click symbol to show symbol detail panel
+- no signals yet unless already stable
+
+HUD Step H: Signal Detail View
+- later, when stable and dependency-safe
+
+============================================================
+22. READABILITY STANDARDS
+============================================================
+
+The operator has visibility constraints.
+Therefore:
+
+- text must remain large enough
+- contrast must remain strong
+- rows must be compact but readable
+- avoid over-dense clutter
+- prioritize summary truth over decorative detail
+- use percentages and counts rather than long verbose text where possible
+- present “done / partial / pending” clearly
+- present per-bucket status in rows
+- do not print every symbol file on Dev HUD
+- highlight current work and last write clearly
+
+============================================================
+23. DEFINITIONS OF DONE / PARTIAL / PENDING
+============================================================
+
+DONE
+- all required categories for current scanner target are ready
+- file written
+- no material pending blocker for current stage
+
+PARTIAL
+- file written
+- some categories ready
+- one or more pending categories remain
+
+PENDING
+- publication target exists
+- file not yet fully ready
+- major category not ready
+- or symbol awaiting batch turn / quote / history / downstream stage
+
+These definitions must be stable across the Dev HUD and the dossier headers.
+
+============================================================
+24. EXAMPLES OF DEV HUD OUTPUT
+============================================================
+
+Example Global:
+- Version: 1.13x
+- Phase: 1
+- Step: 3
+- Buckets Active: 7
+- Target Symbols: 35
+- Files Written: 23
+- Complete: 11
+- Partial: 12
+- Pending: 12
+- Last File: HK_EQUITY_INDUSTRIALS -> 1800.HK
+- Last Write: 17:04:13
+
+Example Bucket Row:
+- HK_EQUITY_INDUSTRIALS   Target 5   Written 5   Complete 3   Partial 2   78%   Waiting: Quote
+- FX_MAJOR               Target 5   Written 5   Complete 5   Partial 0   100%  Waiting: None
+- US_TECH_GROWTH         Target 5   Written 3   Complete 1   Partial 2   46%   Waiting: History
+
+============================================================
+25. EXAMPLES OF TRADER HUD OUTPUT
+============================================================
+
+Example:
+Bucket: HK Industrials
+- 1800.HK  PARTIAL
+- 0388.HK  READY
+- 0005.HK  READY
+- 0016.HK  PENDING
+- 0027.HK  READY
+
+Future expanded symbol view may later include:
+- score
+- role
+- ATR
+- tradability
+- correlation
+- current warnings
+- signals
+
+============================================================
+26. SAFE INTEGRATION RULES
+============================================================
+
+The HUD overhaul must not:
+- change startup order
+- change universe loading truth
+- change Step 8 truth
+- change Step 9 truth
+- change Step 10 truth
+- re-route publication
+- re-rank active symbols
+- change file naming
+- introduce heavy preflight logic
+- poll disk aggressively
+- block timer heartbeats
+- break atomic write assumptions
+
+The HUD overhaul may:
+- consume new runtime visibility flags
+- consume new completion fields
+- consume bucket aggregates
+- consume write-status markers
+- consume batch-state markers
+- consume pending reason counts
+
+============================================================
+27. HUD PROJECT DEPENDENCY RULE
+============================================================
+
+Any HUD enhancement must first answer:
+- where does this value come from?
+- is it already computed?
+- is it safe to expose?
+- is it cheap to expose?
+- does it preserve scanner runtime safety?
+
+If the value is not already computed or cheaply exposed,
+do not force it into the HUD yet.
+
+============================================================
+28. IMMEDIATE RECOMMENDED START POINT
+============================================================
+
+The first practical implementation target should be:
+
+1. Define symbol completion states
+2. Define bucket aggregate states
+3. Expose runtime write-status markers
+4. Build Dev HUD bucket completion view
+5. Keep Trader HUD minimal
+6. Defer advanced buttons
+
+This gives maximum truth visibility for minimum risk.
+
+============================================================
+29. LONG-TERM VISION
+============================================================
+
+Long term, AFS will have:
+
+DEV HUD:
+- operational truth board
+- batch and file visibility
+- bucket completion visibility
+- pending reason visibility
+- scanner progress visibility
+
+TRADER HUD:
+- active bucket browser
+- bucket expansion
+- symbol selection
+- symbol detail
+- later signal detail
+
+This must be achieved gradually and safely.
+
+============================================================
+30. FINAL BLUEPRINT RULE
+============================================================
+
+Do not chase UI sophistication before truth visibility.
+
+First make the HUD honest.
+Then make it useful.
+Then make it interactive.
+
+Truth first.
+Safety first.
+Scanner continuity first.
+Then progressive HUD refinement over time.
