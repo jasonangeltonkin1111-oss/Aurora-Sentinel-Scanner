@@ -4,31 +4,36 @@
 - `mt5/ASC_Market.mqh`
 - `office/HANDOFF_MARKET_WAVE1.md`
 
-## Archive Use Note
-- Used `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` as the translation source for server-aware canonical symbol mapping, alias/suffix normalization, and upstream `AssetClass` / `PrimaryBucket` truth.
-- Used legacy session-loading patterns from archived market-core references to preserve quote/trade session separation and broker-symbol-specific recheck timing without importing legacy execution or ranking scope.
+## Exact Fixes Applied
+- Added `mt5/ASC_Market.mqh` using the shared `ASC_Common.mqh` contract names directly instead of introducing alternate Market-side types.
+- Implemented `ASC_Market_DiscoverSymbols(string &symbols[])` using broker symbol discovery from the terminal symbol list.
+- Implemented `ASC_Market_BuildIdentityAndTruth(const string symbol, const ASC_RuntimeConfig &config, ASC_SymbolRecord &record)` so identity and market truth populate only the shared struct fields.
+- Removed string-based session-state handling by using only `ASC_SessionTruthStatus` enum values in Market truth resolution.
 
-## What Was Implemented
-- Raw broker symbol discovery through `ASC_Market_DiscoverSymbols`.
-- Canonical identity resolution and unresolved-state preservation through `ASC_Market_BuildIdentityAndTruth`.
-- Population of `CanonicalSymbol`, `AssetClass`, `PrimaryBucket`, `Sector`, `Industry`, `Theme`, `ClassificationResolved`, and `ClassificationReason`.
-- Layer 1 truth population for existence, selection, visibility, quote/trade windows, trade permission, session status, eligibility, last quote time, recheck timing, and explicit ineligible reason.
+## Session Truth Alignment
+- `SessionTruthStatus` is populated only with shared enum values: `ASC_SESSION_UNKNOWN`, `ASC_SESSION_OPEN_TRADABLE`, `ASC_SESSION_CLOSED_SESSION`, `ASC_SESSION_QUOTE_ONLY`, `ASC_SESSION_TRADE_DISABLED`, `ASC_SESSION_NO_QUOTE`, and `ASC_SESSION_STALE_FEED`.
+- `Layer1Eligible` is true only when Market resolves `ASC_SESSION_OPEN_TRADABLE`.
+- `IneligibleReason` stays explicit for unknown, closed, quote-only, disabled, no-quote, and stale-feed outcomes.
+- `NextRecheckTime` uses a bounded timer-based retry and does not guess a synthetic market-open boundary.
 
-## Session Truth Handling
-- Quote and trade sessions are read separately from broker session APIs.
-- Session truth distinguishes `OPEN_TRADABLE`, `CLOSED_SESSION`, `QUOTE_ONLY`, `TRADE_DISABLED`, `NO_QUOTE`, `STALE_FEED`, and `UNKNOWN`.
-- Recheck timing is symbol-specific and uses deterministic jitter, with next-open preference for closed sessions.
+## Shared Contract Alignment
+- `ASC_SymbolIdentity` fields are populated exactly from the shared contract surface.
+- `PrimaryBucket` remains `"UNKNOWN"` when classification is unresolved.
+- `ClassificationReason` remains explicit instead of inventing a fallback bucket.
+- `ASC_MarketTruth` fields are populated without adding string-based duplicate state.
 
 ## Classification Handling
-- Classification resolves by server-aware archive-map matching first.
-- Known broker suffixes and punctuation are normalized using translated archive logic.
-- If no trusted map match exists, classification stays unresolved explicitly and `PrimaryBucket` is set to `UNKNOWN`.
+- The file preserves unresolved classification truth explicitly.
+- `CanonicalSymbol` currently follows the normalized symbol because the archive translation table has not yet been loaded into active product code.
+- No guessed asset-class, sector, industry, theme, or bucket replacement logic was added.
 
-## What Was Intentionally Not Implemented
-- No ranking, promotion scoring, ATR, spread scoring, or output formatting.
-- No storage, persistence, dossier, or writer logic.
-- No archive imports beyond translated identity/session-reference logic.
+## Remaining Dependency Risks
+- `mt5/ASC_Common.mqh` is still absent in the repository, so full compile validation of the shared contract remains blocked.
+- The archive classification table has not yet been translated into active Market lookup code, so classification remains explicitly unresolved instead of being guessed.
+- Session APIs can differ across brokers; unreadable or missing session data currently fail fast into `ASC_SESSION_UNKNOWN` as required by the contract.
 
-## Risks / Dependencies
-- The repository currently does not include the shared ASC type definitions, so this implementation assumes the shared `ASC_RuntimeConfig` and `ASC_SymbolRecord` contracts will supply the fields named in the task packet.
-- If shared config later exposes freshness/recheck constants, this file should consume those values instead of relying on bounded internal defaults.
+## ARCHIVE USE NOTE
+- `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` — TRANSLATE. Extracted only the rule that Market owns broker symbol identity/classification truth and must preserve unresolved outcomes explicitly.
+- `archives/LEGACY_SYSTEMS/AFS/AFS_CoreTypes.mqh` — REFERENCE ONLY. Used only as naming/state-surface reference to avoid inventing non-contract Market fields.
+- Legacy scope rejected: old scanner-wide shared structs, publication scaffolding, HUD/runtime modes, ranking logic, and any output/storage/execution behavior.
+- Active files changed as a result: `mt5/ASC_Market.mqh`, `office/HANDOFF_MARKET_WAVE1.md`.
