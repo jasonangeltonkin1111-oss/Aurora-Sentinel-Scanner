@@ -1,21 +1,24 @@
 #property strict
 
 #include "ASC_Common.mqh"
+#include "ASC_Market.mqh"
+#include "ASC_Conditions.mqh"
+#include "ASC_Storage.mqh"
+#include "ASC_Output.mqh"
 #include "ASC_Engine.mqh"
-
-ASC_RuntimeConfig g_runtime_config;
 
 int OnInit()
   {
-   g_runtime_config.TimerSeconds = 60;
-   g_runtime_config.MaxSymbolsPerInitPass = 200;
-   g_runtime_config.MaxSymbolsPerTimerPass = 50;
-   g_runtime_config.StaleFeedSeconds = 300;
-   g_runtime_config.UseCommonFiles = true;
+   ASC_RuntimeConfig runtime_config;
+   runtime_config.TimerSeconds = 60;
+   runtime_config.MaxSymbolsPerInitPass = 200;
+   runtime_config.MaxSymbolsPerTimerPass = 50;
+   runtime_config.StaleFeedSeconds = 300;
+   runtime_config.UseCommonFiles = true;
 
-   EventSetTimer(g_runtime_config.TimerSeconds);
+   EventSetTimer(runtime_config.TimerSeconds);
 
-   if(!ASC_Engine_RunInit(g_runtime_config))
+   if(!ASC_Engine_RunInit(runtime_config))
       return(INIT_FAILED);
 
    return(INIT_SUCCEEDED);
