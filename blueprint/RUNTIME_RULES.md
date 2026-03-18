@@ -26,6 +26,51 @@ That slice must reach:
 - safe write path to Common Files
 - truthful summary output without crashes
 
+## Locked Refresh Cadence for First Milestone
+The first scanner milestone uses a simple bounded cadence:
+
+### OnInit
+- identify broker
+- restore existing broker state from Common Files
+- detect missing, invalid, or stale broker symbol files and summary state
+- perform one full bounded scanner pass
+- publish refreshed broker outputs
+
+### OnTimer
+- run periodic bounded refresh passes
+- re-read current broker state first when needed
+- refresh only symbols that are missing, invalid, or stale
+- rebuild summary after the symbol pass completes
+
+### OnTick
+- no heavy scanner work
+- no universe-wide work
+- no summary rebuilds
+
+## Timer Rule
+The exact timer interval may be implemented in code, but the blueprint intent is fixed:
+- frequent enough to keep the scanner useful
+- slow enough to avoid turning the EA into a heavy tick-driven loop
+
+The first milestone prefers timer-driven orchestration over tick-driven orchestration.
+
+## First Milestone Runtime Scope
+The first milestone runtime includes:
+- symbol universe intake
+- broker spec intake
+- bounded M15 and H1 history intake
+- minimum calculation preparation
+- symbol file writes
+- summary rebuild
+- diagnostics
+
+It does not include:
+- signal generation
+- trade direction logic
+- execution logic
+- deep telemetry systems
+- strategy extraction
+
 ## Build Order Intent
 1. Common
 2. Engine
