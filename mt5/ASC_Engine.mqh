@@ -2,10 +2,14 @@
 #define ASC_ENGINE_MQH
 
 #include "ASC_Common.mqh"
+#include "ASC_Market.mqh"
+#include "ASC_Conditions.mqh"
+#include "ASC_Storage.mqh"
+#include "ASC_Output.mqh"
 
-static ASC_RuntimeConfig g_asc_runtime_config;
 static ASC_SymbolRecord  g_asc_universe_records[];
 static int               g_asc_universe_count = 0;
+static ASC_RuntimeConfig g_asc_runtime_config;
 
 void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
   {
@@ -34,8 +38,8 @@ void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
 
    record.ConditionsTruth.SpecsReadable = false;
    record.ConditionsTruth.SpecsReason = "";
-   record.ConditionsTruth.Digits = 0;
-   record.ConditionsTruth.SpreadPoints = 0;
+   record.ConditionsTruth.Digits = -1;
+   record.ConditionsTruth.SpreadPoints = -1;
    record.ConditionsTruth.SpreadFloat = false;
    record.ConditionsTruth.Point = 0.0;
    record.ConditionsTruth.TickSize = 0.0;
@@ -49,20 +53,38 @@ void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
    record.SurfaceTruth.SurfaceEligible = false;
    record.SurfaceTruth.RankingEligible = false;
    record.SurfaceTruth.SurfaceReason = "";
-   record.SurfaceTruth.BarsM15 = -1;
-   record.SurfaceTruth.BarsH1 = -1;
+   record.SurfaceTruth.BarsM15 = 0;
+   record.SurfaceTruth.BarsH1 = 0;
    record.SurfaceTruth.LastBarTimeM15 = 0;
    record.SurfaceTruth.LastBarTimeH1 = 0;
-   record.SurfaceTruth.QuoteAgeSeconds = -1.0;
-   record.SurfaceTruth.SpreadCostPoints = -1.0;
-   record.SurfaceTruth.SurfaceScore = -1.0;
+   record.SurfaceTruth.QuoteAgeSeconds = 0.0;
+   record.SurfaceTruth.SpreadCostPoints = 0.0;
+   record.SurfaceTruth.SurfaceScore = 0.0;
+  }
+
+int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
+  {
+   const string raw_symbol = record.Identity.RawSymbol;
+   const string normalized_symbol = record.Identity.NormalizedSymbol;
+   const string canonical_symbol = record.Identity.CanonicalSymbol;
+
+   for(int index = 0; index < g_asc_universe_count; ++index)
+     {
+      if(StringLen(raw_symbol) > 0 && g_asc_universe_records[index].Identity.RawSymbol == raw_symbol)
+         return(index);
+
+      if(StringLen(normalized_symbol) > 0 && g_asc_universe_records[index].Identity.NormalizedSymbol == normalized_symbol)
+         return(index);
+
+      if(StringLen(canonical_symbol) > 0 && g_asc_universe_records[index].Identity.CanonicalSymbol == canonical_symbol)
+         return(index);
+     }
+
+   return(-1);
   }
 
 int ASC_Engine_FindRecordIndexBySymbol(const string symbol)
   {
-   if(StringLen(symbol) == 0)
-      return(-1);
-
    for(int index = 0; index < g_asc_universe_count; ++index)
      {
       if(g_asc_universe_records[index].Identity.RawSymbol == symbol)
@@ -78,19 +100,6 @@ int ASC_Engine_FindRecordIndexBySymbol(const string symbol)
    return(-1);
   }
 
-int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
-  {
-   int index = ASC_Engine_FindRecordIndexBySymbol(record.Identity.RawSymbol);
-   if(index >= 0)
-      return(index);
-
-   index = ASC_Engine_FindRecordIndexBySymbol(record.Identity.NormalizedSymbol);
-   if(index >= 0)
-      return(index);
-
-   return(ASC_Engine_FindRecordIndexBySymbol(record.Identity.CanonicalSymbol));
-  }
-
 void ASC_Engine_UpsertRecord(const ASC_SymbolRecord &record)
   {
    int target_index = ASC_Engine_FindRecordIndex(record);
@@ -104,17 +113,43 @@ void ASC_Engine_UpsertRecord(const ASC_SymbolRecord &record)
    g_asc_universe_records[target_index] = record;
   }
 
-void ASC_Engine_ProcessSymbols(const string &symbols[],const int discovered_count,const int max_pass)
+void ASC_Engine_PreserveUniverseMembership(const string &symbols[],const int total_symbols)
   {
-   const int bounded_count = MathMin(discovered_count,max_pass);
-   if(bounded_count <= 0)
-      return;
+   for(int index = 0; index < total_symbols; ++index)
+     {
+      const string symbol = symbols[index];
+      if(StringLen(symbol) == 0)
+         continue;
 
-   for(int index = 0; index < bounded_count; ++index)
+      const int existing_index = ASC_Engine_FindRecordIndexBySymbol(symbol);
+      if(existing_index >= 0)
+        {
+         if(StringLen(g_asc_universe_records[existing_index].Identity.RawSymbol) == 0)
+            g_asc_universe_records[existing_index].Identity.RawSymbol = symbol;
+         continue;
+        }
+
+      ASC_SymbolRecord placeholder_record;
+      ASC_Engine_ResetRecord(placeholder_record);
+      placeholder_record.Identity.RawSymbol = symbol;
+      placeholder_record.Identity.NormalizedSymbol = symbol;
+      placeholder_record.Identity.ClassificationReason = "PENDING_INIT_PASS";
+      placeholder_record.MarketTruth.Exists = true;
+      placeholder_record.MarketTruth.IneligibleReason = "PENDING_INIT_PASS";
+      placeholder_record.ConditionsTruth.SpecsReason = "PENDING_INIT_PASS";
+      ASC_Engine_UpsertRecord(placeholder_record);
+     }
+  }
+
+void ASC_Engine_ProcessSymbols(const string &symbols[],const int total_symbols,const int max_to_process)
+  {
+   int limit = total_symbols;
+   if(max_to_process > 0 && max_to_process < limit)
+      limit = max_to_process;
+
+   for(int index = 0; index < limit; ++index)
      {
       ASC_SymbolRecord built_record;
-      ASC_Engine_ResetRecord(built_record);
-
       if(!ASC_Market_BuildIdentityAndTruth(symbols[index],g_asc_runtime_config,built_record))
          continue;
 
@@ -152,6 +187,7 @@ bool ASC_Engine_RunInit(ASC_RuntimeConfig &config)
       return(restore_succeeded && g_asc_universe_count > 0);
      }
 
+   ASC_Engine_PreserveUniverseMembership(symbols,ArraySize(symbols));
    ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerInitPass);
 
    ASC_Storage_SaveUniverseSnapshot(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
@@ -167,6 +203,7 @@ void ASC_Engine_RunTimer()
    if(!ASC_Market_DiscoverSymbols(symbols))
       return;
 
+   ASC_Engine_PreserveUniverseMembership(symbols,ArraySize(symbols));
    ASC_Engine_ProcessSymbols(symbols,ArraySize(symbols),g_asc_runtime_config.MaxSymbolsPerTimerPass);
 
    ASC_Storage_SaveUniverseSnapshot(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count);
