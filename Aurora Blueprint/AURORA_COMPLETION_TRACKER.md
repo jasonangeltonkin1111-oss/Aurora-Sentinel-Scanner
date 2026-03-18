@@ -32,8 +32,8 @@ It is the operational continuity record.
 - Current governing approach: Start small, preserve full architecture, extract in controlled waves
 
 ## Overall completion estimate
-- Aurora book-to-blueprint foundation: 15%
-- Market-state canon extraction: 0%
+- Aurora book-to-blueprint foundation: 52%
+- Market-state canon extraction: 22%
 - Strategy-family extraction: 0%
 - Pattern atlas extraction: 0%
 - Research/testing method extraction: 0%
