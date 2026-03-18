@@ -5,7 +5,7 @@
 
 #define ASC_OUTPUT_ROOT_PATH "AuroraSentinelCore\\"
 #define ASC_OUTPUT_MIRROR_FILE_NAME ASC_OUTPUT_ROOT_PATH "UniverseSnapshotMirror.txt"
-#define ASC_OUTPUT_BROKER_FALLBACK "BROKER"
+#define ASC_OUTPUT_BROKER_FALLBACK "Broker"
 #define ASC_OUTPUT_SUMMARY_HEADER "Aurora Sentinel Summary"
 #define ASC_OUTPUT_SYMBOL_SECTION_BROKER_SPEC "[BROKER_SPEC]"
 #define ASC_OUTPUT_SYMBOL_SECTION_OHLC_HISTORY "[OHLC_HISTORY]"
@@ -71,28 +71,57 @@ string ASC_Output_SanitizePathComponent(const string value,const string fallback
 
    for(int index = 0; index < StringLen(sanitized); ++index)
      {
+      const ushort code = StringGetCharacter(sanitized,index);
       const string current = StringSubstr(sanitized,index,1);
-      if(StringFind(invalid_characters,current) >= 0)
+      if(code < 32 || StringFind(invalid_characters,current) >= 0)
          StringSetCharacter(sanitized,index,'_');
      }
 
+   sanitized = ASC_Output_Trim(sanitized);
+   while(StringLen(sanitized) > 0)
+     {
+      const string tail = StringSubstr(sanitized,StringLen(sanitized) - 1,1);
+      if(tail != "." && tail != " ")
+         break;
+      sanitized = StringSubstr(sanitized,0,StringLen(sanitized) - 1);
+     }
+
    if(StringLen(sanitized) == 0)
-      sanitized = fallback;
+      sanitized = ASC_Output_Trim(fallback);
+
+   if(StringLen(sanitized) == 0)
+      sanitized = "Broker";
 
    return(sanitized);
   }
 
-string ASC_Output_BrokerName()
+string ASC_Output_ResolveBrokerIdentity()
   {
    const string server = ASC_Output_Trim(AccountInfoString(ACCOUNT_SERVER));
    if(StringLen(server) > 0)
-      return(ASC_Output_SanitizePathComponent(server,ASC_OUTPUT_BROKER_FALLBACK));
+      return(server);
 
    const string company = ASC_Output_Trim(AccountInfoString(ACCOUNT_COMPANY));
    if(StringLen(company) > 0)
-      return(ASC_Output_SanitizePathComponent(company,ASC_OUTPUT_BROKER_FALLBACK));
+      return(company);
+
+   const string terminal_company = ASC_Output_Trim(TerminalInfoString(TERMINAL_COMPANY));
+   if(StringLen(terminal_company) > 0)
+      return(terminal_company);
+
+   const long login = AccountInfoInteger(ACCOUNT_LOGIN);
+   if(login > 0)
+      return("Account" + IntegerToString((int)login));
 
    return(ASC_OUTPUT_BROKER_FALLBACK);
+  }
+
+string ASC_Output_BrokerName()
+  {
+   static string broker_name = "";
+   if(StringLen(broker_name) == 0)
+      broker_name = ASC_Output_SanitizePathComponent(ASC_Output_ResolveBrokerIdentity(),ASC_OUTPUT_BROKER_FALLBACK);
+   return(broker_name);
   }
 
 string ASC_Output_SummaryFileName(const string broker_name)
