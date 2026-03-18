@@ -4,6 +4,7 @@
 #include "ASC_Common.mqh"
 #include "ASC_Market.mqh"
 #include "ASC_Conditions.mqh"
+#include "ASC_Surface.mqh"
 #include "ASC_Storage.mqh"
 #include "ASC_Output.mqh"
 
