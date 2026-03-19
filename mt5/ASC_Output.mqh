@@ -300,17 +300,19 @@ string ASC_Output_SwapModeText(const int value)
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
-   if(record.Identity.ClassificationResolved)
-      return(true);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
-      return(true);
-   if(record.MarketTruth.Exists)
-      return(true);
-   if(record.ConditionsTruth.SpecsReadable)
-      return(true);
-   if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
-      return(true);
-   return(false);
+   if(!record.RecordHydration.PublishableTruth)
+      return(false);
+   if(record.RecordHydration.HydrationState != "CURRENT_PASS_READY")
+      return(false);
+   if(record.RecordHydration.SnapshotAuthority != "CURRENT_PASS")
+      return(false);
+   if(!record.MarketTruth.Exists)
+      return(false);
+   if(record.MarketTruth.SessionReadStatus == "LEGACY")
+      return(false);
+   if(record.ConditionsTruth.TruthCoverageStatus == "LEGACY" || record.ConditionsTruth.TruthCoverageStatus == "UNREAD")
+      return(false);
+   return(true);
   }
 
 string ASC_Output_PublicationStateText(const ASC_SymbolRecord &record)
@@ -734,6 +736,9 @@ void ASC_Output_WriteMirrorRecord(const int handle,const ASC_SymbolRecord &recor
    FileWrite(handle,"Title: " + ASC_Output_RecordTitle(record));
    FileWrite(handle,"DisplaySymbol: " + ASC_Output_RecordDisplaySymbol(record));
    FileWrite(handle,"PublicationState: " + ASC_Output_PublicationStateText(record));
+   ASC_Output_WriteStringField(handle,"HydrationState",record.RecordHydration.HydrationState);
+   ASC_Output_WriteStringField(handle,"SnapshotAuthority",record.RecordHydration.SnapshotAuthority);
+   FileWrite(handle,"PublishableTruth: " + ASC_Output_BoolText(record.RecordHydration.PublishableTruth));
    ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
    FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
    ASC_Output_WriteStringField(handle,"QuoteFreshnessStatus",record.MarketTruth.QuoteFreshnessStatus);
