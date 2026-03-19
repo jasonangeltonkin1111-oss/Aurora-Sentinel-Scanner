@@ -35,7 +35,7 @@ Product naming must stay domain-based, not task-number-based.
 ---
 
 ## Current Objective
-Move from completed Wave 1 hardening into the next bounded HQ-controlled stage without reopening already-resolved blocker packets.
+Move from completed Wave 1 hardening into the next bounded HQ-controlled stage without reopening already-resolved blocker packets, using `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical lineage reference and `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the canonical recovery-packet planning guide.
 
 ---
 

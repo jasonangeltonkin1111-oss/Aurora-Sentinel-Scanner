@@ -61,3 +61,13 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: treat blueprint hardening, merged Wave 1 fix commits, post-fix Clerk review, and post-fix Debug review as the new live repo baseline
 - Why: the product layer no longer reflects the earlier Wave 1 blocker state, and the remaining lag was in office/control continuity rather than unresolved core MT5 blockers
 - Result: Clerk recorded `PASS WITH CLERK CORRECTIONS`, Debug recorded `PASS WITH NON-BLOCKING FIXES`, control-layer normalization became the final active office task, and HQ may now prepare to advance beyond the current fix loop without rewriting later layers as complete
+
+### 2026-03-19 — Canonical non-Aurora system/archive map added
+- Decision: add `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical office reference for current ASC lineage, non-Aurora legacy systems, and archive-to-ASC translation guidance
+- Why: the repository had front-door archive maps and surgical references, but it did not yet have one deep office document joining current ASC truth, office/blueprint law, and the full non-Aurora archive landscape into a single recoverable spine
+- Result: future HQ and workers now have a durable lineage map that distinguishes high-value translation sources, historical-only sources, dangerous legacy patterns, and the main gaps ASC still has relative to legacy systems
+
+### 2026-03-19 — Canonical legacy recovery execution plan added
+- Decision: add `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the operational bridge between the master archive map and future archive-to-ASC recovery packets
+- Why: the repository now had strong lineage and code-translation intelligence, but future HQ still needed one canonical document that converts that intelligence into bounded module-specific recovery order, readiness states, and worker-packet requirements
+- Result: future HQ can now issue surgical recovery prompts with explicit ready-now vs blocked vs future-layer distinctions without re-deriving archive sequencing from scratch
