@@ -6,6 +6,7 @@
 
 #define ASC_OUTPUT_ROOT_PATH "AuroraSentinelCore\\"
 #define ASC_OUTPUT_MIRROR_FILE_NAME ASC_OUTPUT_ROOT_PATH "UniverseSnapshotMirror.txt"
+#define ASC_OUTPUT_REVIEW_QUEUE_SUFFIX ".ClassificationReviewQueue.txt"
 #define ASC_OUTPUT_BROKER_FALLBACK "Broker"
 #define ASC_OUTPUT_SUMMARY_HEADER "Aurora Sentinel Summary"
 #define ASC_OUTPUT_SUMMARY_TEMP_SUFFIX ".tmp"
@@ -103,6 +104,11 @@ string ASC_Output_SummaryFileName(const string broker_name)
 string ASC_Output_SymbolDirectory(const string broker_name)
   {
    return(ASC_OUTPUT_ROOT_PATH + broker_name + ".Symbols");
+  }
+
+string ASC_Output_ReviewQueueFileName(const string broker_name)
+  {
+   return(ASC_OUTPUT_ROOT_PATH + broker_name + ASC_OUTPUT_REVIEW_QUEUE_SUFFIX);
   }
 
 string ASC_Output_RecordDisplaySymbol(const ASC_SymbolRecord &record)
@@ -300,6 +306,23 @@ string ASC_Output_SwapModeText(const int value)
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
+   if(!record.Identity.ClassificationResolved)
+     {
+      string path = ASC_Output_Trim(record.Identity.BrokerPath);
+      StringToUpper(path);
+      string exchange = ASC_Output_Trim(record.Identity.BrokerExchange);
+      StringToUpper(exchange);
+      if(StringFind(path,"SHARE",0) >= 0 ||
+         StringFind(path,"STOCK",0) >= 0 ||
+         StringFind(path,"EQUIT",0) >= 0 ||
+         StringFind(exchange,"NASDAQ",0) >= 0 ||
+         StringFind(exchange,"NYSE",0) >= 0 ||
+         StringFind(exchange,"XETRA",0) >= 0 ||
+         StringFind(exchange,"EURONEXT",0) >= 0 ||
+         StringFind(exchange,"LONDON",0) >= 0)
+         return(false);
+     }
+
    if(record.Identity.ClassificationResolved)
       return(true);
    if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
@@ -311,6 +334,25 @@ bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
    if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
       return(true);
    return(false);
+  }
+
+bool ASC_Output_RecordNeedsClassificationReview(const ASC_SymbolRecord &record)
+  {
+   if(record.Identity.ClassificationResolved)
+      return(false);
+
+   string path = record.Identity.BrokerPath;
+   StringToUpper(path);
+   string exchange = ASC_Output_Trim(record.Identity.BrokerExchange);
+   StringToUpper(exchange);
+   return(StringFind(path,"SHARE",0) >= 0 ||
+          StringFind(path,"STOCK",0) >= 0 ||
+          StringFind(path,"EQUIT",0) >= 0 ||
+          StringFind(exchange,"NASDAQ",0) >= 0 ||
+          StringFind(exchange,"NYSE",0) >= 0 ||
+          StringFind(exchange,"XETRA",0) >= 0 ||
+          StringFind(exchange,"EURONEXT",0) >= 0 ||
+          StringFind(exchange,"LONDON",0) >= 0);
   }
 
 string ASC_Output_PublicationStateText(const ASC_SymbolRecord &record)
@@ -559,11 +601,12 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    int unavailable_count = 0;
    int eligible_count = 0;
    int bucket_known_count = 0;
+   int review_queue_count = 0;
    string lines[];
    ArrayResize(lines,0);
 
    const int header_end = ArraySize(lines);
-   ArrayResize(lines,header_end + 10);
+   ArrayResize(lines,header_end + 11);
    lines[header_end] = ASC_OUTPUT_SUMMARY_HEADER;
    lines[header_end + 1] = "Broker: " + broker_name;
    lines[header_end + 2] = "UniverseRecordCount: " + IntegerToString(count);
@@ -574,6 +617,7 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    lines[header_end + 7] = "UnavailableUniverseMembers: 0";
    lines[header_end + 8] = "Layer1EligibleCount: 0";
    lines[header_end + 9] = "BucketResolvedCount: 0";
+   lines[header_end + 10] = "UnresolvedReviewQueueCount: 0";
 
    string published_buckets[];
    ArrayResize(published_buckets,0);
@@ -585,6 +629,8 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
          ++eligible_count;
       if(ASC_Output_IsMeaningfulValue(record.Identity.PrimaryBucket))
          ++bucket_known_count;
+      if(ASC_Output_RecordNeedsClassificationReview(record))
+         ++review_queue_count;
 
       const string publication_state = ASC_Output_PublicationStateText(record);
       if(publication_state == "PUBLISHED")
@@ -600,6 +646,10 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    lines[7] = "UnavailableUniverseMembers: " + IntegerToString(unavailable_count);
    lines[8] = "Layer1EligibleCount: " + IntegerToString(eligible_count);
    lines[9] = "BucketResolvedCount: " + IntegerToString(bucket_known_count);
+   lines[10] = "UnresolvedReviewQueueCount: " + IntegerToString(review_queue_count);
+
+   Print("ASC classification coverage for server " + broker_name +
+         ": unresolved review queue count=" + IntegerToString(review_queue_count));
 
    const int guidance_start = ArraySize(lines);
    ArrayResize(lines,guidance_start + 4);
@@ -692,6 +742,40 @@ bool ASC_Output_WriteSymbolSurfaces(const ASC_RuntimeConfig &config,const ASC_Sy
    return(true);
   }
 
+bool ASC_Output_WriteClassificationReviewQueue(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
+  {
+   const string broker_name = ASC_Output_BrokerName();
+   FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
+
+   const int handle = FileOpen(ASC_Output_ReviewQueueFileName(broker_name),ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
+   if(handle == INVALID_HANDLE)
+      return(false);
+
+   int queued = 0;
+   FileWrite(handle,"Classification Review Queue");
+   FileWrite(handle,"Broker: " + broker_name);
+   FileWrite(handle,"");
+
+   for(int index = 0; index < count; ++index)
+     {
+      if(!ASC_Output_RecordNeedsClassificationReview(records[index]))
+         continue;
+
+      ++queued;
+      FileWrite(handle,"[REVIEW]");
+      ASC_Output_WriteStringField(handle,"RawSymbol",records[index].Identity.RawSymbol);
+      ASC_Output_WriteStringField(handle,"DisplayName",records[index].Identity.DisplayName);
+      ASC_Output_WriteStringField(handle,"BrokerExchange",records[index].Identity.BrokerExchange);
+      ASC_Output_WriteStringField(handle,"BrokerPath",records[index].Identity.BrokerPath);
+      ASC_Output_WriteStringField(handle,"ClassificationReason",records[index].Identity.ClassificationReason);
+      FileWrite(handle,"");
+     }
+
+   FileWrite(handle,"QueuedCount: " + IntegerToString(queued));
+   FileClose(handle);
+   return(true);
+  }
+
 void ASC_Output_RemoveStaleSymbolFiles(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
   {
    const string broker_name = ASC_Output_BrokerName();
@@ -761,6 +845,9 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
    FileClose(handle);
 
    if(!ASC_Output_WriteSymbolSurfaces(config,records,count))
+      return(false);
+
+   if(!ASC_Output_WriteClassificationReviewQueue(config,records,count))
       return(false);
 
    ASC_Output_RemoveStaleSymbolFiles(config,records,count);
