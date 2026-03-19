@@ -176,6 +176,7 @@ int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
    const string raw_symbol = record.Identity.RawSymbol;
    const string normalized_symbol = record.Identity.NormalizedSymbol;
    const string canonical_symbol = record.Identity.CanonicalSymbol;
+   const string canonical_lookup = ASC_Market_Internal::NormalizeSymbol(canonical_symbol);
    for(int index = 0; index < g_asc_universe_count; ++index)
      {
       if(StringLen(raw_symbol) > 0 && g_asc_universe_records[index].Identity.RawSymbol == raw_symbol)
@@ -184,17 +185,24 @@ int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
          return(index);
       if(StringLen(canonical_symbol) > 0 && g_asc_universe_records[index].Identity.CanonicalSymbol == canonical_symbol)
          return(index);
+      if(StringLen(canonical_lookup) > 0 && g_asc_universe_records[index].Identity.NormalizedSymbol == canonical_lookup)
+         return(index);
      }
    return(-1);
   }
 
 int ASC_Engine_FindRecordIndexBySymbol(const string symbol)
   {
+   const string lookup_symbol = ASC_Market_Internal::NormalizeSymbol(symbol);
    for(int index = 0; index < g_asc_universe_count; ++index)
      {
       if(g_asc_universe_records[index].Identity.RawSymbol == symbol ||
          g_asc_universe_records[index].Identity.NormalizedSymbol == symbol ||
          g_asc_universe_records[index].Identity.CanonicalSymbol == symbol)
+         return(index);
+      if(StringLen(lookup_symbol) > 0 &&
+         (g_asc_universe_records[index].Identity.NormalizedSymbol == lookup_symbol ||
+          ASC_Market_Internal::NormalizeSymbol(g_asc_universe_records[index].Identity.CanonicalSymbol) == lookup_symbol))
          return(index);
      }
    return(-1);
@@ -229,7 +237,8 @@ void ASC_Engine_PreserveUniverseMembership(const string &symbols[],const int tot
       ASC_SymbolRecord placeholder_record;
       ASC_Engine_ResetRecord(placeholder_record);
       placeholder_record.Identity.RawSymbol = symbol;
-      placeholder_record.Identity.NormalizedSymbol = symbol;
+      placeholder_record.Identity.NormalizedSymbol = ASC_Market_Internal::NormalizeSymbol(symbol);
+      placeholder_record.Identity.CanonicalSymbol = ASC_Market_Internal::CanonicalizeSymbol(symbol);
       placeholder_record.Identity.ClassificationReason = "PENDING_INIT_PASS";
       placeholder_record.MarketTruth.Exists = true;
       placeholder_record.MarketTruth.IneligibleReason = "PENDING_DISCOVERY_HYDRATION";
