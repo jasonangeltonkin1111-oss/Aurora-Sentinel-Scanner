@@ -19,7 +19,7 @@ Do not create endless new HQ state files per wave.
 - Foundation status: blueprint hardened, Wave 1 fix wave landed, post-fix Clerk and Debug reviews completed
 - Current implementation wave: Wave 1 Post-Fix Review Completed
 - Current stage family: first-slice implementation hardening complete enough for bounded advancement
-- Current focus: control-layer continuity now reflects the merged product and review truth
+- Current focus: preserve the normalized post-Wave-1 baseline and use the new master non-Aurora system/archive map as the canonical lineage reference for future HQ planning
 
 ---
 
@@ -84,8 +84,9 @@ Current decision:
 
 ## Required Next Action
 1. use the normalized office layer and current review records as the HQ recovery baseline
-2. choose the next bounded post-Wave-1 stage without reissuing the same fix packets
-3. keep later-layer work explicit and bounded rather than implied by Wave 1 success
+2. use `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical non-Aurora lineage spine when selecting the next bounded stage
+3. choose the next bounded post-Wave-1 stage without reissuing the same fix packets
+4. keep later-layer work explicit and bounded rather than implied by Wave 1 success
 
 ---
 
