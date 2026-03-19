@@ -310,6 +310,9 @@ string ASC_Output_SwapModeText(const int value)
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
+   if(record.RecordHydration.RecoveryState == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_REQUIRED))
+      return(false);
+
    if(!record.Identity.ClassificationResolved)
      {
       string path = ASC_Output_Trim(record.Identity.BrokerPath);
@@ -831,8 +834,14 @@ void ASC_Output_WriteMirrorRecord(const int handle,const ASC_SymbolRecord &recor
    FileWrite(handle,"Title: " + ASC_Output_RecordTitle(record));
    FileWrite(handle,"DisplaySymbol: " + ASC_Output_RecordDisplaySymbol(record));
    FileWrite(handle,"PublicationState: " + ASC_Output_PublicationStateText(record));
+   ASC_Output_WriteStringField(handle,"SnapshotTimestamp",TimeToString(record.RecordHydration.SnapshotTimestamp,TIME_DATE | TIME_SECONDS));
+   ASC_Output_WriteStringField(handle,"SnapshotProducer",record.RecordHydration.SnapshotProducer);
+   ASC_Output_WriteStringField(handle,"SnapshotSchema",record.RecordHydration.SnapshotSchema);
+   ASC_Output_WriteStringField(handle,"UniverseFingerprint",record.RecordHydration.UniverseFingerprint);
    ASC_Output_WriteStringField(handle,"HydrationState",record.RecordHydration.HydrationState);
    ASC_Output_WriteStringField(handle,"SnapshotAuthority",record.RecordHydration.SnapshotAuthority);
+   ASC_Output_WriteStringField(handle,"RecoveryState",record.RecordHydration.RecoveryState);
+   ASC_Output_WriteStringField(handle,"RecoveryReason",record.RecordHydration.RecoveryReason);
    FileWrite(handle,"PublishableTruth: " + ASC_Output_BoolText(record.RecordHydration.PublishableTruth));
    ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
    FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
@@ -847,7 +856,7 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
   {
    FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
 
-   const int handle = FileOpen(ASC_OUTPUT_LAYER12_MIRROR_FILE_NAME,ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
+   const int handle = FileOpen(ASC_OUTPUT_MIRROR_FILE_NAME,ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
    if(handle == INVALID_HANDLE)
       return(false);
 
@@ -869,6 +878,13 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
      }
 
    FileWrite(handle,"Universe Recovery Debug Mirror");
+   if(count > 0)
+     {
+      ASC_Output_WriteStringField(handle,"SnapshotProducer",records[0].RecordHydration.SnapshotProducer);
+      ASC_Output_WriteStringField(handle,"SnapshotSchema",records[0].RecordHydration.SnapshotSchema);
+      ASC_Output_WriteStringField(handle,"UniverseFingerprint",records[0].RecordHydration.UniverseFingerprint);
+      ASC_Output_WriteStringField(handle,"SnapshotTimestamp",TimeToString(records[0].RecordHydration.SnapshotTimestamp,TIME_DATE | TIME_SECONDS));
+     }
    FileWrite(handle,"RecordCount: " + IntegerToString(count));
    FileWrite(handle,"Layer1EligibleCount: " + IntegerToString(eligible_count));
    FileWrite(handle,"HydratedSpecCount: " + IntegerToString(hydrated_count));
