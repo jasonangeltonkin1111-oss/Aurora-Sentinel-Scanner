@@ -6,6 +6,7 @@
 
 #define ASC_OUTPUT_ROOT_PATH "AuroraSentinelCore\\"
 #define ASC_OUTPUT_MIRROR_FILE_NAME ASC_OUTPUT_ROOT_PATH "UniverseSnapshotMirror.txt"
+#define ASC_OUTPUT_REVIEW_QUEUE_SUFFIX ".ClassificationReviewQueue.txt"
 #define ASC_OUTPUT_BROKER_FALLBACK "Broker"
 #define ASC_OUTPUT_SUMMARY_HEADER "Aurora Sentinel Summary"
 #define ASC_OUTPUT_SUMMARY_TEMP_SUFFIX ".tmp"
@@ -105,6 +106,11 @@ string ASC_Output_SymbolDirectory(const string broker_name)
    return(ASC_OUTPUT_ROOT_PATH + broker_name + ".Symbols");
   }
 
+string ASC_Output_ReviewQueueFileName(const string broker_name)
+  {
+   return(ASC_OUTPUT_ROOT_PATH + broker_name + ASC_OUTPUT_REVIEW_QUEUE_SUFFIX);
+  }
+
 string ASC_Output_RecordDisplaySymbol(const ASC_SymbolRecord &record)
   {
    if(ASC_Output_IsMeaningfulValue(record.Identity.CanonicalSymbol))
@@ -124,10 +130,14 @@ string ASC_Output_RecordTitle(const ASC_SymbolRecord &record)
    return(symbol_name);
   }
 
+string ASC_Output_RecordFileComponent(const ASC_SymbolRecord &record)
+  {
+   return(ASC_Output_SanitizePathComponent(ASC_Output_RecordDisplaySymbol(record),"Symbol"));
+  }
+
 string ASC_Output_SymbolFileName(const string broker_name,const ASC_SymbolRecord &record)
   {
-   string symbol_name = ASC_Output_RecordDisplaySymbol(record);
-   symbol_name = ASC_Output_SanitizePathComponent(symbol_name,"Symbol");
+   const string symbol_name = ASC_Output_RecordFileComponent(record);
    return(ASC_Output_SymbolDirectory(broker_name) + "\\" + symbol_name + ".txt");
   }
 
@@ -300,6 +310,23 @@ string ASC_Output_SwapModeText(const int value)
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
+   if(!record.Identity.ClassificationResolved)
+     {
+      string path = ASC_Output_Trim(record.Identity.BrokerPath);
+      StringToUpper(path);
+      string exchange = ASC_Output_Trim(record.Identity.BrokerExchange);
+      StringToUpper(exchange);
+      if(StringFind(path,"SHARE",0) >= 0 ||
+         StringFind(path,"STOCK",0) >= 0 ||
+         StringFind(path,"EQUIT",0) >= 0 ||
+         StringFind(exchange,"NASDAQ",0) >= 0 ||
+         StringFind(exchange,"NYSE",0) >= 0 ||
+         StringFind(exchange,"XETRA",0) >= 0 ||
+         StringFind(exchange,"EURONEXT",0) >= 0 ||
+         StringFind(exchange,"LONDON",0) >= 0)
+         return(false);
+     }
+
    if(record.Identity.ClassificationResolved)
       return(true);
    if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
@@ -311,6 +338,25 @@ bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
    if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
       return(true);
    return(false);
+  }
+
+bool ASC_Output_RecordNeedsClassificationReview(const ASC_SymbolRecord &record)
+  {
+   if(record.Identity.ClassificationResolved)
+      return(false);
+
+   string path = record.Identity.BrokerPath;
+   StringToUpper(path);
+   string exchange = ASC_Output_Trim(record.Identity.BrokerExchange);
+   StringToUpper(exchange);
+   return(StringFind(path,"SHARE",0) >= 0 ||
+          StringFind(path,"STOCK",0) >= 0 ||
+          StringFind(path,"EQUIT",0) >= 0 ||
+          StringFind(exchange,"NASDAQ",0) >= 0 ||
+          StringFind(exchange,"NYSE",0) >= 0 ||
+          StringFind(exchange,"XETRA",0) >= 0 ||
+          StringFind(exchange,"EURONEXT",0) >= 0 ||
+          StringFind(exchange,"LONDON",0) >= 0);
   }
 
 string ASC_Output_PublicationStateText(const ASC_SymbolRecord &record)
@@ -329,7 +375,7 @@ string ASC_Output_PrimaryBucketLabel(const ASC_SymbolRecord &record)
 
 string ASC_Output_RecordRoute(const string broker_name,const ASC_SymbolRecord &record)
   {
-   return(broker_name + ".Symbols\\" + ASC_Output_SanitizePathComponent(ASC_Output_RecordDisplaySymbol(record),"Symbol") + ".txt");
+   return(broker_name + ".Symbols\\" + ASC_Output_RecordFileComponent(record) + ".txt");
   }
 
 bool ASC_Output_WriteLinesAtomically(const ASC_RuntimeConfig &config,const string file_name,const string &lines[])
@@ -370,9 +416,8 @@ bool ASC_Output_WriteLinesAtomically(const ASC_RuntimeConfig &config,const strin
    return(true);
   }
 
-void ASC_Output_WriteIdentityBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteIdentityFields(const int handle,const ASC_SymbolRecord &record)
   {
-   ASC_Output_WriteSectionHeader(handle,"[IDENTITY]");
    ASC_Output_WriteStringField(handle,"Symbol",ASC_Output_RecordDisplaySymbol(record));
    ASC_Output_WriteStringField(handle,"DisplayName",record.Identity.DisplayName);
    ASC_Output_WriteStringField(handle,"RawSymbol",record.Identity.RawSymbol);
@@ -384,9 +429,8 @@ void ASC_Output_WriteIdentityBlock(const int handle,const ASC_SymbolRecord &reco
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteClassificationBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteClassificationFields(const int handle,const ASC_SymbolRecord &record)
   {
-   ASC_Output_WriteSectionHeader(handle,"[CLASSIFICATION]");
    ASC_Output_WriteStringField(handle,"AssetClass",record.Identity.AssetClass);
    ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
    ASC_Output_WriteStringField(handle,"Sector",record.Identity.Sector);
@@ -398,9 +442,8 @@ void ASC_Output_WriteClassificationBlock(const int handle,const ASC_SymbolRecord
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteMarketStateBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteMarketStateFields(const int handle,const ASC_SymbolRecord &record)
   {
-   ASC_Output_WriteSectionHeader(handle,"[MARKET_STATE]");
    FileWrite(handle,"Exists: " + ASC_Output_BoolText(record.MarketTruth.Exists));
    FileWrite(handle,"Selected: " + ASC_Output_BoolText(record.MarketTruth.Selected));
    FileWrite(handle,"Visible: " + ASC_Output_BoolText(record.MarketTruth.Visible));
@@ -420,10 +463,9 @@ void ASC_Output_WriteMarketStateBlock(const int handle,const ASC_SymbolRecord &r
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteTradingRulesBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteTradingRulesFields(const int handle,const ASC_SymbolRecord &record)
   {
    ASC_ConditionsTruth t = record.ConditionsTruth;
-   ASC_Output_WriteSectionHeader(handle,"[TRADING_RULES]");
    FileWrite(handle,"SpecsReadable: " + ASC_Output_BoolText(t.SpecsReadable));
    ASC_Output_WriteStringField(handle,"SpecsReason",t.SpecsReason);
    ASC_Output_WriteStringField(handle,"SpecIntegrityStatus",t.SpecIntegrityStatus);
@@ -448,10 +490,9 @@ void ASC_Output_WriteTradingRulesBlock(const int handle,const ASC_SymbolRecord &
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteEconomicsBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteEconomicsFields(const int handle,const ASC_SymbolRecord &record)
   {
    ASC_ConditionsTruth t = record.ConditionsTruth;
-   ASC_Output_WriteSectionHeader(handle,"[ECONOMICS]");
    ASC_Output_WriteStringField(handle,"EconomicsTrust",t.EconomicsTrust);
    ASC_Output_WriteStringField(handle,"EconomicsMismatchFlags",t.EconomicsMismatchFlags);
    FileWrite(handle,"EconomicsAuthoritative: " + ASC_Output_BoolText(t.EconomicsAuthoritative));
@@ -471,10 +512,9 @@ void ASC_Output_WriteEconomicsBlock(const int handle,const ASC_SymbolRecord &rec
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteSwapBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteSwapFields(const int handle,const ASC_SymbolRecord &record)
   {
    ASC_ConditionsTruth t = record.ConditionsTruth;
-   ASC_Output_WriteSectionHeader(handle,"[SWAP]");
    ASC_Output_WriteStringField(handle,"SwapType",t.SwapModeReadable ? ASC_Output_SwapModeText(t.SwapMode) : "UNKNOWN");
    ASC_Output_WriteDoubleField(handle,"SwapLong",t.SwapLong,t.SwapLongReadable);
    ASC_Output_WriteDoubleField(handle,"SwapShort",t.SwapShort,t.SwapShortReadable);
@@ -488,9 +528,8 @@ void ASC_Output_WriteSwapBlock(const int handle,const ASC_SymbolRecord &record)
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteSessionsBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteSessionsFields(const int handle,const ASC_SymbolRecord &record)
   {
-   ASC_Output_WriteSectionHeader(handle,"[SESSIONS]");
    FileWrite(handle,"QuoteScheduleReadable: " + ASC_Output_BoolText(record.MarketTruth.QuoteScheduleReadable));
    FileWrite(handle,"TradeScheduleReadable: " + ASC_Output_BoolText(record.MarketTruth.TradeScheduleReadable));
    ASC_Output_WriteStringField(handle,"SundayQuotes",record.MarketTruth.QuoteScheduleSunday);
@@ -510,10 +549,9 @@ void ASC_Output_WriteSessionsBlock(const int handle,const ASC_SymbolRecord &reco
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteMarginBlock(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteMarginFields(const int handle,const ASC_SymbolRecord &record)
   {
    ASC_ConditionsTruth t = record.ConditionsTruth;
-   ASC_Output_WriteSectionHeader(handle,"[MARGIN]");
    ASC_Output_WriteDoubleField(handle,"MarginInitial",t.MarginInitial,t.MarginInitialReadable);
    ASC_Output_WriteDoubleField(handle,"MarginMaintenance",t.MarginMaintenance,t.MarginMaintenanceReadable);
    ASC_Output_WriteDoubleField(handle,"MarginHedged",t.MarginHedged,t.MarginHedgedReadable);
@@ -540,17 +578,15 @@ void ASC_Output_WriteMarginBlock(const int handle,const ASC_SymbolRecord &record
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteHistoryStatusBlock(const int handle)
+void ASC_Output_WriteHistoryFields(const int handle)
   {
-   ASC_Output_WriteSectionHeader(handle,"[HISTORY_STATUS]");
    FileWrite(handle,"HistoryStatus: PENDING_UPSTREAM_TRUTH");
    FileWrite(handle,"HistoryNote: Layer 1.2 preserves broker/session/spec truth only; history depth is not claimed here.");
    FileWrite(handle,"");
   }
 
-void ASC_Output_WriteCalculationStatusBlock(const int handle)
+void ASC_Output_WriteCalculationFields(const int handle)
   {
-   ASC_Output_WriteSectionHeader(handle,"[CALCULATION_STATUS]");
    FileWrite(handle,"CalculationStatus: PENDING_UPSTREAM_TRUTH");
    FileWrite(handle,"CalculationNote: No ranking, signal, or later-layer calculations are implied by this broker dossier.");
   }
@@ -565,11 +601,12 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    int unavailable_count = 0;
    int eligible_count = 0;
    int bucket_known_count = 0;
+   int review_queue_count = 0;
    string lines[];
    ArrayResize(lines,0);
 
    const int header_end = ArraySize(lines);
-   ArrayResize(lines,header_end + 10);
+   ArrayResize(lines,header_end + 11);
    lines[header_end] = ASC_OUTPUT_SUMMARY_HEADER;
    lines[header_end + 1] = "Broker: " + broker_name;
    lines[header_end + 2] = "UniverseRecordCount: " + IntegerToString(count);
@@ -580,6 +617,7 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    lines[header_end + 7] = "UnavailableUniverseMembers: 0";
    lines[header_end + 8] = "Layer1EligibleCount: 0";
    lines[header_end + 9] = "BucketResolvedCount: 0";
+   lines[header_end + 10] = "UnresolvedReviewQueueCount: 0";
 
    string published_buckets[];
    ArrayResize(published_buckets,0);
@@ -591,6 +629,8 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
          ++eligible_count;
       if(ASC_Output_IsMeaningfulValue(record.Identity.PrimaryBucket))
          ++bucket_known_count;
+      if(ASC_Output_RecordNeedsClassificationReview(record))
+         ++review_queue_count;
 
       const string publication_state = ASC_Output_PublicationStateText(record);
       if(publication_state == "PUBLISHED")
@@ -606,6 +646,10 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    lines[7] = "UnavailableUniverseMembers: " + IntegerToString(unavailable_count);
    lines[8] = "Layer1EligibleCount: " + IntegerToString(eligible_count);
    lines[9] = "BucketResolvedCount: " + IntegerToString(bucket_known_count);
+   lines[10] = "UnresolvedReviewQueueCount: " + IntegerToString(review_queue_count);
+
+   Print("ASC classification coverage for server " + broker_name +
+         ": unresolved review queue count=" + IntegerToString(review_queue_count));
 
    const int guidance_start = ArraySize(lines);
    ArrayResize(lines,guidance_start + 4);
@@ -673,16 +717,22 @@ bool ASC_Output_WriteSymbolDossier(const ASC_RuntimeConfig &config,const ASC_Sym
    FileWrite(handle,"Broker: " + broker_name);
    FileWrite(handle,"");
 
-   ASC_Output_WriteIdentityBlock(handle,record);
-   ASC_Output_WriteClassificationBlock(handle,record);
-   ASC_Output_WriteMarketStateBlock(handle,record);
-   ASC_Output_WriteTradingRulesBlock(handle,record);
-   ASC_Output_WriteEconomicsBlock(handle,record);
-   ASC_Output_WriteSwapBlock(handle,record);
-   ASC_Output_WriteSessionsBlock(handle,record);
-   ASC_Output_WriteMarginBlock(handle,record);
-   ASC_Output_WriteHistoryStatusBlock(handle);
-   ASC_Output_WriteCalculationStatusBlock(handle);
+   ASC_Output_WriteSectionHeader(handle,"[BROKER_SPEC]");
+   ASC_Output_WriteIdentityFields(handle,record);
+   ASC_Output_WriteClassificationFields(handle,record);
+   ASC_Output_WriteMarketStateFields(handle,record);
+   ASC_Output_WriteTradingRulesFields(handle,record);
+   ASC_Output_WriteEconomicsFields(handle,record);
+   ASC_Output_WriteSwapFields(handle,record);
+   ASC_Output_WriteSessionsFields(handle,record);
+   ASC_Output_WriteMarginFields(handle,record);
+
+   ASC_Output_WriteSectionHeader(handle,"[OHLC_HISTORY]");
+   ASC_Output_WriteHistoryFields(handle);
+   FileWrite(handle,"");
+
+   ASC_Output_WriteSectionHeader(handle,"[CALCULATIONS]");
+   ASC_Output_WriteCalculationFields(handle);
 
    FileClose(handle);
    return(true);
@@ -695,6 +745,40 @@ bool ASC_Output_WriteSymbolSurfaces(const ASC_RuntimeConfig &config,const ASC_Sy
       if(!ASC_Output_WriteSymbolDossier(config,records[index]))
          return(false);
      }
+   return(true);
+  }
+
+bool ASC_Output_WriteClassificationReviewQueue(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
+  {
+   const string broker_name = ASC_Output_BrokerName();
+   FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
+
+   const int handle = FileOpen(ASC_Output_ReviewQueueFileName(broker_name),ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
+   if(handle == INVALID_HANDLE)
+      return(false);
+
+   int queued = 0;
+   FileWrite(handle,"Classification Review Queue");
+   FileWrite(handle,"Broker: " + broker_name);
+   FileWrite(handle,"");
+
+   for(int index = 0; index < count; ++index)
+     {
+      if(!ASC_Output_RecordNeedsClassificationReview(records[index]))
+         continue;
+
+      ++queued;
+      FileWrite(handle,"[REVIEW]");
+      ASC_Output_WriteStringField(handle,"RawSymbol",records[index].Identity.RawSymbol);
+      ASC_Output_WriteStringField(handle,"DisplayName",records[index].Identity.DisplayName);
+      ASC_Output_WriteStringField(handle,"BrokerExchange",records[index].Identity.BrokerExchange);
+      ASC_Output_WriteStringField(handle,"BrokerPath",records[index].Identity.BrokerPath);
+      ASC_Output_WriteStringField(handle,"ClassificationReason",records[index].Identity.ClassificationReason);
+      FileWrite(handle,"");
+     }
+
+   FileWrite(handle,"QueuedCount: " + IntegerToString(queued));
+   FileClose(handle);
    return(true);
   }
 
@@ -718,7 +802,7 @@ void ASC_Output_RemoveStaleSymbolFiles(const ASC_RuntimeConfig &config,const ASC
          if(!ASC_Output_RecordHasPublishedTruth(records[index]))
             continue;
 
-         string expected_name = ASC_Output_SanitizePathComponent(ASC_Output_RecordDisplaySymbol(records[index]),"Symbol") + ".txt";
+         string expected_name = ASC_Output_RecordFileComponent(records[index]) + ".txt";
          if(expected_name == found_name)
            {
             keep_file = true;
@@ -740,6 +824,9 @@ void ASC_Output_WriteMirrorRecord(const int handle,const ASC_SymbolRecord &recor
    FileWrite(handle,"Title: " + ASC_Output_RecordTitle(record));
    FileWrite(handle,"DisplaySymbol: " + ASC_Output_RecordDisplaySymbol(record));
    FileWrite(handle,"PublicationState: " + ASC_Output_PublicationStateText(record));
+   ASC_Output_WriteStringField(handle,"HydrationState",record.RecordHydration.HydrationState);
+   ASC_Output_WriteStringField(handle,"SnapshotAuthority",record.RecordHydration.SnapshotAuthority);
+   FileWrite(handle,"PublishableTruth: " + ASC_Output_BoolText(record.RecordHydration.PublishableTruth));
    ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
    FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
    ASC_Output_WriteStringField(handle,"QuoteFreshnessStatus",record.MarketTruth.QuoteFreshnessStatus);
@@ -753,12 +840,33 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
   {
    FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
 
-   const int handle = FileOpen(ASC_OUTPUT_MIRROR_FILE_NAME,ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
+   const int handle = FileOpen(ASC_OUTPUT_LAYER12_MIRROR_FILE_NAME,ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
    if(handle == INVALID_HANDLE)
       return(false);
 
-   FileWrite(handle,"Universe Snapshot Mirror");
+   int hydrated_count = 0;
+   int partial_count = 0;
+   int eligible_count = 0;
+   int published_truth_count = 0;
+   for(int index = 0; index < count; ++index)
+     {
+      const ASC_SymbolRecord record = records[index];
+      if(record.ConditionsTruth.SpecsReadable)
+         ++hydrated_count;
+      if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
+         ++partial_count;
+      if(record.MarketTruth.Layer1Eligible)
+         ++eligible_count;
+      if(ASC_Output_RecordHasPublishedTruth(record))
+         ++published_truth_count;
+     }
+
+   FileWrite(handle,"Universe Recovery Debug Mirror");
    FileWrite(handle,"RecordCount: " + IntegerToString(count));
+   FileWrite(handle,"Layer1EligibleCount: " + IntegerToString(eligible_count));
+   FileWrite(handle,"HydratedSpecCount: " + IntegerToString(hydrated_count));
+   FileWrite(handle,"PartialCoverageCount: " + IntegerToString(partial_count));
+   FileWrite(handle,"PublishedTruthCount: " + IntegerToString(published_truth_count));
    FileWrite(handle,"");
 
    for(int index = 0; index < count; ++index)
@@ -767,6 +875,9 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
    FileClose(handle);
 
    if(!ASC_Output_WriteSymbolSurfaces(config,records,count))
+      return(false);
+
+   if(!ASC_Output_WriteClassificationReviewQueue(config,records,count))
       return(false);
 
    ASC_Output_RemoveStaleSymbolFiles(config,records,count);

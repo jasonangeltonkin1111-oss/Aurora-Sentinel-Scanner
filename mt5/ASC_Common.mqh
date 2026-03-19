@@ -305,12 +305,20 @@ struct ASC_SurfaceTruth
    double               SurfaceScore;
   };
 
+struct ASC_RecordHydration
+  {
+   string HydrationState;
+   string SnapshotAuthority;
+   bool   PublishableTruth;
+  };
+
 struct ASC_SymbolRecord
   {
    ASC_SymbolIdentity   Identity;
    ASC_MarketTruth      MarketTruth;
    ASC_ConditionsTruth  ConditionsTruth;
    ASC_SurfaceTruth     SurfaceTruth;
+   ASC_RecordHydration  RecordHydration;
   };
 
 struct ASC_RuntimeSnapshot
