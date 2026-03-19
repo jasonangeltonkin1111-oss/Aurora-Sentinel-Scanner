@@ -14,7 +14,7 @@
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V1 33
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V2 43
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V3 138
-#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 147
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 156
 #define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
@@ -209,6 +209,12 @@ void ASC_Storage_FormatIdentityFields(const ASC_SymbolRecord &record,string &fie
    ASC_Storage_PushString(fields,cursor,record.Identity.Sector);
    ASC_Storage_PushString(fields,cursor,record.Identity.Industry);
    ASC_Storage_PushString(fields,cursor,record.Identity.Theme);
+   ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationServerKey);
+   ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationSubType);
+   ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationAliasKind);
+   ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationConfidence);
+   ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationReviewStatus);
+   ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationNotes);
    ASC_Storage_PushBool(fields,cursor,record.Identity.ClassificationResolved);
    ASC_Storage_PushString(fields,cursor,record.Identity.ClassificationReason);
   }
@@ -372,6 +378,12 @@ bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_Symbol
    ASC_Storage_PullString(fields,count,cursor,record.Identity.Sector);
    ASC_Storage_PullString(fields,count,cursor,record.Identity.Industry);
    ASC_Storage_PullString(fields,count,cursor,record.Identity.Theme);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationServerKey);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationSubType);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationAliasKind);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationConfidence);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationReviewStatus);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationNotes);
    ASC_Storage_PullBool(fields,count,cursor,record.Identity.ClassificationResolved);
    ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationReason);
 
@@ -511,6 +523,10 @@ bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_Symbol
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginRateSellReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellInitial);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellMaintenance);
+   ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.HydrationState);
+   ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotAuthority);
+   ASC_Storage_PullBool(fields,count,cursor,record.RecordHydration.PublishableTruth);
+   ASC_RecordNormalizeHydration(record.RecordHydration);
 
    return(cursor == count);
   }
@@ -705,6 +721,12 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.Identity.Theme = ASC_Storage_UnescapeField(fields[7]);
    record.Identity.ClassificationResolved = ASC_Storage_ParseBool(fields[8]);
    record.Identity.ClassificationReason = ASC_Storage_UnescapeField(fields[9]);
+   record.Identity.ClassificationServerKey = "";
+   record.Identity.ClassificationSubType = "UNKNOWN";
+   record.Identity.ClassificationAliasKind = "UNKNOWN";
+   record.Identity.ClassificationConfidence = "UNKNOWN";
+   record.Identity.ClassificationReviewStatus = "UNKNOWN";
+   record.Identity.ClassificationNotes = "";
    if(StringLen(record.Identity.DisplayName) == 0)
       record.Identity.DisplayName = record.Identity.RawSymbol;
 

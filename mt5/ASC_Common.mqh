@@ -271,6 +271,12 @@ struct ASC_SymbolIdentity
    string Sector;
    string Industry;
    string Theme;
+   string ClassificationServerKey;
+   string ClassificationSubType;
+   string ClassificationAliasKind;
+   string ClassificationConfidence;
+   string ClassificationReviewStatus;
+   string ClassificationNotes;
    bool   ClassificationResolved;
    string ClassificationReason;
   };
@@ -523,6 +529,12 @@ void ASC_Record_Reset(ASC_SymbolRecord &record)
    record.Identity.Sector = "UNKNOWN";
    record.Identity.Industry = "UNKNOWN";
    record.Identity.Theme = "UNKNOWN";
+   record.Identity.ClassificationServerKey = "";
+   record.Identity.ClassificationSubType = "UNKNOWN";
+   record.Identity.ClassificationAliasKind = "UNKNOWN";
+   record.Identity.ClassificationConfidence = "UNKNOWN";
+   record.Identity.ClassificationReviewStatus = "UNKNOWN";
+   record.Identity.ClassificationNotes = "";
    record.MarketTruth.QuoteAgeSeconds = -1;
    record.MarketTruth.QuoteFreshnessStatus = "UNKNOWN";
    record.MarketTruth.QuoteScheduleSunday = "UNKNOWN";

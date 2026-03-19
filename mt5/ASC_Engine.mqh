@@ -26,12 +26,23 @@ void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
    ASC_Record_Reset(record);
   }
 
+string ASC_Engine_RecordLookupSymbol(const ASC_SymbolRecord &record)
+  {
+   if(StringLen(record.Identity.NormalizedSymbol) > 0)
+      return(record.Identity.NormalizedSymbol);
+   if(StringLen(record.Identity.CanonicalSymbol) > 0)
+      return(ASC_Market_Internal::NormalizeSymbol(record.Identity.CanonicalSymbol));
+   if(StringLen(record.Identity.RawSymbol) > 0)
+      return(ASC_Market_Internal::NormalizeSymbol(record.Identity.RawSymbol));
+   return("");
+  }
+
 int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
   {
    const string raw_symbol = record.Identity.RawSymbol;
    const string normalized_symbol = record.Identity.NormalizedSymbol;
    const string canonical_symbol = record.Identity.CanonicalSymbol;
-   const string canonical_lookup = ASC_Market_Internal::NormalizeSymbol(canonical_symbol);
+   const string lookup_symbol = ASC_Engine_RecordLookupSymbol(record);
    for(int index = 0; index < g_asc_universe_count; ++index)
      {
       if(StringLen(raw_symbol) > 0 && g_asc_universe_records[index].Identity.RawSymbol == raw_symbol)
@@ -40,7 +51,7 @@ int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
          return(index);
       if(StringLen(canonical_symbol) > 0 && g_asc_universe_records[index].Identity.CanonicalSymbol == canonical_symbol)
          return(index);
-      if(StringLen(canonical_lookup) > 0 && g_asc_universe_records[index].Identity.NormalizedSymbol == canonical_lookup)
+      if(StringLen(lookup_symbol) > 0 && ASC_Engine_RecordLookupSymbol(g_asc_universe_records[index]) == lookup_symbol)
          return(index);
      }
    return(-1);
@@ -49,15 +60,15 @@ int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
 int ASC_Engine_FindRecordIndexBySymbol(const string symbol)
   {
    const string lookup_symbol = ASC_Market_Internal::NormalizeSymbol(symbol);
+   const string canonical_symbol = ASC_Market_Internal::CanonicalizeSymbol(symbol);
    for(int index = 0; index < g_asc_universe_count; ++index)
      {
       if(g_asc_universe_records[index].Identity.RawSymbol == symbol ||
          g_asc_universe_records[index].Identity.NormalizedSymbol == symbol ||
-         g_asc_universe_records[index].Identity.CanonicalSymbol == symbol)
+         g_asc_universe_records[index].Identity.CanonicalSymbol == symbol ||
+         g_asc_universe_records[index].Identity.CanonicalSymbol == canonical_symbol)
          return(index);
-      if(StringLen(lookup_symbol) > 0 &&
-         (g_asc_universe_records[index].Identity.NormalizedSymbol == lookup_symbol ||
-          ASC_Market_Internal::NormalizeSymbol(g_asc_universe_records[index].Identity.CanonicalSymbol) == lookup_symbol))
+      if(StringLen(lookup_symbol) > 0 && ASC_Engine_RecordLookupSymbol(g_asc_universe_records[index]) == lookup_symbol)
          return(index);
      }
    return(-1);

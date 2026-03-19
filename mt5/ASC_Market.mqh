@@ -52,13 +52,19 @@ namespace ASC_Market_Internal
       identity.BrokerPath             = "";
       identity.BrokerExchange         = "";
       identity.BrokerCountry          = "";
-      identity.AssetClass             = "UNKNOWN";
-      identity.PrimaryBucket          = "UNKNOWN";
-      identity.Sector                 = "UNKNOWN";
-      identity.Industry               = "UNKNOWN";
-      identity.Theme                  = "UNKNOWN";
-      identity.ClassificationResolved = false;
-      identity.ClassificationReason   = "classification unresolved";
+      identity.AssetClass                = "UNKNOWN";
+      identity.PrimaryBucket             = "UNKNOWN";
+      identity.Sector                    = "UNKNOWN";
+      identity.Industry                  = "UNKNOWN";
+      identity.Theme                     = "UNKNOWN";
+      identity.ClassificationServerKey   = "";
+      identity.ClassificationSubType     = "UNKNOWN";
+      identity.ClassificationAliasKind   = "UNKNOWN";
+      identity.ClassificationConfidence  = "UNKNOWN";
+      identity.ClassificationReviewStatus= "UNKNOWN";
+      identity.ClassificationNotes       = "";
+      identity.ClassificationResolved    = false;
+      identity.ClassificationReason      = "classification unresolved";
    }
 
    void ResetMarketTruth(const ASC_RuntimeConfig &config, ASC_MarketTruth &truth)
@@ -199,15 +205,16 @@ namespace ASC_Market_Internal
 
    string NormalizeSymbol(const string symbol)
    {
-      return RemovePunctuation(UpperTrim(StripKnownBrokerSuffixes(symbol)));
+      return RemovePunctuation(UpperTrim(CanonicalizeSymbol(symbol)));
    }
 
    string CanonicalizeSymbol(const string symbol)
    {
-      const string stripped = Trim(StripKnownBrokerSuffixes(symbol));
+      const string trimmed_symbol = Trim(symbol);
+      const string stripped = Trim(StripKnownBrokerSuffixes(trimmed_symbol));
       if(StringLen(stripped) > 0)
          return stripped;
-      return Trim(symbol);
+      return trimmed_symbol;
    }
 
    string NormalizeSearchText(const string value)
@@ -373,20 +380,30 @@ namespace ASC_Market_Internal
 
    void ApplyClassification(const ClassificationRow &row, ASC_SymbolIdentity &identity)
    {
-      identity.CanonicalSymbol = CanonicalizeSymbol(row.CanonicalSymbol);
-      if(!IsMeaningfulValue(identity.CanonicalSymbol))
-         identity.CanonicalSymbol = CanonicalizeSymbol(row.RawSymbol);
-      if(!IsMeaningfulValue(identity.CanonicalSymbol))
-         identity.CanonicalSymbol = identity.RawSymbol;
-      if(!IsMeaningfulValue(identity.CanonicalSymbol))
-         identity.CanonicalSymbol = identity.NormalizedSymbol;
+      const string translated_canonical = CanonicalizeSymbol(row.CanonicalSymbol);
+      const string translated_raw = CanonicalizeSymbol(row.RawSymbol);
+      if(IsMeaningfulValue(translated_canonical))
+         identity.CanonicalSymbol = translated_canonical;
+      else if(IsMeaningfulValue(translated_raw))
+         identity.CanonicalSymbol = translated_raw;
+      else if(IsMeaningfulValue(identity.CanonicalSymbol))
+         identity.CanonicalSymbol = CanonicalizeSymbol(identity.CanonicalSymbol);
+      else if(IsMeaningfulValue(identity.RawSymbol))
+         identity.CanonicalSymbol = CanonicalizeSymbol(identity.RawSymbol);
 
       identity.AssetClass = IsMeaningfulValue(row.AssetClass) ? UpperTrim(row.AssetClass) : "UNKNOWN";
       identity.PrimaryBucket = IsMeaningfulValue(row.PrimaryBucket) ? UpperTrim(row.PrimaryBucket) : "UNKNOWN";
       identity.Sector = IsMeaningfulValue(row.Sector) ? row.Sector : "UNKNOWN";
       identity.Industry = IsMeaningfulValue(row.Industry) ? row.Industry : "UNKNOWN";
       identity.Theme = IsMeaningfulValue(row.Theme) ? UpperTrim(row.Theme) : "UNKNOWN";
+      identity.ClassificationServerKey = row.ServerKey;
+      identity.ClassificationSubType = IsMeaningfulValue(row.SubType) ? row.SubType : "UNKNOWN";
+      identity.ClassificationAliasKind = IsMeaningfulValue(row.AliasKind) ? row.AliasKind : "UNKNOWN";
+      identity.ClassificationConfidence = IsMeaningfulValue(row.Confidence) ? row.Confidence : "UNKNOWN";
+      identity.ClassificationReviewStatus = IsMeaningfulValue(row.ReviewStatus) ? row.ReviewStatus : "UNKNOWN";
+      identity.ClassificationNotes = row.Notes;
       identity.ClassificationResolved = (identity.AssetClass != "UNKNOWN" || identity.PrimaryBucket != "UNKNOWN" ||
+                                         StringLen(identity.ClassificationServerKey) > 0 ||
                                          NormalizeSymbol(identity.CanonicalSymbol) != identity.NormalizedSymbol);
 
       string reason = "classification resolved from archive translation";
@@ -510,7 +527,7 @@ namespace ASC_Market_Internal
       if(ShouldTryEquitySecondPass(identity) && ResolveEquityClassificationSecondPass(server_key, identity))
          return true;
 
-      identity.CanonicalSymbol = identity.NormalizedSymbol;
+      identity.CanonicalSymbol = CanonicalizeSymbol(raw_symbol);
       identity.ClassificationResolved = false;
       if(ShouldTryEquitySecondPass(identity))
          identity.ClassificationReason = "classification unresolved after equity metadata second pass";
