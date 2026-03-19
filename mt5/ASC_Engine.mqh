@@ -308,7 +308,7 @@ public:
       m_runtime.cycle_in_progress      = false;
      }
 
-   const ASC_RuntimeMemory &Runtime() const
+   ASC_RuntimeMemory Runtime() const
      {
       return(m_runtime);
      }
