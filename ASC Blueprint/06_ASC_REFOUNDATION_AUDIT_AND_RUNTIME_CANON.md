@@ -64,6 +64,64 @@ Reject these patterns completely:
 - any Aurora strategy / execution / wrapper / doctrine scope
 
 ---
+## 2.5 Restored feature families now explicitly back in scope
+
+The following ASC feature families are now explicitly restored into modern canon instead of remaining scattered across archive lineage:
+
+### A. Nervous-system features
+- heartbeat cadence
+- re-entry guard
+- mode transitions
+- due-service scheduling
+- cycle budget and reserved publish budget
+- cycle debt and coverage debt
+- fairness and starvation tracking
+- fastlane retry ownership
+
+### B. Continuity features
+- restore-first startup
+- compatibility-aware restore
+- write-journal inspection
+- last-good preservation
+- mixed/frozen/degraded continuity origin
+- symbol disappearance handling
+- broker-universe shrink protection
+
+### C. Broad-universe truth features
+- whole-universe persistence
+- Layer 1 explicit state ownership
+- Layer 1.2 explicit broker snapshot ownership
+- unknown/unresolved classification visibility
+- stale/weak/pending distinctions
+- slow recheck classes for low-urgency symbols
+
+### D. Promotion and shortlist features
+- 10-minute surface competition
+- bucket-relative ranking
+- smaller-than-five honesty
+- hysteresis
+- near-promoted allowance
+- demotion freeze instead of destructive forgetfulness
+
+### E. Publication features
+- symbol-file-first, summary-last commits
+- runtime-state read model
+- pending-safe symbol publication
+- truthful degraded publication
+- last-good fallback and crash recovery discipline
+
+### F. Operator-visibility features
+- operator HUD health truth
+- trader HUD shortlist truth
+- pending/degraded/frozen visibility
+- publish headline visibility
+- debt/backlog visibility
+- no heavy compute in UI
+
+These are not optional nice-to-haves.
+They are part of the refounded ASC feature set.
+
+---
 
 ## 3. Full contradiction audit
 

@@ -162,3 +162,64 @@ A phase may advance only when:
 - the next phase no longer depends on invention
 
 If any of those fail, the phase is not complete.
+
+
+---
+
+## 6. Feature return tracks
+
+These are the major legacy-derived feature families we are intentionally bringing back, in controlled order:
+
+### Track A — Nervous-system return
+Status: NEXT
+Includes:
+- heartbeat
+- re-entry guard
+- due-service registry
+- mode shell
+- cycle debt and coverage debt
+
+### Track B — Continuity return
+Status: NEXT AFTER TRACK A
+Includes:
+- restore-first shell
+- compatibility checks
+- journal checks
+- last-good preservation
+- recovery-hold behavior
+
+### Track C — Broad-universe truth return
+Status: BLOCKED UNTIL TRACKS A/B PROVEN
+Includes:
+- universe continuity
+- Layer 1 truth ownership
+- Layer 1.2 broker truth ownership
+- unresolved/unknown visibility
+- disappearance handling
+
+### Track D — Publication return
+Status: BLOCKED UNTIL TRACK C PROVEN
+Includes:
+- atomic commits
+- pending-safe symbol publication
+- universe dump
+- summary-last discipline
+
+### Track E — Competition and shortlist return
+Status: BLOCKED UNTIL TRACK D PROVEN
+Includes:
+- Layer 2 ranking
+- quality floors
+- smaller-than-five honesty
+- promotion hysteresis
+- demotion freeze
+
+### Track F — Deep context and final visibility return
+Status: BLOCKED UNTIL TRACK E PROVEN
+Includes:
+- bounded deep continuity
+- operator HUD
+- trader HUD
+- degraded/frozen visibility
+
+These tracks are the controlled meaning of “bringing more features back.”

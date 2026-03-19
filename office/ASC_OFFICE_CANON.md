@@ -264,6 +264,43 @@ Required outcome:
 
 ---
 
+## 7.5 Final sweep checklist
+
+Before implementation begins, office must confirm all of these are explicitly covered somewhere in blueprint + office canon:
+- runtime modes
+- restore-first law
+- write-journal and crash recovery
+- whole-universe continuity
+- Layer 1 explicit outcome classes
+- Layer 1.2 minimum broker snapshot
+- coverage debt and cycle debt
+- fastlane retry ownership
+- promotion hysteresis
+- demotion freeze
+- symbol disappearance handling
+- summary quality floors
+- operator/trader HUD separation
+- product-language boundary
+- stage-gated implementation and testing
+
+If a feature is important but only implied, office must treat it as missing until canon makes it explicit.
+
+## 7.6 Feature return map
+
+The restored feature families should return to implementation in this order:
+1. nervous-system safety
+2. continuity safety
+3. whole-universe truth
+4. publication safety
+5. Layer 2 competition
+6. promotion/freeze behavior
+7. Layer 3 depth
+8. final visibility surfaces
+
+This prevents “bringing features back” from turning into another higher-layer collapse.
+
+---
+
 ## 8. What must be in office besides the plan
 
 To stay clear without becoming messy again, office should hold only these kinds of large canonical documents:
