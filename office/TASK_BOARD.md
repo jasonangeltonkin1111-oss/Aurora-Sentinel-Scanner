@@ -35,7 +35,10 @@ Product naming must stay domain-based, not task-number-based.
 ---
 
 ## Current Objective
-Move from completed Wave 1 hardening into the next bounded HQ-controlled stage without reopening already-resolved blocker packets, using `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical lineage reference and `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the canonical recovery-packet planning guide.
+Move from completed Wave 1 hardening into the next bounded HQ-controlled stage without reopening already-resolved blocker packets, using `office/HANDOFF_L12_RECOVERY_TRUTH_PACKET.md` as the current HQ-controlled prep input, `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical lineage reference, and `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the canonical recovery-packet planning guide.
+
+## Active Recovery References
+- Conditions economics recovery reference: `office/HANDOFF_L12_CONDITIONS_ECONOMICS_RECOVERY.md`
 
 The active output refactor is a bounded build-stage hardening step inside the first-milestone Layer 1.2/Layer 2 boundary.
 It must not be described or treated as a general later-layer expansion.
@@ -100,6 +103,7 @@ The following are blocked until prior truth is verified:
 - Layer 3 rolling dossier continuation before ACTIVE rights are defined and verified
 - Layer 4 expansion before Layers 1, 1.2, 2, Activation Gate, and Layer 3 are stable
 - Diagnostics/UI product work before first-slice scanner truth is working
+- schema/version header updates before the final release-owned version task is opened and approved
 
 ---
 
