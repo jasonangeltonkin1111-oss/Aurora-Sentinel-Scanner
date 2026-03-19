@@ -115,10 +115,10 @@ string ASC_Output_RecordDisplaySymbol(const ASC_SymbolRecord &record)
   {
    if(ASC_Output_IsMeaningfulValue(record.Identity.CanonicalSymbol))
       return(record.Identity.CanonicalSymbol);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.NormalizedSymbol))
-      return(record.Identity.NormalizedSymbol);
    if(ASC_Output_IsMeaningfulValue(record.Identity.RawSymbol))
       return(record.Identity.RawSymbol);
+   if(ASC_Output_IsMeaningfulValue(record.Identity.NormalizedSymbol))
+      return(record.Identity.NormalizedSymbol);
    return("UNKNOWN");
   }
 
@@ -421,7 +421,7 @@ void ASC_Output_WriteIdentityFields(const int handle,const ASC_SymbolRecord &rec
    ASC_Output_WriteStringField(handle,"Symbol",ASC_Output_RecordDisplaySymbol(record));
    ASC_Output_WriteStringField(handle,"DisplayName",record.Identity.DisplayName);
    ASC_Output_WriteStringField(handle,"RawSymbol",record.Identity.RawSymbol);
-   ASC_Output_WriteStringField(handle,"NormalizedSymbol",record.Identity.NormalizedSymbol);
+   ASC_Output_WriteStringField(handle,"NormalizedLookupSymbol",record.Identity.NormalizedSymbol);
    ASC_Output_WriteStringField(handle,"CanonicalSymbol",record.Identity.CanonicalSymbol);
    ASC_Output_WriteStringField(handle,"BrokerPath",record.Identity.BrokerPath);
    ASC_Output_WriteStringField(handle,"BrokerExchange",record.Identity.BrokerExchange);
@@ -437,6 +437,12 @@ void ASC_Output_WriteClassificationFields(const int handle,const ASC_SymbolRecor
    ASC_Output_WriteStringField(handle,"Industry",record.Identity.Industry);
    ASC_Output_WriteStringField(handle,"Theme",record.Identity.Theme);
    FileWrite(handle,"ClassificationResolved: " + ASC_Output_BoolText(record.Identity.ClassificationResolved));
+   ASC_Output_WriteStringField(handle,"ClassificationServerKey",record.Identity.ClassificationServerKey);
+   ASC_Output_WriteStringField(handle,"ClassificationSubType",record.Identity.ClassificationSubType);
+   ASC_Output_WriteStringField(handle,"ClassificationAliasKind",record.Identity.ClassificationAliasKind);
+   ASC_Output_WriteStringField(handle,"ClassificationConfidence",record.Identity.ClassificationConfidence);
+   ASC_Output_WriteStringField(handle,"ClassificationReviewStatus",record.Identity.ClassificationReviewStatus);
+   ASC_Output_WriteStringField(handle,"ClassificationNotes",record.Identity.ClassificationNotes);
    ASC_Output_WriteStringField(handle,"ClassificationReason",record.Identity.ClassificationReason);
    ASC_Output_WriteStringField(handle,"NormalizationStatus",record.ConditionsTruth.NormalizationStatus);
    FileWrite(handle,"");
@@ -774,6 +780,7 @@ bool ASC_Output_WriteClassificationReviewQueue(const ASC_RuntimeConfig &config,c
       ASC_Output_WriteStringField(handle,"BrokerExchange",records[index].Identity.BrokerExchange);
       ASC_Output_WriteStringField(handle,"BrokerPath",records[index].Identity.BrokerPath);
       ASC_Output_WriteStringField(handle,"ClassificationReason",records[index].Identity.ClassificationReason);
+      ASC_Output_WriteStringField(handle,"ClassificationServerKey",records[index].Identity.ClassificationServerKey);
       FileWrite(handle,"");
      }
 
