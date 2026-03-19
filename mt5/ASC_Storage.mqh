@@ -135,7 +135,8 @@ bool ASC_StorageEnsureFolder(const string path,const ASC_RuntimeConfig &config)
    ResetLastError();
    if(FolderCreate(path,config.UseCommonFiles))
       return(true);
-   return(GetLastError() == ERR_DIRECTORY_ALREADY_EXISTS);
+   ResetLastError();
+   return(FileGetInteger(path,FILE_EXISTS,config.UseCommonFiles) != 0);
   }
 
 bool ASC_StorageEnsureRuntimeTree(const ASC_RuntimeConfig &config)

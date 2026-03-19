@@ -145,7 +145,7 @@ string ASC_DiagnosticsDateTimeText(const datetime value)
 
 string ASC_DiagnosticsLongText(const long value)
   {
-   return(LongToString(value));
+   return(IntegerToString(value));
   }
 
 string ASC_DiagnosticsModePair(const ASC_RuntimeMode before_mode,const ASC_RuntimeMode after_mode)

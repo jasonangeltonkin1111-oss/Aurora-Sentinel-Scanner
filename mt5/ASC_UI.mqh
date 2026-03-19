@@ -18,6 +18,35 @@ private:
       return(value ? "true" : "false");
      }
 
+   if(services == "")
+      return("NONE");
+
+   return(services);
+  }
+
+string ASC_UIRenderOperatorHUD(const ASC_UIRuntimeView &view)
+  {
+   // Rendering is intentionally string-only so redraw remains lightweight.
+   string hud = "ASC Operator HUD\n";
+   hud += "Mode: " + ASC_RuntimeModeText(view.Snapshot.Mode) + "\n";
+   hud += "Last Cycle: " + ASC_UIDateTimeText(view.LastCycleTime) + "\n";
+   hud += "Next Timer Due: " + ASC_UIDateTimeText(view.NextTimerDue) + "\n";
+   hud += "Re-entry Count: " + IntegerToString(view.ReentryCount) + "\n";
+   hud += "Due Services: " + ASC_UIDueServicesText(view) + "\n";
+   hud += "Restore Outcome: " + ASC_UIRestoreOutcomeText(view.RestoreOutcome,view.RestoreOutcomeReady) + "\n";
+   hud += "Runtime State: " + ASC_UIFlagSummary(view) + "\n";
+   hud += "Continuity: " + ASC_ContinuityOriginText(view.Snapshot.ContinuityOrigin) + "\n";
+   hud += "Hydration: " + ASC_HydrationStateText(view.Snapshot.HydrationState) + "\n";
+   hud += "Publication: " + ASC_PublicationStateText(view.Snapshot.RuntimePublicationState);
+   return(hud);
+  }
+
+class ASC_OperatorHUD
+  {
+private:
+   ASC_UIRuntimeView m_view;
+   bool              m_has_view;
+
 public:
                      ASC_UIRuntimeHUD(void)
                      {
