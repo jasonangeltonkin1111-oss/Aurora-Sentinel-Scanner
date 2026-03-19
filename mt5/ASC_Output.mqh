@@ -175,15 +175,11 @@ void ASC_Output_WriteDoubleField(const int handle,const string label,const doubl
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
-   if(ASC_Output_IsMeaningfulValue(record.Identity.CanonicalSymbol))
-      return(true);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.NormalizedSymbol) && record.Identity.NormalizedSymbol != record.Identity.RawSymbol)
+   if(record.Identity.ClassificationResolved)
       return(true);
    if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
       return(true);
    if(ASC_Output_IsMeaningfulValue(record.Identity.PrimaryBucket))
-      return(true);
-   if(record.Identity.ClassificationResolved)
       return(true);
    if(record.MarketTruth.Selected || record.MarketTruth.Visible || record.MarketTruth.QuoteWindowOpen || record.MarketTruth.TradeWindowOpen || record.MarketTruth.TradeAllowed)
       return(true);
@@ -193,11 +189,11 @@ bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
       return(true);
    if(record.ConditionsTruth.SpecsReadable)
       return(true);
-   if(record.ConditionsTruth.Digits >= 0 || record.ConditionsTruth.SpreadPoints >= 0)
+   if(record.ConditionsTruth.DigitsReadable || record.ConditionsTruth.SpreadPointsReadable || record.ConditionsTruth.SpreadFloatReadable)
       return(true);
-   if(record.ConditionsTruth.Point > 0.0 || record.ConditionsTruth.TickSize > 0.0 || record.ConditionsTruth.TickValue > 0.0 ||
-      record.ConditionsTruth.ContractSize > 0.0 || record.ConditionsTruth.VolumeMin > 0.0 ||
-      record.ConditionsTruth.VolumeMax > 0.0 || record.ConditionsTruth.VolumeStep > 0.0)
+   if(record.ConditionsTruth.PointReadable || record.ConditionsTruth.TickSizeReadable || record.ConditionsTruth.TickValueReadable ||
+      record.ConditionsTruth.ContractSizeReadable || record.ConditionsTruth.VolumeMinReadable ||
+      record.ConditionsTruth.VolumeMaxReadable || record.ConditionsTruth.VolumeStepReadable)
       return(true);
 
    return(false);
@@ -280,28 +276,28 @@ void ASC_Output_WriteConditionsFields(const int handle,const ASC_SymbolRecord &r
    FileWrite(handle,"SpecsReadable: " + ASC_Output_BoolText(record.ConditionsTruth.SpecsReadable));
    ASC_Output_WriteStringField(handle,"SpecsReason",record.ConditionsTruth.SpecsReason);
 
-   if(record.ConditionsTruth.Digits >= 0)
+   if(record.ConditionsTruth.DigitsReadable)
       ASC_Output_WriteIntegerField(handle,"Digits",record.ConditionsTruth.Digits);
    else
       FileWrite(handle,"Digits: UNKNOWN");
 
-   if(record.ConditionsTruth.SpreadPoints >= 0)
+   if(record.ConditionsTruth.SpreadPointsReadable)
       ASC_Output_WriteIntegerField(handle,"SpreadPoints",record.ConditionsTruth.SpreadPoints);
    else
       FileWrite(handle,"SpreadPoints: UNKNOWN");
 
-   if(record.ConditionsTruth.SpecsReadable)
+   if(record.ConditionsTruth.SpreadFloatReadable)
       FileWrite(handle,"SpreadFloat: " + ASC_Output_BoolText(record.ConditionsTruth.SpreadFloat));
    else
       FileWrite(handle,"SpreadFloat: UNKNOWN");
 
-   ASC_Output_WriteDoubleField(handle,"Point",record.ConditionsTruth.Point,record.ConditionsTruth.Point > 0.0);
-   ASC_Output_WriteDoubleField(handle,"TickSize",record.ConditionsTruth.TickSize,record.ConditionsTruth.TickSize > 0.0);
-   ASC_Output_WriteDoubleField(handle,"TickValue",record.ConditionsTruth.TickValue,record.ConditionsTruth.TickValue > 0.0);
-   ASC_Output_WriteDoubleField(handle,"ContractSize",record.ConditionsTruth.ContractSize,record.ConditionsTruth.ContractSize > 0.0);
-   ASC_Output_WriteDoubleField(handle,"VolumeMin",record.ConditionsTruth.VolumeMin,record.ConditionsTruth.VolumeMin > 0.0);
-   ASC_Output_WriteDoubleField(handle,"VolumeMax",record.ConditionsTruth.VolumeMax,record.ConditionsTruth.VolumeMax > 0.0);
-   ASC_Output_WriteDoubleField(handle,"VolumeStep",record.ConditionsTruth.VolumeStep,record.ConditionsTruth.VolumeStep > 0.0);
+   ASC_Output_WriteDoubleField(handle,"Point",record.ConditionsTruth.Point,record.ConditionsTruth.PointReadable);
+   ASC_Output_WriteDoubleField(handle,"TickSize",record.ConditionsTruth.TickSize,record.ConditionsTruth.TickSizeReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValue",record.ConditionsTruth.TickValue,record.ConditionsTruth.TickValueReadable);
+   ASC_Output_WriteDoubleField(handle,"ContractSize",record.ConditionsTruth.ContractSize,record.ConditionsTruth.ContractSizeReadable);
+   ASC_Output_WriteDoubleField(handle,"VolumeMin",record.ConditionsTruth.VolumeMin,record.ConditionsTruth.VolumeMinReadable);
+   ASC_Output_WriteDoubleField(handle,"VolumeMax",record.ConditionsTruth.VolumeMax,record.ConditionsTruth.VolumeMaxReadable);
+   ASC_Output_WriteDoubleField(handle,"VolumeStep",record.ConditionsTruth.VolumeStep,record.ConditionsTruth.VolumeStepReadable);
   }
 
 bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)

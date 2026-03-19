@@ -6,8 +6,10 @@
 #define ASC_STORAGE_SNAPSHOT_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.txt"
 #define ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.tmp"
 #define ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.bak"
-#define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V1"
-#define ASC_STORAGE_RECORD_FIELD_COUNT 33
+#define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V2"
+#define ASC_STORAGE_SNAPSHOT_HEADER_V1 "ASC_UNIVERSE_SNAPSHOT_V1"
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V1 33
+#define ASC_STORAGE_RECORD_FIELD_COUNT 43
 #define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
@@ -150,16 +152,26 @@ string ASC_Storage_FormatRecord(const ASC_SymbolRecord &record)
 
    fields[21] = ASC_Storage_FormatBool(record.ConditionsTruth.SpecsReadable);
    fields[22] = ASC_Storage_EscapeField(record.ConditionsTruth.SpecsReason);
-   fields[23] = IntegerToString(record.ConditionsTruth.Digits);
-   fields[24] = IntegerToString(record.ConditionsTruth.SpreadPoints);
-   fields[25] = ASC_Storage_FormatBool(record.ConditionsTruth.SpreadFloat);
-   fields[26] = DoubleToString(record.ConditionsTruth.Point,16);
-   fields[27] = DoubleToString(record.ConditionsTruth.TickSize,16);
-   fields[28] = DoubleToString(record.ConditionsTruth.TickValue,16);
-   fields[29] = DoubleToString(record.ConditionsTruth.ContractSize,16);
-   fields[30] = DoubleToString(record.ConditionsTruth.VolumeMin,16);
-   fields[31] = DoubleToString(record.ConditionsTruth.VolumeMax,16);
-   fields[32] = DoubleToString(record.ConditionsTruth.VolumeStep,16);
+   fields[23] = ASC_Storage_FormatBool(record.ConditionsTruth.DigitsReadable);
+   fields[24] = IntegerToString(record.ConditionsTruth.Digits);
+   fields[25] = ASC_Storage_FormatBool(record.ConditionsTruth.SpreadPointsReadable);
+   fields[26] = IntegerToString(record.ConditionsTruth.SpreadPoints);
+   fields[27] = ASC_Storage_FormatBool(record.ConditionsTruth.SpreadFloatReadable);
+   fields[28] = ASC_Storage_FormatBool(record.ConditionsTruth.SpreadFloat);
+   fields[29] = ASC_Storage_FormatBool(record.ConditionsTruth.PointReadable);
+   fields[30] = DoubleToString(record.ConditionsTruth.Point,16);
+   fields[31] = ASC_Storage_FormatBool(record.ConditionsTruth.TickSizeReadable);
+   fields[32] = DoubleToString(record.ConditionsTruth.TickSize,16);
+   fields[33] = ASC_Storage_FormatBool(record.ConditionsTruth.TickValueReadable);
+   fields[34] = DoubleToString(record.ConditionsTruth.TickValue,16);
+   fields[35] = ASC_Storage_FormatBool(record.ConditionsTruth.ContractSizeReadable);
+   fields[36] = DoubleToString(record.ConditionsTruth.ContractSize,16);
+   fields[37] = ASC_Storage_FormatBool(record.ConditionsTruth.VolumeMinReadable);
+   fields[38] = DoubleToString(record.ConditionsTruth.VolumeMin,16);
+   fields[39] = ASC_Storage_FormatBool(record.ConditionsTruth.VolumeMaxReadable);
+   fields[40] = DoubleToString(record.ConditionsTruth.VolumeMax,16);
+   fields[41] = ASC_Storage_FormatBool(record.ConditionsTruth.VolumeStepReadable);
+   fields[42] = DoubleToString(record.ConditionsTruth.VolumeStep,16);
 
    string line = "";
    for(int index = 0; index < ASC_STORAGE_RECORD_FIELD_COUNT; ++index)
@@ -176,7 +188,7 @@ bool ASC_Storage_ParseRecordLine(const string line,ASC_SymbolRecord &record)
   {
    string fields[];
    const int count = StringSplit(line,'|',fields);
-   if(count != ASC_STORAGE_RECORD_FIELD_COUNT)
+   if(count != ASC_STORAGE_RECORD_FIELD_COUNT && count != ASC_STORAGE_RECORD_FIELD_COUNT_V1)
       return(false);
 
    record.Identity.RawSymbol = ASC_Storage_UnescapeField(fields[0]);
@@ -204,16 +216,51 @@ bool ASC_Storage_ParseRecordLine(const string line,ASC_SymbolRecord &record)
 
    record.ConditionsTruth.SpecsReadable = ASC_Storage_ParseBool(fields[21]);
    record.ConditionsTruth.SpecsReason = ASC_Storage_UnescapeField(fields[22]);
-   record.ConditionsTruth.Digits = (int)StringToInteger(fields[23]);
-   record.ConditionsTruth.SpreadPoints = (int)StringToInteger(fields[24]);
-   record.ConditionsTruth.SpreadFloat = ASC_Storage_ParseBool(fields[25]);
-   record.ConditionsTruth.Point = StringToDouble(fields[26]);
-   record.ConditionsTruth.TickSize = StringToDouble(fields[27]);
-   record.ConditionsTruth.TickValue = StringToDouble(fields[28]);
-   record.ConditionsTruth.ContractSize = StringToDouble(fields[29]);
-   record.ConditionsTruth.VolumeMin = StringToDouble(fields[30]);
-   record.ConditionsTruth.VolumeMax = StringToDouble(fields[31]);
-   record.ConditionsTruth.VolumeStep = StringToDouble(fields[32]);
+   if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)
+     {
+      record.ConditionsTruth.DigitsReadable = (StringToInteger(fields[23]) >= 0);
+      record.ConditionsTruth.Digits = (int)StringToInteger(fields[23]);
+      record.ConditionsTruth.SpreadPointsReadable = (StringToInteger(fields[24]) >= 0);
+      record.ConditionsTruth.SpreadPoints = (int)StringToInteger(fields[24]);
+      record.ConditionsTruth.SpreadFloatReadable = record.ConditionsTruth.SpecsReadable;
+      record.ConditionsTruth.SpreadFloat = ASC_Storage_ParseBool(fields[25]);
+      record.ConditionsTruth.PointReadable = (StringToDouble(fields[26]) >= 0.0);
+      record.ConditionsTruth.Point = StringToDouble(fields[26]);
+      record.ConditionsTruth.TickSizeReadable = (StringToDouble(fields[27]) >= 0.0);
+      record.ConditionsTruth.TickSize = StringToDouble(fields[27]);
+      record.ConditionsTruth.TickValueReadable = (StringToDouble(fields[28]) >= 0.0);
+      record.ConditionsTruth.TickValue = StringToDouble(fields[28]);
+      record.ConditionsTruth.ContractSizeReadable = (StringToDouble(fields[29]) >= 0.0);
+      record.ConditionsTruth.ContractSize = StringToDouble(fields[29]);
+      record.ConditionsTruth.VolumeMinReadable = (StringToDouble(fields[30]) >= 0.0);
+      record.ConditionsTruth.VolumeMin = StringToDouble(fields[30]);
+      record.ConditionsTruth.VolumeMaxReadable = (StringToDouble(fields[31]) >= 0.0);
+      record.ConditionsTruth.VolumeMax = StringToDouble(fields[31]);
+      record.ConditionsTruth.VolumeStepReadable = (StringToDouble(fields[32]) >= 0.0);
+      record.ConditionsTruth.VolumeStep = StringToDouble(fields[32]);
+      return(true);
+     }
+
+   record.ConditionsTruth.DigitsReadable = ASC_Storage_ParseBool(fields[23]);
+   record.ConditionsTruth.Digits = (int)StringToInteger(fields[24]);
+   record.ConditionsTruth.SpreadPointsReadable = ASC_Storage_ParseBool(fields[25]);
+   record.ConditionsTruth.SpreadPoints = (int)StringToInteger(fields[26]);
+   record.ConditionsTruth.SpreadFloatReadable = ASC_Storage_ParseBool(fields[27]);
+   record.ConditionsTruth.SpreadFloat = ASC_Storage_ParseBool(fields[28]);
+   record.ConditionsTruth.PointReadable = ASC_Storage_ParseBool(fields[29]);
+   record.ConditionsTruth.Point = StringToDouble(fields[30]);
+   record.ConditionsTruth.TickSizeReadable = ASC_Storage_ParseBool(fields[31]);
+   record.ConditionsTruth.TickSize = StringToDouble(fields[32]);
+   record.ConditionsTruth.TickValueReadable = ASC_Storage_ParseBool(fields[33]);
+   record.ConditionsTruth.TickValue = StringToDouble(fields[34]);
+   record.ConditionsTruth.ContractSizeReadable = ASC_Storage_ParseBool(fields[35]);
+   record.ConditionsTruth.ContractSize = StringToDouble(fields[36]);
+   record.ConditionsTruth.VolumeMinReadable = ASC_Storage_ParseBool(fields[37]);
+   record.ConditionsTruth.VolumeMin = StringToDouble(fields[38]);
+   record.ConditionsTruth.VolumeMaxReadable = ASC_Storage_ParseBool(fields[39]);
+   record.ConditionsTruth.VolumeMax = StringToDouble(fields[40]);
+   record.ConditionsTruth.VolumeStepReadable = ASC_Storage_ParseBool(fields[41]);
+   record.ConditionsTruth.VolumeStep = StringToDouble(fields[42]);
 
    return(true);
   }
@@ -227,7 +274,7 @@ bool ASC_Storage_ParseSnapshotLines(const string &lines[],ASC_SymbolRecord &reco
    if(line_count < 2)
       return(false);
 
-   if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER)
+   if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER && lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V1)
       return(false);
 
    const int expected_count = (int)StringToInteger(lines[1]);
@@ -255,7 +302,7 @@ int ASC_Storage_ReadSnapshotRecordCount(const string &lines[])
    if(line_count < 2)
       return(ASC_STORAGE_COUNT_UNKNOWN);
 
-   if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER)
+   if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER && lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V1)
       return(ASC_STORAGE_COUNT_UNKNOWN);
 
    const int expected_count = (int)StringToInteger(lines[1]);

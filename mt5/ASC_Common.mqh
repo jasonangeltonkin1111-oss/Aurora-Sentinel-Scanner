@@ -61,15 +61,25 @@ struct ASC_ConditionsTruth
   {
    bool   SpecsReadable;
    string SpecsReason;
+   bool   DigitsReadable;
    int    Digits;
+   bool   SpreadPointsReadable;
    int    SpreadPoints;
+   bool   SpreadFloatReadable;
    bool   SpreadFloat;
+   bool   PointReadable;
    double Point;
+   bool   TickSizeReadable;
    double TickSize;
+   bool   TickValueReadable;
    double TickValue;
+   bool   ContractSizeReadable;
    double ContractSize;
+   bool   VolumeMinReadable;
    double VolumeMin;
+   bool   VolumeMaxReadable;
    double VolumeMax;
+   bool   VolumeStepReadable;
    double VolumeStep;
   };
 
