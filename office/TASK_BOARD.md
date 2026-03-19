@@ -40,6 +40,9 @@ Move from completed Wave 1 hardening into the next bounded HQ-controlled stage w
 ## Active Recovery References
 - Conditions economics recovery reference: `office/HANDOFF_L12_CONDITIONS_ECONOMICS_RECOVERY.md`
 
+The active output refactor is a bounded build-stage hardening step inside the first-milestone Layer 1.2/Layer 2 boundary.
+It must not be described or treated as a general later-layer expansion.
+
 ---
 
 ## First Milestone Locked Scope
@@ -120,7 +123,7 @@ Before any progression decision, HQ must preserve these truths:
 3. the latest Clerk verdict is `PASS WITH CLERK CORRECTIONS`
 4. the latest Debug verdict is `PASS WITH NON-BLOCKING FIXES`
 5. no new feature or later-slice expansion should be implied merely because Wave 1 is healthier
-6. version updates remain blocked until the final release-owned version task
+6. output refactor work must stay framed as a bounded first-milestone build stage, not as permission to open general later-layer publication scope
 
 Wave 1 is now review-passed for bounded advancement.
 The next step is not reissuing the same fix packets.
