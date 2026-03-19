@@ -26,6 +26,9 @@ Product naming must stay domain-based, not task-number-based.
 - Wave 1 fix wave landed in live MT5 product code
 - post-fix Clerk review completed: PASS WITH CLERK CORRECTIONS
 - post-fix Debug review completed: PASS WITH NON-BLOCKING FIXES
+- Wave 2 bounded implementation landed in live MT5 product code
+- release-owned schema/version alignment landed in live MT5 product code and outward-facing metadata
+- active persistence/release baseline is snapshot schema `V5`
 - later product domains are acknowledged but not opened as separate worker classes:
   - Surface
   - Ranking
@@ -35,13 +38,16 @@ Product naming must stay domain-based, not task-number-based.
 ---
 
 ## Current Objective
-Move from completed Wave 1 hardening into the next bounded HQ-controlled stage without reopening already-resolved blocker packets, using `office/HANDOFF_L12_RECOVERY_TRUTH_PACKET.md` as the current HQ-controlled prep input, `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical lineage reference, and `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the canonical recovery-packet planning guide.
+Move from completed Wave 2 implementation plus completed version-owner alignment into the next bounded HQ-controlled gate without reopening already-landed packets, using `office/HANDOFF_WAVE2_RELEASE_ALIGNMENT.md` as the active bounded completion note, `office/MASTER_SYSTEM_ARCHIVE_MAP.md` as the canonical lineage reference, and `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the canonical recovery-packet planning guide.
 
 ## Active Recovery References
+- Layer 1.2 recovery baseline: `office/HANDOFF_L12_RECOVERY_TRUTH_PACKET.md`
+- Layer 1.2 identity classification recovery reference: `office/HANDOFF_L12_IDENTITY_CLASSIFICATION_RECOVERY.md`
 - Conditions economics recovery reference: `office/HANDOFF_L12_CONDITIONS_ECONOMICS_RECOVERY.md`
+- Layer 1.2 schema/version authority reference: `office/HANDOFF_L12_SCHEMA_MIGRATION_PACKET.md`
 
-The active output refactor is a bounded build-stage hardening step inside the first-milestone Layer 1.2/Layer 2 boundary.
-It must not be described or treated as a general later-layer expansion.
+The completed output and schema work remain bounded first-milestone implementation steps inside the Layer 1.2/Layer 2 boundary.
+They must not be described or treated as permission to open general later-layer publication scope.
 
 ---
 
@@ -103,7 +109,7 @@ The following are blocked until prior truth is verified:
 - Layer 3 rolling dossier continuation before ACTIVE rights are defined and verified
 - Layer 4 expansion before Layers 1, 1.2, 2, Activation Gate, and Layer 3 are stable
 - Diagnostics/UI product work before first-slice scanner truth is working
-- schema/version header updates before the final release-owned version task is opened and approved
+- reopening schema/version header changes unless a new explicit release-owned packet is opened after the now-completed `V5` baseline
 
 ---
 
@@ -117,17 +123,21 @@ No build worker may overlap with Clerk or Debug.
 ---
 
 ## Current Gate
-Before any progression decision, HQ must preserve these truths:
+Before any progression decision beyond the completed implementation/version-owner slice, HQ must preserve these truths:
 1. the merged Wave 1 fix wave is complete
-2. the control layer reflects the merged Wave 1 fix state truthfully
-3. the latest Clerk verdict is `PASS WITH CLERK CORRECTIONS`
-4. the latest Debug verdict is `PASS WITH NON-BLOCKING FIXES`
-5. no new feature or later-slice expansion should be implied merely because Wave 1 is healthier
-6. output refactor work must stay framed as a bounded first-milestone build stage, not as permission to open general later-layer publication scope
+2. the merged Wave 2 implementation slice is complete
+3. the release-owned snapshot schema/version alignment to `V5` is complete
+4. the control layer reflects those completed states truthfully
+5. the latest recorded Clerk verdict remains `PASS WITH CLERK CORRECTIONS`
+6. the latest recorded Debug truth remains bounded-review pass with no reopened blocker packet
+7. no new feature or later-slice expansion should be implied merely because the current baseline is healthier
+8. output work must stay framed as a bounded first-milestone build stage, not as permission to open general later-layer publication scope
 
-Wave 1 is now review-passed for bounded advancement.
-The next step is not reissuing the same fix packets.
-The next step is selecting the next bounded HQ-controlled stage.
+The implementation/version-owner loop is now complete and documented.
+The next step is not reissuing the same packets.
+The next step is selecting the next bounded HQ-controlled gate.
 
 ## Next-Step Packets
 - Layer 1.2 identity classification recovery packet: `office/HANDOFF_L12_IDENTITY_CLASSIFICATION_RECOVERY.md`
+- Layer 1.2 conditions economics recovery reference: `office/HANDOFF_L12_CONDITIONS_ECONOMICS_RECOVERY.md`
+- Future release-owned schema/version work only if HQ opens a new bounded packet after the `V5` baseline

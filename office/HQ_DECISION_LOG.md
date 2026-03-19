@@ -76,3 +76,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: AFS classification lineage is the active identity recovery source for ASC Layer 1.2 classification repair and backfill
 - Why: ASC currently compresses identity lineage into normalized/canonical outputs plus prose, while archived AFS material preserves raw/canonical/alias/confidence/review/note fields together at both row and shared-record level
 - Result: HQ opened `office/HANDOFF_L12_IDENTITY_CLASSIFICATION_RECOVERY.md` as the bounded recovery packet and directed future backfill toward archived AFS classification material before widening other identity sources
+
+### 2026-03-19 — Wave 2 implementation and version-owner alignment locked as office baseline
+- Decision: update the control layer to treat the bounded Wave 2 implementation slice and the completed version-owner release task as the current live baseline
+- Why: live MT5 product history and release metadata now show Layer 2 surface foundation, truthful Layer 1.2 publication scaffolding, and snapshot schema `V5` alignment already landed, while HQ continuity docs still read like pre-completion gate prep
+- Result: `HQ_STATE.md`, `TASK_BOARD.md`, and the active bounded handoff now let the next operator recover the completed implementation/version-owner state, the archive packets used, and the final build outcomes without reconstructing intent from git history
