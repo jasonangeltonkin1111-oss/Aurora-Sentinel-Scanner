@@ -808,6 +808,12 @@ bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_Symbol
       record.RecordHydration.RecoveryState = ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NOT_REQUIRED);
    if(StringLen(record.RecordHydration.RecoveryReason) == 0)
       record.RecordHydration.RecoveryReason = "parsed from v3 snapshot row";
+   if(record.Identity.ClassificationConfidence == "")
+      record.Identity.ClassificationConfidence = "UNKNOWN";
+   if(record.Identity.ClassificationReviewStatus == "")
+      record.Identity.ClassificationReviewStatus = "UNKNOWN";
+   if(StringLen(record.Identity.ClassificationReason) > 0 && StringFind(record.Identity.ClassificationReason,"provenance=",0) < 0)
+      record.Identity.ClassificationReason += " provenance=legacy_snapshot";
 
    record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordNormalizeIntegrityState(record.ConditionsTruth.SpecIntegrityStatus);
    ASC_RecordNormalizeHydration(record.RecordHydration);
@@ -832,8 +838,8 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.Identity.ClassificationSubType = "UNKNOWN";
    record.Identity.ClassificationAliasKind = "UNKNOWN";
    record.Identity.ClassificationConfidence = "UNKNOWN";
-   record.Identity.ClassificationReviewStatus = "UNKNOWN";
-   record.Identity.ClassificationNotes = "";
+   record.Identity.ClassificationReviewStatus = "MISSING";
+   record.Identity.ClassificationNotes = "legacy snapshot row lacks archive confidence/review metadata";
    if(StringLen(record.Identity.DisplayName) == 0)
       record.Identity.DisplayName = record.Identity.RawSymbol;
 
@@ -857,10 +863,12 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.ConditionsTruth.SpecsReason = ASC_Storage_UnescapeField(fields[22]);
    record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordIntegrityStateText(record.ConditionsTruth.SpecsReadable ? ASC_RECORD_INTEGRITY_SPEC_OK : ASC_RECORD_INTEGRITY_SPEC_UNREADABLE);
    record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.SpecsReadable ? "DERIVED_OK" : "UNREADABLE");
-   record.ConditionsTruth.NormalizationStatus = (record.Identity.ClassificationResolved ? "NORMALIZATION_OK" : "NORMALIZATION_UNRESOLVED");
+   record.ConditionsTruth.NormalizationStatus = (record.Identity.ClassificationResolved ? "NORMALIZATION_PARTIAL" : "NORMALIZATION_UNRESOLVED");
    record.ConditionsTruth.TruthCoverageStatus = "LEGACY";
-   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_LEGACY_RECOVERED,ASC_RECORD_AUTHORITY_LEGACY,ASC_RECORD_PUBLISH_BLOCKED,ASC_RECORD_RECOVERY_REQUIRED,"legacy snapshot row requires rehydration");
+   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_LEGACY_RECOVERED,ASC_RECORD_AUTHORITY_LEGACY,ASC_RECORD_PUBLISH_BLOCKED,ASC_RECORD_RECOVERY_REQUIRED,"legacy snapshot row requires rehydration and archive classification review");
    ASC_Storage_ApplySnapshotMetadata(record,0,ASC_Storage_DefaultSnapshotProducer(),(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1 ? "ASC_UNIVERSE_SCHEMA_V1" : "ASC_UNIVERSE_SCHEMA_V2"),"LEGACY-V1V2");
+   if(StringLen(record.Identity.ClassificationReason) > 0 && StringFind(record.Identity.ClassificationReason,"provenance=",0) < 0)
+      record.Identity.ClassificationReason += " provenance=legacy_snapshot";
 
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)
      {
