@@ -401,7 +401,7 @@ void ASC_Storage_FormatMarketFields(const ASC_SymbolRecord &record,string &field
 
 void ASC_Storage_FormatConditionsFields(const ASC_SymbolRecord &record,string &fields[],int &cursor)
   {
-   const ASC_ConditionsTruth &t = record.ConditionsTruth;
+   ASC_ConditionsTruth t = record.ConditionsTruth;
    ASC_Storage_PushBool(fields,cursor,t.SpecsReadable);
    ASC_Storage_PushString(fields,cursor,t.SpecsReason);
    ASC_Storage_PushString(fields,cursor,t.SpecIntegrityStatus);

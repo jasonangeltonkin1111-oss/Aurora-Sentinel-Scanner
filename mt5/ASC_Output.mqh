@@ -190,7 +190,7 @@ string ASC_Output_CalcModeText(const int value)
       case SYMBOL_CALC_MODE_CFDLEVERAGE: return("CFD Leverage");
       case SYMBOL_CALC_MODE_EXCH_STOCKS: return("Exchange Stocks");
       case SYMBOL_CALC_MODE_EXCH_FUTURES: return("Exchange Futures");
-      case SYMBOL_CALC_MODE_EXCH_OPTIONS: return("Exchange Options");
+      case SYMBOL_CALC_MODE_EXCH_FUTURES_FORTS: return("Exchange Futures Forts");
       default: return("UNKNOWN");
      }
   }
@@ -223,7 +223,9 @@ string ASC_Output_GtcModeText(const int value)
      {
       case SYMBOL_ORDERS_GTC: return("Good till cancelled");
       case SYMBOL_ORDERS_DAILY: return("Daily");
+#ifdef SYMBOL_ORDERS_DAILY_NO_STOPS
       case SYMBOL_ORDERS_DAILY_NO_STOPS: return("Daily no stops");
+#endif
       default: return("UNKNOWN");
      }
   }
@@ -420,7 +422,7 @@ void ASC_Output_WriteMarketStateBlock(const int handle,const ASC_SymbolRecord &r
 
 void ASC_Output_WriteTradingRulesBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   const ASC_ConditionsTruth &t = record.ConditionsTruth;
+   ASC_ConditionsTruth t = record.ConditionsTruth;
    ASC_Output_WriteSectionHeader(handle,"[TRADING_RULES]");
    FileWrite(handle,"SpecsReadable: " + ASC_Output_BoolText(t.SpecsReadable));
    ASC_Output_WriteStringField(handle,"SpecsReason",t.SpecsReason);
@@ -448,7 +450,7 @@ void ASC_Output_WriteTradingRulesBlock(const int handle,const ASC_SymbolRecord &
 
 void ASC_Output_WriteEconomicsBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   const ASC_ConditionsTruth &t = record.ConditionsTruth;
+   ASC_ConditionsTruth t = record.ConditionsTruth;
    ASC_Output_WriteSectionHeader(handle,"[ECONOMICS]");
    ASC_Output_WriteStringField(handle,"EconomicsTrust",t.EconomicsTrust);
    ASC_Output_WriteDoubleField(handle,"Point",t.Point,t.PointReadable);
@@ -465,7 +467,7 @@ void ASC_Output_WriteEconomicsBlock(const int handle,const ASC_SymbolRecord &rec
 
 void ASC_Output_WriteSwapBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   const ASC_ConditionsTruth &t = record.ConditionsTruth;
+   ASC_ConditionsTruth t = record.ConditionsTruth;
    ASC_Output_WriteSectionHeader(handle,"[SWAP]");
    ASC_Output_WriteStringField(handle,"SwapType",t.SwapModeReadable ? ASC_Output_SwapModeText(t.SwapMode) : "UNKNOWN");
    ASC_Output_WriteDoubleField(handle,"SwapLong",t.SwapLong,t.SwapLongReadable);
@@ -504,7 +506,7 @@ void ASC_Output_WriteSessionsBlock(const int handle,const ASC_SymbolRecord &reco
 
 void ASC_Output_WriteMarginBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   const ASC_ConditionsTruth &t = record.ConditionsTruth;
+   ASC_ConditionsTruth t = record.ConditionsTruth;
    ASC_Output_WriteSectionHeader(handle,"[MARGIN]");
    ASC_Output_WriteDoubleField(handle,"MarginInitial",t.MarginInitial,t.MarginInitialReadable);
    ASC_Output_WriteDoubleField(handle,"MarginMaintenance",t.MarginMaintenance,t.MarginMaintenanceReadable);
