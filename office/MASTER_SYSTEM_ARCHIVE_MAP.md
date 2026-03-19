@@ -2509,3 +2509,1093 @@ This subsection upgrades the earlier file index for the highest-leverage files.
 - Failure modes: publication filter overstates readiness, tidy output hides upstream partiality
 - Archive lineage: AFS output/debug routing, PIE deterministic publish discipline, EA1 explicit unknown rules
 - Recommended treatment: **active product owner; preserve writer-only law**
+
+
+---
+
+## 59. Legacy Code Extraction Matrix
+
+This section converts archive lineage into extraction-intelligence at file granularity. It is the practical bridge between legacy code bodies and current ASC module ownership.
+
+### 59.1 AFS extraction matrix
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh`
+- Candidate methods / patterns:
+  - `AFS_CL_StripKnownBrokerSuffixes`
+  - `AFS_CL_RemovePunctuation`
+  - `AFS_CL_NormalizeSymbol`
+  - `AFS_CL_FindRow`
+  - `AFS_CL_ClassifySymbol`
+- What they do:
+  - normalize broker symbols and translate them into canonical classification truth
+- ASC target module:
+  - `mt5/ASC_Market.mqh`
+  - support-contract enrichment in `mt5/ASC_Common.mqh`
+- Adaptation need:
+  - high; current ASC must keep blueprint-owned `PrimaryBucket` semantics and avoid importing AFS row sprawl unchanged
+- Hidden dependencies:
+  - server-key assumptions
+  - embedded table shape
+  - `AFS_UniverseSymbol` field naming
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_MarketCore.mqh`
+- Candidate methods / patterns:
+  - `AFS_MC_TryValidateTickValue`
+  - `AFS_MC_RefreshSpecRecord`
+  - `AFS_MC_GetQuoteState`
+  - `AFS_MC_GetSessionState`
+  - `AFS_MC_RecordSpreadSample`
+  - `AFS_MC_RefreshSurfaceRecord`
+- What they do:
+  - split surface-state, spec-state, quote-state, session-state, spread-sampling, and promotion readiness
+- ASC target module:
+  - `mt5/ASC_Market.mqh` for quote/session state
+  - `mt5/ASC_Conditions.mqh` for spec validation patterns
+  - `mt5/ASC_Surface.mqh` for spread/freshness readiness
+- Adaptation need:
+  - high; functions assume AFS-specific field inventory and promotion vocabulary
+- Hidden dependencies:
+  - spread-sample rings on legacy structs
+  - AFS spec-integrity labels
+  - AFS promotion-state semantics not identical to current activation law
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_HistoryFriction.mqh`
+- Candidate methods / patterns:
+  - `AFS_HF_HydrationStage`
+  - `AFS_HF_IsSessionClosedHint`
+  - `AFS_HF_ComputeATRFromRates`
+  - `AFS_HF_MovementScore`
+  - `AFS_HF_ComputeMedian`
+  - `AFS_HF_ComputeFreshnessScore`
+- What they do:
+  - derive partial-readiness, friction quality, history sufficiency, and freshness quality from price and spread state
+- ASC target module:
+  - `mt5/ASC_Surface.mqh`
+  - possible field additions in `mt5/ASC_Common.mqh`
+- Adaptation need:
+  - very high; current surface truth does not yet expose the required intermediate fields
+- Hidden dependencies:
+  - spread sample ring state
+  - history counters on the legacy symbol record
+  - session-hint logic inherited from `AFS_MarketCore`
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_Selection.mqh`
+- Candidate methods / patterns:
+  - `AFS_SL_IsRankable`
+  - `AFS_SL_ComputeCostEfficiencyScore`
+  - `AFS_SL_ComputeTrustScore`
+  - `AFS_SL_ComputeTotalScore`
+  - `AFS_SL_BetterTieBreak`
+- What they do:
+  - convert truth quality into shortlist rankability and deterministic ranking order
+- ASC target module:
+  - future ranking work centered on `mt5/ASC_Surface.mqh`
+  - supporting bucket/identity truth remains in `mt5/ASC_Market.mqh`
+- Adaptation need:
+  - very high; formulas rely on rich legacy readiness fields absent in ASC
+- Hidden dependencies:
+  - friction/history/cost fields from multiple prior AFS steps
+  - correlation finalist state not yet valid in ASC
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_TraderIntel.mqh`
+- Candidate methods / patterns:
+  - stable-signature builders
+  - atomic file path builders
+  - cache initialization helpers
+  - text read/write helpers with signature logic
+- What they do:
+  - file stability, cache signatures, and dossier artifact handling
+- ASC target module:
+  - `mt5/ASC_Storage.mqh`
+  - `mt5/ASC_Output.mqh`
+- Adaptation need:
+  - medium; some file-stability ideas are reusable but the dossier shell is larger than current ASC
+- Hidden dependencies:
+  - tactical cache/dossier ecosystem
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_TraderAnalyticsEngine.mqh`
+- Candidate methods / patterns:
+  - `AFS_TA_CoverageState`
+  - `AFS_TA_HTFReadinessState`
+  - `AFS_TA_FreshnessBand`
+  - `AFS_TA_SpreadBand`
+  - `AFS_TA_TacticalSummary`
+  - `AFS_TA_ExecutionQualityState`
+- What they do:
+  - turn raw state into compact analytical labels
+- ASC target module:
+  - future Layer 3 dossier enrichment
+  - bounded reuse in `mt5/ASC_Surface.mqh` for qualitative labels only
+- Adaptation need:
+  - high
+- Hidden dependencies:
+  - richer trader intel caches and tactical metrics
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_TraderDossierEngine.mqh`
+- Candidate methods / patterns:
+  - formatting and value-state rendering helpers
+  - mode/calc/swap/session meaning text functions
+  - trust and lifecycle explanation builders
+- What they do:
+  - convert scanner truth into a human-readable dossier layer
+- ASC target module:
+  - future symbol-file enrichment in `mt5/ASC_Output.mqh`
+- Adaptation need:
+  - medium/high
+- Hidden dependencies:
+  - value-state vocabulary not fully represented in `ASC_Common.mqh`
+
+#### `archives/LEGACY_SYSTEMS/AFS/AFS_OutputDebug.mqh`
+- Candidate methods / patterns:
+  - route sanitization
+  - append-line safety
+  - write-failure logging
+  - active-route selection
+- What they do:
+  - deterministic file routing and bounded debug logging
+- ASC target module:
+  - `mt5/ASC_Storage.mqh`
+  - future diagnostics support for `mt5/ASC_Output.mqh`
+- Adaptation need:
+  - medium
+- Hidden dependencies:
+  - legacy route families (`dev`, `FINAL_OUTPUT`, `Trader-Data`)
+
+### 59.2 EA1 extraction matrix
+
+#### `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`
+- Candidate blocks / patterns:
+  - continuity stale/corrupt/incompatible logic
+  - observed-vs-effective value rules
+  - current/previous snapshot safety model
+  - explicit reason-code and health-state vocabulary
+  - spec hash / change count doctrine
+- What they do:
+  - define the discipline needed for high-trust observability under partial data
+- ASC target module:
+  - `mt5/ASC_Storage.mqh`
+  - `mt5/ASC_Conditions.mqh`
+  - `mt5/ASC_Market.mqh`
+  - `mt5/ASC_Output.mqh`
+  - contract support in `mt5/ASC_Common.mqh`
+- Adaptation need:
+  - high; the doctrine is valuable, the stage/debug schema footprint is too large
+- Hidden dependencies:
+  - machine-facing stage ecosystem
+  - broader health-state taxonomy than current product surface
+
+#### `archives/LEGACY_SYSTEMS/Old EAS/EA1_MarketCore*.mq5`
+- Candidate methods / patterns:
+  - reset-state families for spec/session/tick/cost/hydration/continuity
+  - safe symbol read wrappers
+  - spec hash refresh
+  - publish-window and schedule clock helpers
+  - classification heuristics like stock/FX detection
+- What they do:
+  - show how the EA1 doctrine was operationalized in code
+- ASC target module:
+  - reset/state vocab portions -> `mt5/ASC_Common.mqh`
+  - safe property reads -> `mt5/ASC_Market.mqh` / `mt5/ASC_Conditions.mqh`
+  - continuity helpers -> `mt5/ASC_Storage.mqh`
+- Adaptation need:
+  - high; code versions are monolithic and state-dense
+- Hidden dependencies:
+  - EA1-specific global state, publish windows, and stage contracts
+
+### 59.3 ISSX extraction matrix
+
+#### `archives/LEGACY_SYSTEMS/ISSX/issx_runtime.mqh`
+- Candidate methods / patterns:
+  - budget and phase control helpers (`RemainingTotalBudget`, `CanSpend`, `SpendCommit`, `DeadlineHit`)
+  - phase/state label methods
+  - pulse/scheduler surface
+- What they do:
+  - provide a bounded runtime shell with explicit budget semantics
+- ASC target module:
+  - `mt5/ASC_Engine.mqh`
+- Adaptation need:
+  - medium/high; ASC needs the discipline, not the full phase framework
+- Hidden dependencies:
+  - ISSX kernel/stage phase model and queue families
+
+#### `archives/LEGACY_SYSTEMS/ISSX/issx_market_engine.mqh`
+- Candidate methods / patterns:
+  - normalization helpers (`Normalize`, `NormalizeSymbol`, `SafeUpper`)
+  - state reads (`SafeSymbolBool/Long/Int/Double/String`)
+  - session-window logic (`SecondsOfDay`, `IsWithinSessionWindow`)
+  - observation load/refresh methods (`LoadRawObservation`, `RefreshTick`)
+  - continuity restoration helpers
+- What they do:
+  - blend symbol intake, market observation, and continuity restoration
+- ASC target module:
+  - `mt5/ASC_Market.mqh`
+  - `mt5/ASC_Storage.mqh` for restore-specific pieces
+- Adaptation need:
+  - high; logic is intertwined with ISSX runtime phases
+- Hidden dependencies:
+  - prior continuity and runtime shell assumptions
+
+#### `archives/LEGACY_SYSTEMS/ISSX/issx_selection_engine.mqh`
+- Candidate methods / patterns:
+  - lane / truth / freshness class vocabularies
+  - compatibility score and toxicity score helpers
+  - publishability / weak-link labels
+- What they do:
+  - map raw truth quality into a richer selection taxonomy
+- ASC target module:
+  - future ranking support in `mt5/ASC_Surface.mqh`
+  - shared vocabulary support in `mt5/ASC_Common.mqh`
+- Adaptation need:
+  - very high
+- Hidden dependencies:
+  - wide ISSX score model and prior runtime truth classes
+
+#### `archives/LEGACY_SYSTEMS/ISSX/issx_persistence.mqh`
+- Candidate methods / patterns:
+  - path safety checks (`IsSafeRelativePath`)
+  - folder/file ensure helpers
+  - atomic write helpers (`WriteTextAtomic`, `WriteTextIfChanged`)
+  - root/shared/debug path families
+- What they do:
+  - enforce safe persistence routing and atomic write behavior
+- ASC target module:
+  - `mt5/ASC_Storage.mqh`
+- Adaptation need:
+  - medium
+- Hidden dependencies:
+  - ISSX folder hierarchy and lock/debug subsystems
+
+#### `archives/LEGACY_SYSTEMS/ISSX/issx_system_snapshot.mqh`
+- Candidate methods / patterns:
+  - bounded sanitization and hydration labeling
+- What they do:
+  - normalize snapshot-facing text and state labels
+- ASC target module:
+  - `mt5/ASC_Output.mqh`
+  - `mt5/ASC_Common.mqh`
+- Adaptation need:
+  - medium
+- Hidden dependencies:
+  - snapshot schema vocabulary
+
+#### `archives/LEGACY_SYSTEMS/ISSX/issx_ui.mqh` and `issx_menu.mqh`
+- Candidate methods / patterns:
+  - status-to-text helpers
+  - HUD warning accumulation
+  - stage-row rendering
+  - click handling and section rendering
+- What they do:
+  - build bounded operator-facing visibility and control actions
+- ASC target module:
+  - future `mt5/ASC_UI.mqh`
+- Adaptation need:
+  - high
+- Hidden dependencies:
+  - stage rows, warning lists, and UI object lifecycle conventions
+
+### 59.4 Old EAS and extracted reference matrix
+
+#### `archives/LEGACY_SYSTEMS/Old EAS/ISS-X Spec Extraction EA.mq5`
+- Candidate methods / patterns:
+  - `InsideAnySessionTrade`
+  - `InsideAnySessionQuote`
+  - `GetInt/GetDbl/GetStr`
+  - `ComputeMarginRateFlags`
+- What they do:
+  - robust property reads and session-bound truth checks for deep spec extraction
+- ASC target module:
+  - `mt5/ASC_Conditions.mqh`
+  - session helper fragments in `mt5/ASC_Market.mqh`
+- Adaptation need:
+  - medium/high
+- Hidden dependencies:
+  - exporter-specific JSON pipeline and deep-schema assumptions
+
+#### `archives/LEGACY_SYSTEMS/Old EAS/ISSX_DEV_Friction.mq5`
+- Candidate methods / patterns:
+  - ring-state methods (`RingInit`, `PruneRing`, `RingAddSample`)
+  - `ProbeTicksAll`
+  - `GetATRPoints`
+  - `BuildStageA`
+- What they do:
+  - build freshness and friction intelligence from repeated quote samples
+- ASC target module:
+  - `mt5/ASC_Surface.mqh`
+- Adaptation need:
+  - very high
+- Hidden dependencies:
+  - persistent ring buffers and Stage A snapshot conventions
+
+#### `archives/LEGACY_SYSTEMS/Old EAS/ISSX_MarketStateCore.mq5`
+- Candidate methods / patterns:
+  - `DetectAssetClass`
+  - `DetectInstrumentFamily`
+  - `DetectThemeBucket`
+  - `CountTradeSessionsToday`
+  - `CountQuoteSessionsToday`
+  - `HasEconomicallyValidQuote`
+- What they do:
+  - derive richer market-identity and session/quote semantics from broker observations
+- ASC target module:
+  - `mt5/ASC_Market.mqh`
+- Adaptation need:
+  - high
+- Hidden dependencies:
+  - old theme/family vocabulary and market-state wrapper assumptions
+
+#### `archives/LEGACY_SYSTEMS/Old EAS/PIE.MT5.mq5`
+- Candidate methods / patterns:
+  - `PIE_NormalizeSym`
+  - `PIE_SectorClassify`
+  - `PIE_ProbeValuePerPoint`
+  - `PIE_ProbeMargin1Lot`
+  - backup/current publish discipline helpers
+- What they do:
+  - combine deterministic export ordering with broad truth probing
+- ASC target module:
+  - `mt5/ASC_Market.mqh`
+  - `mt5/ASC_Conditions.mqh`
+  - `mt5/ASC_Storage.mqh`
+- Adaptation need:
+  - high
+- Hidden dependencies:
+  - PIE mode detection, one-file architecture, and backup rotation ecosystem
+
+#### `archives/EXTRACTED_REFERENCE/runtime_cadence/Export_Contract_Specs_AllSymbols.mq5`
+- Candidate methods / patterns:
+  - `AtomicWriteText`
+  - `ReadAllText`
+  - basic JSON validation
+  - rates/EMA/ADX/ATR helper blocks only as reference for later analytics
+- What they do:
+  - contract export and staged write safety
+- ASC target module:
+  - `mt5/ASC_Storage.mqh`
+  - analytics helpers are later-slice only
+- Adaptation need:
+  - medium
+- Hidden dependencies:
+  - exporter file contract and DEV cadence assumptions
+
+#### `archives/EXTRACTED_REFERENCE/runtime_cadence/MarketISS_SymbolTruth.mq5`
+- Candidate methods / patterns:
+  - `IsSymbolUsable`
+  - `CalcValuePerPoint_1Lot`
+  - `CalcMargin_1Lot`
+- What they do:
+  - broad truth export and basic cost derivation for market observability
+- ASC target module:
+  - `mt5/ASC_Conditions.mqh`
+- Adaptation need:
+  - high
+- Hidden dependencies:
+  - exporter-only output surface and account/structure dump context
+
+---
+
+## 60. Exact Function / Method Recovery Candidates
+
+This section is method-level, not just file-level. The purpose is to let future HQ name exact legacy candidates in worker packets.
+
+### 60.1 Symbol identity and normalization methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` | `AFS_CL_StripKnownBrokerSuffixes` | remove broker-added suffix noise | `mt5/ASC_Market.mqh` | medium | broker-specific suffix list may over-strip symbols in other environments |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` | `AFS_CL_RemovePunctuation` | normalize punctuation variance | `mt5/ASC_Market.mqh` | low/medium | can erase economically meaningful separators if not bounded |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh` | `AFS_CL_NormalizeSymbol` | canonical normalization pipeline | `mt5/ASC_Market.mqh` | medium | normalization law may conflict with current bucket/classification contract if imported wholesale |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_market_engine.mqh` | `NormalizeSymbol` | alternate normalize path | `mt5/ASC_Market.mqh` | medium | runtime-shell assumptions and weaker lineage clarity than AFS classifier |
+| `archives/LEGACY_SYSTEMS/Old EAS/PIE.MT5.mq5` | `PIE_NormalizeSym` | deterministic broad-universe symbol normalization | `mt5/ASC_Market.mqh` | medium | tied to PIE sector classification and one-file flow |
+
+### 60.2 Session and market-state methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/AFS/AFS_MarketCore.mqh` | `AFS_MC_GetSessionState` | compact session-state synthesis | `mt5/ASC_Market.mqh` | medium/high | uses legacy readiness fields and AFS labels |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_HistoryFriction.mqh` | `AFS_HF_IsSessionClosedHint` | interpret silence vs closed-market hints | `mt5/ASC_Surface.mqh` | high | depends on richer rec fields and can misclassify thin symbols if transplanted blindly |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISS-X Spec Extraction EA.mq5` | `InsideAnySessionTrade` | session-window truth for trade availability | `mt5/ASC_Market.mqh` | medium | exporter context and session loops need current contract mapping |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISS-X Spec Extraction EA.mq5` | `InsideAnySessionQuote` | session-window truth for quote availability | `mt5/ASC_Market.mqh` | medium | same as above |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISSX_MarketStateCore.mq5` | `CountTradeSessionsToday` / `CountQuoteSessionsToday` | richer session density / presence view | `mt5/ASC_Market.mqh` | high | current ASC lacks matching fields in `ASC_Common.mqh` |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_market_engine.mqh` | `IsWithinSessionWindow` | generalized session-window check | `mt5/ASC_Market.mqh` | medium/high | assumes ISSX observation flow and runtime-phase cadence |
+
+### 60.3 Quote freshness and friction methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/AFS/AFS_HistoryFriction.mqh` | `AFS_HF_ComputeFreshnessScore` | quantify quote freshness beyond binary checks | `mt5/ASC_Surface.mqh` | high | legacy scoring assumes spread/history fields not present in ASC |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_HistoryFriction.mqh` | `AFS_HF_HydrationStage` | partial-readiness vocabulary | `mt5/ASC_Surface.mqh` + `mt5/ASC_Common.mqh` | high | requires new enum/state vocabulary first |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISSX_DEV_Friction.mq5` | `RingInit`, `PruneRing`, `RingAddSample` | maintain bounded spread-sample ring | `mt5/ASC_Surface.mqh` | high | depends on persistent ring storage and sampling cadence not yet present |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISSX_DEV_Friction.mq5` | `ProbeTicksAll` | refresh broad quote/freshness state | `mt5/ASC_Surface.mqh` with engine cadence support | high | monolithic runtime assumptions |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISSX_MarketStateCore.mq5` | `HasEconomicallyValidQuote` | distinguish valid quote from meaningless tick state | `mt5/ASC_Market.mqh` | medium | needs careful alignment with current eligibility law |
+
+### 60.4 Spec and conditions methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/AFS/AFS_MarketCore.mqh` | `AFS_MC_TryValidateTickValue` | validate suspect tick value observations | `mt5/ASC_Conditions.mqh` | high | may silently replace observed zero with legacy heuristics |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_MarketCore.mqh` | `AFS_MC_RefreshSpecRecord` | unified spec refresh and validation flow | `mt5/ASC_Conditions.mqh` | high | assumes AFS spec status fields and promotion flow |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISS-X Spec Extraction EA.mq5` | `GetInt`, `GetDbl`, `GetStr` | safe property access wrappers | `mt5/ASC_Conditions.mqh` | low/medium | low risk if kept as wrappers only |
+| `archives/LEGACY_SYSTEMS/Old EAS/ISS-X Spec Extraction EA.mq5` | `ComputeMarginRateFlags` | summarize probe coverage/flags | `mt5/ASC_Conditions.mqh` | medium/high | can bloat conditions truth before provenance fields exist |
+| `archives/LEGACY_SYSTEMS/Old EAS/PIE.MT5.mq5` | `PIE_ProbeValuePerPoint` | probe value-per-point money semantics | `mt5/ASC_Conditions.mqh` | high | if moved early it can create false certainty |
+| `archives/EXTRACTED_REFERENCE/runtime_cadence/MarketISS_SymbolTruth.mq5` | `CalcValuePerPoint_1Lot`, `CalcMargin_1Lot` | derived cost probes for broad truth export | `mt5/ASC_Conditions.mqh` | high | exporter-level derivation not automatically publishable in ASC |
+
+### 60.5 Persistence and restart methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/ISSX/issx_persistence.mqh` | `WriteTextAtomic` | explicit atomic text write | `mt5/ASC_Storage.mqh` | low/medium | low if adapted to current path rules |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_persistence.mqh` | `WriteTextIfChanged` | avoid unnecessary rewrites | `mt5/ASC_Storage.mqh` | medium | can hide needed writes if compared against wrong materiality boundary |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_persistence.mqh` | `IsSafeRelativePath` | path safety filter | `mt5/ASC_Storage.mqh` | low | low risk, highly compatible |
+| `archives/EXTRACTED_REFERENCE/runtime_cadence/Export_Contract_Specs_AllSymbols.mq5` | `AtomicWriteText` | alternate staged write pattern | `mt5/ASC_Storage.mqh` | low/medium | exporter temp-file assumptions may differ |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_market_engine.mqh` | `RestorePriorContinuity` | continuity merge/restore concept | `mt5/ASC_Storage.mqh` | high | deeply coupled to ISSX state structs |
+| `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt` | stale/corrupt/incompatible logic block | continuity validity doctrine | `mt5/ASC_Storage.mqh` | high | conceptual, requires new current contract states |
+
+### 60.6 Ranking and selection methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/AFS/AFS_Selection.mqh` | `AFS_SL_IsRankable` | define shortlist entry gate | `mt5/ASC_Surface.mqh` | high | gate logic assumes missing legacy fields |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_Selection.mqh` | `AFS_SL_ComputeTrustScore` | summarize truth quality | `mt5/ASC_Surface.mqh` + `mt5/ASC_Common.mqh` | high | trust model depends on history/friction/cost states not yet represented |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_Selection.mqh` | `AFS_SL_BetterTieBreak` | deterministic same-score ordering | `mt5/ASC_Surface.mqh` | medium | safer than full scoring if tie inputs are redefined clearly |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_selection_engine.mqh` | truth/freshness class text helpers | richer rankability vocabulary | `mt5/ASC_Common.mqh` | medium/high | vocabulary import without supporting states creates dead enums |
+
+### 60.7 Output and operator-state methods
+
+| Archive file | Method / pattern | Purpose | ASC target module | Difficulty | Risk if copied blindly |
+|---|---|---|---|---|---|
+| `archives/LEGACY_SYSTEMS/AFS/AFS_OutputDebug.mqh` | `AFS_OD_AppendLine` | append-safe logging/output helper | `mt5/ASC_Storage.mqh` or future diagnostics | medium | route assumptions and file-family naming |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_ui.mqh` | `PushWarning`, `BuildStageRowJson` | UI-facing visibility of weak links | future `mt5/ASC_UI.mqh` | high | stage-row assumptions and UI object contracts |
+| `archives/LEGACY_SYSTEMS/ISSX/issx_menu.mqh` | `RenderStageButton`, `HandleClick` | on-chart operator controls | future `mt5/ASC_UI.mqh` | high | stage/menu dependency model absent in current product |
+| `archives/LEGACY_SYSTEMS/AFS/AFS_TraderDossierEngine.mqh` | lifecycle/trust/session meaning text builders | explain dossier truth cleanly | `mt5/ASC_Output.mqh` | medium/high | dossier semantics exceed current symbol file depth |
+
+---
+
+## 61. Struct / Enum / Schema Translation Candidates
+
+### 61.1 Legacy structs that should be mined conceptually, not ported directly
+
+#### `AFS_UniverseSymbol` from `archives/LEGACY_SYSTEMS/AFS/AFS_CoreTypes.mqh`
+- Valuable concepts to extract:
+  - separated market/spec/history/friction/selection/publication fields
+  - distinct “state” and “reason” pairs
+  - room for weak/partial/fail status vocabularies
+- Why direct port is wrong:
+  - too many subsystems share it
+  - ownership is diffuse
+  - current ASC module boundaries would be violated
+- ASC contract impact:
+  - `mt5/ASC_Common.mqh` likely needs more sub-struct vocabulary rather than a giant merged record
+
+#### EA1 symbol-state structs from `archives/LEGACY_SYSTEMS/Old EAS/EA1_MarketCore*.mq5`
+- Valuable concepts to extract:
+  - resettable sub-state groups
+  - spec/session/tick/cost/continuity decomposition
+  - reason-code channels
+- Why direct port is wrong:
+  - monolithic globals and phase-era publishing assumptions
+- ASC contract impact:
+  - `ASC_Common.mqh` is too thin to represent several of these sub-state distinctions
+
+#### ISSX runtime and selection structs from `archives/LEGACY_SYSTEMS/ISSX/*.mqh`
+- Valuable concepts to extract:
+  - runtime-class / publishability / weak-link vocabularies
+  - persistence shell state separation
+- Why direct port is wrong:
+  - coupled to multi-phase runtime shell and queue families
+- ASC contract impact:
+  - only bounded enum/state ideas should survive translation
+
+### 61.2 Enum vocabularies worth recovering
+
+#### From AFS
+- `AFS_ModuleStateCode`
+- `AFS_SurfaceUpdatePolicy`
+- `AFS_DeepUpdatePolicy`
+- promote/profile enums only as conceptual history
+
+Recoverable value:
+- clear state naming and policy naming discipline
+
+#### From ISSX selection/runtime
+- publishability classes
+- truth/freshness classes
+- weak-link codes
+- phase abort reasons
+
+Recoverable value:
+- better degraded-state and publishability vocabulary
+
+#### From EA1 doctrine
+- restart-state classes
+- persistence-state classes
+- capability and completeness classes
+
+Recoverable value:
+- explicit resume, stale, corrupt, incompatible semantics
+
+### 61.3 Schema fields worth translating into `ASC_Common.mqh`
+
+Current likely-thin areas in `ASC_Common.mqh` relative to legacy:
+- restart-state vocabulary
+- persistence validity reason
+- provenance source for derived condition fields
+- quality/completeness labels for conditions and surface truth
+- degraded / warming / partial readiness vocabulary
+- explicit publishability class separate from “has some truth”
+- continuity compatibility / age reason fields
+- operator-visible health summary fields
+
+### 61.4 Shared-contract enrichment candidates
+
+#### Candidate enrichment group: conditions provenance
+Needed concepts:
+- raw observed source vs effective/derived source
+- capability support flags
+- derived confidence / substitution reason
+
+#### Candidate enrichment group: surface readiness decomposition
+Needed concepts:
+- freshness band
+- history sufficiency band
+- friction readiness band
+- hydration/degraded state
+
+#### Candidate enrichment group: persistence vocabulary
+Needed concepts:
+- restored_from_persistence
+- restarted_clean
+- persistence_stale
+- persistence_incompatible
+- persistence_corrupt
+- compatibility_reason
+
+---
+
+## 62. Old Blueprint Doctrine Still Missing in Live MT5
+
+### Doctrine 1 — explicit degraded / partial / weak readiness classes
+- Source: `archives/LEGACY_SYSTEMS/AFS/AFS_HistoryFriction.mqh`, `archives/LEGACY_SYSTEMS/Old EAS/ISSX_DEV_Friction.mq5`, `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`
+- Doctrine meaning:
+  - systems should distinguish not-ready, weak, degraded, warming, partial, and fail states rather than only eligible/ineligible
+- Current missing representation:
+  - `mt5/ASC_Surface.mqh` has limited `SurfaceEligible`, `RankingEligible`, and a free-text reason, but not a formal degraded-state taxonomy
+- Proper owner:
+  - `mt5/ASC_Surface.mqh`
+  - vocabulary support in `mt5/ASC_Common.mqh`
+
+### Doctrine 2 — observed vs effective conditions truth provenance
+- Source: `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`, `archives/LEGACY_SYSTEMS/Old EAS/ISS-X Spec Extraction EA.mq5`, `archives/LEGACY_SYSTEMS/Old EAS/PIE.MT5.mq5`
+- Doctrine meaning:
+  - raw broker fields and derived replacements must remain distinct and source-tagged
+- Current missing representation:
+  - `mt5/ASC_Conditions.mqh` exposes readability and values, but not a deep observed-vs-effective/provenance contract
+- Proper owner:
+  - `mt5/ASC_Conditions.mqh`
+  - shared field support in `mt5/ASC_Common.mqh`
+
+### Doctrine 3 — continuity compatibility states beyond restore-first
+- Source: `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`, `archives/LEGACY_SYSTEMS/ISSX/issx_persistence.mqh`
+- Doctrine meaning:
+  - restart continuity must explicitly track fresh/stale/corrupt/incompatible/resumed/clean-restart conditions
+- Current missing representation:
+  - `mt5/ASC_Storage.mqh` follows correct direction but lacks the full visible state vocabulary
+- Proper owner:
+  - `mt5/ASC_Storage.mqh`
+  - orchestration exposure in `mt5/ASC_Engine.mqh`
+  - common state fields in `mt5/ASC_Common.mqh`
+
+### Doctrine 4 — publishability is not the same as truth presence
+- Source: `archives/LEGACY_SYSTEMS/ISSX/issx_selection_engine.mqh`, `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`
+- Doctrine meaning:
+  - a symbol can contain some truth while still being non-publishable or only partially publishable
+- Current missing representation:
+  - `mt5/ASC_Output.mqh` uses `PUBLISHED`, `PENDING_SCAN`, and `UNAVAILABLE`, but the upstream contract vocabulary is still thin
+- Proper owner:
+  - `mt5/ASC_Output.mqh`
+  - upstream publishability support in `mt5/ASC_Common.mqh`
+
+### Doctrine 5 — deterministic tie-break discipline as contract, not ad hoc behavior
+- Source: `archives/LEGACY_SYSTEMS/AFS/AFS_Selection.mqh`
+- Doctrine meaning:
+  - ranking systems need explicit deterministic ordering for equal-score candidates
+- Current missing representation:
+  - current surface layer has score output potential but not a mature tie-break contract
+- Proper owner:
+  - future ranking logic rooted in `mt5/ASC_Surface.mqh`
+
+### Doctrine 6 — operator-facing health visibility separate from trader-facing summary
+- Source: `archives/LEGACY_SYSTEMS/ISSX/issx_ui.mqh`, `archives/LEGACY_SYSTEMS/AFS/AFS_OutputDebug.mqh`, `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`
+- Doctrine meaning:
+  - internal health state should be inspectable without bloating the trader-facing artifact
+- Current missing representation:
+  - no dedicated diagnostics/UI file currently present in active MT5 set
+- Proper owner:
+  - future diagnostics/UI domain
+
+### Doctrine 7 — spec change tracking as continuity input
+- Source: `archives/LEGACY_SYSTEMS/EA1/ORIGINAL/EA1_MARKETCORE_FINAL.txt`, `archives/LEGACY_SYSTEMS/Old EAS/EA1_MarketCore_Phase1.mq5`
+- Doctrine meaning:
+  - spec changes should inform compatibility, cache invalidation, and condition trust
+- Current missing representation:
+  - current conditions/storage path lacks explicit spec hash / change count representation
+- Proper owner:
+  - `mt5/ASC_Conditions.mqh`
+  - `mt5/ASC_Storage.mqh`
+
+---
+
+## 63. Archive-to-ASC Ownership Translation Map
+
+| Legacy capability | Archive source | ASC target module | Ownership status | `ASC_Common.mqh` enrichment needed? |
+|---|---|---|---|---|
+| symbol normalization | AFS classification, ISSX market, PIE | `mt5/ASC_Market.mqh` | clear | low/medium |
+| classification confidence / alias lineage | AFS classification | `mt5/ASC_Market.mqh` | shared with Common | yes |
+| session-window truth | ISS spec extraction, ISSX market, ISSX market-state core | `mt5/ASC_Market.mqh` | clear | medium |
+| degraded quote/freshness vocabulary | AFS history/friction, ISSX DEV friction | `mt5/ASC_Surface.mqh` | shared with Common | yes |
+| observed-vs-effective conditions provenance | EA1 doctrine, ISS spec extraction, PIE | `mt5/ASC_Conditions.mqh` | clear | yes |
+| spec hash / change tracking | EA1 doctrine, EA1 market-core code | `mt5/ASC_Conditions.mqh` + `mt5/ASC_Storage.mqh` | shared | yes |
+| continuity compatibility states | EA1 doctrine, ISSX persistence | `mt5/ASC_Storage.mqh` | shared with Engine | yes |
+| deterministic tie-break logic | AFS selection | `mt5/ASC_Surface.mqh` | currently missing later packet | possibly |
+| writer-side route/failure diagnostics | AFS output debug, PIE | `mt5/ASC_Storage.mqh` / future diagnostics | shared | low |
+| operator warning/UI state | ISSX UI/menu | future `mt5/ASC_UI.mqh` | currently missing | yes |
+
+Ownership interpretation:
+- **clear** means one current module is the obvious home.
+- **shared** means the owning module needs support states or enums in `ASC_Common.mqh` and possibly orchestration visibility in `ASC_Engine.mqh`.
+- **currently missing** means no live MT5 module can absorb it cleanly without new contract enrichment.
+
+---
+
+## 64. Method-Level Do / Adapt / Ban Matrix
+
+### 64.1 DO TRANSLATE
+These are high-confidence translation candidates if rewritten into current ownership boundaries.
+
+- `AFS_CL_StripKnownBrokerSuffixes`
+- `AFS_CL_RemovePunctuation`
+- `AFS_CL_NormalizeSymbol`
+- safe symbol/spec property wrappers from EA1 and ISS spec extraction code
+- `IsSafeRelativePath`, `WriteTextAtomic`, `WriteTextIfChanged` style storage helpers
+- deterministic tie-break concepts from `AFS_SL_BetterTieBreak`
+- session-window methods such as `InsideAnySessionTrade` / `InsideAnySessionQuote`, but only after mapping to current session law
+
+### 64.2 ADAPT CAREFULLY
+These are valuable, but dangerous if imported without contract enrichment.
+
+- `AFS_MC_RefreshSpecRecord`
+- `AFS_MC_TryValidateTickValue`
+- `AFS_HF_HydrationStage`
+- `AFS_HF_ComputeFreshnessScore`
+- `AFS_HF_MovementScore`
+- `AFS_SL_IsRankable`
+- `AFS_SL_ComputeTrustScore`
+- `RestorePriorContinuity`
+- `DetectAssetClass`, `DetectInstrumentFamily`, `DetectThemeBucket`
+- `ComputeMarginRateFlags`
+- `PIE_ProbeValuePerPoint`, `PIE_ProbeMargin1Lot`
+
+### 64.3 BAN DIRECT PORT
+These should not be copied as-is.
+
+- any giant shared struct (`AFS_UniverseSymbol`, EA1 monolith state structs, ISSX selection/runtime aggregates)
+- raw legacy scoring formulas and thresholds
+- Stage A / stage-debug schema blocks as current trader output
+- full UI/menu object systems from ISSX before a bounded ASC UI contract exists
+- multi-phase queue/budget runtimes from ISSX as a direct replacement for current engine flow
+- any method whose output semantics depend on legacy fields not represented in `ASC_Common.mqh`
+
+---
+
+## 65. Live ASC Coverage vs Legacy Method Coverage
+
+### `mt5/ASC_Market.mqh`
+- Already covers well:
+  - broad identity ownership
+  - classification placement
+  - universe discovery
+- Partially covers:
+  - normalization richness
+  - session/open nuance
+  - theme/family inference
+- Still lacks entirely:
+  - confidence/review/alias lineage
+  - richer session-count / fallback semantics
+  - explicit economically-valid quote checks as a formal sub-state
+
+### `mt5/ASC_Conditions.mqh`
+- Already covers well:
+  - readable/unreadable conditions truth
+  - basic spec and spread state
+- Partially covers:
+  - safe property access patterns
+  - conditions contribution to surface eligibility
+- Still lacks entirely:
+  - provenance source tags
+  - observed-vs-effective separation
+  - capability matrix and spec change tracking
+
+### `mt5/ASC_Storage.mqh`
+- Already covers well:
+  - restore-first doctrine direction
+  - atomic-write orientation
+- Partially covers:
+  - staged write safety
+  - continuity preservation
+- Still lacks entirely:
+  - explicit stale/corrupt/incompatible/resume vocabulary
+  - write-if-changed materiality logic
+  - safe-path semantics as an explicit contract layer
+
+### `mt5/ASC_Output.mqh`
+- Already covers well:
+  - writer-only discipline
+  - summary/symbol publication surface
+- Partially covers:
+  - deterministic route cleanup
+  - pending vs publishable distinction
+- Still lacks entirely:
+  - richer publishability classes
+  - internal-only diagnostics surface
+  - dossier-explanation text layers beyond the current minimal shape
+
+### `mt5/ASC_Surface.mqh`
+- Already covers well:
+  - basic quote-age + history + conditions gate
+- Partially covers:
+  - score generation
+  - surface-eligible vs ranking-eligible distinction
+- Still lacks entirely:
+  - hydration/degraded/weak vocabulary
+  - friction decomposition
+  - deterministic tie-break logic
+  - richer trust decomposition
+
+### `mt5/ASC_Engine.mqh`
+- Already covers well:
+  - bounded scanner orchestration
+- Partially covers:
+  - restore-first sequencing
+- Still lacks entirely:
+  - richer budget/phase concepts for heavier later truth work
+  - restart-state exposure to diagnostics
+
+### `mt5/ASC_Common.mqh`
+- Already covers well:
+  - baseline shared contract surface
+- Partially covers:
+  - common enums and record grouping
+- Still lacks entirely:
+  - degraded-state vocabulary
+  - provenance fields
+  - publishability class vocabulary
+  - restart/compatibility vocabulary
+  - richer selection decomposition state
+
+---
+
+## 66. Exact Recovery Sequence for Future Build Waves
+
+This is the strict recovery order future HQ should follow when translating legacy intelligence into ASC.
+
+### Wave A — Market identity and normalization hardening
+1. translate normalization/suffix-stripping methods into `mt5/ASC_Market.mqh`
+2. enrich `ASC_Common.mqh` only if confidence/alias/review lineage becomes necessary
+3. verify `PrimaryBucket` continuity is preserved end-to-end
+
+Reason:
+- all downstream truth becomes unstable if symbol identity remains weak
+
+### Wave B — Conditions provenance and safe property access
+1. recover safe property wrapper discipline from ISS spec extraction / EA1 code
+2. add provenance fields for observed vs effective conditions truth
+3. do not add large derived-cost surfaces yet
+
+Reason:
+- ranking and output trust cannot improve if conditions semantics remain opaque
+
+### Wave C — Session and quote-state enrichment
+1. adapt session-window methods and quote-validity logic into `mt5/ASC_Market.mqh`
+2. add bounded explicit quote/session states rather than free-form reasons only
+3. verify Layer 1 eligibility remains blueprint-aligned
+
+Reason:
+- surface quality depends on more truthful upstream market-state inputs
+
+### Wave D — Surface degraded-state vocabulary before ranking formulas
+1. add hydration/degraded/partial/weak state vocabulary in `ASC_Common.mqh`
+2. adapt freshness/hydration concepts into `mt5/ASC_Surface.mqh`
+3. avoid formula import until supporting truth fields exist
+
+Reason:
+- formulas without state vocabulary create false precision
+
+### Wave E — Ranking decomposition and deterministic tie-breaks
+1. adapt AFS trust/rankable/tie-break concepts
+2. introduce deterministic same-score ordering
+3. only then consider richer score decomposition
+
+Reason:
+- shortlist integrity improves more from correct rankability and deterministic ordering than from early numeric complexity
+
+### Wave F — Continuity compatibility and restart truth
+1. translate EA1 continuity doctrine into explicit states in `ASC_Common.mqh`
+2. implement storage-side compatibility/stale/corrupt logic in `mt5/ASC_Storage.mqh`
+3. surface restart-path truth through engine/output diagnostics as needed
+
+Reason:
+- later Layer 3 work becomes unsafe without restart honesty
+
+### Wave G — Internal diagnostics separation
+1. recover route/failure logging concepts from AFS/PIE
+2. keep trader outputs compact
+3. expose internal-only diagnostics separately
+
+Reason:
+- richer scanner truth will need observability, but not in the trader summary itself
+
+### Wave H — ACTIVE dossier enrichment and bounded UI work
+1. adapt dossier explanation text methods from AFS TraderDossierEngine
+2. only after continuity and ranking are stable, open bounded UI/operator visibility using ISSX UI lessons
+
+Reason:
+- dossier and UI layers should explain stable truth, not unstable foundations
+
+---
+
+## 67. Legacy Formula / Threshold Caution Map
+
+### `archives/LEGACY_SYSTEMS/AFS/AFS_HistoryFriction.mqh`
+- Controlled: spread/freshness/history scoring and hydration stages
+- Why not portable as-is:
+  - depends on legacy spread samples, history bars, and session hints not yet represented in ASC
+- Useful principle:
+  - quality should be decomposed into freshness, history sufficiency, and friction components
+
+### `archives/LEGACY_SYSTEMS/AFS/AFS_Selection.mqh`
+- Controlled: total score, trust score, cost efficiency, tie-breaks
+- Why not portable as-is:
+  - score inputs come from richer legacy truth surfaces than current ASC has
+- Useful principle:
+  - deterministic ranking should be multi-axis and tie-aware
+
+### `archives/LEGACY_SYSTEMS/Old EAS/ISSX_DEV_Friction.mq5`
+- Controlled: spike counts, ATR-point comparisons, Stage A sorting
+- Why not portable as-is:
+  - depends on sampling budgets, ring-state windows, and Stage A snapshot contracts
+- Useful principle:
+  - quote quality needs repeated-sample context, not just one-point observations
+
+### `archives/LEGACY_SYSTEMS/Old EAS/PIE.MT5.mq5`
+- Controlled: mode detection, backfill cadence, probe-based cost calculations
+- Why not portable as-is:
+  - one-file architecture and universe mode logic are not current ASC architecture
+- Useful principle:
+  - export/probe behavior should remain deterministic and bounded
+
+### `archives/EXTRACTED_REFERENCE/runtime_cadence/Export_Contract_Specs_AllSymbols.mq5`
+- Controlled: technical metrics and percentile rank helpers
+- Why not portable as-is:
+  - exporter-specific structural cadence and analytics layer not yet part of current scanner mission
+- Useful principle:
+  - atomic writes and bounded analytics helpers can be staged later
+
+---
+
+## 68. Provenance and Source-Truth Recovery Map
+
+### 68.1 Conditions provenance
+Legacy strength:
+- EA1 doctrine and ISS spec extraction tools were much stronger on separating observed fields from effective replacements or derived financial interpretations.
+
+Current ASC influence:
+- `mt5/ASC_Conditions.mqh` should eventually recover:
+  - source tags for each derived/effective condition
+  - explicit reason when a fallback replaces or augments a raw field
+  - capability flags indicating whether a field is truly observed, probed, or unknown
+
+### 68.2 Market provenance
+Legacy strength:
+- ISSX market-state code and AFS classification carried stronger lineage for how identity and session states were obtained.
+
+Current ASC influence:
+- `mt5/ASC_Market.mqh` should eventually recover:
+  - classification confidence/review lineage where ambiguity remains
+  - clearer reasons for session-open/session-unknown conditions
+
+### 68.3 Storage provenance
+Legacy strength:
+- EA1 persistence doctrine clearly tagged whether continuity was resumed, rejected, stale, corrupt, or incompatible.
+
+Current ASC influence:
+- `mt5/ASC_Storage.mqh` should expose origin-of-restored-state truth instead of only acting as if persistence either existed or did not.
+
+### 68.4 Output provenance
+Legacy strength:
+- richer systems distinguished publishable truth from merely known internal truth.
+
+Current ASC influence:
+- `mt5/ASC_Output.mqh` should eventually gain access to clearer publishability class fields so compact trader output does not imply stronger trust than the underlying state deserves.
+
+---
+
+## 69. Archive Method Dependencies and Hidden Couplings
+
+### Coupling 1 — giant shared structs
+- AFS methods often depend on `AFS_UniverseSymbol` carrying history, friction, selection, and output-routing fields all at once.
+- Consequence:
+  - methods like `AFS_HF_ComputeFreshnessScore` and `AFS_SL_ComputeTrustScore` cannot be lifted without first recreating or redesigning the intermediate truth they consume.
+
+### Coupling 2 — stage/publish ecosystem assumptions
+- EA1 and PIE methods often assume current/previous snapshot files, stage files, or debug files exist in a known cadence.
+- Consequence:
+  - publication helpers are unsafe to reuse unless current ASC explicitly wants the same fallback model.
+
+### Coupling 3 — runtime phase shells
+- ISSX runtime and market/selection methods assume kernel phases, queue families, or staged budget spending.
+- Consequence:
+  - phase-aware helpers must be reduced to simpler engine semantics before use in ASC.
+
+### Coupling 4 — hidden sampling state
+- ISSX DEV friction logic assumes ring buffers, sample windows, and periodic quote probes persist across cycles.
+- Consequence:
+  - friction methods cannot be lifted until ASC decides whether to own sample rings in Surface or Storage.
+
+### Coupling 5 — dossier/trader package assumptions
+- AFS trader intel and dossier methods assume richer downstream symbol artifacts and caches than current ASC symbol files provide.
+- Consequence:
+  - text-formatting helpers are portable only after dossier contract growth is explicitly opened.
+
+### Coupling 6 — theme/family vocabularies not preserved in current contracts
+- ISSX and some market-state methods return richer asset family or theme buckets than current ASC currently models downstream.
+- Consequence:
+  - identity methods that emit those labels will appear useless unless `ASC_Common.mqh` is enriched first.
+
+---
+
+## 70. High-Value Legacy Code Fragments by Current MT5 Module
+
+### For `mt5/ASC_Market.mqh`
+- `AFS_CL_NormalizeSymbol`
+- `AFS_CL_ClassifySymbol` structure, not raw row import
+- `AFS_MC_GetSessionState`
+- `InsideAnySessionTrade` / `InsideAnySessionQuote`
+- `DetectAssetClass`, `DetectInstrumentFamily`, `DetectThemeBucket`
+- `HasEconomicallyValidQuote`
+
+### For `mt5/ASC_Conditions.mqh`
+- `GetInt` / `GetDbl` / `GetStr` wrappers from ISS spec extraction
+- `AFS_MC_TryValidateTickValue` principle only
+- `ComputeMarginRateFlags` as capability/probe-summary inspiration
+- `PIE_ProbeValuePerPoint` and `PIE_ProbeMargin1Lot` principles, not direct formulas
+- `CalcValuePerPoint_1Lot` / `CalcMargin_1Lot` as provenance-aware reference only
+
+### For `mt5/ASC_Storage.mqh`
+- `WriteTextAtomic`
+- `WriteTextIfChanged`
+- `IsSafeRelativePath`
+- EA1 stale/corrupt/incompatible continuity doctrine
+- AFS/TraderIntel stable-signature and atomic temp path ideas where still useful
+
+### For `mt5/ASC_Output.mqh`
+- AFS output route sanitization and write-failure logging concepts
+- AFS dossier explanation text fragments after dossier scope is opened
+- ISSX snapshot/hydration labeling ideas only if publishability classes are added
+
+### For `mt5/ASC_Surface.mqh`
+- `AFS_HF_HydrationStage`
+- `AFS_HF_ComputeFreshnessScore`
+- `AFS_HF_MovementScore`
+- `AFS_SL_IsRankable`
+- `AFS_SL_BetterTieBreak`
+- ISSX DEV friction ring and ATR-point principles, not raw mechanics
+
+### For `mt5/ASC_Engine.mqh`
+- ISSX budget and phase-discipline concepts in reduced form
+- publish-preservation / deadline-hit style guard concepts
+- restart-state exposure hooks once Storage is enriched
+
+### For future `mt5/ASC_UI.mqh`
+- ISSX warning presentation helpers
+- ISSX menu click/render concepts in a much smaller bounded operator shell
+- HUD state exposure for restart, ranking, and scanner health only
+
+---
+
+## 71. What Current ASC Still Cannot Express
+
+### 71.1 Degraded-state vocabulary
+Current ASC cannot yet express a formal difference between:
+- warming
+- weak
+- degraded
+- stale-but-observable
+- session-ambiguous
+- friction-poor but technically alive
+
+### 71.2 Provenance for derived conditions truth
+Current contracts are too thin to express:
+- raw observed vs substituted/effective values
+- why a derived money or spec field is trusted
+- which probe or fallback produced it
+
+### 71.3 Restart-path truth
+Current contracts are too thin to express:
+- restored cleanly from compatible persistence
+- restarted because persistence was stale
+- restarted because persistence was corrupt
+- restarted because identity/spec compatibility failed
+
+### 71.4 Rich rankability decomposition
+Current contracts are too thin to express:
+- trust class
+- freshness class
+- weak-link cause
+- publishability class
+- deterministic tie-break context
+
+### 71.5 Operator-visible health states
+Current product files cannot yet represent a bounded operator health plane showing:
+- why a symbol is not shortlist-worthy
+- why continuity was rejected
+- why conditions truth is partial
+- why output is pending vs publishable
+
+### 71.6 Identity ambiguity lineage
+Current contracts are too thin to represent:
+- classification confidence
+- alias kind
+- review-needed state
+- theme/family enrichment status
+
+---
+
+## 72. Canonical Translation Rules for Future Codex Packets
+
+1. Never port formulas before porting their truth model.
+2. Never port structs before splitting ownership by current ASC module.
+3. Always name the exact archive source file and exact method family in future extraction prompts.
+4. Always map the legacy capability to one current owner module before coding.
+5. If ownership is shared, enrich `mt5/ASC_Common.mqh` first instead of improvising duplicate fields in multiple modules.
+6. Never let archive code override blueprint law.
+7. Treat archive methods as candidates for translation, not authorities for current naming.
+8. Preserve `PrimaryBucket` law even when importing richer classification lineage.
+9. Keep writer-only discipline intact even if legacy output code computed more than it wrote.
+10. Do not import stage/debug schema ecosystems into trader-facing output.
+11. Do not import multi-EA runtime shells into current engine work.
+12. If a legacy method depends on hidden rings, caches, or stage files, document that dependency before implementation begins.
+13. Prefer method families in this order when extracting:
+    - identity normalization
+    - safe property access
+    - provenance/state vocabulary
+    - continuity validity
+    - degraded-state vocabulary
+    - deterministic tie-breaks
+    - deeper score formulas only after all prior truth surfaces exist
+14. Any future packet that says “recover legacy X” must also name:
+    - source file
+    - target module
+    - required contract enrichment
+    - what must not be ported from the same source
+15. When in doubt, translate the principle, not the threshold.
+16. If an archive method was built around a monolith, extract only the local logic and rewrite around current bounded records.
+17. Future Codex runs should treat this section and Sections 59-71 as the mandatory pre-implementation bridge before touching MT5 code.
