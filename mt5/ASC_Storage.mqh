@@ -14,7 +14,8 @@
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V1 33
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V2 43
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V3 138
-#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 156
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 159
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V4_LEGACY 156
 #define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
@@ -292,6 +293,9 @@ void ASC_Storage_FormatConditionsFields(const ASC_SymbolRecord &record,string &f
    ASC_Storage_PushDouble(fields,cursor,t.TickValueProfit);
    ASC_Storage_PushBool(fields,cursor,t.TickValueLossReadable);
    ASC_Storage_PushDouble(fields,cursor,t.TickValueLoss);
+   ASC_Storage_PushBool(fields,cursor,t.CommissionMetadataReadable);
+   ASC_Storage_PushString(fields,cursor,t.CommissionMetadataSource);
+   ASC_Storage_PushString(fields,cursor,t.CommissionMetadata);
    ASC_Storage_PushString(fields,cursor,t.EconomicsMismatchFlags);
    ASC_Storage_PushBool(fields,cursor,t.EconomicsAuthoritative);
    ASC_Storage_PushBool(fields,cursor,t.EconomicsPreservedFromPrior);
@@ -456,6 +460,18 @@ bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_Symbol
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueProfit);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueLossReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueLoss);
+   if(count >= ASC_STORAGE_RECORD_FIELD_COUNT_V4)
+     {
+      ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.CommissionMetadataReadable);
+      ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.CommissionMetadataSource);
+      ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.CommissionMetadata);
+     }
+   else
+     {
+      record.ConditionsTruth.CommissionMetadataReadable = false;
+      record.ConditionsTruth.CommissionMetadataSource = "LEGACY_V4";
+      record.ConditionsTruth.CommissionMetadata = "";
+     }
    ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.EconomicsMismatchFlags);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.EconomicsAuthoritative);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.EconomicsPreservedFromPrior);
@@ -618,6 +634,9 @@ bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_Symbol
    record.ConditionsTruth.TickValueDerived = -1.0;
    record.ConditionsTruth.TickValueValidatedReadable = false;
    record.ConditionsTruth.TickValueValidated = -1.0;
+   record.ConditionsTruth.CommissionMetadataReadable = false;
+   record.ConditionsTruth.CommissionMetadataSource = "LEGACY";
+   record.ConditionsTruth.CommissionMetadata = "";
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueProfitReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueProfit);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueLossReadable);
@@ -749,7 +768,7 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.ConditionsTruth.SpecsReadable = ASC_Storage_ParseBool(fields[21]);
    record.ConditionsTruth.SpecsReason = ASC_Storage_UnescapeField(fields[22]);
    record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordIntegrityStateText(record.ConditionsTruth.SpecsReadable ? ASC_RECORD_INTEGRITY_SPEC_OK : ASC_RECORD_INTEGRITY_SPEC_UNREADABLE);
-   record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.SpecsReadable ? "PASS" : "UNREAD");
+   record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.SpecsReadable ? "DERIVED_OK" : "UNREADABLE");
    record.ConditionsTruth.NormalizationStatus = (record.Identity.ClassificationResolved ? "NORMALIZATION_OK" : "NORMALIZATION_UNRESOLVED");
    record.ConditionsTruth.TruthCoverageStatus = "LEGACY";
    ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_LEGACY_RECOVERED,ASC_RECORD_AUTHORITY_LEGACY,ASC_RECORD_PUBLISH_BLOCKED);
@@ -833,7 +852,7 @@ bool ASC_Storage_ParseRecordLine(const string line,ASC_SymbolRecord &record)
   {
    string fields[];
    const int count = StringSplit(line,'|',fields);
-   if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V4)
+   if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V4 || count == ASC_STORAGE_RECORD_FIELD_COUNT_V4_LEGACY)
       return(ASC_Storage_ParseV4Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V3)
       return(ASC_Storage_ParseV3Record(fields,count,record));
