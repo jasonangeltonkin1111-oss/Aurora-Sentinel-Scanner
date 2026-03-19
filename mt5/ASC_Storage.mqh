@@ -6,16 +6,18 @@
 #define ASC_STORAGE_SNAPSHOT_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.txt"
 #define ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.tmp"
 #define ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.bak"
-#define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V4"
+#define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V5"
+#define ASC_STORAGE_SNAPSHOT_HEADER_V5 "ASC_UNIVERSE_SNAPSHOT_V5"
+#define ASC_STORAGE_SNAPSHOT_HEADER_V4 "ASC_UNIVERSE_SNAPSHOT_V4"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V3 "ASC_UNIVERSE_SNAPSHOT_V3"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V2 "ASC_UNIVERSE_SNAPSHOT_V2"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V1 "ASC_UNIVERSE_SNAPSHOT_V1"
-#define ASC_STORAGE_SNAPSHOT_HEADER_V3 "ASC_UNIVERSE_SNAPSHOT_V3"
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V1 33
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V2 43
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V3 138
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V4 159
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V4_LEGACY 156
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V5 165
 #define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
@@ -196,6 +198,53 @@ bool ASC_Storage_PullDouble(const string &fields[],const int count,int &cursor,d
    return(true);
   }
 
+string ASC_Storage_DefaultSnapshotProducer()
+  {
+   return("AuroraSentinelScanner");
+  }
+
+string ASC_Storage_CurrentSchemaName()
+  {
+   return("ASC_UNIVERSE_SCHEMA_V5");
+  }
+
+string ASC_Storage_FormatFingerprint(const ulong value)
+  {
+   return(IntegerToString((int)(value / 1000000000)) + "-" + IntegerToString((int)(value % 1000000000)));
+  }
+
+string ASC_Storage_ComputeUniverseFingerprint(const ASC_SymbolRecord &records[],const int count)
+  {
+   ulong hash = 1469598103;
+
+   for(int index = 0; index < count; ++index)
+     {
+      const string identity = records[index].Identity.RawSymbol + "|" +
+                              records[index].Identity.CanonicalSymbol + "|" +
+                              records[index].Identity.PrimaryBucket + "|" +
+                              records[index].RecordHydration.HydrationState + "|" +
+                              records[index].RecordHydration.SnapshotAuthority;
+      const int length = StringLen(identity);
+      for(int char_index = 0; char_index < length; ++char_index)
+        {
+         hash ^= (ulong)StringGetCharacter(identity,char_index);
+         hash *= 16777619;
+         hash %= 2147483647;
+        }
+     }
+
+   return(ASC_Storage_FormatFingerprint(hash));
+  }
+
+void ASC_Storage_ApplySnapshotMetadata(ASC_SymbolRecord &record,const datetime snapshot_timestamp,const string snapshot_producer,const string snapshot_schema,const string universe_fingerprint)
+  {
+   record.RecordHydration.SnapshotTimestamp = snapshot_timestamp;
+   record.RecordHydration.SnapshotProducer = snapshot_producer;
+   record.RecordHydration.SnapshotSchema = snapshot_schema;
+   record.RecordHydration.UniverseFingerprint = universe_fingerprint;
+  }
+
+
 void ASC_Storage_FormatIdentityFields(const ASC_SymbolRecord &record,string &fields[],int &cursor)
   {
    ASC_Storage_PushString(fields,cursor,record.Identity.RawSymbol);
@@ -365,7 +414,7 @@ void ASC_Storage_FormatConditionsFields(const ASC_SymbolRecord &record,string &f
    ASC_Storage_PushDouble(fields,cursor,t.MarginRateSellMaintenance);
   }
 
-bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_SymbolRecord &record)
+bool ASC_Storage_ParseV5Record(const string &fields[],const int count,ASC_SymbolRecord &record)
   {
    int cursor = 0;
    ASC_Storage_ResetRecord(record);
@@ -539,12 +588,45 @@ bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_Symbol
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginRateSellReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellInitial);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellMaintenance);
-   ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.HydrationState);
-   ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotAuthority);
-   ASC_Storage_PullBool(fields,count,cursor,record.RecordHydration.PublishableTruth);
-   ASC_RecordNormalizeHydration(record.RecordHydration);
 
+   if(count >= ASC_STORAGE_RECORD_FIELD_COUNT_V5)
+     {
+      ASC_Storage_PullDatetime(fields,count,cursor,record.RecordHydration.SnapshotTimestamp);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotProducer);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotSchema);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.UniverseFingerprint);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.HydrationState);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotAuthority);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.RecoveryState);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.RecoveryReason);
+      ASC_Storage_PullBool(fields,count,cursor,record.RecordHydration.PublishableTruth);
+     }
+   else
+     {
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.HydrationState);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotAuthority);
+      ASC_Storage_PullBool(fields,count,cursor,record.RecordHydration.PublishableTruth);
+      ASC_Storage_ApplySnapshotMetadata(record,0,ASC_Storage_DefaultSnapshotProducer(),"ASC_UNIVERSE_SCHEMA_V4","LEGACY-V4");
+      record.RecordHydration.RecoveryState = ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NOT_REQUIRED);
+      record.RecordHydration.RecoveryReason = (count == ASC_STORAGE_RECORD_FIELD_COUNT_V4_LEGACY ? "parsed from legacy v4 snapshot row" : "parsed from v4 snapshot row");
+     }
+
+   ASC_RecordNormalizeHydration(record.RecordHydration);
    return(cursor == count);
+  }
+
+
+bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_SymbolRecord &record)
+  {
+   if(!ASC_Storage_ParseV5Record(fields,count,record))
+      return(false);
+
+   ASC_Storage_ApplySnapshotMetadata(record,0,ASC_Storage_DefaultSnapshotProducer(),"ASC_UNIVERSE_SCHEMA_V4","LEGACY-V4");
+   if(record.RecordHydration.RecoveryState == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NONE))
+      record.RecordHydration.RecoveryState = ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NOT_REQUIRED);
+   if(StringLen(record.RecordHydration.RecoveryReason) == 0)
+      record.RecordHydration.RecoveryReason = (count == ASC_STORAGE_RECORD_FIELD_COUNT_V4_LEGACY ? "parsed from legacy v4 snapshot row" : "parsed from v4 snapshot row");
+   return(true);
   }
 
 
@@ -718,8 +800,14 @@ bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_Symbol
      }
    else
      {
-      ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_CURRENT_PASS_READY,ASC_RECORD_AUTHORITY_SNAPSHOT_V3,ASC_RECORD_PUBLISH_READY);
+      ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_CURRENT_PASS_READY,ASC_RECORD_AUTHORITY_SNAPSHOT_V3,ASC_RECORD_PUBLISH_READY,ASC_RECORD_RECOVERY_NOT_REQUIRED,"parsed from v3 snapshot row");
      }
+
+   ASC_Storage_ApplySnapshotMetadata(record,0,ASC_Storage_DefaultSnapshotProducer(),"ASC_UNIVERSE_SCHEMA_V3","LEGACY-V3");
+   if(record.RecordHydration.RecoveryState == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NONE))
+      record.RecordHydration.RecoveryState = ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NOT_REQUIRED);
+   if(StringLen(record.RecordHydration.RecoveryReason) == 0)
+      record.RecordHydration.RecoveryReason = "parsed from v3 snapshot row";
 
    record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordNormalizeIntegrityState(record.ConditionsTruth.SpecIntegrityStatus);
    ASC_RecordNormalizeHydration(record.RecordHydration);
@@ -771,7 +859,8 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.SpecsReadable ? "DERIVED_OK" : "UNREADABLE");
    record.ConditionsTruth.NormalizationStatus = (record.Identity.ClassificationResolved ? "NORMALIZATION_OK" : "NORMALIZATION_UNRESOLVED");
    record.ConditionsTruth.TruthCoverageStatus = "LEGACY";
-   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_LEGACY_RECOVERED,ASC_RECORD_AUTHORITY_LEGACY,ASC_RECORD_PUBLISH_BLOCKED);
+   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_LEGACY_RECOVERED,ASC_RECORD_AUTHORITY_LEGACY,ASC_RECORD_PUBLISH_BLOCKED,ASC_RECORD_RECOVERY_REQUIRED,"legacy snapshot row requires rehydration");
+   ASC_Storage_ApplySnapshotMetadata(record,0,ASC_Storage_DefaultSnapshotProducer(),(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1 ? "ASC_UNIVERSE_SCHEMA_V1" : "ASC_UNIVERSE_SCHEMA_V2"),"LEGACY-V1V2");
 
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)
      {
@@ -825,16 +914,22 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    return(true);
   }
 
-string ASC_Storage_FormatRecord(const ASC_SymbolRecord &record)
+string ASC_Storage_FormatRecord(const ASC_SymbolRecord &record,const datetime snapshot_timestamp,const string universe_fingerprint)
   {
    string fields[];
-   ArrayResize(fields,ASC_STORAGE_RECORD_FIELD_COUNT_V4);
+   ArrayResize(fields,ASC_STORAGE_RECORD_FIELD_COUNT_V5);
    int cursor = 0;
    ASC_Storage_FormatIdentityFields(record,fields,cursor);
    ASC_Storage_FormatMarketFields(record,fields,cursor);
    ASC_Storage_FormatConditionsFields(record,fields,cursor);
+   ASC_Storage_PushDatetime(fields,cursor,snapshot_timestamp);
+   ASC_Storage_PushString(fields,cursor,ASC_Storage_DefaultSnapshotProducer());
+   ASC_Storage_PushString(fields,cursor,ASC_Storage_CurrentSchemaName());
+   ASC_Storage_PushString(fields,cursor,universe_fingerprint);
    ASC_Storage_PushString(fields,cursor,record.RecordHydration.HydrationState);
    ASC_Storage_PushString(fields,cursor,record.RecordHydration.SnapshotAuthority);
+   ASC_Storage_PushString(fields,cursor,record.RecordHydration.RecoveryState);
+   ASC_Storage_PushString(fields,cursor,record.RecordHydration.RecoveryReason);
    ASC_Storage_PushBool(fields,cursor,record.RecordHydration.PublishableTruth);
 
    string line = "";
@@ -852,6 +947,8 @@ bool ASC_Storage_ParseRecordLine(const string line,ASC_SymbolRecord &record)
   {
    string fields[];
    const int count = StringSplit(line,'|',fields);
+   if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V5)
+      return(ASC_Storage_ParseV5Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V4 || count == ASC_STORAGE_RECORD_FIELD_COUNT_V4_LEGACY)
       return(ASC_Storage_ParseV4Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V3)
@@ -871,6 +968,7 @@ bool ASC_Storage_ParseSnapshotLines(const string &lines[],ASC_SymbolRecord &reco
       return(false);
 
    if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER &&
+      lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V4 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V3 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V2 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V1)
@@ -901,6 +999,7 @@ int ASC_Storage_ReadSnapshotRecordCount(const string &lines[])
       return(ASC_STORAGE_COUNT_UNKNOWN);
 
    if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER &&
+      lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V4 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V3 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V2 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V1)
@@ -963,8 +1062,11 @@ bool ASC_Storage_SaveUniverseSnapshot(const ASC_RuntimeConfig &config,const ASC_
    new_lines[0] = ASC_STORAGE_SNAPSHOT_HEADER;
    new_lines[1] = IntegerToString(count);
 
+   const datetime snapshot_timestamp = TimeCurrent();
+   const string universe_fingerprint = ASC_Storage_ComputeUniverseFingerprint(records,count);
+
    for(int index = 0; index < count; ++index)
-      new_lines[index + 2] = ASC_Storage_FormatRecord(records[index]);
+      new_lines[index + 2] = ASC_Storage_FormatRecord(records[index],snapshot_timestamp,universe_fingerprint);
 
    ASC_SymbolRecord validation_records[];
    int validation_count = 0;
