@@ -212,8 +212,6 @@ bool ASC_Engine_PublishOutputs()
      }
    else
      {
-      if(g_asc_runtime_config.PublishSymbolFiles && !ASC_Output_WriteSymbolSurfaces(g_asc_runtime_config,publish_records,ArraySize(publish_records)))
-         return(false);
       if(g_asc_runtime_config.PublishSummary && !ASC_Output_WriteSummarySurface(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count))
          return(false);
       if(g_asc_runtime_config.CleanStaleSymbolFiles)

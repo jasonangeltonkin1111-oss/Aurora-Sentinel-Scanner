@@ -310,37 +310,13 @@ string ASC_Output_SwapModeText(const int value)
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
+   if(!record.RecordHydration.PublishableTruth)
+      return(false);
    if(record.RecordHydration.RecoveryState == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_REQUIRED))
       return(false);
-
    if(!record.Identity.ClassificationResolved)
-     {
-      string path = ASC_Output_Trim(record.Identity.BrokerPath);
-      StringToUpper(path);
-      string exchange = ASC_Output_Trim(record.Identity.BrokerExchange);
-      StringToUpper(exchange);
-      if(StringFind(path,"SHARE",0) >= 0 ||
-         StringFind(path,"STOCK",0) >= 0 ||
-         StringFind(path,"EQUIT",0) >= 0 ||
-         StringFind(exchange,"NASDAQ",0) >= 0 ||
-         StringFind(exchange,"NYSE",0) >= 0 ||
-         StringFind(exchange,"XETRA",0) >= 0 ||
-         StringFind(exchange,"EURONEXT",0) >= 0 ||
-         StringFind(exchange,"LONDON",0) >= 0)
-         return(false);
-     }
-
-   if(record.Identity.ClassificationResolved)
-      return(true);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
-      return(true);
-   if(record.MarketTruth.Exists)
-      return(true);
-   if(record.ConditionsTruth.SpecsReadable)
-      return(true);
-   if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
-      return(true);
-   return(false);
+      return(false);
+   return(true);
   }
 
 bool ASC_Output_RecordNeedsClassificationReview(const ASC_SymbolRecord &record)
@@ -605,7 +581,7 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    const string broker_name = ASC_Output_BrokerName();
    const string file_name = ASC_Output_SummaryFileName(broker_name);
 
-   int published_count = 0;
+   int publishable_review_count = 0;
    int pending_count = 0;
    int unavailable_count = 0;
    int eligible_count = 0;
@@ -643,14 +619,14 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
 
       const string publication_state = ASC_Output_PublicationStateText(record);
       if(publication_state == "PUBLISHED")
-         ++published_count;
+         ++publishable_review_count;
       else if(publication_state == "PENDING_SCAN")
          ++pending_count;
       else
          ++unavailable_count;
      }
 
-   lines[5] = "PublishedSymbolFiles: " + IntegerToString(published_count);
+   lines[5] = "PublishedSymbolFiles: 0";
    lines[6] = "PendingUniverseMembers: " + IntegerToString(pending_count);
    lines[7] = "UnavailableUniverseMembers: " + IntegerToString(unavailable_count);
    lines[8] = "Layer1EligibleCount: " + IntegerToString(eligible_count);
@@ -664,13 +640,20 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    ArrayResize(lines,guidance_start + 4);
    lines[guidance_start] = "";
    lines[guidance_start + 1] = "[ROUTING_GUIDANCE]";
-   lines[guidance_start + 2] = "Published symbol routes appear below only when a symbol dossier was actually written this cycle.";
-   lines[guidance_start + 3] = "Pending symbols remain preserved in the universe snapshot and mirror output until a later pass supplies publishable truth.";
+   lines[guidance_start + 2] = "Layer 1.2 no longer publishes trader-facing symbol dossiers; consult the snapshot mirror and review queue instead.";
+   lines[guidance_start + 3] = "Unresolved or partial truth remains visible only through operator/recovery surfaces until S1 shared state marks it publishable.";
+
+   const int status_start = ArraySize(lines);
+   ArrayResize(lines,status_start + 3);
+   lines[status_start] = "";
+   lines[status_start + 1] = "[OPERATOR_STATUS]";
+   lines[status_start + 2] = "PublishableReviewReadyCount: " + IntegerToString(publishable_review_count);
 
    for(int index = 0; index < count; ++index)
      {
       const ASC_SymbolRecord record = records[index];
-      if(ASC_Output_PublicationStateText(record) != "PUBLISHED")
+      const string publication_state = ASC_Output_PublicationStateText(record);
+      if(publication_state == "UNAVAILABLE")
          continue;
 
       const string bucket = ASC_Output_PrimaryBucketLabel(record);
@@ -697,10 +680,12 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
         }
 
       string line = ASC_Output_RecordDisplaySymbol(record);
-      line += " | Route=" + ASC_Output_RecordRoute(broker_name,record);
+      line += " | PublicationState=" + publication_state;
       line += " | Session=" + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus);
       line += " | Quote=" + record.MarketTruth.QuoteFreshnessStatus;
       line += " | Specs=" + record.ConditionsTruth.SpecIntegrityStatus;
+      if(ASC_Output_RecordNeedsClassificationReview(record))
+         line += " | Review=CLASSIFICATION";
       const int next_index = ArraySize(lines);
       ArrayResize(lines,next_index + 1);
       lines[next_index] = line;
@@ -896,9 +881,6 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
       ASC_Output_WriteMirrorRecord(handle,records[index]);
 
    FileClose(handle);
-
-   if(!ASC_Output_WriteSymbolSurfaces(config,records,count))
-      return(false);
 
    if(!ASC_Output_WriteClassificationReviewQueue(config,records,count))
       return(false);
