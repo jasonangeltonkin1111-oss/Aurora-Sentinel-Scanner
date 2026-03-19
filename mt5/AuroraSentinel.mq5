@@ -1,5 +1,5 @@
 #property strict
-#property version   "0.1"
+#property version   "1.000"
 #property description "Aurora Sentinel shell-only timer runtime"
 
 #include "ASC_Common.mqh"
