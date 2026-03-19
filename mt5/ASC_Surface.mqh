@@ -117,6 +117,8 @@ bool ASC_Surface_Evaluate(const ASC_RuntimeConfig &config,ASC_SymbolRecord &reco
      {
       record.SurfaceTruth.ScanState = ASC_SURFACE_SKIPPED;
       record.SurfaceTruth.SurfaceReason = "symbol not present in broker universe";
+      ASC_Logger_Log("WARN","SURFACE","ASC_Surface_Evaluate",
+                     "skipped symbol=" + record.Identity.RawSymbol + " reason=" + record.SurfaceTruth.SurfaceReason);
       return(false);
      }
 
@@ -126,6 +128,8 @@ bool ASC_Surface_Evaluate(const ASC_RuntimeConfig &config,ASC_SymbolRecord &reco
       record.SurfaceTruth.SurfaceReason = record.MarketTruth.IneligibleReason;
       if(StringLen(record.SurfaceTruth.SurfaceReason) == 0)
          record.SurfaceTruth.SurfaceReason = "layer 1 ineligible";
+      ASC_Logger_Log("WARN","SURFACE","ASC_Surface_Evaluate",
+                     "skipped symbol=" + record.Identity.RawSymbol + " reason=" + record.SurfaceTruth.SurfaceReason);
       return(false);
      }
 
@@ -170,6 +174,9 @@ bool ASC_Surface_Evaluate(const ASC_RuntimeConfig &config,ASC_SymbolRecord &reco
          ASC_Surface_Internal::ComputeFreshnessScore(record.SurfaceTruth.QuoteAgeSeconds,config.StaleFeedSeconds) +
          ASC_Surface_Internal::ComputeHistoryScore(has_m15,has_h1);
       record.SurfaceTruth.SurfaceReason = "surface eligible for later ranking";
+      ASC_Logger_Log("INFO","SURFACE","ASC_Surface_Evaluate",
+                     "evaluated symbol=" + record.Identity.RawSymbol +
+                     " ranking_eligible=true score=" + DoubleToString(record.SurfaceTruth.SurfaceScore,2));
       return(true);
      }
 
@@ -177,6 +184,9 @@ bool ASC_Surface_Evaluate(const ASC_RuntimeConfig &config,ASC_SymbolRecord &reco
       reason = "surface truth incomplete";
 
    record.SurfaceTruth.SurfaceReason = reason;
+   ASC_Logger_Log("WARN","SURFACE","ASC_Surface_Evaluate",
+                  "evaluated symbol=" + record.Identity.RawSymbol +
+                  " ranking_eligible=false reason=" + record.SurfaceTruth.SurfaceReason);
    return(false);
   }
 
