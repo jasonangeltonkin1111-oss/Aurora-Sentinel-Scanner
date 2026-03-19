@@ -124,10 +124,14 @@ string ASC_Output_RecordTitle(const ASC_SymbolRecord &record)
    return(symbol_name);
   }
 
+string ASC_Output_RecordFileComponent(const ASC_SymbolRecord &record)
+  {
+   return(ASC_Output_SanitizePathComponent(ASC_Output_RecordDisplaySymbol(record),"Symbol"));
+  }
+
 string ASC_Output_SymbolFileName(const string broker_name,const ASC_SymbolRecord &record)
   {
-   string symbol_name = ASC_Output_RecordDisplaySymbol(record);
-   symbol_name = ASC_Output_SanitizePathComponent(symbol_name,"Symbol");
+   const string symbol_name = ASC_Output_RecordFileComponent(record);
    return(ASC_Output_SymbolDirectory(broker_name) + "\\" + symbol_name + ".txt");
   }
 
@@ -329,7 +333,7 @@ string ASC_Output_PrimaryBucketLabel(const ASC_SymbolRecord &record)
 
 string ASC_Output_RecordRoute(const string broker_name,const ASC_SymbolRecord &record)
   {
-   return(broker_name + ".Symbols\\" + ASC_Output_SanitizePathComponent(ASC_Output_RecordDisplaySymbol(record),"Symbol") + ".txt");
+   return(broker_name + ".Symbols\\" + ASC_Output_RecordFileComponent(record) + ".txt");
   }
 
 bool ASC_Output_WriteLinesAtomically(const ASC_RuntimeConfig &config,const string file_name,const string &lines[])
@@ -712,7 +716,7 @@ void ASC_Output_RemoveStaleSymbolFiles(const ASC_RuntimeConfig &config,const ASC
          if(!ASC_Output_RecordHasPublishedTruth(records[index]))
             continue;
 
-         string expected_name = ASC_Output_SanitizePathComponent(ASC_Output_RecordDisplaySymbol(records[index]),"Symbol") + ".txt";
+         string expected_name = ASC_Output_RecordFileComponent(records[index]) + ".txt";
          if(expected_name == found_name)
            {
             keep_file = true;

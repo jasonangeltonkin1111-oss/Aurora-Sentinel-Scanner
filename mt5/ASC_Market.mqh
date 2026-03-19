@@ -1910,7 +1910,15 @@ namespace ASC_Market_Internal
 
    string NormalizeSymbol(const string symbol)
    {
-      return RemovePunctuation(StripKnownBrokerSuffixes(symbol));
+      return RemovePunctuation(UpperTrim(StripKnownBrokerSuffixes(symbol)));
+   }
+
+   string CanonicalizeSymbol(const string symbol)
+   {
+      const string stripped = Trim(StripKnownBrokerSuffixes(symbol));
+      if(StringLen(stripped) > 0)
+         return stripped;
+      return Trim(symbol);
    }
 
    string CurrentServerKey()
@@ -1964,15 +1972,15 @@ namespace ASC_Market_Internal
 
    bool ClassificationRowMatches(const ClassificationRow &row,
                                  const string            server_key,
-                                 const string            normalized_symbol,
+                                 const string            lookup_key,
                                  const bool              require_server)
    {
       if(require_server && row.ServerKey != server_key)
          return false;
 
-      const string row_raw_normalized = NormalizeSymbol(row.RawSymbol);
-      const string row_canonical_normalized = NormalizeSymbol(row.CanonicalSymbol);
-      return (row_raw_normalized == normalized_symbol || row_canonical_normalized == normalized_symbol);
+      const string row_raw_lookup = NormalizeSymbol(row.RawSymbol);
+      const string row_canonical_lookup = NormalizeSymbol(row.CanonicalSymbol);
+      return (row_raw_lookup == lookup_key || row_canonical_lookup == lookup_key);
    }
 
    bool IsMeaningfulValue(const string value)
@@ -1983,7 +1991,11 @@ namespace ASC_Market_Internal
 
    void ApplyClassification(const ClassificationRow &row, ASC_SymbolIdentity &identity)
    {
-      identity.CanonicalSymbol = NormalizeSymbol(row.CanonicalSymbol);
+      identity.CanonicalSymbol = CanonicalizeSymbol(row.CanonicalSymbol);
+      if(!IsMeaningfulValue(identity.CanonicalSymbol))
+         identity.CanonicalSymbol = CanonicalizeSymbol(row.RawSymbol);
+      if(!IsMeaningfulValue(identity.CanonicalSymbol))
+         identity.CanonicalSymbol = identity.RawSymbol;
       if(!IsMeaningfulValue(identity.CanonicalSymbol))
          identity.CanonicalSymbol = identity.NormalizedSymbol;
 
@@ -1992,7 +2004,8 @@ namespace ASC_Market_Internal
       identity.Sector = IsMeaningfulValue(row.Sector) ? row.Sector : "UNKNOWN";
       identity.Industry = IsMeaningfulValue(row.Industry) ? row.Industry : "UNKNOWN";
       identity.Theme = IsMeaningfulValue(row.Theme) ? UpperTrim(row.Theme) : "UNKNOWN";
-      identity.ClassificationResolved = (identity.AssetClass != "UNKNOWN" || identity.PrimaryBucket != "UNKNOWN" || identity.CanonicalSymbol != identity.NormalizedSymbol);
+      identity.ClassificationResolved = (identity.AssetClass != "UNKNOWN" || identity.PrimaryBucket != "UNKNOWN" ||
+                                         NormalizeSymbol(identity.CanonicalSymbol) != identity.NormalizedSymbol);
 
       string reason = "classification resolved from archive translation";
       if(StringLen(row.ServerKey) > 0)
@@ -2012,12 +2025,12 @@ namespace ASC_Market_Internal
       EnsureClassificationLoaded();
 
       const string server_key = CurrentServerKey();
-      const string normalized_symbol = identity.NormalizedSymbol;
+      const string lookup_key = identity.NormalizedSymbol;
       int fallback_index = -1;
 
       for(int i = 0; i < ArraySize(g_classification_rows); ++i)
       {
-         if(!ClassificationRowMatches(g_classification_rows[i], server_key, normalized_symbol, false))
+         if(!ClassificationRowMatches(g_classification_rows[i], server_key, lookup_key, false))
             continue;
 
          if(g_classification_rows[i].ServerKey == server_key)
@@ -2037,7 +2050,9 @@ namespace ASC_Market_Internal
          return true;
       }
 
-      identity.CanonicalSymbol = identity.NormalizedSymbol;
+      identity.CanonicalSymbol = CanonicalizeSymbol(raw_symbol);
+      if(!IsMeaningfulValue(identity.CanonicalSymbol))
+         identity.CanonicalSymbol = identity.NormalizedSymbol;
       identity.ClassificationResolved = false;
       identity.ClassificationReason = "classification unresolved: no archive translation match";
       return false;
@@ -2654,7 +2669,7 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
 
    record.Identity.RawSymbol        = symbol;
    record.Identity.NormalizedSymbol = ASC_Market_Internal::NormalizeSymbol(symbol);
-   record.Identity.CanonicalSymbol  = record.Identity.NormalizedSymbol;
+   record.Identity.CanonicalSymbol  = ASC_Market_Internal::CanonicalizeSymbol(symbol);
    ASC_Market_Internal::LoadIdentityMetadata(symbol, record.Identity);
    ASC_Market_Internal::ResolveClassification(symbol, record.Identity);
 
