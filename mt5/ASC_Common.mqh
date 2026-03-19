@@ -19,13 +19,109 @@ enum ASC_SurfaceScanState
    ASC_SURFACE_EVALUATED
   };
 
+enum ASC_UICorner
+  {
+   ASC_UI_TOP_LEFT = 0,
+   ASC_UI_TOP_RIGHT,
+   ASC_UI_BOTTOM_LEFT,
+   ASC_UI_BOTTOM_RIGHT
+  };
+
 struct ASC_RuntimeConfig
   {
-   int  TimerSeconds;
-   int  MaxSymbolsPerInitPass;
-   int  MaxSymbolsPerTimerPass;
-   int  StaleFeedSeconds;
-   bool UseCommonFiles;
+   bool           ScannerEnabled;
+   int            TimerSeconds;
+   int            MaxSymbolsPerInitPass;
+   int            MaxSymbolsPerTimerPass;
+   int            DiscoveryRefreshMinutes;
+   int            StaleFeedSeconds;
+   int            NoQuoteSeconds;
+   bool           UseCommonFiles;
+
+   bool           ForceFullRediscovery;
+   bool           ForceRepublish;
+   bool           ForceSnapshotReload;
+   bool           PublishNow;
+   bool           CleanStaleOutputsNow;
+
+   bool           IncludeCustomSymbols;
+   bool           IncludeDisabledTradeSymbols;
+   bool           PreserveFullUniverseSnapshot;
+   bool           PendingHydrationAllowed;
+   bool           EnableBucketFiltering;
+   string         EnabledPrimaryBuckets;
+   string         UnknownBucketPolicy;
+   string         UnresolvedClassificationPolicy;
+
+   string         ContinuousMarketBias;
+   string         SessionWindowTrustMode;
+   bool           UseSessionReferenceEvidence;
+   int            RecheckOpenSeconds;
+   int            RecheckClosedSeconds;
+   int            RecheckUnknownSeconds;
+
+   bool           StrictSpecValidation;
+   bool           PreservePartialTruth;
+   bool           RejectBrokerZeroEconomics;
+   string         SuspiciousTickValueHandling;
+   string         SuspiciousTickSizeHandling;
+   bool           AllowPublishWhenSpecsPartial;
+   bool           RequireStrongEconomicsForPublish;
+
+   bool           EnableHistoryIntake;
+   int            BarsPerTimeframe;
+   int            MinimumBarsRequired;
+   string         HistoryLoadMode;
+   bool           PublishHistorySection;
+   bool           RequireHistoryBeforeSurface;
+
+   bool           EnableATR;
+   int            ATRPeriod;
+   ENUM_TIMEFRAMES ATRTimeframe;
+   string         ATRThresholdProfile;
+   bool           EnableEMA;
+   int            EMAFastPeriod;
+   int            EMASlowPeriod;
+   ENUM_TIMEFRAMES EMATimeframe;
+   bool           EnableRSI;
+   int            RSIPeriod;
+   ENUM_TIMEFRAMES RSITimeframe;
+   string         RSIThresholdProfile;
+
+   ENUM_TIMEFRAMES PrimaryScanTimeframe;
+   ENUM_TIMEFRAMES ConfirmationTimeframe;
+   ENUM_TIMEFRAMES ContextTimeframe;
+   string         EnabledTimeframeSet;
+
+   bool           EnableSurfaceLayer;
+   int            MinimumSurfaceInputs;
+   double         SurfaceScoreThreshold;
+   bool           RequireConditionsBeforeSurface;
+
+   bool           PublishSummary;
+   bool           PublishSymbolFiles;
+   bool           PublishMirror;
+   bool           PublishPendingRecords;
+   bool           HideUnresolvedClassification;
+   bool           HideWeakSpecs;
+   bool           IncludeSuspiciousTruthWithWarning;
+   string         SummaryMode;
+   int            MaxItemsPerBucket;
+   bool           CleanStaleSymbolFiles;
+   bool           CleanStaleSummary;
+   bool           CleanLegacyBadRoots;
+
+   bool           HUDEnabled;
+   bool           MenuEnabled;
+   bool           CompactMode;
+   ASC_UICorner   PanelCorner;
+   int            PanelXOffset;
+   int            PanelYOffset;
+   int            FontSize;
+   int            RowSpacing;
+   bool           ShowReasons;
+   bool           ShowCounts;
+   bool           ExpertMode;
   };
 
 struct ASC_SymbolIdentity
@@ -208,8 +304,42 @@ struct ASC_SymbolRecord
    ASC_SurfaceTruth     SurfaceTruth;
   };
 
+struct ASC_RuntimeSnapshot
+  {
+   bool     ScannerEnabled;
+   string   BrokerName;
+   int      UniverseCount;
+   int      HydratedCount;
+   int      PendingCount;
+   int      PublishedCount;
+   int      Layer1EligibleCount;
+   int      OpenTradableCount;
+   int      StaleFeedCount;
+   int      NoQuoteCount;
+   int      ClosedSessionCount;
+   int      UnknownCount;
+   int      BucketResolvedCount;
+   int      RankingEligibleCount;
+   int      SpecsReadableCount;
+   int      SpecsWeakCount;
+   datetime LastScanTime;
+   datetime NextRunTime;
+   string   PhaseText;
+   string   PublicationText;
+   string   SpecSummary;
+  };
+
 bool ASC_Engine_RunInit(ASC_RuntimeConfig &config);
 void ASC_Engine_RunTimer();
+void ASC_Engine_Shutdown();
+void ASC_Engine_RequestImmediateRefresh();
+void ASC_Engine_RequestRepublish();
+void ASC_Engine_RequestReloadUniverse();
+void ASC_Engine_RequestRebuildSnapshot();
+void ASC_Engine_RequestCleanStaleOutputs();
+void ASC_Engine_UpdateRuntimeConfig(const ASC_RuntimeConfig &config);
+void ASC_Engine_GetRuntimeConfig(ASC_RuntimeConfig &config);
+bool ASC_Engine_GetRuntimeSnapshot(ASC_RuntimeSnapshot &snapshot);
 
 bool ASC_Market_DiscoverSymbols(string &symbols[]);
 bool ASC_Market_BuildIdentityAndTruth(const string symbol,const ASC_RuntimeConfig &config,ASC_SymbolRecord &record);
