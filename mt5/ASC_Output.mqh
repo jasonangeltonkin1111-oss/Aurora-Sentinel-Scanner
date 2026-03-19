@@ -8,9 +8,6 @@
 #define ASC_OUTPUT_MIRROR_FILE_NAME ASC_OUTPUT_ROOT_PATH "UniverseSnapshotMirror.txt"
 #define ASC_OUTPUT_BROKER_FALLBACK "Broker"
 #define ASC_OUTPUT_SUMMARY_HEADER "Aurora Sentinel Summary"
-#define ASC_OUTPUT_SYMBOL_SECTION_BROKER_SPEC "[BROKER_SPEC]"
-#define ASC_OUTPUT_SYMBOL_SECTION_OHLC_HISTORY "[OHLC_HISTORY]"
-#define ASC_OUTPUT_SYMBOL_SECTION_CALCULATIONS "[CALCULATIONS]"
 #define ASC_OUTPUT_SUMMARY_TEMP_SUFFIX ".tmp"
 
 int ASC_Output_OpenFlags(const bool use_common_files)
@@ -23,30 +20,7 @@ int ASC_Output_OpenFlags(const bool use_common_files)
 
 string ASC_Output_BoolText(const bool value)
   {
-   if(value)
-      return("YES");
-   return("NO");
-  }
-
-string ASC_Output_SessionStatusText(const ASC_SessionTruthStatus status)
-  {
-   switch(status)
-     {
-      case ASC_SESSION_OPEN_TRADABLE:
-         return("OPEN_TRADABLE");
-      case ASC_SESSION_CLOSED_SESSION:
-         return("CLOSED_SESSION");
-      case ASC_SESSION_QUOTE_ONLY:
-         return("QUOTE_ONLY");
-      case ASC_SESSION_TRADE_DISABLED:
-         return("TRADE_DISABLED");
-      case ASC_SESSION_NO_QUOTE:
-         return("NO_QUOTE");
-      case ASC_SESSION_STALE_FEED:
-         return("STALE_FEED");
-      default:
-         return("UNKNOWN");
-     }
+   return(value ? "YES" : "NO");
   }
 
 string ASC_Output_Trim(const string value)
@@ -60,10 +34,7 @@ string ASC_Output_Trim(const string value)
 bool ASC_Output_IsMeaningfulValue(const string value)
   {
    const string trimmed = ASC_Output_Trim(value);
-   if(StringLen(trimmed) == 0)
-      return(false);
-
-   return(trimmed != "UNKNOWN");
+   return(StringLen(trimmed) > 0 && trimmed != "UNKNOWN");
   }
 
 string ASC_Output_SanitizePathComponent(const string value,const string fallback)
@@ -90,10 +61,8 @@ string ASC_Output_SanitizePathComponent(const string value,const string fallback
 
    if(StringLen(sanitized) == 0)
       sanitized = ASC_Output_Trim(fallback);
-
    if(StringLen(sanitized) == 0)
-      sanitized = "Broker";
-
+      sanitized = ASC_OUTPUT_BROKER_FALLBACK;
    return(sanitized);
   }
 
@@ -136,42 +105,198 @@ string ASC_Output_SymbolDirectory(const string broker_name)
    return(ASC_OUTPUT_ROOT_PATH + broker_name + ".Symbols");
   }
 
+string ASC_Output_RecordDisplaySymbol(const ASC_SymbolRecord &record)
+  {
+   if(ASC_Output_IsMeaningfulValue(record.Identity.CanonicalSymbol))
+      return(record.Identity.CanonicalSymbol);
+   if(ASC_Output_IsMeaningfulValue(record.Identity.NormalizedSymbol))
+      return(record.Identity.NormalizedSymbol);
+   if(ASC_Output_IsMeaningfulValue(record.Identity.RawSymbol))
+      return(record.Identity.RawSymbol);
+   return("UNKNOWN");
+  }
+
+string ASC_Output_RecordTitle(const ASC_SymbolRecord &record)
+  {
+   const string symbol_name = ASC_Output_RecordDisplaySymbol(record);
+   if(ASC_Output_IsMeaningfulValue(record.Identity.DisplayName) && record.Identity.DisplayName != symbol_name)
+      return(symbol_name + ", " + record.Identity.DisplayName);
+   return(symbol_name);
+  }
+
 string ASC_Output_SymbolFileName(const string broker_name,const ASC_SymbolRecord &record)
   {
-   string symbol_name = record.Identity.CanonicalSymbol;
-   if(!ASC_Output_IsMeaningfulValue(symbol_name))
-      symbol_name = record.Identity.NormalizedSymbol;
-   if(!ASC_Output_IsMeaningfulValue(symbol_name))
-      symbol_name = record.Identity.RawSymbol;
-
+   string symbol_name = ASC_Output_RecordDisplaySymbol(record);
    symbol_name = ASC_Output_SanitizePathComponent(symbol_name,"Symbol");
    return(ASC_Output_SymbolDirectory(broker_name) + "\\" + symbol_name + ".txt");
   }
 
 void ASC_Output_WriteStringField(const int handle,const string label,const string value)
   {
-   if(value == "")
-      FileWrite(handle,label + ": UNKNOWN");
-   else
-      FileWrite(handle,label + ": " + value);
+   FileWrite(handle,label + ": " + (StringLen(value) > 0 ? value : "UNKNOWN"));
   }
 
-void ASC_Output_WriteIntegerField(const int handle,const string label,const long value)
+void ASC_Output_WriteIntegerField(const int handle,const string label,const int value,const bool readable)
   {
-   FileWrite(handle,label + ": " + IntegerToString((int)value));
+   FileWrite(handle,label + ": " + (readable ? IntegerToString(value) : "UNKNOWN"));
   }
 
 void ASC_Output_WriteDoubleField(const int handle,const string label,const double value,const bool readable)
   {
-   if(!readable)
-     {
-      FileWrite(handle,label + ": UNKNOWN");
-      return;
-     }
-
-   FileWrite(handle,label + ": " + DoubleToString(value,16));
+   FileWrite(handle,label + ": " + (readable ? DoubleToString(value,16) : "UNKNOWN"));
   }
 
+void ASC_Output_WriteSectionHeader(const int handle,const string title)
+  {
+   FileWrite(handle,title);
+  }
+
+string ASC_Output_SessionStatusText(const ASC_SessionTruthStatus status)
+  {
+   switch(status)
+     {
+      case ASC_SESSION_OPEN_TRADABLE: return("OPEN_TRADABLE");
+      case ASC_SESSION_CLOSED_SESSION: return("CLOSED_SESSION");
+      case ASC_SESSION_QUOTE_ONLY: return("QUOTE_ONLY");
+      case ASC_SESSION_TRADE_DISABLED: return("TRADE_DISABLED");
+      case ASC_SESSION_NO_QUOTE: return("NO_QUOTE");
+      case ASC_SESSION_STALE_FEED: return("STALE_FEED");
+      default: return("UNKNOWN");
+     }
+  }
+
+string ASC_Output_TradeModeText(const int value)
+  {
+   switch(value)
+     {
+      case SYMBOL_TRADE_MODE_DISABLED: return("Disabled");
+      case SYMBOL_TRADE_MODE_LONGONLY: return("Long only");
+      case SYMBOL_TRADE_MODE_SHORTONLY: return("Short only");
+      case SYMBOL_TRADE_MODE_CLOSEONLY: return("Close only");
+      case SYMBOL_TRADE_MODE_FULL: return("Full access");
+      default: return("UNKNOWN");
+     }
+  }
+
+string ASC_Output_CalcModeText(const int value)
+  {
+   switch(value)
+     {
+      case SYMBOL_CALC_MODE_FOREX: return("Forex");
+      case SYMBOL_CALC_MODE_FOREX_NO_LEVERAGE: return("Forex no leverage");
+      case SYMBOL_CALC_MODE_FUTURES: return("Futures");
+      case SYMBOL_CALC_MODE_CFD: return("CFD");
+      case SYMBOL_CALC_MODE_CFDINDEX: return("CFD Index");
+      case SYMBOL_CALC_MODE_CFDLEVERAGE: return("CFD Leverage");
+      case SYMBOL_CALC_MODE_EXCH_STOCKS: return("Exchange Stocks");
+      case SYMBOL_CALC_MODE_EXCH_FUTURES: return("Exchange Futures");
+      case SYMBOL_CALC_MODE_EXCH_FUTURES_FORTS: return("Exchange Futures Forts");
+      default: return("UNKNOWN");
+     }
+  }
+
+string ASC_Output_ChartModeText(const int value)
+  {
+   switch(value)
+     {
+      case SYMBOL_CHART_MODE_BID: return("By bid price");
+      case SYMBOL_CHART_MODE_LAST: return("By last price");
+      default: return("UNKNOWN");
+     }
+  }
+
+string ASC_Output_ExecutionModeText(const int value)
+  {
+   switch(value)
+     {
+      case SYMBOL_TRADE_EXECUTION_REQUEST: return("Request");
+      case SYMBOL_TRADE_EXECUTION_INSTANT: return("Instant");
+      case SYMBOL_TRADE_EXECUTION_MARKET: return("Market");
+      case SYMBOL_TRADE_EXECUTION_EXCHANGE: return("Exchange");
+      default: return("UNKNOWN");
+     }
+  }
+
+string ASC_Output_GtcModeText(const int value)
+  {
+   switch(value)
+     {
+      case SYMBOL_ORDERS_GTC: return("Good till cancelled");
+      case SYMBOL_ORDERS_DAILY: return("Daily");
+#ifdef SYMBOL_ORDERS_DAILY_NO_STOPS
+      case SYMBOL_ORDERS_DAILY_NO_STOPS: return("Daily no stops");
+#endif
+      default: return("UNKNOWN");
+     }
+  }
+
+string ASC_Output_FillingModeText(const int value)
+  {
+   string text = "";
+   if((value & SYMBOL_FILLING_FOK) == SYMBOL_FILLING_FOK)
+      text = (StringLen(text) == 0 ? "Fill or Kill" : text + ", Fill or Kill");
+   if((value & SYMBOL_FILLING_IOC) == SYMBOL_FILLING_IOC)
+      text = (StringLen(text) == 0 ? "Immediate or Cancel" : text + ", Immediate or Cancel");
+   if((value & SYMBOL_FILLING_BOC) == SYMBOL_FILLING_BOC)
+      text = (StringLen(text) == 0 ? "Book or Cancel" : text + ", Book or Cancel");
+   return(StringLen(text) > 0 ? text : "UNKNOWN");
+  }
+
+string ASC_Output_ExpirationModeText(const int value)
+  {
+   string text = "";
+   if((value & SYMBOL_EXPIRATION_GTC) == SYMBOL_EXPIRATION_GTC)
+      text = (StringLen(text) == 0 ? "GTC" : text + ", GTC");
+   if((value & SYMBOL_EXPIRATION_DAY) == SYMBOL_EXPIRATION_DAY)
+      text = (StringLen(text) == 0 ? "Day" : text + ", Day");
+   if((value & SYMBOL_EXPIRATION_SPECIFIED) == SYMBOL_EXPIRATION_SPECIFIED)
+      text = (StringLen(text) == 0 ? "Specified" : text + ", Specified");
+   if((value & SYMBOL_EXPIRATION_SPECIFIED_DAY) == SYMBOL_EXPIRATION_SPECIFIED_DAY)
+      text = (StringLen(text) == 0 ? "Specified day" : text + ", Specified day");
+   return(StringLen(text) > 0 ? text : "UNKNOWN");
+  }
+
+string ASC_Output_OrderModeText(const int value)
+  {
+   if(value < 0)
+      return("UNKNOWN");
+   if(value == 0)
+      return("None");
+
+   string text = "";
+   if((value & SYMBOL_ORDER_MARKET) == SYMBOL_ORDER_MARKET)
+      text = (StringLen(text) == 0 ? "Market" : text + ", Market");
+   if((value & SYMBOL_ORDER_LIMIT) == SYMBOL_ORDER_LIMIT)
+      text = (StringLen(text) == 0 ? "Limit" : text + ", Limit");
+   if((value & SYMBOL_ORDER_STOP) == SYMBOL_ORDER_STOP)
+      text = (StringLen(text) == 0 ? "Stop" : text + ", Stop");
+   if((value & SYMBOL_ORDER_STOP_LIMIT) == SYMBOL_ORDER_STOP_LIMIT)
+      text = (StringLen(text) == 0 ? "Stop limit" : text + ", Stop limit");
+   if((value & SYMBOL_ORDER_SL) == SYMBOL_ORDER_SL)
+      text = (StringLen(text) == 0 ? "Stop loss" : text + ", Stop loss");
+   if((value & SYMBOL_ORDER_TP) == SYMBOL_ORDER_TP)
+      text = (StringLen(text) == 0 ? "Take profit" : text + ", Take profit");
+   if((value & SYMBOL_ORDER_CLOSEBY) == SYMBOL_ORDER_CLOSEBY)
+      text = (StringLen(text) == 0 ? "Close by" : text + ", Close by");
+   return(text);
+  }
+
+string ASC_Output_SwapModeText(const int value)
+  {
+   switch(value)
+     {
+      case SYMBOL_SWAP_MODE_DISABLED: return("Disabled");
+      case SYMBOL_SWAP_MODE_POINTS: return("In points");
+      case SYMBOL_SWAP_MODE_CURRENCY_SYMBOL: return("In margin currency");
+      case SYMBOL_SWAP_MODE_CURRENCY_MARGIN: return("In deposit currency");
+      case SYMBOL_SWAP_MODE_CURRENCY_DEPOSIT: return("In deposit currency");
+      case SYMBOL_SWAP_MODE_INTEREST_CURRENT: return("Interest current");
+      case SYMBOL_SWAP_MODE_INTEREST_OPEN: return("Interest open");
+      case SYMBOL_SWAP_MODE_REOPEN_CURRENT: return("Reopen current");
+      case SYMBOL_SWAP_MODE_REOPEN_BID: return("Reopen bid");
+      default: return("UNKNOWN");
+     }
+  }
 
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
@@ -179,23 +304,12 @@ bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
       return(true);
    if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
       return(true);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.PrimaryBucket))
-      return(true);
-   if(record.MarketTruth.Selected || record.MarketTruth.Visible || record.MarketTruth.QuoteWindowOpen || record.MarketTruth.TradeWindowOpen || record.MarketTruth.TradeAllowed)
-      return(true);
-   if(record.MarketTruth.SessionTruthStatus != ASC_SESSION_UNKNOWN)
-      return(true);
-   if(record.MarketTruth.Layer1Eligible)
+   if(record.MarketTruth.Exists)
       return(true);
    if(record.ConditionsTruth.SpecsReadable)
       return(true);
-   if(record.ConditionsTruth.DigitsReadable || record.ConditionsTruth.SpreadPointsReadable || record.ConditionsTruth.SpreadFloatReadable)
+   if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
       return(true);
-   if(record.ConditionsTruth.PointReadable || record.ConditionsTruth.TickSizeReadable || record.ConditionsTruth.TickValueReadable ||
-      record.ConditionsTruth.ContractSizeReadable || record.ConditionsTruth.VolumeMinReadable ||
-      record.ConditionsTruth.VolumeMaxReadable || record.ConditionsTruth.VolumeStepReadable)
-      return(true);
-
    return(false);
   }
 
@@ -203,11 +317,14 @@ string ASC_Output_PublicationStateText(const ASC_SymbolRecord &record)
   {
    if(ASC_Output_RecordHasPublishedTruth(record))
       return("PUBLISHED");
-
    if(record.MarketTruth.Exists || ASC_Output_IsMeaningfulValue(record.Identity.RawSymbol))
       return("PENDING_SCAN");
-
    return("UNAVAILABLE");
+  }
+
+string ASC_Output_PrimaryBucketLabel(const ASC_SymbolRecord &record)
+  {
+   return(ASC_Output_IsMeaningfulValue(record.Identity.PrimaryBucket) ? record.Identity.PrimaryBucket : "UNKNOWN");
   }
 
 string ASC_Output_RecordRoute(const string broker_name,const ASC_SymbolRecord &record)
@@ -253,51 +370,183 @@ bool ASC_Output_WriteLinesAtomically(const ASC_RuntimeConfig &config,const strin
    return(true);
   }
 
-string ASC_Output_PrimaryBucketLabel(const ASC_SymbolRecord &record)
+void ASC_Output_WriteIdentityBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   if(ASC_Output_IsMeaningfulValue(record.Identity.PrimaryBucket))
-      return(record.Identity.PrimaryBucket);
-   return("UNKNOWN");
+   ASC_Output_WriteSectionHeader(handle,"[IDENTITY]");
+   ASC_Output_WriteStringField(handle,"Symbol",ASC_Output_RecordDisplaySymbol(record));
+   ASC_Output_WriteStringField(handle,"DisplayName",record.Identity.DisplayName);
+   ASC_Output_WriteStringField(handle,"RawSymbol",record.Identity.RawSymbol);
+   ASC_Output_WriteStringField(handle,"NormalizedSymbol",record.Identity.NormalizedSymbol);
+   ASC_Output_WriteStringField(handle,"CanonicalSymbol",record.Identity.CanonicalSymbol);
+   ASC_Output_WriteStringField(handle,"BrokerPath",record.Identity.BrokerPath);
+   ASC_Output_WriteStringField(handle,"BrokerExchange",record.Identity.BrokerExchange);
+   ASC_Output_WriteStringField(handle,"BrokerCountry",record.Identity.BrokerCountry);
+   FileWrite(handle,"");
   }
 
-string ASC_Output_RecordDisplaySymbol(const ASC_SymbolRecord &record)
+void ASC_Output_WriteClassificationBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   if(ASC_Output_IsMeaningfulValue(record.Identity.CanonicalSymbol))
-      return(record.Identity.CanonicalSymbol);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.NormalizedSymbol))
-      return(record.Identity.NormalizedSymbol);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.RawSymbol))
-      return(record.Identity.RawSymbol);
-   return("UNKNOWN");
+   ASC_Output_WriteSectionHeader(handle,"[CLASSIFICATION]");
+   ASC_Output_WriteStringField(handle,"AssetClass",record.Identity.AssetClass);
+   ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
+   ASC_Output_WriteStringField(handle,"Sector",record.Identity.Sector);
+   ASC_Output_WriteStringField(handle,"Industry",record.Identity.Industry);
+   ASC_Output_WriteStringField(handle,"Theme",record.Identity.Theme);
+   FileWrite(handle,"ClassificationResolved: " + ASC_Output_BoolText(record.Identity.ClassificationResolved));
+   ASC_Output_WriteStringField(handle,"ClassificationReason",record.Identity.ClassificationReason);
+   ASC_Output_WriteStringField(handle,"NormalizationStatus",record.ConditionsTruth.NormalizationStatus);
+   FileWrite(handle,"");
   }
 
-void ASC_Output_WriteConditionsFields(const int handle,const ASC_SymbolRecord &record)
+void ASC_Output_WriteMarketStateBlock(const int handle,const ASC_SymbolRecord &record)
   {
-   FileWrite(handle,"SpecsReadable: " + ASC_Output_BoolText(record.ConditionsTruth.SpecsReadable));
-   ASC_Output_WriteStringField(handle,"SpecsReason",record.ConditionsTruth.SpecsReason);
+   ASC_Output_WriteSectionHeader(handle,"[MARKET_STATE]");
+   FileWrite(handle,"Exists: " + ASC_Output_BoolText(record.MarketTruth.Exists));
+   FileWrite(handle,"Selected: " + ASC_Output_BoolText(record.MarketTruth.Selected));
+   FileWrite(handle,"Visible: " + ASC_Output_BoolText(record.MarketTruth.Visible));
+   FileWrite(handle,"TradeAllowed: " + ASC_Output_BoolText(record.MarketTruth.TradeAllowed));
+   FileWrite(handle,"HasUsableQuote: " + ASC_Output_BoolText(record.MarketTruth.HasUsableQuote));
+   FileWrite(handle,"QuoteFresh: " + ASC_Output_BoolText(record.MarketTruth.QuoteFresh));
+   ASC_Output_WriteStringField(handle,"QuoteFreshnessStatus",record.MarketTruth.QuoteFreshnessStatus);
+   ASC_Output_WriteIntegerField(handle,"QuoteAgeSeconds",record.MarketTruth.QuoteAgeSeconds,(record.MarketTruth.QuoteAgeSeconds >= 0));
+   FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
+   FileWrite(handle,"Layer1Eligible: " + ASC_Output_BoolText(record.MarketTruth.Layer1Eligible));
+   ASC_Output_WriteIntegerField(handle,"LastQuoteTime",(int)record.MarketTruth.LastQuoteTime,(record.MarketTruth.LastQuoteTime > 0));
+   ASC_Output_WriteIntegerField(handle,"NextRecheckTime",(int)record.MarketTruth.NextRecheckTime,(record.MarketTruth.NextRecheckTime > 0));
+   ASC_Output_WriteStringField(handle,"SessionReadStatus",record.MarketTruth.SessionReadStatus);
+   ASC_Output_WriteStringField(handle,"SessionReadReason",record.MarketTruth.SessionReadReason);
+   ASC_Output_WriteStringField(handle,"SessionConsistencyReason",record.MarketTruth.SessionConsistencyReason);
+   ASC_Output_WriteStringField(handle,"IneligibleReason",record.MarketTruth.IneligibleReason);
+   FileWrite(handle,"");
+  }
 
-   if(record.ConditionsTruth.DigitsReadable)
-      ASC_Output_WriteIntegerField(handle,"Digits",record.ConditionsTruth.Digits);
+void ASC_Output_WriteTradingRulesBlock(const int handle,const ASC_SymbolRecord &record)
+  {
+   ASC_ConditionsTruth t = record.ConditionsTruth;
+   ASC_Output_WriteSectionHeader(handle,"[TRADING_RULES]");
+   FileWrite(handle,"SpecsReadable: " + ASC_Output_BoolText(t.SpecsReadable));
+   ASC_Output_WriteStringField(handle,"SpecsReason",t.SpecsReason);
+   ASC_Output_WriteStringField(handle,"SpecIntegrityStatus",t.SpecIntegrityStatus);
+   ASC_Output_WriteStringField(handle,"TruthCoverageStatus",t.TruthCoverageStatus);
+   ASC_Output_WriteIntegerField(handle,"Digits",t.Digits,t.DigitsReadable);
+   ASC_Output_WriteIntegerField(handle,"SpreadPoints",t.SpreadPoints,t.SpreadPointsReadable);
+   FileWrite(handle,"SpreadFloat: " + (t.SpreadFloatReadable ? ASC_Output_BoolText(t.SpreadFloat) : "UNKNOWN"));
+   ASC_Output_WriteIntegerField(handle,"StopsLevel",t.StopsLevel,t.StopsLevelReadable);
+   ASC_Output_WriteIntegerField(handle,"FreezeLevel",t.FreezeLevel,t.FreezeLevelReadable);
+   ASC_Output_WriteStringField(handle,"CalcMode",t.CalcModeReadable ? ASC_Output_CalcModeText(t.CalcMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"ChartMode",t.ChartModeReadable ? ASC_Output_ChartModeText(t.ChartMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"TradeMode",t.TradeModeReadable ? ASC_Output_TradeModeText(t.TradeMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"ExecutionMode",t.ExecutionModeReadable ? ASC_Output_ExecutionModeText(t.ExecutionMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"GtcMode",t.GtcModeReadable ? ASC_Output_GtcModeText(t.GtcMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"FillingMode",t.FillingModeReadable ? ASC_Output_FillingModeText(t.FillingMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"ExpirationMode",t.ExpirationModeReadable ? ASC_Output_ExpirationModeText(t.ExpirationMode) : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"OrderMode",t.OrderModeReadable ? ASC_Output_OrderModeText(t.OrderMode) : "UNKNOWN");
+   ASC_Output_WriteDoubleField(handle,"VolumeMin",t.VolumeMin,t.VolumeMinReadable);
+   ASC_Output_WriteDoubleField(handle,"VolumeMax",t.VolumeMax,t.VolumeMaxReadable);
+   ASC_Output_WriteDoubleField(handle,"VolumeStep",t.VolumeStep,t.VolumeStepReadable);
+   ASC_Output_WriteDoubleField(handle,"VolumeLimit",t.VolumeLimit,t.VolumeLimitReadable);
+   FileWrite(handle,"");
+  }
+
+void ASC_Output_WriteEconomicsBlock(const int handle,const ASC_SymbolRecord &record)
+  {
+   ASC_ConditionsTruth t = record.ConditionsTruth;
+   ASC_Output_WriteSectionHeader(handle,"[ECONOMICS]");
+   ASC_Output_WriteStringField(handle,"EconomicsTrust",t.EconomicsTrust);
+   ASC_Output_WriteDoubleField(handle,"Point",t.Point,t.PointReadable);
+   ASC_Output_WriteDoubleField(handle,"TickSize",t.TickSize,t.TickSizeReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValue",t.TickValue,t.TickValueReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValueProfit",t.TickValueProfit,t.TickValueProfitReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValueLoss",t.TickValueLoss,t.TickValueLossReadable);
+   ASC_Output_WriteDoubleField(handle,"ContractSize",t.ContractSize,t.ContractSizeReadable);
+   ASC_Output_WriteStringField(handle,"MarginCurrency",t.MarginCurrencyReadable ? t.MarginCurrency : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"ProfitCurrency",t.ProfitCurrencyReadable ? t.ProfitCurrency : "UNKNOWN");
+   ASC_Output_WriteStringField(handle,"BaseCurrency",t.BaseCurrencyReadable ? t.BaseCurrency : "UNKNOWN");
+   FileWrite(handle,"");
+  }
+
+void ASC_Output_WriteSwapBlock(const int handle,const ASC_SymbolRecord &record)
+  {
+   ASC_ConditionsTruth t = record.ConditionsTruth;
+   ASC_Output_WriteSectionHeader(handle,"[SWAP]");
+   ASC_Output_WriteStringField(handle,"SwapType",t.SwapModeReadable ? ASC_Output_SwapModeText(t.SwapMode) : "UNKNOWN");
+   ASC_Output_WriteDoubleField(handle,"SwapLong",t.SwapLong,t.SwapLongReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapShort",t.SwapShort,t.SwapShortReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapSunday",t.SwapSunday,t.SwapSundayReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapMonday",t.SwapMonday,t.SwapMondayReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapTuesday",t.SwapTuesday,t.SwapTuesdayReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapWednesday",t.SwapWednesday,t.SwapWednesdayReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapThursday",t.SwapThursday,t.SwapThursdayReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapFriday",t.SwapFriday,t.SwapFridayReadable);
+   ASC_Output_WriteDoubleField(handle,"SwapSaturday",t.SwapSaturday,t.SwapSaturdayReadable);
+   FileWrite(handle,"");
+  }
+
+void ASC_Output_WriteSessionsBlock(const int handle,const ASC_SymbolRecord &record)
+  {
+   ASC_Output_WriteSectionHeader(handle,"[SESSIONS]");
+   FileWrite(handle,"QuoteScheduleReadable: " + ASC_Output_BoolText(record.MarketTruth.QuoteScheduleReadable));
+   FileWrite(handle,"TradeScheduleReadable: " + ASC_Output_BoolText(record.MarketTruth.TradeScheduleReadable));
+   ASC_Output_WriteStringField(handle,"SundayQuotes",record.MarketTruth.QuoteScheduleSunday);
+   ASC_Output_WriteStringField(handle,"SundayTrade",record.MarketTruth.TradeScheduleSunday);
+   ASC_Output_WriteStringField(handle,"MondayQuotes",record.MarketTruth.QuoteScheduleMonday);
+   ASC_Output_WriteStringField(handle,"MondayTrade",record.MarketTruth.TradeScheduleMonday);
+   ASC_Output_WriteStringField(handle,"TuesdayQuotes",record.MarketTruth.QuoteScheduleTuesday);
+   ASC_Output_WriteStringField(handle,"TuesdayTrade",record.MarketTruth.TradeScheduleTuesday);
+   ASC_Output_WriteStringField(handle,"WednesdayQuotes",record.MarketTruth.QuoteScheduleWednesday);
+   ASC_Output_WriteStringField(handle,"WednesdayTrade",record.MarketTruth.TradeScheduleWednesday);
+   ASC_Output_WriteStringField(handle,"ThursdayQuotes",record.MarketTruth.QuoteScheduleThursday);
+   ASC_Output_WriteStringField(handle,"ThursdayTrade",record.MarketTruth.TradeScheduleThursday);
+   ASC_Output_WriteStringField(handle,"FridayQuotes",record.MarketTruth.QuoteScheduleFriday);
+   ASC_Output_WriteStringField(handle,"FridayTrade",record.MarketTruth.TradeScheduleFriday);
+   ASC_Output_WriteStringField(handle,"SaturdayQuotes",record.MarketTruth.QuoteScheduleSaturday);
+   ASC_Output_WriteStringField(handle,"SaturdayTrade",record.MarketTruth.TradeScheduleSaturday);
+   FileWrite(handle,"");
+  }
+
+void ASC_Output_WriteMarginBlock(const int handle,const ASC_SymbolRecord &record)
+  {
+   ASC_ConditionsTruth t = record.ConditionsTruth;
+   ASC_Output_WriteSectionHeader(handle,"[MARGIN]");
+   ASC_Output_WriteDoubleField(handle,"MarginInitial",t.MarginInitial,t.MarginInitialReadable);
+   ASC_Output_WriteDoubleField(handle,"MarginMaintenance",t.MarginMaintenance,t.MarginMaintenanceReadable);
+   ASC_Output_WriteDoubleField(handle,"MarginHedged",t.MarginHedged,t.MarginHedgedReadable);
+   if(t.MarginRateBuyReadable)
+     {
+      FileWrite(handle,"BuyMarginInitial: " + DoubleToString(t.MarginRateBuyInitial,16));
+      FileWrite(handle,"BuyMarginMaintenance: " + DoubleToString(t.MarginRateBuyMaintenance,16));
+     }
    else
-      FileWrite(handle,"Digits: UNKNOWN");
-
-   if(record.ConditionsTruth.SpreadPointsReadable)
-      ASC_Output_WriteIntegerField(handle,"SpreadPoints",record.ConditionsTruth.SpreadPoints);
+     {
+      FileWrite(handle,"BuyMarginInitial: UNKNOWN");
+      FileWrite(handle,"BuyMarginMaintenance: UNKNOWN");
+     }
+   if(t.MarginRateSellReadable)
+     {
+      FileWrite(handle,"SellMarginInitial: " + DoubleToString(t.MarginRateSellInitial,16));
+      FileWrite(handle,"SellMarginMaintenance: " + DoubleToString(t.MarginRateSellMaintenance,16));
+     }
    else
-      FileWrite(handle,"SpreadPoints: UNKNOWN");
+     {
+      FileWrite(handle,"SellMarginInitial: UNKNOWN");
+      FileWrite(handle,"SellMarginMaintenance: UNKNOWN");
+     }
+   FileWrite(handle,"");
+  }
 
-   if(record.ConditionsTruth.SpreadFloatReadable)
-      FileWrite(handle,"SpreadFloat: " + ASC_Output_BoolText(record.ConditionsTruth.SpreadFloat));
-   else
-      FileWrite(handle,"SpreadFloat: UNKNOWN");
+void ASC_Output_WriteHistoryStatusBlock(const int handle)
+  {
+   ASC_Output_WriteSectionHeader(handle,"[HISTORY_STATUS]");
+   FileWrite(handle,"HistoryStatus: PENDING_UPSTREAM_TRUTH");
+   FileWrite(handle,"HistoryNote: Layer 1.2 preserves broker/session/spec truth only; history depth is not claimed here.");
+   FileWrite(handle,"");
+  }
 
-   ASC_Output_WriteDoubleField(handle,"Point",record.ConditionsTruth.Point,record.ConditionsTruth.PointReadable);
-   ASC_Output_WriteDoubleField(handle,"TickSize",record.ConditionsTruth.TickSize,record.ConditionsTruth.TickSizeReadable);
-   ASC_Output_WriteDoubleField(handle,"TickValue",record.ConditionsTruth.TickValue,record.ConditionsTruth.TickValueReadable);
-   ASC_Output_WriteDoubleField(handle,"ContractSize",record.ConditionsTruth.ContractSize,record.ConditionsTruth.ContractSizeReadable);
-   ASC_Output_WriteDoubleField(handle,"VolumeMin",record.ConditionsTruth.VolumeMin,record.ConditionsTruth.VolumeMinReadable);
-   ASC_Output_WriteDoubleField(handle,"VolumeMax",record.ConditionsTruth.VolumeMax,record.ConditionsTruth.VolumeMaxReadable);
-   ASC_Output_WriteDoubleField(handle,"VolumeStep",record.ConditionsTruth.VolumeStep,record.ConditionsTruth.VolumeStepReadable);
+void ASC_Output_WriteCalculationStatusBlock(const int handle)
+  {
+   ASC_Output_WriteSectionHeader(handle,"[CALCULATION_STATUS]");
+   FileWrite(handle,"CalculationStatus: PENDING_UPSTREAM_TRUTH");
+   FileWrite(handle,"CalculationNote: No ranking, signal, or later-layer calculations are implied by this broker dossier.");
   }
 
 bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
@@ -356,8 +605,8 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    ArrayResize(lines,guidance_start + 4);
    lines[guidance_start] = "";
    lines[guidance_start + 1] = "[ROUTING_GUIDANCE]";
-   lines[guidance_start + 2] = "Published symbol routes appear below only when a symbol file was actually written this cycle.";
-   lines[guidance_start + 3] = "Pending symbols remain in the universe count but are not routed as finished symbol publications.";
+   lines[guidance_start + 2] = "Published symbol routes appear below only when a symbol dossier was actually written this cycle.";
+   lines[guidance_start + 3] = "Pending symbols remain preserved in the universe snapshot and mirror output until a later pass supplies publishable truth.";
 
    for(int index = 0; index < count; ++index)
      {
@@ -391,64 +640,43 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
       string line = ASC_Output_RecordDisplaySymbol(record);
       line += " | Route=" + ASC_Output_RecordRoute(broker_name,record);
       line += " | Session=" + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus);
-      line += " | Layer1Eligible=" + ASC_Output_BoolText(record.MarketTruth.Layer1Eligible);
-      line += " | SpecsReadable=" + ASC_Output_BoolText(record.ConditionsTruth.SpecsReadable);
+      line += " | Quote=" + record.MarketTruth.QuoteFreshnessStatus;
+      line += " | Specs=" + record.ConditionsTruth.SpecIntegrityStatus;
       const int next_index = ArraySize(lines);
       ArrayResize(lines,next_index + 1);
       lines[next_index] = line;
      }
 
-   const int footer_start = ArraySize(lines);
-   ArrayResize(lines,footer_start + 4);
-   lines[footer_start] = "";
-   lines[footer_start + 1] = "[PENDING_OR_UNAVAILABLE]";
-   lines[footer_start + 2] = "Pending or unavailable universe members remain preserved in the universe snapshot and mirror output until a later pass supplies publishable truth.";
-   lines[footer_start + 3] = "Use UniverseSnapshotMirror.txt for broad continuity review; use symbol routes above for finished per-symbol publication.";
-
    return(ASC_Output_WriteLinesAtomically(config,file_name,lines));
   }
 
-bool ASC_Output_WriteSymbolSurface(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &record)
+bool ASC_Output_WriteSymbolDossier(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &record)
   {
    if(!ASC_Output_RecordHasPublishedTruth(record))
       return(true);
 
    const string broker_name = ASC_Output_BrokerName();
-   const string directory_name = ASC_Output_SymbolDirectory(broker_name);
-   FolderCreate(directory_name,config.UseCommonFiles ? FILE_COMMON : 0);
+   FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
+   FolderCreate(ASC_Output_SymbolDirectory(broker_name),config.UseCommonFiles ? FILE_COMMON : 0);
 
    const int handle = FileOpen(ASC_Output_SymbolFileName(broker_name,record),ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
    if(handle == INVALID_HANDLE)
       return(false);
 
-   FileWrite(handle,ASC_Output_RecordDisplaySymbol(record));
+   FileWrite(handle,ASC_Output_RecordTitle(record));
    FileWrite(handle,"Broker: " + broker_name);
    FileWrite(handle,"");
 
-   FileWrite(handle,ASC_OUTPUT_SYMBOL_SECTION_BROKER_SPEC);
-   ASC_Output_WriteStringField(handle,"RawSymbol",record.Identity.RawSymbol);
-   ASC_Output_WriteStringField(handle,"NormalizedSymbol",record.Identity.NormalizedSymbol);
-   ASC_Output_WriteStringField(handle,"CanonicalSymbol",record.Identity.CanonicalSymbol);
-   ASC_Output_WriteStringField(handle,"AssetClass",record.Identity.AssetClass);
-   ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
-   ASC_Output_WriteStringField(handle,"Sector",record.Identity.Sector);
-   ASC_Output_WriteStringField(handle,"Industry",record.Identity.Industry);
-   ASC_Output_WriteStringField(handle,"Theme",record.Identity.Theme);
-   FileWrite(handle,"ClassificationResolved: " + ASC_Output_BoolText(record.Identity.ClassificationResolved));
-   ASC_Output_WriteStringField(handle,"ClassificationReason",record.Identity.ClassificationReason);
-   FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
-   FileWrite(handle,"Layer1Eligible: " + ASC_Output_BoolText(record.MarketTruth.Layer1Eligible));
-   ASC_Output_WriteConditionsFields(handle,record);
-   FileWrite(handle,"");
-
-   FileWrite(handle,ASC_OUTPUT_SYMBOL_SECTION_OHLC_HISTORY);
-   FileWrite(handle,"HistoryStatus: PENDING_UPSTREAM_TRUTH");
-   FileWrite(handle,"HistoryNote: This symbol file is intentionally limited to currently supplied broker and conditions truth.");
-   FileWrite(handle,"");
-
-   FileWrite(handle,ASC_OUTPUT_SYMBOL_SECTION_CALCULATIONS);
-   FileWrite(handle,"CalculationStatus: PENDING_UPSTREAM_TRUTH");
-   FileWrite(handle,"CalculationNote: No calculation payload was provided to this writer, so no later-layer values are implied.");
+   ASC_Output_WriteIdentityBlock(handle,record);
+   ASC_Output_WriteClassificationBlock(handle,record);
+   ASC_Output_WriteMarketStateBlock(handle,record);
+   ASC_Output_WriteTradingRulesBlock(handle,record);
+   ASC_Output_WriteEconomicsBlock(handle,record);
+   ASC_Output_WriteSwapBlock(handle,record);
+   ASC_Output_WriteSessionsBlock(handle,record);
+   ASC_Output_WriteMarginBlock(handle,record);
+   ASC_Output_WriteHistoryStatusBlock(handle);
+   ASC_Output_WriteCalculationStatusBlock(handle);
 
    FileClose(handle);
    return(true);
@@ -456,19 +684,13 @@ bool ASC_Output_WriteSymbolSurface(const ASC_RuntimeConfig &config,const ASC_Sym
 
 bool ASC_Output_WriteSymbolSurfaces(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
   {
-   const string broker_name = ASC_Output_BrokerName();
-   FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
-   FolderCreate(ASC_Output_SymbolDirectory(broker_name),config.UseCommonFiles ? FILE_COMMON : 0);
-
    for(int index = 0; index < count; ++index)
      {
-      if(!ASC_Output_WriteSymbolSurface(config,records[index]))
+      if(!ASC_Output_WriteSymbolDossier(config,records[index]))
          return(false);
      }
-
    return(true);
   }
-
 
 void ASC_Output_RemoveStaleSymbolFiles(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
   {
@@ -506,6 +728,21 @@ void ASC_Output_RemoveStaleSymbolFiles(const ASC_RuntimeConfig &config,const ASC
    FileFindClose(search_handle);
   }
 
+void ASC_Output_WriteMirrorRecord(const int handle,const ASC_SymbolRecord &record)
+  {
+   FileWrite(handle,"[SYMBOL]");
+   FileWrite(handle,"Title: " + ASC_Output_RecordTitle(record));
+   FileWrite(handle,"DisplaySymbol: " + ASC_Output_RecordDisplaySymbol(record));
+   FileWrite(handle,"PublicationState: " + ASC_Output_PublicationStateText(record));
+   ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
+   FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
+   ASC_Output_WriteStringField(handle,"QuoteFreshnessStatus",record.MarketTruth.QuoteFreshnessStatus);
+   ASC_Output_WriteStringField(handle,"SpecIntegrityStatus",record.ConditionsTruth.SpecIntegrityStatus);
+   ASC_Output_WriteStringField(handle,"TruthCoverageStatus",record.ConditionsTruth.TruthCoverageStatus);
+   ASC_Output_WriteStringField(handle,"SessionConsistencyReason",record.MarketTruth.SessionConsistencyReason);
+   FileWrite(handle,"");
+  }
+
 bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count)
   {
    FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
@@ -519,38 +756,7 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
    FileWrite(handle,"");
 
    for(int index = 0; index < count; ++index)
-     {
-      const ASC_SymbolRecord record = records[index];
-
-      FileWrite(handle,"[Symbol]");
-      ASC_Output_WriteStringField(handle,"RawSymbol",record.Identity.RawSymbol);
-      ASC_Output_WriteStringField(handle,"NormalizedSymbol",record.Identity.NormalizedSymbol);
-      ASC_Output_WriteStringField(handle,"CanonicalSymbol",record.Identity.CanonicalSymbol);
-      ASC_Output_WriteStringField(handle,"AssetClass",record.Identity.AssetClass);
-      ASC_Output_WriteStringField(handle,"PrimaryBucket",record.Identity.PrimaryBucket);
-      ASC_Output_WriteStringField(handle,"Sector",record.Identity.Sector);
-      ASC_Output_WriteStringField(handle,"Industry",record.Identity.Industry);
-      ASC_Output_WriteStringField(handle,"Theme",record.Identity.Theme);
-      FileWrite(handle,"ClassificationResolved: " + ASC_Output_BoolText(record.Identity.ClassificationResolved));
-      ASC_Output_WriteStringField(handle,"ClassificationReason",record.Identity.ClassificationReason);
-
-      FileWrite(handle,"[MarketState]");
-      FileWrite(handle,"Exists: " + ASC_Output_BoolText(record.MarketTruth.Exists));
-      FileWrite(handle,"Selected: " + ASC_Output_BoolText(record.MarketTruth.Selected));
-      FileWrite(handle,"Visible: " + ASC_Output_BoolText(record.MarketTruth.Visible));
-      FileWrite(handle,"QuoteWindowOpen: " + ASC_Output_BoolText(record.MarketTruth.QuoteWindowOpen));
-      FileWrite(handle,"TradeWindowOpen: " + ASC_Output_BoolText(record.MarketTruth.TradeWindowOpen));
-      FileWrite(handle,"TradeAllowed: " + ASC_Output_BoolText(record.MarketTruth.TradeAllowed));
-      FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
-      FileWrite(handle,"Layer1Eligible: " + ASC_Output_BoolText(record.MarketTruth.Layer1Eligible));
-      ASC_Output_WriteIntegerField(handle,"LastQuoteTime",(long)record.MarketTruth.LastQuoteTime);
-      ASC_Output_WriteIntegerField(handle,"NextRecheckTime",(long)record.MarketTruth.NextRecheckTime);
-      ASC_Output_WriteStringField(handle,"IneligibleReason",record.MarketTruth.IneligibleReason);
-
-      FileWrite(handle,"[Conditions]");
-      ASC_Output_WriteConditionsFields(handle,record);
-      FileWrite(handle,"");
-     }
+      ASC_Output_WriteMirrorRecord(handle,records[index]);
 
    FileClose(handle);
 

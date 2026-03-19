@@ -1759,6 +1759,10 @@ namespace ASC_Market_Internal
       identity.RawSymbol              = "";
       identity.NormalizedSymbol       = "";
       identity.CanonicalSymbol        = "";
+      identity.DisplayName            = "";
+      identity.BrokerPath             = "";
+      identity.BrokerExchange         = "";
+      identity.BrokerCountry          = "";
       identity.AssetClass             = "UNKNOWN";
       identity.PrimaryBucket          = "UNKNOWN";
       identity.Sector                 = "UNKNOWN";
@@ -1770,17 +1774,40 @@ namespace ASC_Market_Internal
 
    void ResetMarketTruth(const ASC_RuntimeConfig &config, ASC_MarketTruth &truth)
    {
-      truth.Exists             = false;
-      truth.Selected           = false;
-      truth.Visible            = false;
-      truth.QuoteWindowOpen    = false;
-      truth.TradeWindowOpen    = false;
-      truth.TradeAllowed       = false;
-      truth.SessionTruthStatus = ASC_SESSION_UNKNOWN;
-      truth.Layer1Eligible     = false;
-      truth.LastQuoteTime      = 0;
-      truth.NextRecheckTime    = TimeCurrent() + MathMax(config.TimerSeconds, 1);
-      truth.IneligibleReason   = "market truth unresolved";
+      truth.Exists                    = false;
+      truth.Selected                  = false;
+      truth.Visible                   = false;
+      truth.QuoteWindowOpen           = false;
+      truth.TradeWindowOpen           = false;
+      truth.TradeAllowed              = false;
+      truth.HasUsableQuote            = false;
+      truth.QuoteFresh                = false;
+      truth.QuoteScheduleReadable     = false;
+      truth.TradeScheduleReadable     = false;
+      truth.SessionTruthStatus        = ASC_SESSION_UNKNOWN;
+      truth.Layer1Eligible            = false;
+      truth.LastQuoteTime             = 0;
+      truth.NextRecheckTime           = TimeCurrent() + MathMax(config.TimerSeconds, 1);
+      truth.QuoteAgeSeconds           = -1;
+      truth.QuoteFreshnessStatus      = "UNKNOWN";
+      truth.QuoteScheduleSunday       = "UNKNOWN";
+      truth.QuoteScheduleMonday       = "UNKNOWN";
+      truth.QuoteScheduleTuesday      = "UNKNOWN";
+      truth.QuoteScheduleWednesday    = "UNKNOWN";
+      truth.QuoteScheduleThursday     = "UNKNOWN";
+      truth.QuoteScheduleFriday       = "UNKNOWN";
+      truth.QuoteScheduleSaturday     = "UNKNOWN";
+      truth.TradeScheduleSunday       = "UNKNOWN";
+      truth.TradeScheduleMonday       = "UNKNOWN";
+      truth.TradeScheduleTuesday      = "UNKNOWN";
+      truth.TradeScheduleWednesday    = "UNKNOWN";
+      truth.TradeScheduleThursday     = "UNKNOWN";
+      truth.TradeScheduleFriday       = "UNKNOWN";
+      truth.TradeScheduleSaturday     = "UNKNOWN";
+      truth.SessionReadStatus         = "UNREAD";
+      truth.SessionReadReason         = "session truth not loaded";
+      truth.SessionConsistencyReason  = "session truth unresolved";
+      truth.IneligibleReason          = "market truth unresolved";
    }
 
    bool EndsWith(const string value, const string suffix)
@@ -1793,20 +1820,72 @@ namespace ASC_Market_Internal
       return (StringSubstr(value, value_len - suffix_len, suffix_len) == suffix);
    }
 
+   bool IsAsciiAlphaNumeric(const ushort ch)
+   {
+      if(ch >= 'A' && ch <= 'Z')
+         return true;
+      if(ch >= '0' && ch <= '9')
+         return true;
+      return false;
+   }
+
+   string TrimTrailingNormalizationNoise(const string value)
+   {
+      string s = value;
+      int len = StringLen(s);
+      while(len > 0)
+      {
+         const ushort ch = (ushort)StringGetCharacter(s, len - 1);
+         if(IsAsciiAlphaNumeric(ch))
+            break;
+
+         s = StringSubstr(s, 0, len - 1);
+         len = StringLen(s);
+      }
+
+      return s;
+   }
+
    string StripKnownBrokerSuffixes(const string value)
    {
-      string s = UpperTrim(value);
-      string suffixes[] = {".C", ".NX", ".PRO", ".RAW", ".M", "_C", "_NX", "_PRO", "_RAW", "_M", "-C", "-NX", "-PRO", "-RAW", "-M"};
+      string s = TrimTrailingNormalizationNoise(UpperTrim(value));
+      string always_strip_suffixes[] =
+      {
+         ".C", ".NX", ".PRO", ".RAW", ".M",
+         "_C", "_NX", "_PRO", "_RAW", "_M",
+         "-C", "-NX", "-PRO", "-RAW", "-M"
+      };
+      string long_symbol_suffixes[] =
+      {
+         "MICRO", "MINI", "PRO", "RAW", "ECN", "STD", "CASH", "SPOT", "PLUS", "RW"
+      };
       bool changed = true;
 
       while(changed && StringLen(s) > 0)
       {
          changed = false;
-         for(int i = 0; i < ArraySize(suffixes); ++i)
+         for(int i = 0; i < ArraySize(always_strip_suffixes); ++i)
          {
-            if(EndsWith(s, suffixes[i]))
+            if(EndsWith(s, always_strip_suffixes[i]))
             {
-               s = StringSubstr(s, 0, StringLen(s) - StringLen(suffixes[i]));
+               s = StringSubstr(s, 0, StringLen(s) - StringLen(always_strip_suffixes[i]));
+               changed = true;
+               break;
+            }
+         }
+
+         if(changed)
+            continue;
+
+         for(int i = 0; i < ArraySize(long_symbol_suffixes); ++i)
+         {
+            if(EndsWith(s, long_symbol_suffixes[i]))
+            {
+               const string candidate = StringSubstr(s, 0, StringLen(s) - StringLen(long_symbol_suffixes[i]));
+               if(StringLen(candidate) < 6)
+                  continue;
+
+               s = candidate;
                changed = true;
                break;
             }
@@ -1825,7 +1904,7 @@ namespace ASC_Market_Internal
       StringReplace(s, "/", "");
       StringReplace(s, "\\", "");
       StringReplace(s, " ", "");
-      StringReplace(s, "	", "");
+      StringReplace(s, "\t", "");
       return s;
    }
 
@@ -2013,6 +2092,26 @@ namespace ASC_Market_Internal
       string Issue;
    };
 
+   struct WeeklySessionSchedule
+   {
+      bool QuoteReadable;
+      bool TradeReadable;
+      string QuoteSunday;
+      string QuoteMonday;
+      string QuoteTuesday;
+      string QuoteWednesday;
+      string QuoteThursday;
+      string QuoteFriday;
+      string QuoteSaturday;
+      string TradeSunday;
+      string TradeMonday;
+      string TradeTuesday;
+      string TradeWednesday;
+      string TradeThursday;
+      string TradeFriday;
+      string TradeSaturday;
+   };
+
    struct TickEvidence
    {
       bool Readable;
@@ -2099,6 +2198,123 @@ namespace ASC_Market_Internal
       if(server_time <= 0)
          server_time = TimeCurrent();
       return server_time;
+   }
+
+   string FormatTimeOfDay(const datetime value)
+   {
+      MqlDateTime parts;
+      TimeToStruct(value, parts);
+      return StringFormat("%02d:%02d", parts.hour, parts.min);
+   }
+
+   string FormatSessionRange(const datetime from_time, const datetime to_time)
+   {
+      return FormatTimeOfDay(from_time) + "-" + FormatTimeOfDay(to_time);
+   }
+
+   string AppendSessionRange(const string existing, const string range_text)
+   {
+      if(StringLen(existing) == 0)
+         return range_text;
+      return existing + "; " + range_text;
+   }
+
+   string BuildSessionDaySummary(const string symbol,
+                                 const ENUM_DAY_OF_WEEK day,
+                                 const bool quote_window,
+                                 bool &readable)
+   {
+      string summary = "";
+      readable = true;
+
+      for(uint session_index = 0; session_index < 16; ++session_index)
+      {
+         datetime from_time = 0;
+         datetime to_time = 0;
+         const bool ok = quote_window
+                         ? SymbolInfoSessionQuote(symbol, day, session_index, from_time, to_time)
+                         : SymbolInfoSessionTrade(symbol, day, session_index, from_time, to_time);
+         if(!ok)
+         {
+            if(session_index == 0)
+               readable = false;
+            break;
+         }
+
+         summary = AppendSessionRange(summary, FormatSessionRange(from_time, to_time));
+      }
+
+      if(!readable)
+         return "UNREADABLE";
+      if(StringLen(summary) == 0)
+         return "CLOSED";
+      return summary;
+   }
+
+   void LoadWeeklySessionSchedule(const string symbol,
+                                  WeeklySessionSchedule &schedule)
+   {
+      schedule.QuoteReadable = true;
+      schedule.TradeReadable = true;
+
+      bool day_readable = true;
+      schedule.QuoteSunday = BuildSessionDaySummary(symbol, SUNDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+      schedule.QuoteMonday = BuildSessionDaySummary(symbol, MONDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+      schedule.QuoteTuesday = BuildSessionDaySummary(symbol, TUESDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+      schedule.QuoteWednesday = BuildSessionDaySummary(symbol, WEDNESDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+      schedule.QuoteThursday = BuildSessionDaySummary(symbol, THURSDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+      schedule.QuoteFriday = BuildSessionDaySummary(symbol, FRIDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+      schedule.QuoteSaturday = BuildSessionDaySummary(symbol, SATURDAY, true, day_readable);
+      schedule.QuoteReadable = (schedule.QuoteReadable && day_readable);
+
+      schedule.TradeSunday = BuildSessionDaySummary(symbol, SUNDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+      schedule.TradeMonday = BuildSessionDaySummary(symbol, MONDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+      schedule.TradeTuesday = BuildSessionDaySummary(symbol, TUESDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+      schedule.TradeWednesday = BuildSessionDaySummary(symbol, WEDNESDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+      schedule.TradeThursday = BuildSessionDaySummary(symbol, THURSDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+      schedule.TradeFriday = BuildSessionDaySummary(symbol, FRIDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+      schedule.TradeSaturday = BuildSessionDaySummary(symbol, SATURDAY, false, day_readable);
+      schedule.TradeReadable = (schedule.TradeReadable && day_readable);
+   }
+
+   string ResolveQuoteFreshnessStatus(const TickEvidence &tick_evidence,
+                                      const int stale_feed_seconds)
+   {
+      if(!tick_evidence.Readable || !tick_evidence.HasTimestamp)
+         return "MISSING";
+      if(!tick_evidence.HasQuote)
+         return "UNUSABLE";
+      if(stale_feed_seconds > 0 && tick_evidence.AgeSeconds > stale_feed_seconds)
+         return "STALE";
+      return "FRESH";
+   }
+
+   void LoadIdentityMetadata(const string symbol,
+                             ASC_SymbolIdentity &identity)
+   {
+      SymbolInfoString(symbol, SYMBOL_DESCRIPTION, identity.DisplayName);
+      SymbolInfoString(symbol, SYMBOL_PATH, identity.BrokerPath);
+      SymbolInfoString(symbol, SYMBOL_EXCHANGE, identity.BrokerExchange);
+      SymbolInfoString(symbol, SYMBOL_COUNTRY, identity.BrokerCountry);
+
+      if(!IsMeaningfulValue(identity.DisplayName))
+         identity.DisplayName = symbol;
+      if(!IsMeaningfulValue(identity.BrokerExchange))
+         identity.BrokerExchange = "UNKNOWN";
+      if(!IsMeaningfulValue(identity.BrokerCountry))
+         identity.BrokerCountry = "UNKNOWN";
    }
 
    int SecondsOfDay(const datetime value)
@@ -2439,6 +2655,7 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    record.Identity.RawSymbol        = symbol;
    record.Identity.NormalizedSymbol = ASC_Market_Internal::NormalizeSymbol(symbol);
    record.Identity.CanonicalSymbol  = record.Identity.NormalizedSymbol;
+   ASC_Market_Internal::LoadIdentityMetadata(symbol, record.Identity);
    ASC_Market_Internal::ResolveClassification(symbol, record.Identity);
 
    if(StringLen(symbol) == 0)
@@ -2463,6 +2680,7 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    datetime last_quote_time = 0;
    ASC_Market_Internal::SessionWindowProbe quote_probe;
    ASC_Market_Internal::SessionWindowProbe trade_probe;
+   ASC_Market_Internal::WeeklySessionSchedule weekly_schedule;
    ASC_Market_Internal::TickEvidence tick_evidence;
    const datetime current_time = ASC_Market_Internal::CurrentServerTime();
 
@@ -2472,14 +2690,36 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    const bool quote_time_ok = ASC_Market_Internal::LoadTickTime(symbol, last_quote_time, read_reason);
    ASC_Market_Internal::ProbeSessionWindow(symbol, true, quote_probe);
    ASC_Market_Internal::ProbeSessionWindow(symbol, false, trade_probe);
+   ASC_Market_Internal::LoadWeeklySessionSchedule(symbol, weekly_schedule);
    ASC_Market_Internal::LoadTickEvidence(symbol, current_time, tick_evidence);
    const bool has_session_reference = ASC_Market_Internal::HasSessionReference(symbol);
 
-   record.MarketTruth.Selected        = selected;
-   record.MarketTruth.Visible         = visible;
-   record.MarketTruth.QuoteWindowOpen = quote_probe.IsOpen;
-   record.MarketTruth.TradeWindowOpen = trade_probe.IsOpen;
-   record.MarketTruth.LastQuoteTime   = tick_evidence.HasTimestamp ? tick_evidence.QuoteTime : last_quote_time;
+   record.MarketTruth.Selected              = selected;
+   record.MarketTruth.Visible               = visible;
+   record.MarketTruth.QuoteWindowOpen       = quote_probe.IsOpen;
+   record.MarketTruth.TradeWindowOpen       = trade_probe.IsOpen;
+   record.MarketTruth.LastQuoteTime         = tick_evidence.HasTimestamp ? tick_evidence.QuoteTime : last_quote_time;
+   record.MarketTruth.HasUsableQuote        = tick_evidence.HasQuote;
+   record.MarketTruth.QuoteFresh            = (ASC_Market_Internal::ResolveQuoteFreshnessStatus(tick_evidence, config.StaleFeedSeconds) == "FRESH");
+   record.MarketTruth.QuoteAgeSeconds       = tick_evidence.AgeSeconds;
+   record.MarketTruth.QuoteFreshnessStatus  = ASC_Market_Internal::ResolveQuoteFreshnessStatus(tick_evidence, config.StaleFeedSeconds);
+   record.MarketTruth.QuoteScheduleReadable = weekly_schedule.QuoteReadable;
+   record.MarketTruth.TradeScheduleReadable = weekly_schedule.TradeReadable;
+   record.MarketTruth.QuoteScheduleSunday   = weekly_schedule.QuoteSunday;
+   record.MarketTruth.QuoteScheduleMonday   = weekly_schedule.QuoteMonday;
+   record.MarketTruth.QuoteScheduleTuesday  = weekly_schedule.QuoteTuesday;
+   record.MarketTruth.QuoteScheduleWednesday = weekly_schedule.QuoteWednesday;
+   record.MarketTruth.QuoteScheduleThursday = weekly_schedule.QuoteThursday;
+   record.MarketTruth.QuoteScheduleFriday   = weekly_schedule.QuoteFriday;
+   record.MarketTruth.QuoteScheduleSaturday = weekly_schedule.QuoteSaturday;
+   record.MarketTruth.TradeScheduleSunday   = weekly_schedule.TradeSunday;
+   record.MarketTruth.TradeScheduleMonday   = weekly_schedule.TradeMonday;
+   record.MarketTruth.TradeScheduleTuesday  = weekly_schedule.TradeTuesday;
+   record.MarketTruth.TradeScheduleWednesday = weekly_schedule.TradeWednesday;
+   record.MarketTruth.TradeScheduleThursday = weekly_schedule.TradeThursday;
+   record.MarketTruth.TradeScheduleFriday   = weekly_schedule.TradeFriday;
+   record.MarketTruth.TradeScheduleSaturday = weekly_schedule.TradeSaturday;
+   record.MarketTruth.SessionReadStatus     = (weekly_schedule.QuoteReadable && weekly_schedule.TradeReadable) ? "FULL" : ((weekly_schedule.QuoteReadable || weekly_schedule.TradeReadable) ? "PARTIAL" : "UNREADABLE");
 
    if(trade_mode_ok)
       record.MarketTruth.TradeAllowed = ASC_Market_Internal::TradeModePermitsNewExposure(trade_mode);
@@ -2488,6 +2728,8 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    {
       record.MarketTruth.SessionTruthStatus = ASC_SESSION_UNKNOWN;
       record.MarketTruth.Layer1Eligible = false;
+      record.MarketTruth.SessionReadReason = read_reason;
+      record.MarketTruth.SessionConsistencyReason = read_reason;
       record.MarketTruth.IneligibleReason = read_reason;
       return true;
    }
@@ -2513,6 +2755,8 @@ bool ASC_Market_BuildIdentityAndTruth(const string symbol,
    record.MarketTruth.Layer1Eligible = (record.MarketTruth.SessionTruthStatus == ASC_SESSION_OPEN_TRADABLE);
    record.MarketTruth.NextRecheckTime = ASC_Market_Internal::ResolveNextRecheckTime(config,
                                                                                      record.MarketTruth.SessionTruthStatus);
+   record.MarketTruth.SessionReadReason = (StringLen(read_reason) > 0 ? read_reason : "session inputs readable");
+   record.MarketTruth.SessionConsistencyReason = (record.MarketTruth.Layer1Eligible ? "schedule and live quote evidence agree" : ineligible_reason);
    record.MarketTruth.IneligibleReason = record.MarketTruth.Layer1Eligible ? "" : ineligible_reason;
 
    return true;
