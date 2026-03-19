@@ -122,7 +122,7 @@ string ASC_UIRenderOperatorHUD(const ASC_UIRuntimeView &view)
    hud += "Mode: " + ASC_RuntimeModeText(view.Snapshot.Mode) + "\n";
    hud += "Last Cycle: " + ASC_UIDateTimeText(view.LastCycleTime) + "\n";
    hud += "Next Timer Due: " + ASC_UIDateTimeText(view.NextTimerDue) + "\n";
-   hud += "Re-entry Count: " + LongToString(view.ReentryCount) + "\n";
+   hud += "Re-entry Count: " + IntegerToString(view.ReentryCount) + "\n";
    hud += "Due Services: " + ASC_UIDueServicesText(view) + "\n";
    hud += "Restore Outcome: " + ASC_UIRestoreOutcomeText(view.RestoreOutcome,view.RestoreOutcomeReady) + "\n";
    hud += "Runtime State: " + ASC_UIFlagSummary(view) + "\n";
