@@ -494,9 +494,15 @@ void ASC_Output_WriteEconomicsFields(const int handle,const ASC_SymbolRecord &re
   {
    ASC_ConditionsTruth t = record.ConditionsTruth;
    ASC_Output_WriteStringField(handle,"EconomicsTrust",t.EconomicsTrust);
+   ASC_Output_WriteStringField(handle,"EconomicsMismatchFlags",t.EconomicsMismatchFlags);
+   FileWrite(handle,"EconomicsAuthoritative: " + ASC_Output_BoolText(t.EconomicsAuthoritative));
+   FileWrite(handle,"EconomicsPreservedFromPrior: " + ASC_Output_BoolText(t.EconomicsPreservedFromPrior));
    ASC_Output_WriteDoubleField(handle,"Point",t.Point,t.PointReadable);
    ASC_Output_WriteDoubleField(handle,"TickSize",t.TickSize,t.TickSizeReadable);
    ASC_Output_WriteDoubleField(handle,"TickValue",t.TickValue,t.TickValueReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValueRaw",t.TickValueRaw,t.TickValueRawReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValueDerived",t.TickValueDerived,t.TickValueDerivedReadable);
+   ASC_Output_WriteDoubleField(handle,"TickValueValidated",t.TickValueValidated,t.TickValueValidatedReadable);
    ASC_Output_WriteDoubleField(handle,"TickValueProfit",t.TickValueProfit,t.TickValueProfitReadable);
    ASC_Output_WriteDoubleField(handle,"TickValueLoss",t.TickValueLoss,t.TickValueLossReadable);
    ASC_Output_WriteDoubleField(handle,"ContractSize",t.ContractSize,t.ContractSizeReadable);

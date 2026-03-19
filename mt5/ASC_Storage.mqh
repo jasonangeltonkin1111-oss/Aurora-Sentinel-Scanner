@@ -7,13 +7,14 @@
 #define ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.tmp"
 #define ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.bak"
 #define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V4"
+#define ASC_STORAGE_SNAPSHOT_HEADER_V3 "ASC_UNIVERSE_SNAPSHOT_V3"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V2 "ASC_UNIVERSE_SNAPSHOT_V2"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V1 "ASC_UNIVERSE_SNAPSHOT_V1"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V3 "ASC_UNIVERSE_SNAPSHOT_V3"
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V1 33
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V2 43
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V3 138
-#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 141
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 147
 #define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
@@ -198,10 +199,19 @@ void ASC_Storage_ResetRecord(ASC_SymbolRecord &record)
    record.ConditionsTruth.TickSize = -1.0;
    record.ConditionsTruth.TickValueReadable = false;
    record.ConditionsTruth.TickValue = -1.0;
+   record.ConditionsTruth.TickValueRawReadable = false;
+   record.ConditionsTruth.TickValueRaw = -1.0;
+   record.ConditionsTruth.TickValueDerivedReadable = false;
+   record.ConditionsTruth.TickValueDerived = -1.0;
+   record.ConditionsTruth.TickValueValidatedReadable = false;
+   record.ConditionsTruth.TickValueValidated = -1.0;
    record.ConditionsTruth.TickValueProfitReadable = false;
    record.ConditionsTruth.TickValueProfit = -1.0;
    record.ConditionsTruth.TickValueLossReadable = false;
    record.ConditionsTruth.TickValueLoss = -1.0;
+   record.ConditionsTruth.EconomicsMismatchFlags = "";
+   record.ConditionsTruth.EconomicsAuthoritative = false;
+   record.ConditionsTruth.EconomicsPreservedFromPrior = false;
    record.ConditionsTruth.ContractSizeReadable = false;
    record.ConditionsTruth.ContractSize = -1.0;
    record.ConditionsTruth.VolumeMinReadable = false;
@@ -430,10 +440,19 @@ void ASC_Storage_FormatConditionsFields(const ASC_SymbolRecord &record,string &f
    ASC_Storage_PushDouble(fields,cursor,t.TickSize);
    ASC_Storage_PushBool(fields,cursor,t.TickValueReadable);
    ASC_Storage_PushDouble(fields,cursor,t.TickValue);
+   ASC_Storage_PushBool(fields,cursor,t.TickValueRawReadable);
+   ASC_Storage_PushDouble(fields,cursor,t.TickValueRaw);
+   ASC_Storage_PushBool(fields,cursor,t.TickValueDerivedReadable);
+   ASC_Storage_PushDouble(fields,cursor,t.TickValueDerived);
+   ASC_Storage_PushBool(fields,cursor,t.TickValueValidatedReadable);
+   ASC_Storage_PushDouble(fields,cursor,t.TickValueValidated);
    ASC_Storage_PushBool(fields,cursor,t.TickValueProfitReadable);
    ASC_Storage_PushDouble(fields,cursor,t.TickValueProfit);
    ASC_Storage_PushBool(fields,cursor,t.TickValueLossReadable);
    ASC_Storage_PushDouble(fields,cursor,t.TickValueLoss);
+   ASC_Storage_PushString(fields,cursor,t.EconomicsMismatchFlags);
+   ASC_Storage_PushBool(fields,cursor,t.EconomicsAuthoritative);
+   ASC_Storage_PushBool(fields,cursor,t.EconomicsPreservedFromPrior);
    ASC_Storage_PushBool(fields,cursor,t.ContractSizeReadable);
    ASC_Storage_PushDouble(fields,cursor,t.ContractSize);
    ASC_Storage_PushBool(fields,cursor,t.VolumeMinReadable);
@@ -499,6 +518,168 @@ void ASC_Storage_FormatConditionsFields(const ASC_SymbolRecord &record,string &f
    ASC_Storage_PushDouble(fields,cursor,t.MarginRateSellInitial);
    ASC_Storage_PushDouble(fields,cursor,t.MarginRateSellMaintenance);
   }
+
+bool ASC_Storage_ParseV4Record(const string &fields[],const int count,ASC_SymbolRecord &record)
+  {
+   int cursor = 0;
+   ASC_Storage_ResetRecord(record);
+
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.RawSymbol);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.NormalizedSymbol);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.CanonicalSymbol);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.DisplayName);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.BrokerPath);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.BrokerExchange);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.BrokerCountry);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.AssetClass);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.PrimaryBucket);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.Sector);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.Industry);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.Theme);
+   ASC_Storage_PullBool(fields,count,cursor,record.Identity.ClassificationResolved);
+   ASC_Storage_PullString(fields,count,cursor,record.Identity.ClassificationReason);
+
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.Exists);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.Selected);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.Visible);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.QuoteWindowOpen);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.TradeWindowOpen);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.TradeAllowed);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.HasUsableQuote);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.QuoteFresh);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.QuoteScheduleReadable);
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.TradeScheduleReadable);
+   int session_status = 0;
+   ASC_Storage_PullInt(fields,count,cursor,session_status);
+   record.MarketTruth.SessionTruthStatus = (ASC_SessionTruthStatus)session_status;
+   ASC_Storage_PullBool(fields,count,cursor,record.MarketTruth.Layer1Eligible);
+   ASC_Storage_PullDatetime(fields,count,cursor,record.MarketTruth.LastQuoteTime);
+   ASC_Storage_PullDatetime(fields,count,cursor,record.MarketTruth.NextRecheckTime);
+   ASC_Storage_PullInt(fields,count,cursor,record.MarketTruth.QuoteAgeSeconds);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteFreshnessStatus);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleSunday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleMonday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleTuesday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleWednesday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleThursday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleFriday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.QuoteScheduleSaturday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleSunday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleMonday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleTuesday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleWednesday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleThursday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleFriday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.TradeScheduleSaturday);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.SessionReadStatus);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.SessionReadReason);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.SessionConsistencyReason);
+   ASC_Storage_PullString(fields,count,cursor,record.MarketTruth.IneligibleReason);
+
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SpecsReadable);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.SpecsReason);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.SpecIntegrityStatus);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.EconomicsTrust);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.NormalizationStatus);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.TruthCoverageStatus);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.DigitsReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.Digits);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SpreadPointsReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.SpreadPoints);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SpreadFloatReadable);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SpreadFloat);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.StopsLevelReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.StopsLevel);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.FreezeLevelReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.FreezeLevel);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.PointReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.Point);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickSizeReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickSize);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValue);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueRawReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueRaw);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueDerivedReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueDerived);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueValidatedReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueValidated);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueProfitReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueProfit);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueLossReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueLoss);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.EconomicsMismatchFlags);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.EconomicsAuthoritative);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.EconomicsPreservedFromPrior);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.ContractSizeReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.ContractSize);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.VolumeMinReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.VolumeMin);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.VolumeMaxReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.VolumeMax);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.VolumeStepReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.VolumeStep);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.VolumeLimitReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.VolumeLimit);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginCurrencyReadable);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.MarginCurrency);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.ProfitCurrencyReadable);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.ProfitCurrency);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.BaseCurrencyReadable);
+   ASC_Storage_PullString(fields,count,cursor,record.ConditionsTruth.BaseCurrency);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.CalcModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.CalcMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.ChartModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.ChartMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TradeModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.TradeMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.ExecutionModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.ExecutionMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.GtcModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.GtcMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.FillingModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.FillingMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.ExpirationModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.ExpirationMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.OrderModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.OrderMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapModeReadable);
+   ASC_Storage_PullInt(fields,count,cursor,record.ConditionsTruth.SwapMode);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapLongReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapLong);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapShortReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapShort);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapSundayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapSunday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapMondayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapMonday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapTuesdayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapTuesday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapWednesdayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapWednesday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapThursdayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapThursday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapFridayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapFriday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.SwapSaturdayReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.SwapSaturday);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginInitialReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginInitial);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginMaintenanceReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginMaintenance);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginHedgedReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginHedged);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginRateBuyReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateBuyInitial);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateBuyMaintenance);
+   ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.MarginRateSellReadable);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellInitial);
+   ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellMaintenance);
+
+   return(cursor == count);
+  }
+
+
 
 bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_SymbolRecord &record)
   {
@@ -579,10 +760,19 @@ bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_Symbol
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickSize);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValue);
+   record.ConditionsTruth.TickValueRawReadable = record.ConditionsTruth.TickValueReadable;
+   record.ConditionsTruth.TickValueRaw = record.ConditionsTruth.TickValue;
+   record.ConditionsTruth.TickValueDerivedReadable = false;
+   record.ConditionsTruth.TickValueDerived = -1.0;
+   record.ConditionsTruth.TickValueValidatedReadable = false;
+   record.ConditionsTruth.TickValueValidated = -1.0;
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueProfitReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueProfit);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.TickValueLossReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.TickValueLoss);
+   record.ConditionsTruth.EconomicsMismatchFlags = "";
+   record.ConditionsTruth.EconomicsAuthoritative = false;
+   record.ConditionsTruth.EconomicsPreservedFromPrior = false;
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.ContractSizeReadable);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.ContractSize);
    ASC_Storage_PullBool(fields,count,cursor,record.ConditionsTruth.VolumeMinReadable);
@@ -783,7 +973,7 @@ bool ASC_Storage_ParseRecordLine(const string line,ASC_SymbolRecord &record)
    string fields[];
    const int count = StringSplit(line,'|',fields);
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V4)
-      return(ASC_Storage_ParseV3Record(fields,count,record));
+      return(ASC_Storage_ParseV4Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V3)
       return(ASC_Storage_ParseV3Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V2 || count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)

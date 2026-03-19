@@ -15,6 +15,138 @@ namespace ASC_Conditions_Internal
       return (value > 0.0 && IsFiniteNumber(value));
    }
 
+   double AbsRatioGap(const double a,const double b)
+   {
+      if(a <= 0.0 || b <= 0.0)
+         return 0.0;
+
+      const double hi = MathMax(a,b);
+      if(hi <= 0.0)
+         return 0.0;
+
+      return MathAbs(a - b) / hi;
+   }
+
+   void AppendFlag(string &flags,const string flag)
+   {
+      if(StringLen(flag) == 0)
+         return;
+      if(StringLen(flags) > 0)
+         flags += "|";
+      flags += flag;
+   }
+
+   double DeriveTickValue(const ASC_ConditionsTruth &truth,bool &derived_readable)
+   {
+      derived_readable = false;
+
+      if(truth.TickValueProfitReadable && truth.TickValueLossReadable &&
+         IsFinitePositive(truth.TickValueProfit) && IsFinitePositive(truth.TickValueLoss))
+        {
+         derived_readable = true;
+         return (truth.TickValueProfit + truth.TickValueLoss) * 0.5;
+        }
+
+      if(truth.TickValueProfitReadable && IsFinitePositive(truth.TickValueProfit))
+        {
+         derived_readable = true;
+         return truth.TickValueProfit;
+        }
+
+      if(truth.TickValueLossReadable && IsFinitePositive(truth.TickValueLoss))
+        {
+         derived_readable = true;
+         return truth.TickValueLoss;
+        }
+
+      return -1.0;
+   }
+
+   bool TryValidateTickValue(const string symbol,const ASC_SymbolRecord &record,double &validated_tick_value)
+   {
+      validated_tick_value = -1.0;
+
+      if(!record.MarketTruth.TradeAllowed ||
+         !record.ConditionsTruth.TickSizeReadable || !IsFinitePositive(record.ConditionsTruth.TickSize) ||
+         !record.ConditionsTruth.VolumeMinReadable || !IsFinitePositive(record.ConditionsTruth.VolumeMin))
+         return false;
+
+      MqlTick tick;
+      if(!SymbolInfoTick(symbol,tick))
+         return false;
+
+      double profit = 0.0;
+      const double volume = record.ConditionsTruth.VolumeMin;
+
+      if(tick.ask > 0.0)
+        {
+         ResetLastError();
+         if(OrderCalcProfit(ORDER_TYPE_BUY,symbol,volume,tick.ask,tick.ask + record.ConditionsTruth.TickSize,profit))
+           {
+            validated_tick_value = MathAbs(profit) / volume;
+            if(IsFinitePositive(validated_tick_value))
+               return true;
+           }
+        }
+
+      if(tick.bid > 0.0)
+        {
+         ResetLastError();
+         if(OrderCalcProfit(ORDER_TYPE_SELL,symbol,volume,tick.bid,tick.bid - record.ConditionsTruth.TickSize,profit))
+           {
+            validated_tick_value = MathAbs(profit) / volume;
+            if(IsFinitePositive(validated_tick_value))
+               return true;
+           }
+        }
+
+      validated_tick_value = -1.0;
+      return false;
+   }
+
+   int CoverageRank(const ASC_ConditionsTruth &truth)
+   {
+      int rank = 0;
+      if(truth.TruthCoverageStatus == "PARTIAL")
+         rank = 1;
+      else if(truth.TruthCoverageStatus == "FULL")
+         rank = 2;
+
+      if(truth.TickValueDerivedReadable)
+         rank += 1;
+      if(truth.TickValueValidatedReadable)
+         rank += 2;
+      if(truth.EconomicsAuthoritative)
+         rank += 2;
+
+      return rank;
+   }
+
+   bool IsGoodIntegrityStatus(const string status)
+   {
+      return (status == "SPEC_OK" || status == "SPEC_SUSPICIOUS" || status == "SPEC_PRESERVED_PRIOR");
+   }
+
+   bool ShouldPreservePrior(const ASC_ConditionsTruth &prior,const ASC_ConditionsTruth &candidate,const bool candidate_authoritative)
+   {
+      if(!IsGoodIntegrityStatus(prior.SpecIntegrityStatus))
+         return false;
+
+      if(candidate_authoritative)
+         return false;
+
+      if(CoverageRank(candidate) < CoverageRank(prior))
+         return true;
+
+      if(prior.TickValueValidatedReadable && !candidate.TickValueValidatedReadable)
+         return true;
+
+      if(prior.EconomicsTrust == "PASS" && candidate.EconomicsTrust != "PASS")
+         return true;
+
+      return false;
+   }
+
    void AppendReason(string &reason, const string message)
    {
       if(StringLen(message) == 0)
@@ -52,10 +184,19 @@ namespace ASC_Conditions_Internal
       truth.TickSize = -1.0;
       truth.TickValueReadable = false;
       truth.TickValue = -1.0;
+      truth.TickValueRawReadable = false;
+      truth.TickValueRaw = -1.0;
+      truth.TickValueDerivedReadable = false;
+      truth.TickValueDerived = -1.0;
+      truth.TickValueValidatedReadable = false;
+      truth.TickValueValidated = -1.0;
       truth.TickValueProfitReadable = false;
       truth.TickValueProfit = -1.0;
       truth.TickValueLossReadable = false;
       truth.TickValueLoss = -1.0;
+      truth.EconomicsMismatchFlags = "";
+      truth.EconomicsAuthoritative = false;
+      truth.EconomicsPreservedFromPrior = false;
       truth.ContractSizeReadable = false;
       truth.ContractSize = -1.0;
 
@@ -276,17 +417,23 @@ namespace ASC_Conditions_Internal
 
 bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
 {
+   const ASC_ConditionsTruth prior_truth = record.ConditionsTruth;
    ASC_Conditions_Internal::ResetConditionsTruth(record.ConditionsTruth);
 
    string reason = "";
+   string mismatch_flags = "";
    bool all_readable = true;
    bool all_valid = true;
-   bool key_economics_strong = true;
    bool any_readable = false;
+   bool broker_missing = false;
+   bool broker_unreadable = false;
+   bool contradictory = false;
 
    if(StringLen(symbol) == 0)
    {
       record.ConditionsTruth.SpecsReason = "symbol is empty";
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_UNREADABLE";
+      record.ConditionsTruth.EconomicsTrust = "UNREADABLE";
       return false;
    }
 
@@ -432,12 +579,20 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
    ASC_Conditions_Internal::ApplyDoubleSpec(tick_size_readable, tick_size, record.ConditionsTruth.TickSize);
    record.ConditionsTruth.TickValueReadable = tick_value_readable;
    ASC_Conditions_Internal::ApplyDoubleSpec(tick_value_readable, tick_value, record.ConditionsTruth.TickValue);
+   record.ConditionsTruth.TickValueRawReadable = tick_value_readable;
+   ASC_Conditions_Internal::ApplyDoubleSpec(tick_value_readable, tick_value, record.ConditionsTruth.TickValueRaw);
    record.ConditionsTruth.TickValueProfitReadable = tick_value_profit_readable;
    ASC_Conditions_Internal::ApplyDoubleSpec(tick_value_profit_readable, tick_value_profit, record.ConditionsTruth.TickValueProfit);
    record.ConditionsTruth.TickValueLossReadable = tick_value_loss_readable;
    ASC_Conditions_Internal::ApplyDoubleSpec(tick_value_loss_readable, tick_value_loss, record.ConditionsTruth.TickValueLoss);
    record.ConditionsTruth.ContractSizeReadable = contract_size_readable;
    ASC_Conditions_Internal::ApplyDoubleSpec(contract_size_readable, contract_size, record.ConditionsTruth.ContractSize);
+
+   bool derived_tick_value_readable = false;
+   const double derived_tick_value = ASC_Conditions_Internal::DeriveTickValue(record.ConditionsTruth, derived_tick_value_readable);
+   record.ConditionsTruth.TickValueDerivedReadable = derived_tick_value_readable;
+   if(derived_tick_value_readable)
+      record.ConditionsTruth.TickValueDerived = derived_tick_value;
 
    record.ConditionsTruth.VolumeMinReadable = volume_min_readable;
    ASC_Conditions_Internal::ApplyDoubleSpec(volume_min_readable, volume_min, record.ConditionsTruth.VolumeMin);
@@ -447,6 +602,13 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
    ASC_Conditions_Internal::ApplyDoubleSpec(volume_step_readable, volume_step, record.ConditionsTruth.VolumeStep);
    record.ConditionsTruth.VolumeLimitReadable = volume_limit_readable;
    ASC_Conditions_Internal::ApplyDoubleSpec(volume_limit_readable, volume_limit, record.ConditionsTruth.VolumeLimit);
+
+   double validated_tick_value = -1.0;
+   const bool validated_tick_value_readable = ASC_Conditions_Internal::TryValidateTickValue(symbol, record, validated_tick_value);
+   record.ConditionsTruth.TickValueValidatedReadable = validated_tick_value_readable;
+   if(validated_tick_value_readable)
+      record.ConditionsTruth.TickValueValidated = validated_tick_value;
+   record.ConditionsTruth.EconomicsAuthoritative = validated_tick_value_readable;
 
    record.ConditionsTruth.MarginCurrencyReadable = margin_currency_readable;
    ASC_Conditions_Internal::ApplyStringSpec(margin_currency_readable, margin_currency, record.ConditionsTruth.MarginCurrency);
@@ -501,83 +663,67 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
    ASC_Conditions_Internal::ApplyDoubleSpec(margin_hedged_readable, margin_hedged, record.ConditionsTruth.MarginHedged);
    record.ConditionsTruth.MarginRateBuyReadable = buy_margin_rate_readable;
    if(buy_margin_rate_readable)
-   {
+     {
       record.ConditionsTruth.MarginRateBuyInitial = buy_margin_initial;
       record.ConditionsTruth.MarginRateBuyMaintenance = buy_margin_maintenance;
-   }
+     }
    record.ConditionsTruth.MarginRateSellReadable = sell_margin_rate_readable;
    if(sell_margin_rate_readable)
-   {
+     {
       record.ConditionsTruth.MarginRateSellInitial = sell_margin_initial;
       record.ConditionsTruth.MarginRateSellMaintenance = sell_margin_maintenance;
-   }
+     }
 
    if(digits_readable && record.ConditionsTruth.Digits < 0)
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendReason(reason, "digits invalid");
-   }
-
+     }
    if(spread_points_readable && record.ConditionsTruth.SpreadPoints < 0)
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendReason(reason, "spread_points invalid");
-   }
-
+     }
    if(stops_level_readable && record.ConditionsTruth.StopsLevel < 0)
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendReason(reason, "stops_level invalid");
-   }
-
+     }
    if(point_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.Point))
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "point", record.ConditionsTruth.Point);
-   }
-
+     }
    if(tick_size_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickSize))
-   {
+     {
       all_valid = false;
-      key_economics_strong = false;
       ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "tick_size", record.ConditionsTruth.TickSize);
-   }
-
-   if(tick_value_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValue))
-   {
-      key_economics_strong = false;
-      ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "tick_value", record.ConditionsTruth.TickValue);
-   }
-
+     }
    if(contract_size_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.ContractSize))
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "contract_size", record.ConditionsTruth.ContractSize);
-   }
-
+     }
    if(volume_min_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.VolumeMin))
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "volume_min", record.ConditionsTruth.VolumeMin);
-   }
-
+     }
    if(volume_max_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.VolumeMax))
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "volume_max", record.ConditionsTruth.VolumeMax);
-   }
-
+     }
    if(volume_step_readable && !ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.VolumeStep))
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendInvalidDoubleReason(reason, "volume_step", record.ConditionsTruth.VolumeStep);
-   }
-
+     }
    if(volume_min_readable && volume_max_readable && record.ConditionsTruth.VolumeMax < record.ConditionsTruth.VolumeMin)
-   {
+     {
       all_valid = false;
       ASC_Conditions_Internal::AppendReason(reason, "volume_max below volume_min");
-   }
+     }
 
    if(margin_currency_readable && !ASC_Conditions_Internal::IsMeaningfulText(record.ConditionsTruth.MarginCurrency))
       ASC_Conditions_Internal::AppendReason(reason, "margin_currency blank");
@@ -586,91 +732,154 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
 
    const bool point_valid = (point_readable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.Point));
    const bool tick_size_valid = (tick_size_readable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickSize));
-   const bool tick_value_valid = (tick_value_readable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValue));
-   const bool contract_size_valid = (contract_size_readable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.ContractSize));
-
+   const bool tick_value_raw_valid = (record.ConditionsTruth.TickValueRawReadable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValueRaw));
+   const bool tick_value_derived_valid = (record.ConditionsTruth.TickValueDerivedReadable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValueDerived));
+   const bool tick_value_validated_valid = (record.ConditionsTruth.TickValueValidatedReadable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValueValidated));
    if(point_valid && tick_size_valid && record.ConditionsTruth.TickSize < record.ConditionsTruth.Point)
-   {
+     {
       all_valid = false;
-      key_economics_strong = false;
+      contradictory = true;
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_SIZE_BELOW_POINT");
       ASC_Conditions_Internal::AppendReason(reason, "tick_size below point");
-   }
+     }
 
-   if(point_valid && tick_size_valid && tick_value_valid && contract_size_valid)
-   {
+   if(tick_size_valid && contract_size_readable && ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.ContractSize) && tick_value_raw_valid)
+     {
       const double implied_tick_value = record.ConditionsTruth.ContractSize * record.ConditionsTruth.TickSize;
       if(ASC_Conditions_Internal::IsFinitePositive(implied_tick_value))
-      {
-         const double ratio = MathAbs(record.ConditionsTruth.TickValue - implied_tick_value) /
-                              MathMax(record.ConditionsTruth.TickValue, implied_tick_value);
-         if(ratio > 0.50)
-         {
-            key_economics_strong = false;
-            ASC_Conditions_Internal::AppendReason(reason, "tick_value mismatch vs contract/tick_size");
-         }
-      }
-   }
+        {
+         const double implied_gap = ASC_Conditions_Internal::AbsRatioGap(record.ConditionsTruth.TickValueRaw, implied_tick_value);
+         if(implied_gap > 0.50)
+           {
+            contradictory = true;
+            ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_CONTRACT_MISMATCH");
+            ASC_Conditions_Internal::AppendReason(reason, "tick_value raw vs contract/tick_size mismatch");
+           }
+        }
+     }
+
+   if(!tick_value_raw_valid && !tick_value_derived_valid && !tick_value_validated_valid)
+     {
+      broker_missing = true;
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_MISSING");
+      ASC_Conditions_Internal::AppendReason(reason, "tick_value broker-missing");
+     }
 
    if(tick_value_profit_readable && tick_value_loss_readable &&
       ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValueProfit) &&
       ASC_Conditions_Internal::IsFinitePositive(record.ConditionsTruth.TickValueLoss))
-   {
-      const double midpoint = (record.ConditionsTruth.TickValueProfit + record.ConditionsTruth.TickValueLoss) * 0.5;
-      if(tick_value_valid)
-      {
-         const double ratio = MathAbs(record.ConditionsTruth.TickValue - midpoint) /
-                              MathMax(record.ConditionsTruth.TickValue, midpoint);
-         if(ratio > 0.50)
-         {
-            key_economics_strong = false;
-            ASC_Conditions_Internal::AppendReason(reason, "tick_value diverges from tick_value_profit/loss");
-         }
-      }
-   }
+     {
+      const double profit_loss_gap = ASC_Conditions_Internal::AbsRatioGap(record.ConditionsTruth.TickValueProfit, record.ConditionsTruth.TickValueLoss);
+      if(profit_loss_gap > 0.50)
+        {
+         contradictory = true;
+         ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_PROFIT_LOSS_MISMATCH");
+         ASC_Conditions_Internal::AppendReason(reason, "tick_value_profit vs tick_value_loss mismatch");
+        }
+     }
 
-   if(!all_readable)
-   {
-      ASC_Conditions_Internal::AppendSpecWeakness(reason, tick_size_valid, "tick_size");
-      ASC_Conditions_Internal::AppendSpecWeakness(reason, tick_value_valid, "tick_value");
-      ASC_Conditions_Internal::AppendSpecWeakness(reason, contract_size_valid, "contract_size");
-   }
+   if(tick_value_raw_valid && tick_value_derived_valid)
+     {
+      const double raw_vs_derived_gap = ASC_Conditions_Internal::AbsRatioGap(record.ConditionsTruth.TickValueRaw, record.ConditionsTruth.TickValueDerived);
+      if(raw_vs_derived_gap > 0.50)
+        {
+         contradictory = true;
+         ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_RAW_DERIVED_MISMATCH");
+         ASC_Conditions_Internal::AppendReason(reason, "tick_value raw vs derived mismatch");
+        }
+     }
 
-   record.ConditionsTruth.SpecsReadable = (all_readable && all_valid && key_economics_strong);
+   if(tick_value_validated_valid && tick_value_raw_valid)
+     {
+      const double raw_vs_validated_gap = ASC_Conditions_Internal::AbsRatioGap(record.ConditionsTruth.TickValueRaw, record.ConditionsTruth.TickValueValidated);
+      if(raw_vs_validated_gap > 0.50)
+        {
+         contradictory = true;
+         ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_RAW_VALIDATED_MISMATCH");
+         ASC_Conditions_Internal::AppendReason(reason, "tick_value raw vs validated mismatch");
+        }
+     }
+
+   if(tick_value_validated_valid && tick_value_derived_valid)
+     {
+      const double derived_vs_validated_gap = ASC_Conditions_Internal::AbsRatioGap(record.ConditionsTruth.TickValueDerived, record.ConditionsTruth.TickValueValidated);
+      if(derived_vs_validated_gap > 0.50)
+        {
+         contradictory = true;
+         ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_DERIVED_VALIDATED_MISMATCH");
+         ASC_Conditions_Internal::AppendReason(reason, "tick_value derived vs validated mismatch");
+        }
+     }
+   else if(!tick_value_validated_valid)
+     {
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "VALIDATION_THIN");
+      ASC_Conditions_Internal::AppendReason(reason, "tick_value validation thin");
+     }
+
+   record.ConditionsTruth.EconomicsMismatchFlags = mismatch_flags;
+   record.ConditionsTruth.SpecsReadable = false;
    record.ConditionsTruth.NormalizationStatus = ASC_Conditions_Internal::ResolveNormalizationStatus(record);
 
-   if(record.ConditionsTruth.SpecsReadable)
-      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_OK";
-   else if(!any_readable)
-      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_UNREADABLE";
-   else if(all_valid)
-      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_SUSPICIOUS";
+   if(!all_readable && !any_readable)
+      broker_unreadable = true;
+
+   if(!all_readable)
+      record.ConditionsTruth.TruthCoverageStatus = (any_readable ? "PARTIAL" : "UNREAD");
    else
+      record.ConditionsTruth.TruthCoverageStatus = "FULL";
+
+   if(!any_readable)
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_UNREADABLE";
+   else if(!all_valid)
       record.ConditionsTruth.SpecIntegrityStatus = "SPEC_BROKEN";
+   else if(contradictory)
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_CONTRADICTORY";
+   else if(broker_missing)
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_BROKER_MISSING";
+   else if(all_readable)
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_OK";
+   else
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_SUSPICIOUS";
 
    if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_OK")
-      record.ConditionsTruth.EconomicsTrust = (key_economics_strong ? "PASS" : "WEAK");
+      record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.EconomicsAuthoritative ? "PASS" : "DERIVED");
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_SUSPICIOUS")
-      record.ConditionsTruth.EconomicsTrust = "WEAK";
+      record.ConditionsTruth.EconomicsTrust = "THIN";
+   else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_BROKER_MISSING")
+      record.ConditionsTruth.EconomicsTrust = "BROKER_MISSING";
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_UNREADABLE")
-      record.ConditionsTruth.EconomicsTrust = "UNREAD";
+      record.ConditionsTruth.EconomicsTrust = "UNREADABLE";
+   else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_CONTRADICTORY")
+      record.ConditionsTruth.EconomicsTrust = "CONTRADICTORY";
    else
       record.ConditionsTruth.EconomicsTrust = "FAIL";
 
-   if(!any_readable)
-      record.ConditionsTruth.TruthCoverageStatus = "UNREAD";
-   else if(all_readable)
-      record.ConditionsTruth.TruthCoverageStatus = "FULL";
-   else
-      record.ConditionsTruth.TruthCoverageStatus = "PARTIAL";
+   const bool candidate_authoritative = record.ConditionsTruth.EconomicsAuthoritative;
+   if(ASC_Conditions_Internal::ShouldPreservePrior(prior_truth, record.ConditionsTruth, candidate_authoritative))
+     {
+      record.ConditionsTruth = prior_truth;
+      record.ConditionsTruth.SpecIntegrityStatus = "SPEC_PRESERVED_PRIOR";
+      record.ConditionsTruth.EconomicsTrust = "PRESERVED";
+      record.ConditionsTruth.EconomicsPreservedFromPrior = true;
+      ASC_Conditions_Internal::AppendFlag(record.ConditionsTruth.EconomicsMismatchFlags, "CARRY_FORWARD");
+      record.ConditionsTruth.SpecsReadable = true;
+      record.ConditionsTruth.SpecsReason = "preserved prior authoritative economics; incoming pass thinner";
+      return true;
+     }
+
+   if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_OK" || record.ConditionsTruth.SpecIntegrityStatus == "SPEC_SUSPICIOUS")
+      record.ConditionsTruth.SpecsReadable = true;
 
    if(record.ConditionsTruth.SpecsReadable)
-      record.ConditionsTruth.SpecsReason = "ok";
-   else if(!any_readable)
-      record.ConditionsTruth.SpecsReason = "specs unreadable";
+      record.ConditionsTruth.SpecsReason = (record.ConditionsTruth.EconomicsAuthoritative ? "ok; validated economics" : "ok; derived economics");
+   else if(broker_unreadable)
+      record.ConditionsTruth.SpecsReason = "broker-unreadable specs";
+   else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_BROKER_MISSING")
+      record.ConditionsTruth.SpecsReason = "broker-missing economics; " + reason;
+   else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_CONTRADICTORY")
+      record.ConditionsTruth.SpecsReason = "contradictory economics; flags=" + (StringLen(mismatch_flags) > 0 ? mismatch_flags : "NONE") + "; " + reason;
    else if(StringLen(reason) > 0)
-      record.ConditionsTruth.SpecsReason = (record.ConditionsTruth.TruthCoverageStatus == "PARTIAL" ? "partial truth; " : "") + reason;
-   else if(!key_economics_strong)
-      record.ConditionsTruth.SpecsReason = "key economics suspect";
+      record.ConditionsTruth.SpecsReason = ((record.ConditionsTruth.TruthCoverageStatus == "PARTIAL") ? "partial truth; " : "") + reason;
    else
       record.ConditionsTruth.SpecsReason = "specs incomplete";
 
