@@ -1793,20 +1793,72 @@ namespace ASC_Market_Internal
       return (StringSubstr(value, value_len - suffix_len, suffix_len) == suffix);
    }
 
+   bool IsAsciiAlphaNumeric(const ushort ch)
+   {
+      if(ch >= 'A' && ch <= 'Z')
+         return true;
+      if(ch >= '0' && ch <= '9')
+         return true;
+      return false;
+   }
+
+   string TrimTrailingNormalizationNoise(const string value)
+   {
+      string s = value;
+      int len = StringLen(s);
+      while(len > 0)
+      {
+         const ushort ch = (ushort)StringGetCharacter(s, len - 1);
+         if(IsAsciiAlphaNumeric(ch))
+            break;
+
+         s = StringSubstr(s, 0, len - 1);
+         len = StringLen(s);
+      }
+
+      return s;
+   }
+
    string StripKnownBrokerSuffixes(const string value)
    {
-      string s = UpperTrim(value);
-      string suffixes[] = {".C", ".NX", ".PRO", ".RAW", ".M", "_C", "_NX", "_PRO", "_RAW", "_M", "-C", "-NX", "-PRO", "-RAW", "-M"};
+      string s = TrimTrailingNormalizationNoise(UpperTrim(value));
+      string always_strip_suffixes[] =
+      {
+         ".C", ".NX", ".PRO", ".RAW", ".M",
+         "_C", "_NX", "_PRO", "_RAW", "_M",
+         "-C", "-NX", "-PRO", "-RAW", "-M"
+      };
+      string long_symbol_suffixes[] =
+      {
+         "MICRO", "MINI", "PRO", "RAW", "ECN", "STD", "CASH", "SPOT", "PLUS", "RW"
+      };
       bool changed = true;
 
       while(changed && StringLen(s) > 0)
       {
          changed = false;
-         for(int i = 0; i < ArraySize(suffixes); ++i)
+         for(int i = 0; i < ArraySize(always_strip_suffixes); ++i)
          {
-            if(EndsWith(s, suffixes[i]))
+            if(EndsWith(s, always_strip_suffixes[i]))
             {
-               s = StringSubstr(s, 0, StringLen(s) - StringLen(suffixes[i]));
+               s = StringSubstr(s, 0, StringLen(s) - StringLen(always_strip_suffixes[i]));
+               changed = true;
+               break;
+            }
+         }
+
+         if(changed)
+            continue;
+
+         for(int i = 0; i < ArraySize(long_symbol_suffixes); ++i)
+         {
+            if(EndsWith(s, long_symbol_suffixes[i]))
+            {
+               const string candidate = StringSubstr(s, 0, StringLen(s) - StringLen(long_symbol_suffixes[i]));
+               if(StringLen(candidate) < 6)
+                  continue;
+
+               s = candidate;
                changed = true;
                break;
             }
