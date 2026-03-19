@@ -45,6 +45,14 @@ enum ASC_RecordPublishabilityState
    ASC_RECORD_PUBLISH_READY
   };
 
+enum ASC_RecordRecoveryState
+  {
+   ASC_RECORD_RECOVERY_NONE = 0,
+   ASC_RECORD_RECOVERY_NOT_REQUIRED,
+   ASC_RECORD_RECOVERY_REQUIRED,
+   ASC_RECORD_RECOVERY_REHYDRATED
+  };
+
 enum ASC_RecordIntegrityState
   {
    ASC_RECORD_INTEGRITY_UNREAD = 0,
@@ -88,6 +96,17 @@ string ASC_RecordNormalizePublishabilityState(const string value);
 string ASC_RecordPublishabilityStateText(const ASC_RecordPublishabilityState state)
   {
    return(state == ASC_RECORD_PUBLISH_READY ? "READY" : "BLOCKED");
+  }
+
+string ASC_RecordRecoveryStateText(const ASC_RecordRecoveryState state)
+  {
+   switch(state)
+     {
+      case ASC_RECORD_RECOVERY_NOT_REQUIRED: return("NOT_REQUIRED");
+      case ASC_RECORD_RECOVERY_REQUIRED: return("REQUIRED");
+      case ASC_RECORD_RECOVERY_REHYDRATED: return("REHYDRATED");
+      default: return("NONE");
+     }
   }
 
 string ASC_RecordIntegrityStateText(const ASC_RecordIntegrityState state)
@@ -137,6 +156,15 @@ string ASC_RecordNormalizePublishabilityState(const string value)
    if(value == ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY))
       return(value);
    return(ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_BLOCKED));
+  }
+
+string ASC_RecordNormalizeRecoveryState(const string value)
+  {
+   if(value == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NOT_REQUIRED) ||
+      value == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_REQUIRED) ||
+      value == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_REHYDRATED))
+      return(value);
+   return(ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_NONE));
   }
 
 string ASC_RecordNormalizeIntegrityState(const string value)
@@ -449,15 +477,23 @@ struct ASC_SurfaceTruth
 
 struct ASC_RecordHydration
   {
-   string HydrationState;
-   string SnapshotAuthority;
-   bool   PublishableTruth;
+   datetime SnapshotTimestamp;
+   string   SnapshotProducer;
+   string   SnapshotSchema;
+   string   UniverseFingerprint;
+   string   HydrationState;
+   string   SnapshotAuthority;
+   string   RecoveryState;
+   string   RecoveryReason;
+   bool     PublishableTruth;
   };
 
-void ASC_RecordSetHydration(ASC_RecordHydration &hydration,const ASC_RecordHydrationState hydration_state,const ASC_RecordAuthorityState authority_state,const ASC_RecordPublishabilityState publishability_state)
+void ASC_RecordSetHydration(ASC_RecordHydration &hydration,const ASC_RecordHydrationState hydration_state,const ASC_RecordAuthorityState authority_state,const ASC_RecordPublishabilityState publishability_state,const ASC_RecordRecoveryState recovery_state = ASC_RECORD_RECOVERY_NOT_REQUIRED,const string recovery_reason = "")
   {
    hydration.HydrationState = ASC_RecordHydrationStateText(hydration_state);
    hydration.SnapshotAuthority = ASC_RecordAuthorityStateText(authority_state);
+   hydration.RecoveryState = ASC_RecordRecoveryStateText(recovery_state);
+   hydration.RecoveryReason = recovery_reason;
    hydration.PublishableTruth = (publishability_state == ASC_RECORD_PUBLISH_READY);
   }
 
@@ -465,6 +501,7 @@ void ASC_RecordNormalizeHydration(ASC_RecordHydration &hydration)
   {
    hydration.HydrationState = ASC_RecordNormalizeHydrationState(hydration.HydrationState);
    hydration.SnapshotAuthority = ASC_RecordNormalizeAuthorityState(hydration.SnapshotAuthority);
+   hydration.RecoveryState = ASC_RecordNormalizeRecoveryState(hydration.RecoveryState);
    hydration.PublishableTruth = (ASC_RecordNormalizePublishabilityState(hydration.PublishableTruth ? ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY) : ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_BLOCKED)) == ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY));
   }
 
@@ -608,7 +645,11 @@ void ASC_Record_Reset(ASC_SymbolRecord &record)
    record.SurfaceTruth.QuoteAgeSeconds = -1.0;
    record.SurfaceTruth.SpreadCostPoints = -1.0;
    record.SurfaceTruth.SurfaceScore = -1.0;
-   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_UNHYDRATED,ASC_RECORD_AUTHORITY_NONE,ASC_RECORD_PUBLISH_BLOCKED);
+   record.RecordHydration.SnapshotTimestamp = 0;
+   record.RecordHydration.SnapshotProducer = "UNKNOWN";
+   record.RecordHydration.SnapshotSchema = "UNKNOWN";
+   record.RecordHydration.UniverseFingerprint = "UNKNOWN";
+   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_UNHYDRATED,ASC_RECORD_AUTHORITY_NONE,ASC_RECORD_PUBLISH_BLOCKED,ASC_RECORD_RECOVERY_NONE,"");
   }
 
 #endif

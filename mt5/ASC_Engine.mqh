@@ -149,6 +149,16 @@ void ASC_Engine_ProcessSymbols(const string &symbols[],const int total_symbols,c
       if(existing_index >= 0)
          merged_record = g_asc_universe_records[existing_index];
 
+      if(existing_index >= 0 && !built_record.Identity.ClassificationResolved)
+        {
+         built_record.Identity.ClassificationConfidence = g_asc_universe_records[existing_index].Identity.ClassificationConfidence;
+         built_record.Identity.ClassificationReviewStatus = g_asc_universe_records[existing_index].Identity.ClassificationReviewStatus;
+         built_record.Identity.ClassificationNotes = g_asc_universe_records[existing_index].Identity.ClassificationNotes;
+         if(StringLen(built_record.Identity.ClassificationReason) == 0 || StringFind(built_record.Identity.ClassificationReason,"unresolved",0) >= 0)
+            built_record.Identity.ClassificationReason = g_asc_universe_records[existing_index].Identity.ClassificationReason;
+         if(StringLen(built_record.Identity.ClassificationServerKey) == 0)
+            built_record.Identity.ClassificationServerKey = g_asc_universe_records[existing_index].Identity.ClassificationServerKey;
+        }
       merged_record.Identity = built_record.Identity;
       merged_record.MarketTruth = built_record.MarketTruth;
 
@@ -185,7 +195,7 @@ bool ASC_Engine_ShouldPublishRecord(const ASC_SymbolRecord &record)
   {
    if(!g_asc_runtime_config.PublishPendingRecords && !ASC_Output_RecordHasPublishedTruth(record))
       return(false);
-   if(g_asc_runtime_config.HideUnresolvedClassification && !record.Identity.ClassificationResolved)
+   if(g_asc_runtime_config.HideUnresolvedClassification && ASC_Output_RecordBlockedByClassificationGovernance(record))
       return(false);
    if(g_asc_runtime_config.HideWeakSpecs && !record.ConditionsTruth.SpecsReadable)
       return(false);
@@ -212,8 +222,6 @@ bool ASC_Engine_PublishOutputs()
      }
    else
      {
-      if(g_asc_runtime_config.PublishSymbolFiles && !ASC_Output_WriteSymbolSurfaces(g_asc_runtime_config,publish_records,ArraySize(publish_records)))
-         return(false);
       if(g_asc_runtime_config.PublishSummary && !ASC_Output_WriteSummarySurface(g_asc_runtime_config,g_asc_universe_records,g_asc_universe_count))
          return(false);
       if(g_asc_runtime_config.CleanStaleSymbolFiles)

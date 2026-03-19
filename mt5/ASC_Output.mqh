@@ -308,41 +308,48 @@ string ASC_Output_SwapModeText(const int value)
      }
   }
 
-bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
+
+bool ASC_Output_RecordBlockedByClassificationGovernance(const ASC_SymbolRecord &record)
   {
    if(!record.Identity.ClassificationResolved)
-     {
-      string path = ASC_Output_Trim(record.Identity.BrokerPath);
-      StringToUpper(path);
-      string exchange = ASC_Output_Trim(record.Identity.BrokerExchange);
-      StringToUpper(exchange);
-      if(StringFind(path,"SHARE",0) >= 0 ||
-         StringFind(path,"STOCK",0) >= 0 ||
-         StringFind(path,"EQUIT",0) >= 0 ||
-         StringFind(exchange,"NASDAQ",0) >= 0 ||
-         StringFind(exchange,"NYSE",0) >= 0 ||
-         StringFind(exchange,"XETRA",0) >= 0 ||
-         StringFind(exchange,"EURONEXT",0) >= 0 ||
-         StringFind(exchange,"LONDON",0) >= 0)
-         return(false);
-     }
-
-   if(record.Identity.ClassificationResolved)
       return(true);
-   if(ASC_Output_IsMeaningfulValue(record.Identity.AssetClass))
+   if(StringFind(record.Identity.ClassificationReason,"fallback",0) >= 0)
       return(true);
-   if(record.MarketTruth.Exists)
-      return(true);
-   if(record.ConditionsTruth.SpecsReadable)
-      return(true);
-   if(record.ConditionsTruth.TruthCoverageStatus == "PARTIAL")
+   string review_status = ASC_Output_Trim(record.Identity.ClassificationReviewStatus);
+   StringToUpper(review_status);
+   if(review_status == "MISSING" || review_status == "REVIEW" || review_status == "REVIEW_REQUIRED" || review_status == "SERVER_REVIEW" || review_status == "UNRESOLVED")
       return(true);
    return(false);
   }
 
+string ASC_Output_ClassificationGovernanceState(const ASC_SymbolRecord &record)
+  {
+   if(!record.Identity.ClassificationResolved)
+      return("UNRESOLVED");
+   if(StringFind(record.Identity.ClassificationReason,"fallback",0) >= 0)
+      return("SERVER_FALLBACK_ONLY");
+   string review_status = ASC_Output_Trim(record.Identity.ClassificationReviewStatus);
+   StringToUpper(review_status);
+   if(review_status == "MISSING" || review_status == "REVIEW" || review_status == "REVIEW_REQUIRED" || review_status == "SERVER_REVIEW" || review_status == "UNRESOLVED")
+      return("REVIEW_REQUIRED");
+   return("PUBLISHABLE");
+  }
+
+bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
+  {
+   if(!record.RecordHydration.PublishableTruth)
+      return(false);
+   if(record.RecordHydration.RecoveryState == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_REQUIRED))
+      return(false);
+   if(ASC_Output_RecordBlockedByClassificationGovernance(record))
+      return(false);
+   return(true);
+  }
+
 bool ASC_Output_RecordNeedsClassificationReview(const ASC_SymbolRecord &record)
   {
-   if(record.Identity.ClassificationResolved)
+   const string governance_state = ASC_Output_ClassificationGovernanceState(record);
+   if(governance_state == "PUBLISHABLE")
       return(false);
 
    string path = record.Identity.BrokerPath;
@@ -602,7 +609,7 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    const string broker_name = ASC_Output_BrokerName();
    const string file_name = ASC_Output_SummaryFileName(broker_name);
 
-   int published_count = 0;
+   int publishable_review_count = 0;
    int pending_count = 0;
    int unavailable_count = 0;
    int eligible_count = 0;
@@ -639,15 +646,16 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
          ++review_queue_count;
 
       const string publication_state = ASC_Output_PublicationStateText(record);
+      const string governance_state = ASC_Output_ClassificationGovernanceState(record);
       if(publication_state == "PUBLISHED")
-         ++published_count;
+         ++publishable_review_count;
       else if(publication_state == "PENDING_SCAN")
          ++pending_count;
       else
          ++unavailable_count;
      }
 
-   lines[5] = "PublishedSymbolFiles: " + IntegerToString(published_count);
+   lines[5] = "PublishedSymbolFiles: 0";
    lines[6] = "PendingUniverseMembers: " + IntegerToString(pending_count);
    lines[7] = "UnavailableUniverseMembers: " + IntegerToString(unavailable_count);
    lines[8] = "Layer1EligibleCount: " + IntegerToString(eligible_count);
@@ -661,13 +669,21 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
    ArrayResize(lines,guidance_start + 4);
    lines[guidance_start] = "";
    lines[guidance_start + 1] = "[ROUTING_GUIDANCE]";
-   lines[guidance_start + 2] = "Published symbol routes appear below only when a symbol dossier was actually written this cycle.";
-   lines[guidance_start + 3] = "Pending symbols remain preserved in the universe snapshot and mirror output until a later pass supplies publishable truth.";
+   lines[guidance_start + 2] = "Layer 1.2 no longer publishes trader-facing symbol dossiers; consult the snapshot mirror and review queue instead.";
+   lines[guidance_start + 3] = "Unresolved or partial truth remains visible only through operator/recovery surfaces until S1 shared state marks it publishable.";
+
+   const int status_start = ArraySize(lines);
+   ArrayResize(lines,status_start + 3);
+   lines[status_start] = "";
+   lines[status_start + 1] = "[OPERATOR_STATUS]";
+   lines[status_start + 2] = "PublishableReviewReadyCount: " + IntegerToString(publishable_review_count);
 
    for(int index = 0; index < count; ++index)
      {
       const ASC_SymbolRecord record = records[index];
-      if(ASC_Output_PublicationStateText(record) != "PUBLISHED")
+      const string publication_state = ASC_Output_PublicationStateText(record);
+      const string governance_state = ASC_Output_ClassificationGovernanceState(record);
+      if(publication_state == "UNAVAILABLE")
          continue;
 
       const string bucket = ASC_Output_PrimaryBucketLabel(record);
@@ -694,10 +710,14 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
         }
 
       string line = ASC_Output_RecordDisplaySymbol(record);
-      line += " | Route=" + ASC_Output_RecordRoute(broker_name,record);
+      line += " | PublicationState=" + publication_state;
       line += " | Session=" + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus);
       line += " | Quote=" + record.MarketTruth.QuoteFreshnessStatus;
       line += " | Specs=" + record.ConditionsTruth.SpecIntegrityStatus;
+      if(ASC_Output_RecordNeedsClassificationReview(record))
+         line += " | Review=CLASSIFICATION:" + governance_state;
+      if(ASC_Output_IsMeaningfulValue(record.Identity.ClassificationServerKey))
+         line += " | ArchiveServer=" + record.Identity.ClassificationServerKey;
       const int next_index = ArraySize(lines);
       ArrayResize(lines,next_index + 1);
       lines[next_index] = line;
@@ -779,8 +799,12 @@ bool ASC_Output_WriteClassificationReviewQueue(const ASC_RuntimeConfig &config,c
       ASC_Output_WriteStringField(handle,"DisplayName",records[index].Identity.DisplayName);
       ASC_Output_WriteStringField(handle,"BrokerExchange",records[index].Identity.BrokerExchange);
       ASC_Output_WriteStringField(handle,"BrokerPath",records[index].Identity.BrokerPath);
+      ASC_Output_WriteStringField(handle,"GovernanceState",ASC_Output_ClassificationGovernanceState(records[index]));
+      ASC_Output_WriteStringField(handle,"ClassificationConfidence",records[index].Identity.ClassificationConfidence);
+      ASC_Output_WriteStringField(handle,"ClassificationReviewStatus",records[index].Identity.ClassificationReviewStatus);
       ASC_Output_WriteStringField(handle,"ClassificationReason",records[index].Identity.ClassificationReason);
       ASC_Output_WriteStringField(handle,"ClassificationServerKey",records[index].Identity.ClassificationServerKey);
+      ASC_Output_WriteStringField(handle,"ArchiveProvenance","archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh");
       FileWrite(handle,"");
      }
 
@@ -831,14 +855,26 @@ void ASC_Output_WriteMirrorRecord(const int handle,const ASC_SymbolRecord &recor
    FileWrite(handle,"Title: " + ASC_Output_RecordTitle(record));
    FileWrite(handle,"DisplaySymbol: " + ASC_Output_RecordDisplaySymbol(record));
    FileWrite(handle,"PublicationState: " + ASC_Output_PublicationStateText(record));
+   ASC_Output_WriteStringField(handle,"SnapshotTimestamp",TimeToString(record.RecordHydration.SnapshotTimestamp,TIME_DATE | TIME_SECONDS));
+   ASC_Output_WriteStringField(handle,"SnapshotProducer",record.RecordHydration.SnapshotProducer);
+   ASC_Output_WriteStringField(handle,"SnapshotSchema",record.RecordHydration.SnapshotSchema);
+   ASC_Output_WriteStringField(handle,"UniverseFingerprint",record.RecordHydration.UniverseFingerprint);
    ASC_Output_WriteStringField(handle,"HydrationState",record.RecordHydration.HydrationState);
    ASC_Output_WriteStringField(handle,"SnapshotAuthority",record.RecordHydration.SnapshotAuthority);
+   ASC_Output_WriteStringField(handle,"RecoveryState",record.RecordHydration.RecoveryState);
+   ASC_Output_WriteStringField(handle,"RecoveryReason",record.RecordHydration.RecoveryReason);
    FileWrite(handle,"PublishableTruth: " + ASC_Output_BoolText(record.RecordHydration.PublishableTruth));
    ASC_Output_WriteStringField(handle,"PrimaryBucket",ASC_Output_PrimaryBucketLabel(record));
    FileWrite(handle,"SessionTruthStatus: " + ASC_Output_SessionStatusText(record.MarketTruth.SessionTruthStatus));
    ASC_Output_WriteStringField(handle,"QuoteFreshnessStatus",record.MarketTruth.QuoteFreshnessStatus);
    ASC_Output_WriteStringField(handle,"SpecIntegrityStatus",record.ConditionsTruth.SpecIntegrityStatus);
    ASC_Output_WriteStringField(handle,"TruthCoverageStatus",record.ConditionsTruth.TruthCoverageStatus);
+   ASC_Output_WriteStringField(handle,"ClassificationConfidence",record.Identity.ClassificationConfidence);
+   ASC_Output_WriteStringField(handle,"ClassificationReviewStatus",record.Identity.ClassificationReviewStatus);
+   ASC_Output_WriteStringField(handle,"ClassificationReason",record.Identity.ClassificationReason);
+   ASC_Output_WriteStringField(handle,"ClassificationServerKey",record.Identity.ClassificationServerKey);
+   ASC_Output_WriteStringField(handle,"ClassificationGovernanceState",ASC_Output_ClassificationGovernanceState(record));
+   ASC_Output_WriteStringField(handle,"ArchiveProvenance","archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh");
    ASC_Output_WriteStringField(handle,"SessionConsistencyReason",record.MarketTruth.SessionConsistencyReason);
    FileWrite(handle,"");
   }
@@ -847,7 +883,7 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
   {
    FolderCreate(ASC_OUTPUT_ROOT_PATH,config.UseCommonFiles ? FILE_COMMON : 0);
 
-   const int handle = FileOpen(ASC_OUTPUT_LAYER12_MIRROR_FILE_NAME,ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
+   const int handle = FileOpen(ASC_OUTPUT_MIRROR_FILE_NAME,ASC_Output_OpenFlags(config.UseCommonFiles) | FILE_WRITE);
    if(handle == INVALID_HANDLE)
       return(false);
 
@@ -869,6 +905,13 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
      }
 
    FileWrite(handle,"Universe Recovery Debug Mirror");
+   if(count > 0)
+     {
+      ASC_Output_WriteStringField(handle,"SnapshotProducer",records[0].RecordHydration.SnapshotProducer);
+      ASC_Output_WriteStringField(handle,"SnapshotSchema",records[0].RecordHydration.SnapshotSchema);
+      ASC_Output_WriteStringField(handle,"UniverseFingerprint",records[0].RecordHydration.UniverseFingerprint);
+      ASC_Output_WriteStringField(handle,"SnapshotTimestamp",TimeToString(records[0].RecordHydration.SnapshotTimestamp,TIME_DATE | TIME_SECONDS));
+     }
    FileWrite(handle,"RecordCount: " + IntegerToString(count));
    FileWrite(handle,"Layer1EligibleCount: " + IntegerToString(eligible_count));
    FileWrite(handle,"HydratedSpecCount: " + IntegerToString(hydrated_count));
@@ -880,9 +923,6 @@ bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,cons
       ASC_Output_WriteMirrorRecord(handle,records[index]);
 
    FileClose(handle);
-
-   if(!ASC_Output_WriteSymbolSurfaces(config,records,count))
-      return(false);
 
    if(!ASC_Output_WriteClassificationReviewQueue(config,records,count))
       return(false);
