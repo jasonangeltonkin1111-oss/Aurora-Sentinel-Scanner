@@ -19,6 +19,139 @@ enum ASC_SurfaceScanState
    ASC_SURFACE_EVALUATED
   };
 
+enum ASC_RecordHydrationState
+  {
+   ASC_RECORD_UNHYDRATED = 0,
+   ASC_RECORD_PENDING_DISCOVERY_HYDRATION,
+   ASC_RECORD_MARKET_PASS_COMPLETE,
+   ASC_RECORD_MARKET_PASS_ONLY,
+   ASC_RECORD_MARKET_PASS_ABSENT,
+   ASC_RECORD_CURRENT_PASS_READY,
+   ASC_RECORD_LEGACY_RECOVERED
+  };
+
+enum ASC_RecordAuthorityState
+  {
+   ASC_RECORD_AUTHORITY_NONE = 0,
+   ASC_RECORD_AUTHORITY_PLACEHOLDER,
+   ASC_RECORD_AUTHORITY_CURRENT_PASS,
+   ASC_RECORD_AUTHORITY_SNAPSHOT_V3,
+   ASC_RECORD_AUTHORITY_LEGACY
+  };
+
+enum ASC_RecordPublishabilityState
+  {
+   ASC_RECORD_PUBLISH_BLOCKED = 0,
+   ASC_RECORD_PUBLISH_READY
+  };
+
+enum ASC_RecordIntegrityState
+  {
+   ASC_RECORD_INTEGRITY_UNREAD = 0,
+   ASC_RECORD_INTEGRITY_SPEC_OK,
+   ASC_RECORD_INTEGRITY_SPEC_SUSPICIOUS,
+   ASC_RECORD_INTEGRITY_SPEC_PRESERVED_PRIOR,
+   ASC_RECORD_INTEGRITY_SPEC_UNREADABLE,
+   ASC_RECORD_INTEGRITY_SPEC_BROKER_MISSING,
+   ASC_RECORD_INTEGRITY_SPEC_CONTRADICTORY,
+   ASC_RECORD_INTEGRITY_SPEC_BROKEN
+  };
+
+string ASC_RecordHydrationStateText(const ASC_RecordHydrationState state)
+  {
+   switch(state)
+     {
+      case ASC_RECORD_PENDING_DISCOVERY_HYDRATION: return("PENDING_DISCOVERY_HYDRATION");
+      case ASC_RECORD_MARKET_PASS_COMPLETE: return("MARKET_PASS_COMPLETE");
+      case ASC_RECORD_MARKET_PASS_ONLY: return("MARKET_PASS_ONLY");
+      case ASC_RECORD_MARKET_PASS_ABSENT: return("MARKET_PASS_ABSENT");
+      case ASC_RECORD_CURRENT_PASS_READY: return("CURRENT_PASS_READY");
+      case ASC_RECORD_LEGACY_RECOVERED: return("LEGACY_RECOVERED");
+      default: return("UNHYDRATED");
+     }
+  }
+
+string ASC_RecordAuthorityStateText(const ASC_RecordAuthorityState state)
+  {
+   switch(state)
+     {
+      case ASC_RECORD_AUTHORITY_PLACEHOLDER: return("PLACEHOLDER");
+      case ASC_RECORD_AUTHORITY_CURRENT_PASS: return("CURRENT_PASS");
+      case ASC_RECORD_AUTHORITY_SNAPSHOT_V3: return("SNAPSHOT_V3");
+      case ASC_RECORD_AUTHORITY_LEGACY: return("LEGACY");
+      default: return("NONE");
+     }
+  }
+
+string ASC_RecordNormalizePublishabilityState(const string value);
+
+string ASC_RecordPublishabilityStateText(const ASC_RecordPublishabilityState state)
+  {
+   return(state == ASC_RECORD_PUBLISH_READY ? "READY" : "BLOCKED");
+  }
+
+string ASC_RecordIntegrityStateText(const ASC_RecordIntegrityState state)
+  {
+   switch(state)
+     {
+      case ASC_RECORD_INTEGRITY_SPEC_OK: return("SPEC_OK");
+      case ASC_RECORD_INTEGRITY_SPEC_SUSPICIOUS: return("SPEC_SUSPICIOUS");
+      case ASC_RECORD_INTEGRITY_SPEC_PRESERVED_PRIOR: return("SPEC_PRESERVED_PRIOR");
+      case ASC_RECORD_INTEGRITY_SPEC_UNREADABLE: return("SPEC_UNREADABLE");
+      case ASC_RECORD_INTEGRITY_SPEC_BROKER_MISSING: return("SPEC_BROKER_MISSING");
+      case ASC_RECORD_INTEGRITY_SPEC_CONTRADICTORY: return("SPEC_CONTRADICTORY");
+      case ASC_RECORD_INTEGRITY_SPEC_BROKEN: return("SPEC_BROKEN");
+      default: return("UNREAD");
+     }
+  }
+
+bool ASC_RecordPublishableTruthFromState(const string publishability_state)
+  {
+   return(ASC_RecordNormalizePublishabilityState(publishability_state) == ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY));
+  }
+
+string ASC_RecordNormalizeHydrationState(const string value)
+  {
+   if(value == ASC_RecordHydrationStateText(ASC_RECORD_PENDING_DISCOVERY_HYDRATION) ||
+      value == ASC_RecordHydrationStateText(ASC_RECORD_MARKET_PASS_COMPLETE) ||
+      value == ASC_RecordHydrationStateText(ASC_RECORD_MARKET_PASS_ONLY) ||
+      value == ASC_RecordHydrationStateText(ASC_RECORD_MARKET_PASS_ABSENT) ||
+      value == ASC_RecordHydrationStateText(ASC_RECORD_CURRENT_PASS_READY) ||
+      value == ASC_RecordHydrationStateText(ASC_RECORD_LEGACY_RECOVERED))
+      return(value);
+   return(ASC_RecordHydrationStateText(ASC_RECORD_UNHYDRATED));
+  }
+
+string ASC_RecordNormalizeAuthorityState(const string value)
+  {
+   if(value == ASC_RecordAuthorityStateText(ASC_RECORD_AUTHORITY_PLACEHOLDER) ||
+      value == ASC_RecordAuthorityStateText(ASC_RECORD_AUTHORITY_CURRENT_PASS) ||
+      value == ASC_RecordAuthorityStateText(ASC_RECORD_AUTHORITY_SNAPSHOT_V3) ||
+      value == ASC_RecordAuthorityStateText(ASC_RECORD_AUTHORITY_LEGACY))
+      return(value);
+   return(ASC_RecordAuthorityStateText(ASC_RECORD_AUTHORITY_NONE));
+  }
+
+string ASC_RecordNormalizePublishabilityState(const string value)
+  {
+   if(value == ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY))
+      return(value);
+   return(ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_BLOCKED));
+  }
+
+string ASC_RecordNormalizeIntegrityState(const string value)
+  {
+   if(value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_OK) ||
+      value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_SUSPICIOUS) ||
+      value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_PRESERVED_PRIOR) ||
+      value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_UNREADABLE) ||
+      value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_BROKER_MISSING) ||
+      value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_CONTRADICTORY) ||
+      value == ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_SPEC_BROKEN))
+      return(value);
+   return(ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_UNREAD));
+  }
+
 enum ASC_UICorner
   {
    ASC_UI_TOP_LEFT = 0,
@@ -312,6 +445,21 @@ struct ASC_RecordHydration
    bool   PublishableTruth;
   };
 
+void ASC_RecordSetHydration(ASC_RecordHydration &hydration,const ASC_RecordHydrationState hydration_state,const ASC_RecordAuthorityState authority_state,const ASC_RecordPublishabilityState publishability_state)
+  {
+   hydration.HydrationState = ASC_RecordHydrationStateText(hydration_state);
+   hydration.SnapshotAuthority = ASC_RecordAuthorityStateText(authority_state);
+   hydration.PublishableTruth = (publishability_state == ASC_RECORD_PUBLISH_READY);
+  }
+
+void ASC_RecordNormalizeHydration(ASC_RecordHydration &hydration)
+  {
+   hydration.HydrationState = ASC_RecordNormalizeHydrationState(hydration.HydrationState);
+   hydration.SnapshotAuthority = ASC_RecordNormalizeAuthorityState(hydration.SnapshotAuthority);
+   hydration.PublishableTruth = (ASC_RecordNormalizePublishabilityState(hydration.PublishableTruth ? ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY) : ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_BLOCKED)) == ASC_RecordPublishabilityStateText(ASC_RECORD_PUBLISH_READY));
+  }
+
+
 struct ASC_SymbolRecord
   {
    ASC_SymbolIdentity   Identity;
@@ -365,5 +513,84 @@ bool ASC_Surface_Evaluate(const ASC_RuntimeConfig &config,ASC_SymbolRecord &reco
 bool ASC_Storage_LoadUniverseSnapshot(const ASC_RuntimeConfig &config,ASC_SymbolRecord &records[],int &count);
 bool ASC_Storage_SaveUniverseSnapshot(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count);
 bool ASC_Output_WriteUniverseSnapshotMirror(const ASC_RuntimeConfig &config,const ASC_SymbolRecord &records[],const int count);
+
+void ASC_Record_Reset(ASC_SymbolRecord &record)
+  {
+   ZeroMemory(record);
+
+   record.Identity.AssetClass = "UNKNOWN";
+   record.Identity.PrimaryBucket = "UNKNOWN";
+   record.Identity.Sector = "UNKNOWN";
+   record.Identity.Industry = "UNKNOWN";
+   record.Identity.Theme = "UNKNOWN";
+   record.MarketTruth.QuoteAgeSeconds = -1;
+   record.MarketTruth.QuoteFreshnessStatus = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleSunday = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleMonday = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleTuesday = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleWednesday = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleThursday = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleFriday = "UNKNOWN";
+   record.MarketTruth.QuoteScheduleSaturday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleSunday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleMonday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleTuesday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleWednesday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleThursday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleFriday = "UNKNOWN";
+   record.MarketTruth.TradeScheduleSaturday = "UNKNOWN";
+   record.MarketTruth.SessionReadStatus = "UNREAD";
+   record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordIntegrityStateText(ASC_RECORD_INTEGRITY_UNREAD);
+   record.ConditionsTruth.EconomicsTrust = "UNREAD";
+   record.ConditionsTruth.NormalizationStatus = "NORMALIZATION_UNKNOWN";
+   record.ConditionsTruth.TruthCoverageStatus = "UNREAD";
+   record.ConditionsTruth.Digits = -1;
+   record.ConditionsTruth.SpreadPoints = -1;
+   record.ConditionsTruth.StopsLevel = -1;
+   record.ConditionsTruth.FreezeLevel = -1;
+   record.ConditionsTruth.Point = -1.0;
+   record.ConditionsTruth.TickSize = -1.0;
+   record.ConditionsTruth.TickValue = -1.0;
+   record.ConditionsTruth.TickValueRaw = -1.0;
+   record.ConditionsTruth.TickValueDerived = -1.0;
+   record.ConditionsTruth.TickValueValidated = -1.0;
+   record.ConditionsTruth.TickValueProfit = -1.0;
+   record.ConditionsTruth.TickValueLoss = -1.0;
+   record.ConditionsTruth.ContractSize = -1.0;
+   record.ConditionsTruth.VolumeMin = -1.0;
+   record.ConditionsTruth.VolumeMax = -1.0;
+   record.ConditionsTruth.VolumeStep = -1.0;
+   record.ConditionsTruth.VolumeLimit = -1.0;
+   record.ConditionsTruth.CalcMode = -1;
+   record.ConditionsTruth.ChartMode = -1;
+   record.ConditionsTruth.TradeMode = -1;
+   record.ConditionsTruth.ExecutionMode = -1;
+   record.ConditionsTruth.GtcMode = -1;
+   record.ConditionsTruth.FillingMode = -1;
+   record.ConditionsTruth.ExpirationMode = -1;
+   record.ConditionsTruth.OrderMode = -1;
+   record.ConditionsTruth.SwapMode = -1;
+   record.ConditionsTruth.SwapSunday = -1.0;
+   record.ConditionsTruth.SwapMonday = -1.0;
+   record.ConditionsTruth.SwapTuesday = -1.0;
+   record.ConditionsTruth.SwapWednesday = -1.0;
+   record.ConditionsTruth.SwapThursday = -1.0;
+   record.ConditionsTruth.SwapFriday = -1.0;
+   record.ConditionsTruth.SwapSaturday = -1.0;
+   record.ConditionsTruth.MarginInitial = -1.0;
+   record.ConditionsTruth.MarginMaintenance = -1.0;
+   record.ConditionsTruth.MarginHedged = -1.0;
+   record.ConditionsTruth.MarginRateBuyInitial = -1.0;
+   record.ConditionsTruth.MarginRateBuyMaintenance = -1.0;
+   record.ConditionsTruth.MarginRateSellInitial = -1.0;
+   record.ConditionsTruth.MarginRateSellMaintenance = -1.0;
+   record.SurfaceTruth.ScanState = ASC_SURFACE_NOT_RUN;
+   record.SurfaceTruth.BarsM15 = -1;
+   record.SurfaceTruth.BarsH1 = -1;
+   record.SurfaceTruth.QuoteAgeSeconds = -1.0;
+   record.SurfaceTruth.SpreadCostPoints = -1.0;
+   record.SurfaceTruth.SurfaceScore = -1.0;
+   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_UNHYDRATED,ASC_RECORD_AUTHORITY_NONE,ASC_RECORD_PUBLISH_BLOCKED);
+  }
 
 #endif

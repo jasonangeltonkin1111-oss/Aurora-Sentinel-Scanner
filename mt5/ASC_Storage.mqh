@@ -127,171 +127,7 @@ bool ASC_Storage_ParseBool(const string value)
 
 void ASC_Storage_ResetRecord(ASC_SymbolRecord &record)
   {
-   record.Identity.RawSymbol = "";
-   record.Identity.NormalizedSymbol = "";
-   record.Identity.CanonicalSymbol = "";
-   record.Identity.DisplayName = "";
-   record.Identity.BrokerPath = "";
-   record.Identity.BrokerExchange = "";
-   record.Identity.BrokerCountry = "";
-   record.Identity.AssetClass = "UNKNOWN";
-   record.Identity.PrimaryBucket = "UNKNOWN";
-   record.Identity.Sector = "UNKNOWN";
-   record.Identity.Industry = "UNKNOWN";
-   record.Identity.Theme = "UNKNOWN";
-   record.Identity.ClassificationResolved = false;
-   record.Identity.ClassificationReason = "classification unresolved";
-
-   record.MarketTruth.Exists = false;
-   record.MarketTruth.Selected = false;
-   record.MarketTruth.Visible = false;
-   record.MarketTruth.QuoteWindowOpen = false;
-   record.MarketTruth.TradeWindowOpen = false;
-   record.MarketTruth.TradeAllowed = false;
-   record.MarketTruth.HasUsableQuote = false;
-   record.MarketTruth.QuoteFresh = false;
-   record.MarketTruth.QuoteScheduleReadable = false;
-   record.MarketTruth.TradeScheduleReadable = false;
-   record.MarketTruth.SessionTruthStatus = ASC_SESSION_UNKNOWN;
-   record.MarketTruth.Layer1Eligible = false;
-   record.MarketTruth.LastQuoteTime = 0;
-   record.MarketTruth.NextRecheckTime = 0;
-   record.MarketTruth.QuoteAgeSeconds = -1;
-   record.MarketTruth.QuoteFreshnessStatus = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleSunday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleMonday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleTuesday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleWednesday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleThursday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleFriday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleSaturday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleSunday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleMonday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleTuesday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleWednesday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleThursday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleFriday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleSaturday = "UNKNOWN";
-   record.MarketTruth.SessionReadStatus = "UNREAD";
-   record.MarketTruth.SessionReadReason = "session truth not loaded";
-   record.MarketTruth.SessionConsistencyReason = "session truth unresolved";
-   record.MarketTruth.IneligibleReason = "market truth unresolved";
-
-   record.ConditionsTruth.SpecsReadable = false;
-   record.ConditionsTruth.SpecsReason = "specs not loaded";
-   record.ConditionsTruth.SpecIntegrityStatus = "UNREAD";
-   record.ConditionsTruth.EconomicsTrust = "UNREAD";
-   record.ConditionsTruth.NormalizationStatus = "NORMALIZATION_UNKNOWN";
-   record.ConditionsTruth.TruthCoverageStatus = "UNREAD";
-   record.ConditionsTruth.DigitsReadable = false;
-   record.ConditionsTruth.Digits = -1;
-   record.ConditionsTruth.SpreadPointsReadable = false;
-   record.ConditionsTruth.SpreadPoints = -1;
-   record.ConditionsTruth.SpreadFloatReadable = false;
-   record.ConditionsTruth.SpreadFloat = false;
-   record.ConditionsTruth.StopsLevelReadable = false;
-   record.ConditionsTruth.StopsLevel = -1;
-   record.ConditionsTruth.FreezeLevelReadable = false;
-   record.ConditionsTruth.FreezeLevel = -1;
-   record.ConditionsTruth.PointReadable = false;
-   record.ConditionsTruth.Point = -1.0;
-   record.ConditionsTruth.TickSizeReadable = false;
-   record.ConditionsTruth.TickSize = -1.0;
-   record.ConditionsTruth.TickValueReadable = false;
-   record.ConditionsTruth.TickValue = -1.0;
-   record.ConditionsTruth.TickValueRawReadable = false;
-   record.ConditionsTruth.TickValueRaw = -1.0;
-   record.ConditionsTruth.TickValueDerivedReadable = false;
-   record.ConditionsTruth.TickValueDerived = -1.0;
-   record.ConditionsTruth.TickValueValidatedReadable = false;
-   record.ConditionsTruth.TickValueValidated = -1.0;
-   record.ConditionsTruth.TickValueProfitReadable = false;
-   record.ConditionsTruth.TickValueProfit = -1.0;
-   record.ConditionsTruth.TickValueLossReadable = false;
-   record.ConditionsTruth.TickValueLoss = -1.0;
-   record.ConditionsTruth.EconomicsMismatchFlags = "";
-   record.ConditionsTruth.EconomicsAuthoritative = false;
-   record.ConditionsTruth.EconomicsPreservedFromPrior = false;
-   record.ConditionsTruth.ContractSizeReadable = false;
-   record.ConditionsTruth.ContractSize = -1.0;
-   record.ConditionsTruth.VolumeMinReadable = false;
-   record.ConditionsTruth.VolumeMin = -1.0;
-   record.ConditionsTruth.VolumeMaxReadable = false;
-   record.ConditionsTruth.VolumeMax = -1.0;
-   record.ConditionsTruth.VolumeStepReadable = false;
-   record.ConditionsTruth.VolumeStep = -1.0;
-   record.ConditionsTruth.VolumeLimitReadable = false;
-   record.ConditionsTruth.VolumeLimit = -1.0;
-   record.ConditionsTruth.MarginCurrencyReadable = false;
-   record.ConditionsTruth.MarginCurrency = "";
-   record.ConditionsTruth.ProfitCurrencyReadable = false;
-   record.ConditionsTruth.ProfitCurrency = "";
-   record.ConditionsTruth.BaseCurrencyReadable = false;
-   record.ConditionsTruth.BaseCurrency = "";
-   record.ConditionsTruth.CalcModeReadable = false;
-   record.ConditionsTruth.CalcMode = -1;
-   record.ConditionsTruth.ChartModeReadable = false;
-   record.ConditionsTruth.ChartMode = -1;
-   record.ConditionsTruth.TradeModeReadable = false;
-   record.ConditionsTruth.TradeMode = -1;
-   record.ConditionsTruth.ExecutionModeReadable = false;
-   record.ConditionsTruth.ExecutionMode = -1;
-   record.ConditionsTruth.GtcModeReadable = false;
-   record.ConditionsTruth.GtcMode = -1;
-   record.ConditionsTruth.FillingModeReadable = false;
-   record.ConditionsTruth.FillingMode = -1;
-   record.ConditionsTruth.ExpirationModeReadable = false;
-   record.ConditionsTruth.ExpirationMode = -1;
-   record.ConditionsTruth.OrderModeReadable = false;
-   record.ConditionsTruth.OrderMode = -1;
-   record.ConditionsTruth.SwapModeReadable = false;
-   record.ConditionsTruth.SwapMode = -1;
-   record.ConditionsTruth.SwapLongReadable = false;
-   record.ConditionsTruth.SwapLong = 0.0;
-   record.ConditionsTruth.SwapShortReadable = false;
-   record.ConditionsTruth.SwapShort = 0.0;
-   record.ConditionsTruth.SwapSundayReadable = false;
-   record.ConditionsTruth.SwapSunday = -1.0;
-   record.ConditionsTruth.SwapMondayReadable = false;
-   record.ConditionsTruth.SwapMonday = -1.0;
-   record.ConditionsTruth.SwapTuesdayReadable = false;
-   record.ConditionsTruth.SwapTuesday = -1.0;
-   record.ConditionsTruth.SwapWednesdayReadable = false;
-   record.ConditionsTruth.SwapWednesday = -1.0;
-   record.ConditionsTruth.SwapThursdayReadable = false;
-   record.ConditionsTruth.SwapThursday = -1.0;
-   record.ConditionsTruth.SwapFridayReadable = false;
-   record.ConditionsTruth.SwapFriday = -1.0;
-   record.ConditionsTruth.SwapSaturdayReadable = false;
-   record.ConditionsTruth.SwapSaturday = -1.0;
-   record.ConditionsTruth.MarginInitialReadable = false;
-   record.ConditionsTruth.MarginInitial = -1.0;
-   record.ConditionsTruth.MarginMaintenanceReadable = false;
-   record.ConditionsTruth.MarginMaintenance = -1.0;
-   record.ConditionsTruth.MarginHedgedReadable = false;
-   record.ConditionsTruth.MarginHedged = -1.0;
-   record.ConditionsTruth.MarginRateBuyReadable = false;
-   record.ConditionsTruth.MarginRateBuyInitial = -1.0;
-   record.ConditionsTruth.MarginRateBuyMaintenance = -1.0;
-   record.ConditionsTruth.MarginRateSellReadable = false;
-   record.ConditionsTruth.MarginRateSellInitial = -1.0;
-   record.ConditionsTruth.MarginRateSellMaintenance = -1.0;
-
-   record.SurfaceTruth.ScanState = ASC_SURFACE_NOT_RUN;
-   record.SurfaceTruth.SurfaceEligible = false;
-   record.SurfaceTruth.RankingEligible = false;
-   record.SurfaceTruth.SurfaceReason = "";
-   record.SurfaceTruth.BarsM15 = 0;
-   record.SurfaceTruth.BarsH1 = 0;
-   record.SurfaceTruth.LastBarTimeM15 = 0;
-   record.SurfaceTruth.LastBarTimeH1 = 0;
-   record.SurfaceTruth.QuoteAgeSeconds = 0.0;
-   record.SurfaceTruth.SpreadCostPoints = 0.0;
-   record.SurfaceTruth.SurfaceScore = 0.0;
-
-   record.RecordHydration.HydrationState = "UNHYDRATED";
-   record.RecordHydration.SnapshotAuthority = "NONE";
-   record.RecordHydration.PublishableTruth = false;
+   ASC_Record_Reset(record);
   }
 
 void ASC_Storage_PushString(string &fields[],int &cursor,const string value)
@@ -843,14 +679,15 @@ bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_Symbol
       ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.HydrationState);
       ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotAuthority);
       ASC_Storage_PullBool(fields,count,cursor,record.RecordHydration.PublishableTruth);
+      ASC_RecordNormalizeHydration(record.RecordHydration);
      }
    else
      {
-      record.RecordHydration.HydrationState = "CURRENT_PASS_READY";
-      record.RecordHydration.SnapshotAuthority = "SNAPSHOT_V3";
-      record.RecordHydration.PublishableTruth = true;
+      ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_CURRENT_PASS_READY,ASC_RECORD_AUTHORITY_SNAPSHOT_V3,ASC_RECORD_PUBLISH_READY);
      }
 
+   record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordNormalizeIntegrityState(record.ConditionsTruth.SpecIntegrityStatus);
+   ASC_RecordNormalizeHydration(record.RecordHydration);
    return(cursor == count);
   }
 
@@ -889,13 +726,11 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
 
    record.ConditionsTruth.SpecsReadable = ASC_Storage_ParseBool(fields[21]);
    record.ConditionsTruth.SpecsReason = ASC_Storage_UnescapeField(fields[22]);
-   record.ConditionsTruth.SpecIntegrityStatus = (record.ConditionsTruth.SpecsReadable ? "SPEC_OK" : "SPEC_UNREADABLE");
+   record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordIntegrityStateText(record.ConditionsTruth.SpecsReadable ? ASC_RECORD_INTEGRITY_SPEC_OK : ASC_RECORD_INTEGRITY_SPEC_UNREADABLE);
    record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.SpecsReadable ? "PASS" : "UNREAD");
    record.ConditionsTruth.NormalizationStatus = (record.Identity.ClassificationResolved ? "NORMALIZATION_OK" : "NORMALIZATION_UNRESOLVED");
    record.ConditionsTruth.TruthCoverageStatus = "LEGACY";
-   record.RecordHydration.HydrationState = "LEGACY_RECOVERED";
-   record.RecordHydration.SnapshotAuthority = "LEGACY";
-   record.RecordHydration.PublishableTruth = false;
+   ASC_RecordSetHydration(record.RecordHydration,ASC_RECORD_LEGACY_RECOVERED,ASC_RECORD_AUTHORITY_LEGACY,ASC_RECORD_PUBLISH_BLOCKED);
 
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)
      {
@@ -919,6 +754,8 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
       record.ConditionsTruth.VolumeMax = StringToDouble(fields[31]);
       record.ConditionsTruth.VolumeStepReadable = (StringToDouble(fields[32]) >= 0.0);
       record.ConditionsTruth.VolumeStep = StringToDouble(fields[32]);
+      record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordNormalizeIntegrityState(record.ConditionsTruth.SpecIntegrityStatus);
+      ASC_RecordNormalizeHydration(record.RecordHydration);
       return(true);
      }
 
@@ -942,6 +779,8 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.ConditionsTruth.VolumeMax = StringToDouble(fields[40]);
    record.ConditionsTruth.VolumeStepReadable = ASC_Storage_ParseBool(fields[41]);
    record.ConditionsTruth.VolumeStep = StringToDouble(fields[42]);
+   record.ConditionsTruth.SpecIntegrityStatus = ASC_RecordNormalizeIntegrityState(record.ConditionsTruth.SpecIntegrityStatus);
+   ASC_RecordNormalizeHydration(record.RecordHydration);
    return(true);
   }
 
