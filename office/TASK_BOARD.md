@@ -100,6 +100,7 @@ The following are blocked until prior truth is verified:
 - Layer 3 rolling dossier continuation before ACTIVE rights are defined and verified
 - Layer 4 expansion before Layers 1, 1.2, 2, Activation Gate, and Layer 3 are stable
 - Diagnostics/UI product work before first-slice scanner truth is working
+- schema/version header updates before the final release-owned version task is opened and approved
 
 ---
 
@@ -119,6 +120,7 @@ Before any progression decision, HQ must preserve these truths:
 3. the latest Clerk verdict is `PASS WITH CLERK CORRECTIONS`
 4. the latest Debug verdict is `PASS WITH NON-BLOCKING FIXES`
 5. no new feature or later-slice expansion should be implied merely because Wave 1 is healthier
+6. version updates remain blocked until the final release-owned version task
 
 Wave 1 is now review-passed for bounded advancement.
 The next step is not reissuing the same fix packets.
