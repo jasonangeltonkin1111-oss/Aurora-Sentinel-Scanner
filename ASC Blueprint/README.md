@@ -40,6 +40,7 @@ ASC must **not**:
 3. `03_ASC_DATA_PERSISTENCE_AND_PUBLICATION.md`
 4. `04_ASC_SURFACE_RANKING_AND_DEEP_ENRICHMENT.md`
 5. `05_ASC_BUILD_STAGES_AND_ACCEPTANCE.md`
+6. `06_ASC_REFOUNDATION_AUDIT_AND_RUNTIME_CANON.md`
 
 ---
 
@@ -102,6 +103,8 @@ The current repo already contains strong ideas, but the live implementation and 
 
 This blueprint pack fixes that by forcing a runtime shape of:
 
+- contradiction and missing-function closure from the full ASC refoundation audit
+- canonical runtime spine details for implementation staging
 - kernel
 - Layer 1 market truth
 - Layer 1.2 broker snapshot
