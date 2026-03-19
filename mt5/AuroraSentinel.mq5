@@ -2,31 +2,24 @@
 #property version   "1.000"
 #property description "Aurora Sentinel shell-only timer runtime"
 
-// ==================================================
-// AURORA SENTINEL SHELL VERSION BLOCK
-// Keep property and runtime-reported version metadata aligned.
-// ==================================================
-#define ASC_VERSION            "1.000"
-#define ASC_VERSION_DATE_UTC   "2026-03-19"
-#define ASC_VERSION_SCOPE      "Shell-only timer runtime"
-
-void ASC_LogVersionBlock()
-  {
-   Print("Aurora Sentinel");
-   Print("Version: ", ASC_VERSION);
-   Print("VersionDateUTC: ", ASC_VERSION_DATE_UTC);
-   Print("VersionScope: ", ASC_VERSION_SCOPE);
-  }
-
+#include "ASC_Common.mqh"
+#include "ASC_Storage.mqh"
+#include "ASC_Diagnostics.mqh"
+#include "ASC_UI.mqh"
 #include "ASC_Engine.mqh"
 
 input int InpKernelTimerSeconds = 1;
+input bool InpPauseShell = false;
+input bool InpDegradedShell = false;
+input bool InpRecoveryHoldShell = false;
 
 ASC_Engine g_engine;
 
 int OnInit()
   {
-   ASC_LogVersionBlock();
+   g_engine.RequestPause(InpPauseShell);
+   g_engine.RequestDegraded(InpDegradedShell);
+   g_engine.RequestRecoveryHold(InpRecoveryHoldShell);
    return(g_engine.Init(InpKernelTimerSeconds));
   }
 
