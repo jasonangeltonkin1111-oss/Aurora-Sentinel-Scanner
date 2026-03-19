@@ -206,10 +206,19 @@ struct ASC_ConditionsTruth
    double TickSize;
    bool   TickValueReadable;
    double TickValue;
+   bool   TickValueRawReadable;
+   double TickValueRaw;
+   bool   TickValueDerivedReadable;
+   double TickValueDerived;
+   bool   TickValueValidatedReadable;
+   double TickValueValidated;
    bool   TickValueProfitReadable;
    double TickValueProfit;
    bool   TickValueLossReadable;
    double TickValueLoss;
+   string EconomicsMismatchFlags;
+   bool   EconomicsAuthoritative;
+   bool   EconomicsPreservedFromPrior;
    bool   ContractSizeReadable;
    double ContractSize;
 
