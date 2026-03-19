@@ -6,12 +6,14 @@
 #define ASC_STORAGE_SNAPSHOT_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.txt"
 #define ASC_STORAGE_SNAPSHOT_TEMP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.tmp"
 #define ASC_STORAGE_SNAPSHOT_BACKUP_FILE_NAME "AuroraSentinelCore\\UniverseSnapshot.bak"
-#define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V3"
+#define ASC_STORAGE_SNAPSHOT_HEADER "ASC_UNIVERSE_SNAPSHOT_V4"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V2 "ASC_UNIVERSE_SNAPSHOT_V2"
 #define ASC_STORAGE_SNAPSHOT_HEADER_V1 "ASC_UNIVERSE_SNAPSHOT_V1"
+#define ASC_STORAGE_SNAPSHOT_HEADER_V3 "ASC_UNIVERSE_SNAPSHOT_V3"
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V1 33
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V2 43
 #define ASC_STORAGE_RECORD_FIELD_COUNT_V3 138
+#define ASC_STORAGE_RECORD_FIELD_COUNT_V4 141
 #define ASC_STORAGE_COUNT_UNKNOWN -1
 
 string ASC_Storage_EscapeField(const string value)
@@ -276,6 +278,10 @@ void ASC_Storage_ResetRecord(ASC_SymbolRecord &record)
    record.SurfaceTruth.QuoteAgeSeconds = 0.0;
    record.SurfaceTruth.SpreadCostPoints = 0.0;
    record.SurfaceTruth.SurfaceScore = 0.0;
+
+   record.RecordHydration.HydrationState = "UNHYDRATED";
+   record.RecordHydration.SnapshotAuthority = "NONE";
+   record.RecordHydration.PublishableTruth = false;
   }
 
 void ASC_Storage_PushString(string &fields[],int &cursor,const string value)
@@ -642,6 +648,19 @@ bool ASC_Storage_ParseV3Record(const string &fields[],const int count,ASC_Symbol
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellInitial);
    ASC_Storage_PullDouble(fields,count,cursor,record.ConditionsTruth.MarginRateSellMaintenance);
 
+   if(count >= ASC_STORAGE_RECORD_FIELD_COUNT_V4)
+     {
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.HydrationState);
+      ASC_Storage_PullString(fields,count,cursor,record.RecordHydration.SnapshotAuthority);
+      ASC_Storage_PullBool(fields,count,cursor,record.RecordHydration.PublishableTruth);
+     }
+   else
+     {
+      record.RecordHydration.HydrationState = "CURRENT_PASS_READY";
+      record.RecordHydration.SnapshotAuthority = "SNAPSHOT_V3";
+      record.RecordHydration.PublishableTruth = true;
+     }
+
    return(cursor == count);
   }
 
@@ -684,6 +703,9 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
    record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.SpecsReadable ? "PASS" : "UNREAD");
    record.ConditionsTruth.NormalizationStatus = (record.Identity.ClassificationResolved ? "NORMALIZATION_OK" : "NORMALIZATION_UNRESOLVED");
    record.ConditionsTruth.TruthCoverageStatus = "LEGACY";
+   record.RecordHydration.HydrationState = "LEGACY_RECOVERED";
+   record.RecordHydration.SnapshotAuthority = "LEGACY";
+   record.RecordHydration.PublishableTruth = false;
 
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)
      {
@@ -736,11 +758,14 @@ bool ASC_Storage_ParseLegacyRecord(const string &fields[],const int count,ASC_Sy
 string ASC_Storage_FormatRecord(const ASC_SymbolRecord &record)
   {
    string fields[];
-   ArrayResize(fields,ASC_STORAGE_RECORD_FIELD_COUNT_V3);
+   ArrayResize(fields,ASC_STORAGE_RECORD_FIELD_COUNT_V4);
    int cursor = 0;
    ASC_Storage_FormatIdentityFields(record,fields,cursor);
    ASC_Storage_FormatMarketFields(record,fields,cursor);
    ASC_Storage_FormatConditionsFields(record,fields,cursor);
+   ASC_Storage_PushString(fields,cursor,record.RecordHydration.HydrationState);
+   ASC_Storage_PushString(fields,cursor,record.RecordHydration.SnapshotAuthority);
+   ASC_Storage_PushBool(fields,cursor,record.RecordHydration.PublishableTruth);
 
    string line = "";
    for(int index = 0; index < cursor; ++index)
@@ -757,6 +782,8 @@ bool ASC_Storage_ParseRecordLine(const string line,ASC_SymbolRecord &record)
   {
    string fields[];
    const int count = StringSplit(line,'|',fields);
+   if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V4)
+      return(ASC_Storage_ParseV3Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V3)
       return(ASC_Storage_ParseV3Record(fields,count,record));
    if(count == ASC_STORAGE_RECORD_FIELD_COUNT_V2 || count == ASC_STORAGE_RECORD_FIELD_COUNT_V1)
@@ -774,6 +801,7 @@ bool ASC_Storage_ParseSnapshotLines(const string &lines[],ASC_SymbolRecord &reco
       return(false);
 
    if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER &&
+      lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V3 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V2 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V1)
       return(false);
@@ -803,6 +831,7 @@ int ASC_Storage_ReadSnapshotRecordCount(const string &lines[])
       return(ASC_STORAGE_COUNT_UNKNOWN);
 
    if(lines[0] != ASC_STORAGE_SNAPSHOT_HEADER &&
+      lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V3 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V2 &&
       lines[0] != ASC_STORAGE_SNAPSHOT_HEADER_V1)
       return(ASC_STORAGE_COUNT_UNKNOWN);
