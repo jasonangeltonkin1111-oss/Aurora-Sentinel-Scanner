@@ -1,11 +1,11 @@
 #property strict
-#property version   "0.3.0"
+#property version "1.003"
 
 // ==================================================
 // AURORA SENTINEL SCANNER VERSION BLOCK
 // Always update this block when this EA changes.
 // ==================================================
-#define ASC_VERSION            "0.3.0"
+#define ASC_VERSION            "1.003"
 #define ASC_VERSION_DATE_UTC   "2026-03-19"
 #define ASC_VERSION_SCOPE      "Operator UI control module"
 
