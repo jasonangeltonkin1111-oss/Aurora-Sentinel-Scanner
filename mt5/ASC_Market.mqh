@@ -28,6 +28,9 @@ namespace ASC_Market_Internal
 
    #include "generated/ASC_ClassificationEmbeddedRows.mqh"
 
+   #define ASC_CLASSIFICATION_ARCHIVE_PROVENANCE "archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh"
+
+
    string Trim(const string value)
    {
       string s = value;
@@ -203,6 +206,71 @@ namespace ASC_Market_Internal
       return s;
    }
 
+   string NormalizeServerKey(const string value)
+   {
+      return RemovePunctuation(UpperTrim(value));
+   }
+
+   string ServerFamilyKey(const string value)
+   {
+      string normalized = NormalizeServerKey(value);
+      int cut = StringLen(normalized);
+      for(int i = 0; i < StringLen(normalized); ++i)
+      {
+         const ushort ch = (ushort)StringGetCharacter(normalized, i);
+         if(ch >= '0' && ch <= '9')
+         {
+            cut = i;
+            break;
+         }
+      }
+
+      if(cut > 0)
+         normalized = StringSubstr(normalized,0,cut);
+      while(EndsWith(normalized,"LIVE")) normalized = StringSubstr(normalized,0,StringLen(normalized)-4);
+      while(EndsWith(normalized,"DEMO")) normalized = StringSubstr(normalized,0,StringLen(normalized)-4);
+      while(EndsWith(normalized,"REAL")) normalized = StringSubstr(normalized,0,StringLen(normalized)-4);
+      while(EndsWith(normalized,"TRADE")) normalized = StringSubstr(normalized,0,StringLen(normalized)-5);
+      while(EndsWith(normalized,"SERVER")) normalized = StringSubstr(normalized,0,StringLen(normalized)-6);
+      while(EndsWith(normalized,"GROUP")) normalized = StringSubstr(normalized,0,StringLen(normalized)-5);
+      while(EndsWith(normalized,"MT5")) normalized = StringSubstr(normalized,0,StringLen(normalized)-3);
+      return normalized;
+   }
+
+   bool ServerKeysEquivalent(const string left,const string right)
+   {
+      const string left_exact = UpperTrim(left);
+      const string right_exact = UpperTrim(right);
+      if(left_exact == right_exact)
+         return true;
+
+      const string left_normalized = NormalizeServerKey(left_exact);
+      const string right_normalized = NormalizeServerKey(right_exact);
+      if(StringLen(left_normalized) > 0 && left_normalized == right_normalized)
+         return true;
+
+      const string left_family = ServerFamilyKey(left_exact);
+      const string right_family = ServerFamilyKey(right_exact);
+      return(StringLen(left_family) > 0 && left_family == right_family);
+   }
+
+   bool ReviewStatusRequiresOperatorReview(const string review_status)
+   {
+      const string normalized = UpperTrim(review_status);
+      return(normalized == "MISSING" || normalized == "REVIEW" || normalized == "REVIEW_REQUIRED" || normalized == "SERVER_REVIEW" || normalized == "UNRESOLVED");
+   }
+
+   bool ClassificationIsPublishable(const ASC_SymbolIdentity &identity)
+   {
+      if(!identity.ClassificationResolved)
+         return false;
+      if(StringFind(identity.ClassificationReason,"fallback",0) >= 0)
+         return false;
+      if(ReviewStatusRequiresOperatorReview(identity.ClassificationReviewStatus))
+         return false;
+      return true;
+   }
+
    string NormalizeSymbol(const string symbol)
    {
       return RemovePunctuation(UpperTrim(CanonicalizeSymbol(symbol)));
@@ -348,7 +416,7 @@ namespace ASC_Market_Internal
       int active_rows = 0;
       for(int idx = 0; idx < loaded; ++idx)
       {
-         if(g_classification_rows[idx].ServerKey == active_server)
+         if(ServerKeysEquivalent(g_classification_rows[idx].ServerKey, active_server))
             ++active_rows;
       }
 
@@ -364,7 +432,7 @@ namespace ASC_Market_Internal
                                  const string            lookup_key,
                                  const bool              require_server)
    {
-      if(require_server && row.ServerKey != server_key)
+      if(require_server && !ServerKeysEquivalent(row.ServerKey, server_key))
          return false;
 
       const string row_raw_lookup = NormalizeSymbol(row.RawSymbol);
@@ -402,11 +470,9 @@ namespace ASC_Market_Internal
       identity.ClassificationConfidence = IsMeaningfulValue(row.Confidence) ? row.Confidence : "UNKNOWN";
       identity.ClassificationReviewStatus = IsMeaningfulValue(row.ReviewStatus) ? row.ReviewStatus : "UNKNOWN";
       identity.ClassificationNotes = row.Notes;
-      identity.ClassificationResolved = (identity.AssetClass != "UNKNOWN" || identity.PrimaryBucket != "UNKNOWN" ||
-                                         StringLen(identity.ClassificationServerKey) > 0 ||
-                                         NormalizeSymbol(identity.CanonicalSymbol) != identity.NormalizedSymbol);
+      identity.ClassificationResolved = (identity.AssetClass != "UNKNOWN" && identity.PrimaryBucket != "UNKNOWN");
 
-      string reason = "classification resolved from archive translation";
+      string reason = "classification resolved from archive translation provenance=" + ASC_CLASSIFICATION_ARCHIVE_PROVENANCE;
       if(StringLen(row.ServerKey) > 0)
          reason += " [" + row.ServerKey + "]";
       if(StringLen(row.AliasKind) > 0)
@@ -426,7 +492,7 @@ namespace ASC_Market_Internal
          return -1;
 
       int score = 0;
-      if(row.ServerKey == server_key)
+      if(ServerKeysEquivalent(row.ServerKey, server_key))
          score += 100;
       else if(StringLen(row.ServerKey) > 0)
          score += 15;
@@ -507,7 +573,7 @@ namespace ASC_Market_Internal
          if(!ClassificationRowMatches(g_classification_rows[i], server_key, lookup_key, false))
             continue;
 
-         if(g_classification_rows[i].ServerKey == server_key)
+         if(ServerKeysEquivalent(g_classification_rows[i].ServerKey, server_key))
          {
             ApplyClassification(g_classification_rows[i], identity);
             return true;
@@ -520,19 +586,31 @@ namespace ASC_Market_Internal
       if(fallback_index >= 0)
       {
          ApplyClassification(g_classification_rows[fallback_index], identity);
-         identity.ClassificationReason += "; server fallback from archive match";
+         identity.ClassificationReason += "; server fallback from archive match (active_server=" + server_key + ")";
+         if(!IsMeaningfulValue(identity.ClassificationReviewStatus) || identity.ClassificationReviewStatus == "UNKNOWN")
+            identity.ClassificationReviewStatus = "SERVER_REVIEW";
+         if(!IsMeaningfulValue(identity.ClassificationConfidence) || identity.ClassificationConfidence == "UNKNOWN")
+            identity.ClassificationConfidence = "FALLBACK";
          return true;
       }
 
       if(ShouldTryEquitySecondPass(identity) && ResolveEquityClassificationSecondPass(server_key, identity))
+      {
+         if(!ClassificationIsPublishable(identity) && identity.ClassificationReviewStatus == "UNKNOWN")
+            identity.ClassificationReviewStatus = "REVIEW";
          return true;
+      }
 
       identity.CanonicalSymbol = CanonicalizeSymbol(raw_symbol);
       identity.ClassificationResolved = false;
       if(ShouldTryEquitySecondPass(identity))
-         identity.ClassificationReason = "classification unresolved after equity metadata second pass";
+         identity.ClassificationReason = "classification unresolved after equity metadata second pass provenance=" + ASC_CLASSIFICATION_ARCHIVE_PROVENANCE;
       else
-         identity.ClassificationReason = "classification unresolved: no archive translation match";
+         identity.ClassificationReason = "classification unresolved: no archive translation match provenance=" + ASC_CLASSIFICATION_ARCHIVE_PROVENANCE;
+      if(identity.ClassificationConfidence == "UNKNOWN")
+         identity.ClassificationConfidence = "LOW";
+      if(identity.ClassificationReviewStatus == "UNKNOWN")
+         identity.ClassificationReviewStatus = "MISSING";
       return false;
    }
 

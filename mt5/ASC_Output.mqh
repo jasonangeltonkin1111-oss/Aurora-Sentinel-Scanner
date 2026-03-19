@@ -308,20 +308,48 @@ string ASC_Output_SwapModeText(const int value)
      }
   }
 
+
+bool ASC_Output_RecordBlockedByClassificationGovernance(const ASC_SymbolRecord &record)
+  {
+   if(!record.Identity.ClassificationResolved)
+      return(true);
+   if(StringFind(record.Identity.ClassificationReason,"fallback",0) >= 0)
+      return(true);
+   string review_status = ASC_Output_Trim(record.Identity.ClassificationReviewStatus);
+   StringToUpper(review_status);
+   if(review_status == "MISSING" || review_status == "REVIEW" || review_status == "REVIEW_REQUIRED" || review_status == "SERVER_REVIEW" || review_status == "UNRESOLVED")
+      return(true);
+   return(false);
+  }
+
+string ASC_Output_ClassificationGovernanceState(const ASC_SymbolRecord &record)
+  {
+   if(!record.Identity.ClassificationResolved)
+      return("UNRESOLVED");
+   if(StringFind(record.Identity.ClassificationReason,"fallback",0) >= 0)
+      return("SERVER_FALLBACK_ONLY");
+   string review_status = ASC_Output_Trim(record.Identity.ClassificationReviewStatus);
+   StringToUpper(review_status);
+   if(review_status == "MISSING" || review_status == "REVIEW" || review_status == "REVIEW_REQUIRED" || review_status == "SERVER_REVIEW" || review_status == "UNRESOLVED")
+      return("REVIEW_REQUIRED");
+   return("PUBLISHABLE");
+  }
+
 bool ASC_Output_RecordHasPublishedTruth(const ASC_SymbolRecord &record)
   {
    if(!record.RecordHydration.PublishableTruth)
       return(false);
    if(record.RecordHydration.RecoveryState == ASC_RecordRecoveryStateText(ASC_RECORD_RECOVERY_REQUIRED))
       return(false);
-   if(!record.Identity.ClassificationResolved)
+   if(ASC_Output_RecordBlockedByClassificationGovernance(record))
       return(false);
    return(true);
   }
 
 bool ASC_Output_RecordNeedsClassificationReview(const ASC_SymbolRecord &record)
   {
-   if(record.Identity.ClassificationResolved)
+   const string governance_state = ASC_Output_ClassificationGovernanceState(record);
+   if(governance_state == "PUBLISHABLE")
       return(false);
 
    string path = record.Identity.BrokerPath;
@@ -618,6 +646,7 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
          ++review_queue_count;
 
       const string publication_state = ASC_Output_PublicationStateText(record);
+      const string governance_state = ASC_Output_ClassificationGovernanceState(record);
       if(publication_state == "PUBLISHED")
          ++publishable_review_count;
       else if(publication_state == "PENDING_SCAN")
@@ -653,6 +682,7 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
      {
       const ASC_SymbolRecord record = records[index];
       const string publication_state = ASC_Output_PublicationStateText(record);
+      const string governance_state = ASC_Output_ClassificationGovernanceState(record);
       if(publication_state == "UNAVAILABLE")
          continue;
 
@@ -685,7 +715,9 @@ bool ASC_Output_WriteSummarySurface(const ASC_RuntimeConfig &config,const ASC_Sy
       line += " | Quote=" + record.MarketTruth.QuoteFreshnessStatus;
       line += " | Specs=" + record.ConditionsTruth.SpecIntegrityStatus;
       if(ASC_Output_RecordNeedsClassificationReview(record))
-         line += " | Review=CLASSIFICATION";
+         line += " | Review=CLASSIFICATION:" + governance_state;
+      if(ASC_Output_IsMeaningfulValue(record.Identity.ClassificationServerKey))
+         line += " | ArchiveServer=" + record.Identity.ClassificationServerKey;
       const int next_index = ArraySize(lines);
       ArrayResize(lines,next_index + 1);
       lines[next_index] = line;
@@ -767,8 +799,12 @@ bool ASC_Output_WriteClassificationReviewQueue(const ASC_RuntimeConfig &config,c
       ASC_Output_WriteStringField(handle,"DisplayName",records[index].Identity.DisplayName);
       ASC_Output_WriteStringField(handle,"BrokerExchange",records[index].Identity.BrokerExchange);
       ASC_Output_WriteStringField(handle,"BrokerPath",records[index].Identity.BrokerPath);
+      ASC_Output_WriteStringField(handle,"GovernanceState",ASC_Output_ClassificationGovernanceState(records[index]));
+      ASC_Output_WriteStringField(handle,"ClassificationConfidence",records[index].Identity.ClassificationConfidence);
+      ASC_Output_WriteStringField(handle,"ClassificationReviewStatus",records[index].Identity.ClassificationReviewStatus);
       ASC_Output_WriteStringField(handle,"ClassificationReason",records[index].Identity.ClassificationReason);
       ASC_Output_WriteStringField(handle,"ClassificationServerKey",records[index].Identity.ClassificationServerKey);
+      ASC_Output_WriteStringField(handle,"ArchiveProvenance","archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh");
       FileWrite(handle,"");
      }
 
@@ -833,6 +869,12 @@ void ASC_Output_WriteMirrorRecord(const int handle,const ASC_SymbolRecord &recor
    ASC_Output_WriteStringField(handle,"QuoteFreshnessStatus",record.MarketTruth.QuoteFreshnessStatus);
    ASC_Output_WriteStringField(handle,"SpecIntegrityStatus",record.ConditionsTruth.SpecIntegrityStatus);
    ASC_Output_WriteStringField(handle,"TruthCoverageStatus",record.ConditionsTruth.TruthCoverageStatus);
+   ASC_Output_WriteStringField(handle,"ClassificationConfidence",record.Identity.ClassificationConfidence);
+   ASC_Output_WriteStringField(handle,"ClassificationReviewStatus",record.Identity.ClassificationReviewStatus);
+   ASC_Output_WriteStringField(handle,"ClassificationReason",record.Identity.ClassificationReason);
+   ASC_Output_WriteStringField(handle,"ClassificationServerKey",record.Identity.ClassificationServerKey);
+   ASC_Output_WriteStringField(handle,"ClassificationGovernanceState",ASC_Output_ClassificationGovernanceState(record));
+   ASC_Output_WriteStringField(handle,"ArchiveProvenance","archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh");
    ASC_Output_WriteStringField(handle,"SessionConsistencyReason",record.MarketTruth.SessionConsistencyReason);
    FileWrite(handle,"");
   }
