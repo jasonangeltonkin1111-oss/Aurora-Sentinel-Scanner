@@ -23,165 +23,7 @@ static bool              g_asc_force_clean_stale_outputs = false;
 
 void ASC_Engine_ResetRecord(ASC_SymbolRecord &record)
   {
-   record.Identity.RawSymbol = "";
-   record.Identity.NormalizedSymbol = "";
-   record.Identity.CanonicalSymbol = "";
-   record.Identity.DisplayName = "";
-   record.Identity.BrokerPath = "";
-   record.Identity.BrokerExchange = "";
-   record.Identity.BrokerCountry = "";
-   record.Identity.AssetClass = "UNKNOWN";
-   record.Identity.PrimaryBucket = "UNKNOWN";
-   record.Identity.Sector = "UNKNOWN";
-   record.Identity.Industry = "UNKNOWN";
-   record.Identity.Theme = "UNKNOWN";
-   record.Identity.ClassificationResolved = false;
-   record.Identity.ClassificationReason = "";
-
-   record.MarketTruth.Exists = false;
-   record.MarketTruth.Selected = false;
-   record.MarketTruth.Visible = false;
-   record.MarketTruth.QuoteWindowOpen = false;
-   record.MarketTruth.TradeWindowOpen = false;
-   record.MarketTruth.TradeAllowed = false;
-   record.MarketTruth.HasUsableQuote = false;
-   record.MarketTruth.QuoteFresh = false;
-   record.MarketTruth.QuoteScheduleReadable = false;
-   record.MarketTruth.TradeScheduleReadable = false;
-   record.MarketTruth.SessionTruthStatus = ASC_SESSION_UNKNOWN;
-   record.MarketTruth.Layer1Eligible = false;
-   record.MarketTruth.LastQuoteTime = 0;
-   record.MarketTruth.NextRecheckTime = 0;
-   record.MarketTruth.QuoteAgeSeconds = -1;
-   record.MarketTruth.QuoteFreshnessStatus = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleSunday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleMonday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleTuesday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleWednesday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleThursday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleFriday = "UNKNOWN";
-   record.MarketTruth.QuoteScheduleSaturday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleSunday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleMonday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleTuesday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleWednesday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleThursday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleFriday = "UNKNOWN";
-   record.MarketTruth.TradeScheduleSaturday = "UNKNOWN";
-   record.MarketTruth.SessionReadStatus = "UNREAD";
-   record.MarketTruth.SessionReadReason = "";
-   record.MarketTruth.SessionConsistencyReason = "";
-   record.MarketTruth.IneligibleReason = "";
-
-   record.ConditionsTruth.SpecsReadable = false;
-   record.ConditionsTruth.SpecsReason = "";
-   record.ConditionsTruth.SpecIntegrityStatus = "UNREAD";
-   record.ConditionsTruth.EconomicsTrust = "UNREAD";
-   record.ConditionsTruth.NormalizationStatus = "NORMALIZATION_UNKNOWN";
-   record.ConditionsTruth.TruthCoverageStatus = "UNREAD";
-   record.ConditionsTruth.DigitsReadable = false;
-   record.ConditionsTruth.Digits = -1;
-   record.ConditionsTruth.SpreadPoints = -1;
-   record.ConditionsTruth.SpreadFloatReadable = false;
-   record.ConditionsTruth.SpreadFloat = false;
-   record.ConditionsTruth.StopsLevelReadable = false;
-   record.ConditionsTruth.StopsLevel = -1;
-   record.ConditionsTruth.FreezeLevelReadable = false;
-   record.ConditionsTruth.FreezeLevel = -1;
-   record.ConditionsTruth.PointReadable = false;
-   record.ConditionsTruth.Point = -1.0;
-   record.ConditionsTruth.TickSizeReadable = false;
-   record.ConditionsTruth.TickSize = -1.0;
-   record.ConditionsTruth.TickValueReadable = false;
-   record.ConditionsTruth.TickValue = -1.0;
-   record.ConditionsTruth.TickValueRawReadable = false;
-   record.ConditionsTruth.TickValueRaw = -1.0;
-   record.ConditionsTruth.TickValueDerivedReadable = false;
-   record.ConditionsTruth.TickValueDerived = -1.0;
-   record.ConditionsTruth.TickValueValidatedReadable = false;
-   record.ConditionsTruth.TickValueValidated = -1.0;
-   record.ConditionsTruth.TickValueProfitReadable = false;
-   record.ConditionsTruth.TickValueProfit = -1.0;
-   record.ConditionsTruth.TickValueLossReadable = false;
-   record.ConditionsTruth.TickValueLoss = -1.0;
-   record.ConditionsTruth.EconomicsMismatchFlags = "";
-   record.ConditionsTruth.EconomicsAuthoritative = false;
-   record.ConditionsTruth.EconomicsPreservedFromPrior = false;
-   record.ConditionsTruth.ContractSizeReadable = false;
-   record.ConditionsTruth.ContractSize = -1.0;
-   record.ConditionsTruth.VolumeMinReadable = false;
-   record.ConditionsTruth.VolumeMin = -1.0;
-   record.ConditionsTruth.VolumeMaxReadable = false;
-   record.ConditionsTruth.VolumeMax = -1.0;
-   record.ConditionsTruth.VolumeStepReadable = false;
-   record.ConditionsTruth.VolumeStep = -1.0;
-   record.ConditionsTruth.VolumeLimitReadable = false;
-   record.ConditionsTruth.VolumeLimit = -1.0;
-   record.ConditionsTruth.MarginCurrencyReadable = false;
-   record.ConditionsTruth.MarginCurrency = "";
-   record.ConditionsTruth.ProfitCurrencyReadable = false;
-   record.ConditionsTruth.ProfitCurrency = "";
-   record.ConditionsTruth.BaseCurrencyReadable = false;
-   record.ConditionsTruth.BaseCurrency = "";
-   record.ConditionsTruth.CalcModeReadable = false;
-   record.ConditionsTruth.CalcMode = -1;
-   record.ConditionsTruth.ChartModeReadable = false;
-   record.ConditionsTruth.ChartMode = -1;
-   record.ConditionsTruth.TradeModeReadable = false;
-   record.ConditionsTruth.TradeMode = -1;
-   record.ConditionsTruth.ExecutionModeReadable = false;
-   record.ConditionsTruth.ExecutionMode = -1;
-   record.ConditionsTruth.GtcModeReadable = false;
-   record.ConditionsTruth.GtcMode = -1;
-   record.ConditionsTruth.FillingModeReadable = false;
-   record.ConditionsTruth.FillingMode = -1;
-   record.ConditionsTruth.ExpirationModeReadable = false;
-   record.ConditionsTruth.ExpirationMode = -1;
-   record.ConditionsTruth.OrderModeReadable = false;
-   record.ConditionsTruth.OrderMode = -1;
-   record.ConditionsTruth.SwapModeReadable = false;
-   record.ConditionsTruth.SwapMode = -1;
-   record.ConditionsTruth.SwapLongReadable = false;
-   record.ConditionsTruth.SwapLong = 0.0;
-   record.ConditionsTruth.SwapShortReadable = false;
-   record.ConditionsTruth.SwapShort = 0.0;
-   record.ConditionsTruth.SwapSundayReadable = false;
-   record.ConditionsTruth.SwapSunday = -1.0;
-   record.ConditionsTruth.SwapMondayReadable = false;
-   record.ConditionsTruth.SwapMonday = -1.0;
-   record.ConditionsTruth.SwapTuesdayReadable = false;
-   record.ConditionsTruth.SwapTuesday = -1.0;
-   record.ConditionsTruth.SwapWednesdayReadable = false;
-   record.ConditionsTruth.SwapWednesday = -1.0;
-   record.ConditionsTruth.SwapThursdayReadable = false;
-   record.ConditionsTruth.SwapThursday = -1.0;
-   record.ConditionsTruth.SwapFridayReadable = false;
-   record.ConditionsTruth.SwapFriday = -1.0;
-   record.ConditionsTruth.SwapSaturdayReadable = false;
-   record.ConditionsTruth.SwapSaturday = -1.0;
-   record.ConditionsTruth.MarginInitialReadable = false;
-   record.ConditionsTruth.MarginInitial = -1.0;
-   record.ConditionsTruth.MarginMaintenanceReadable = false;
-   record.ConditionsTruth.MarginMaintenance = -1.0;
-   record.ConditionsTruth.MarginHedgedReadable = false;
-   record.ConditionsTruth.MarginHedged = -1.0;
-   record.ConditionsTruth.MarginRateBuyReadable = false;
-   record.ConditionsTruth.MarginRateBuyInitial = -1.0;
-   record.ConditionsTruth.MarginRateBuyMaintenance = -1.0;
-   record.ConditionsTruth.MarginRateSellReadable = false;
-   record.ConditionsTruth.MarginRateSellInitial = -1.0;
-   record.ConditionsTruth.MarginRateSellMaintenance = -1.0;
-
-   record.SurfaceTruth.ScanState = ASC_SURFACE_NOT_RUN;
-   record.SurfaceTruth.BarsM15 = -1;
-   record.SurfaceTruth.BarsH1 = -1;
-   record.SurfaceTruth.QuoteAgeSeconds = -1.0;
-   record.SurfaceTruth.SpreadCostPoints = -1.0;
-   record.SurfaceTruth.SurfaceScore = -1.0;
-
-   record.RecordHydration.HydrationState = "UNHYDRATED";
-   record.RecordHydration.SnapshotAuthority = "NONE";
-   record.RecordHydration.PublishableTruth = false;
+   ASC_Record_Reset(record);
   }
 
 int ASC_Engine_FindRecordIndex(const ASC_SymbolRecord &record)
@@ -256,9 +98,7 @@ void ASC_Engine_PreserveUniverseMembership(const string &symbols[],const int tot
       placeholder_record.MarketTruth.Exists = true;
       placeholder_record.MarketTruth.IneligibleReason = "PENDING_DISCOVERY_HYDRATION";
       placeholder_record.ConditionsTruth.SpecsReason = "PENDING_INIT_PASS";
-      placeholder_record.RecordHydration.HydrationState = "PENDING_DISCOVERY_HYDRATION";
-      placeholder_record.RecordHydration.SnapshotAuthority = "PLACEHOLDER";
-      placeholder_record.RecordHydration.PublishableTruth = false;
+      ASC_RecordSetHydration(placeholder_record.RecordHydration,ASC_RECORD_PENDING_DISCOVERY_HYDRATION,ASC_RECORD_AUTHORITY_PLACEHOLDER,ASC_RECORD_PUBLISH_BLOCKED);
       ASC_Engine_UpsertRecord(placeholder_record);
      }
   }
@@ -291,9 +131,7 @@ void ASC_Engine_ProcessSymbols(const string &symbols[],const int total_symbols,c
       if(!ASC_Market_BuildIdentityAndTruth(symbols[index],g_asc_runtime_config,built_record))
          continue;
 
-      built_record.RecordHydration.HydrationState = "MARKET_PASS_COMPLETE";
-      built_record.RecordHydration.SnapshotAuthority = "CURRENT_PASS";
-      built_record.RecordHydration.PublishableTruth = false;
+      ASC_RecordSetHydration(built_record.RecordHydration,ASC_RECORD_MARKET_PASS_COMPLETE,ASC_RECORD_AUTHORITY_CURRENT_PASS,ASC_RECORD_PUBLISH_BLOCKED);
 
       ASC_SymbolRecord merged_record = built_record;
       const int existing_index = ASC_Engine_FindRecordIndex(built_record);
@@ -311,22 +149,16 @@ void ASC_Engine_ProcessSymbols(const string &symbols[],const int total_symbols,c
             merged_record.ConditionsTruth = conditions_record.ConditionsTruth;
          if(conditions_loaded)
            {
-            merged_record.RecordHydration.HydrationState = "CURRENT_PASS_READY";
-            merged_record.RecordHydration.SnapshotAuthority = "CURRENT_PASS";
-            merged_record.RecordHydration.PublishableTruth = true;
+            ASC_RecordSetHydration(merged_record.RecordHydration,ASC_RECORD_CURRENT_PASS_READY,ASC_RECORD_AUTHORITY_CURRENT_PASS,ASC_RECORD_PUBLISH_READY);
            }
          else
            {
-            merged_record.RecordHydration.HydrationState = "MARKET_PASS_ONLY";
-            merged_record.RecordHydration.SnapshotAuthority = "CURRENT_PASS";
-            merged_record.RecordHydration.PublishableTruth = false;
+            ASC_RecordSetHydration(merged_record.RecordHydration,ASC_RECORD_MARKET_PASS_ONLY,ASC_RECORD_AUTHORITY_CURRENT_PASS,ASC_RECORD_PUBLISH_BLOCKED);
            }
         }
       else
         {
-         merged_record.RecordHydration.HydrationState = "MARKET_PASS_ABSENT";
-         merged_record.RecordHydration.SnapshotAuthority = "CURRENT_PASS";
-         merged_record.RecordHydration.PublishableTruth = false;
+         ASC_RecordSetHydration(merged_record.RecordHydration,ASC_RECORD_MARKET_PASS_ABSENT,ASC_RECORD_AUTHORITY_CURRENT_PASS,ASC_RECORD_PUBLISH_BLOCKED);
         }
 
       if(g_asc_runtime_config.EnableSurfaceLayer)
@@ -463,7 +295,7 @@ bool ASC_Engine_GetRuntimeSnapshot(ASC_RuntimeSnapshot &snapshot)
    for(int index = 0; index < g_asc_universe_count; ++index)
      {
       const ASC_SymbolRecord record = g_asc_universe_records[index];
-      const bool hydrated = (record.RecordHydration.HydrationState == "CURRENT_PASS_READY");
+      const bool hydrated = (record.RecordHydration.HydrationState == ASC_RecordHydrationStateText(ASC_RECORD_CURRENT_PASS_READY));
       if(hydrated)
          ++snapshot.HydratedCount;
       if(!ASC_Output_RecordHasPublishedTruth(record))
