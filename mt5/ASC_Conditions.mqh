@@ -112,12 +112,16 @@ namespace ASC_Conditions_Internal
       else if(truth.TruthCoverageStatus == "FULL")
          rank = 2;
 
+      if(truth.TickValueRawReadable)
+         rank += 1;
       if(truth.TickValueDerivedReadable)
          rank += 1;
       if(truth.TickValueValidatedReadable)
          rank += 2;
       if(truth.EconomicsAuthoritative)
          rank += 2;
+      if(truth.CommissionMetadataReadable)
+         rank += 1;
 
       return rank;
    }
@@ -135,16 +139,23 @@ namespace ASC_Conditions_Internal
       if(candidate_authoritative)
          return false;
 
-      if(CoverageRank(candidate) < CoverageRank(prior))
-         return true;
+      const int prior_rank = CoverageRank(prior);
+      const int candidate_rank = CoverageRank(candidate);
+      if(candidate_rank >= prior_rank)
+         return false;
+
+      const int rank_gap = prior_rank - candidate_rank;
+      if(rank_gap > 3)
+         return false;
 
       if(prior.TickValueValidatedReadable && !candidate.TickValueValidatedReadable)
          return true;
 
-      if(prior.EconomicsTrust == "PASS" && candidate.EconomicsTrust != "PASS")
+      if((prior.EconomicsTrust == "VALIDATED" || prior.EconomicsTrust == "DERIVED_OK") &&
+         candidate.EconomicsTrust != prior.EconomicsTrust)
          return true;
 
-      return false;
+      return (candidate.TruthCoverageStatus == "PARTIAL" || candidate.TruthCoverageStatus == "UNREAD");
    }
 
    void AppendReason(string &reason, const string message)
@@ -157,6 +168,24 @@ namespace ASC_Conditions_Internal
 
       reason += message;
    }
+
+   void PopulateCommissionMetadata(const string symbol,ASC_ConditionsTruth &truth)
+   {
+      truth.CommissionMetadataReadable = true;
+      truth.CommissionMetadataSource = "TERMINAL";
+      truth.CommissionMetadata = "symbol commission metadata unavailable via SymbolInfo*";
+
+      long custom_symbol = 0;
+      ResetLastError();
+      if(SymbolInfoInteger(symbol,SYMBOL_CUSTOM,custom_symbol))
+        {
+         if(custom_symbol != 0)
+            truth.CommissionMetadata = "custom symbol; commission may be embedded in synthetic pricing";
+         return;
+        }
+
+      truth.CommissionMetadataSource = "TERMINAL_PARTIAL";
+    }
 
    void ResetConditionsTruth(ASC_ConditionsTruth &truth)
    {
@@ -194,6 +223,9 @@ namespace ASC_Conditions_Internal
       truth.TickValueProfit = -1.0;
       truth.TickValueLossReadable = false;
       truth.TickValueLoss = -1.0;
+      truth.CommissionMetadataReadable = false;
+      truth.CommissionMetadataSource = "UNREAD";
+      truth.CommissionMetadata = "";
       truth.EconomicsMismatchFlags = "";
       truth.EconomicsAuthoritative = false;
       truth.EconomicsPreservedFromPrior = false;
@@ -609,6 +641,7 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
    if(validated_tick_value_readable)
       record.ConditionsTruth.TickValueValidated = validated_tick_value;
    record.ConditionsTruth.EconomicsAuthoritative = validated_tick_value_readable;
+   ASC_Conditions_Internal::PopulateCommissionMetadata(symbol,record.ConditionsTruth);
 
    record.ConditionsTruth.MarginCurrencyReadable = margin_currency_readable;
    ASC_Conditions_Internal::ApplyStringSpec(margin_currency_readable, margin_currency, record.ConditionsTruth.MarginCurrency);
@@ -762,7 +795,13 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
      {
       broker_missing = true;
       ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_MISSING");
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "NO_ECONOMIC_TRUTH");
       ASC_Conditions_Internal::AppendReason(reason, "tick_value broker-missing");
+     }
+   else if(!tick_value_raw_valid && (tick_value_derived_valid || tick_value_validated_valid))
+     {
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_RAW_UNREADABLE");
+      ASC_Conditions_Internal::AppendReason(reason, "tick_value raw unreadable; using alternate evidence");
      }
 
    if(tick_value_profit_readable && tick_value_loss_readable &&
@@ -774,6 +813,7 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
         {
          contradictory = true;
          ASC_Conditions_Internal::AppendFlag(mismatch_flags, "TICK_VALUE_PROFIT_LOSS_MISMATCH");
+         ASC_Conditions_Internal::AppendFlag(mismatch_flags, "DERIVED_SIDE_ASYMMETRY");
          ASC_Conditions_Internal::AppendReason(reason, "tick_value_profit vs tick_value_loss mismatch");
         }
      }
@@ -816,6 +856,12 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
       ASC_Conditions_Internal::AppendReason(reason, "tick_value validation thin");
      }
 
+   if(tick_value_validated_valid)
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "VALIDATED_TICK_VALUE");
+
+   if(record.ConditionsTruth.CommissionMetadataReadable && StringLen(record.ConditionsTruth.CommissionMetadata) > 0)
+      ASC_Conditions_Internal::AppendFlag(mismatch_flags, "COMMISSION_METADATA_PRESENT");
+
    record.ConditionsTruth.EconomicsMismatchFlags = mismatch_flags;
    record.ConditionsTruth.SpecsReadable = false;
    record.ConditionsTruth.NormalizationStatus = ASC_Conditions_Internal::ResolveNormalizationStatus(record);
@@ -842,9 +888,9 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
       record.ConditionsTruth.SpecIntegrityStatus = "SPEC_SUSPICIOUS";
 
    if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_OK")
-      record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.EconomicsAuthoritative ? "PASS" : "DERIVED");
+      record.ConditionsTruth.EconomicsTrust = (record.ConditionsTruth.EconomicsAuthoritative ? "VALIDATED" : "DERIVED_OK");
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_SUSPICIOUS")
-      record.ConditionsTruth.EconomicsTrust = "THIN";
+      record.ConditionsTruth.EconomicsTrust = (tick_value_validated_valid ? "VALIDATED_THIN" : "SUSPICIOUS");
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_BROKER_MISSING")
       record.ConditionsTruth.EconomicsTrust = "BROKER_MISSING";
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_UNREADABLE")
@@ -852,14 +898,14 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_CONTRADICTORY")
       record.ConditionsTruth.EconomicsTrust = "CONTRADICTORY";
    else
-      record.ConditionsTruth.EconomicsTrust = "FAIL";
+      record.ConditionsTruth.EconomicsTrust = "BROKEN";
 
    const bool candidate_authoritative = record.ConditionsTruth.EconomicsAuthoritative;
    if(ASC_Conditions_Internal::ShouldPreservePrior(prior_truth, record.ConditionsTruth, candidate_authoritative))
      {
       record.ConditionsTruth = prior_truth;
       record.ConditionsTruth.SpecIntegrityStatus = "SPEC_PRESERVED_PRIOR";
-      record.ConditionsTruth.EconomicsTrust = "PRESERVED";
+      record.ConditionsTruth.EconomicsTrust = "CARRIED_FORWARD";
       record.ConditionsTruth.EconomicsPreservedFromPrior = true;
       ASC_Conditions_Internal::AppendFlag(record.ConditionsTruth.EconomicsMismatchFlags, "CARRY_FORWARD");
       record.ConditionsTruth.SpecsReadable = true;
@@ -871,7 +917,7 @@ bool ASC_Conditions_Load(const string symbol, ASC_SymbolRecord &record)
       record.ConditionsTruth.SpecsReadable = true;
 
    if(record.ConditionsTruth.SpecsReadable)
-      record.ConditionsTruth.SpecsReason = (record.ConditionsTruth.EconomicsAuthoritative ? "ok; validated economics" : "ok; derived economics");
+      record.ConditionsTruth.SpecsReason = (record.ConditionsTruth.EconomicsAuthoritative ? "ok; validated economics" : "ok; derived economics") + (record.ConditionsTruth.CommissionMetadataReadable ? "; commission metadata noted" : "");
    else if(broker_unreadable)
       record.ConditionsTruth.SpecsReason = "broker-unreadable specs";
    else if(record.ConditionsTruth.SpecIntegrityStatus == "SPEC_BROKER_MISSING")

@@ -355,6 +355,9 @@ struct ASC_ConditionsTruth
    double TickValueProfit;
    bool   TickValueLossReadable;
    double TickValueLoss;
+   bool   CommissionMetadataReadable;
+   string CommissionMetadataSource;
+   string CommissionMetadata;
    string EconomicsMismatchFlags;
    bool   EconomicsAuthoritative;
    bool   EconomicsPreservedFromPrior;
@@ -568,6 +571,9 @@ void ASC_Record_Reset(ASC_SymbolRecord &record)
    record.ConditionsTruth.TickValueValidated = -1.0;
    record.ConditionsTruth.TickValueProfit = -1.0;
    record.ConditionsTruth.TickValueLoss = -1.0;
+   record.ConditionsTruth.CommissionMetadataReadable = false;
+   record.ConditionsTruth.CommissionMetadataSource = "UNREAD";
+   record.ConditionsTruth.CommissionMetadata = "";
    record.ConditionsTruth.ContractSize = -1.0;
    record.ConditionsTruth.VolumeMin = -1.0;
    record.ConditionsTruth.VolumeMax = -1.0;
