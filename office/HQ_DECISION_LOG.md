@@ -71,3 +71,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: add `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the operational bridge between the master archive map and future archive-to-ASC recovery packets
 - Why: the repository now had strong lineage and code-translation intelligence, but future HQ still needed one canonical document that converts that intelligence into bounded module-specific recovery order, readiness states, and worker-packet requirements
 - Result: future HQ can now issue surgical recovery prompts with explicit ready-now vs blocked vs future-layer distinctions without re-deriving archive sequencing from scratch
+
+### 2026-03-19 — Layer 1.2 recovery baseline packet activated
+- Decision: treat `office/HANDOFF_L12_RECOVERY_TRUTH_PACKET.md` as the active Layer 1.2 recovery baseline
+- Why: HQ needed one bounded reconciliation packet that joins the active Layer 1 law, Layer 1.2 law, trader-facing output law, and continuity rules before the next bounded stage
+- Result: future HQ-controlled prep should use this packet as the current Layer 1.2 recovery input and continuity anchor
