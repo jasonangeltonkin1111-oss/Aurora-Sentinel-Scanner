@@ -71,3 +71,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: add `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the operational bridge between the master archive map and future archive-to-ASC recovery packets
 - Why: the repository now had strong lineage and code-translation intelligence, but future HQ still needed one canonical document that converts that intelligence into bounded module-specific recovery order, readiness states, and worker-packet requirements
 - Result: future HQ can now issue surgical recovery prompts with explicit ready-now vs blocked vs future-layer distinctions without re-deriving archive sequencing from scratch
+
+### 2026-03-19 — Schema/version authority centralized and bounded
+- Decision: centralize schema/version changes under HQ and block opportunistic version bumps outside the final release-owned task
+- Why: the upcoming Layer 1.2 snapshot migration needs stronger authority boundaries so legacy restore cannot accidentally claim modern release ownership
+- Result: `V4` schema planning is now defined as a bounded office packet, older `V1`/`V2`/`V3` parsing must remain non-authoritative, and version-field updates stay blocked until the final release task
