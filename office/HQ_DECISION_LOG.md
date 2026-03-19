@@ -72,7 +72,7 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Why: the repository now had strong lineage and code-translation intelligence, but future HQ still needed one canonical document that converts that intelligence into bounded module-specific recovery order, readiness states, and worker-packet requirements
 - Result: future HQ can now issue surgical recovery prompts with explicit ready-now vs blocked vs future-layer distinctions without re-deriving archive sequencing from scratch
 
-### 2026-03-19 — Layer 1.2 output boundary locked to snapshot/mirror-only
-- Decision: keep Layer 1.2 output restricted to snapshot, mirror, and review/debug surfaces until a future HQ packet explicitly opens true Layer 2 publication
-- Why: current failure modes still include placeholder state, legacy-restored state without rehydration, unresolved identity without fresh truth, and partial truth that is not yet safe for trader-facing publication
-- Result: Layer 1.2 is now explicitly barred from drifting into trader-facing dossier files, and output refactor work is bounded as a build-stage hardening task rather than a generic later-layer expansion
+### 2026-03-19 — AFS classification lineage selected for identity recovery
+- Decision: AFS classification lineage is the active identity recovery source for ASC Layer 1.2 classification repair and backfill
+- Why: ASC currently compresses identity lineage into normalized/canonical outputs plus prose, while archived AFS material preserves raw/canonical/alias/confidence/review/note fields together at both row and shared-record level
+- Result: HQ opened `office/HANDOFF_L12_IDENTITY_CLASSIFICATION_RECOVERY.md` as the bounded recovery packet and directed future backfill toward archived AFS classification material before widening other identity sources

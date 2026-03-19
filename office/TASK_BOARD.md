@@ -128,3 +128,6 @@ Before any progression decision, HQ must preserve these truths:
 Wave 1 is now review-passed for bounded advancement.
 The next step is not reissuing the same fix packets.
 The next step is selecting the next bounded HQ-controlled stage.
+
+## Next-Step Packets
+- Layer 1.2 identity classification recovery packet: `office/HANDOFF_L12_IDENTITY_CLASSIFICATION_RECOVERY.md`
