@@ -416,7 +416,7 @@ private:
          return(ASC_OUTCOME_INVALID_DATA);
         }
 
-      ASC_DueServiceSlot &slot = m_runtime.due_services[index];
+      ASC_DueServiceSlot slot = m_runtime.due_services[index];
       const bool was_due = slot.due;
       ASC_ServiceOutcome outcome = ASC_OUTCOME_SKIPPED;
 
@@ -435,6 +435,8 @@ private:
       slot.last_run_at  = TimeCurrent();
       if(slot.due)
          slot.due = false;
+
+      m_runtime.due_services[index] = slot;
 
       Emit(ASC_DiagnosticsDueServiceDispatchEvent(slot.name,slot.service_class,outcome,m_runtime.mode,m_runtime.previous_mode,(long)m_runtime.cycle_counter,was_due,slot.enabled,reason));
       return(outcome);
@@ -533,12 +535,12 @@ public:
       return(m_runtime);
      }
 
-   const ASC_RuntimeConfig &Config() const
+   ASC_RuntimeConfig Config() const
      {
       return(m_config);
      }
 
-   const ASC_RuntimeSnapshot &PreparedSnapshot() const
+   ASC_RuntimeSnapshot PreparedSnapshot() const
      {
       return(m_runtime.prepared_snapshot);
      }
