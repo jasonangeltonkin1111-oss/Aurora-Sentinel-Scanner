@@ -3,145 +3,165 @@
 ## 1. Purpose
 
 This file defines the **implementation order implied by the EA design**.
+It is not office choreography.
+It is the build order required so the finished EA actually behaves like the blueprint.
 
-It is not office workflow.  
-It is the build order required so the finished EA actually matches the blueprint.
-
-Each stage must be:
+Every stage must be:
 - built
 - tested
 - observed
 - corrected
 - accepted
 
-Only then does the next stage begin.
+Only then may the next stage begin.
 
 ## 2. Global build laws
 
 1. Never build later intelligence on top of unstable foundation truth.
-2. Do not let UI own missing runtime behavior.
+2. Do not let UI stand in for missing runtime behavior.
 3. Do not build deep logic before the kernel, persistence, and Layer 1/1.2 work.
-4. Do not publish trader summary from partial unsafe truth.
-5. Each stage must expose logs and HUD evidence proving it ran.
+4. Do not publish trader summary from unsafe partial truth.
+5. Every stage must expose logs and HUD evidence proving it ran.
+6. Every stage must preserve restart continuity and file safety.
 
-## 3. Stage 0 — Canon shell and naming
+## 3. Stage 0 — Canon shell and shared vocabulary
 
 ### Build
-- runtime config shell
-- shared enums / reason codes / freshness vocab
-- file naming model
-- folder structure
-- runtime state DTOs
-- symbol lifecycle DTOs
+- shared enums
+- reason codes
+- freshness vocabulary
+- lifecycle vocabulary
+- file naming and folder structure
+- schema version constants
+- runtime DTOs and symbol DTOs
 
 ### Must prove
-- no product/dev language confusion
+- one shared language exists for all later stages
 - no duplicate enum drift
-- all later stages have stable shared vocabulary
+- product language and developer language are separated early
 
 ### Forbidden jump
-- no market logic yet
+- no market logic
 - no ranking
-- no deep data
+- no deep analytics
 
-## 4. Stage 1 — Kernel, restore, and nervous system shell
+## 4. Stage 1 — Kernel, restore, and nervous-system shell
 
 ### Build
 - timer heartbeat
 - re-entry guard
 - runtime mode state
 - due-service registry
-- per-service last-run timestamps
-- cycle budget/debt shell
+- service timestamps
+- budget and coverage debt shell
 - cursor persistence
 - runtime state file
 - structured log shell
-- operator HUD shell that only displays runtime state
+- operator HUD shell that displays runtime state only
 
 ### Must prove
-- init completes without heavy full-feature collapse
+- init completes without feature collapse
 - restore path runs before fill
-- kernel can show due services and cycle counts
-- no heavy scanning lives in UI
+- kernel exposes cycle and due-service visibility
+- UI does not own heavy work
 
-### Failure points to test
+### Test focus
 - repeated timers
 - pause/resume
-- empty state restore
+- empty-state restore
 - stale/corrupt runtime state
 
-## 5. Stage 2 — Layer 1 market truth
+## 5. Stage 2 — Universe discovery and identity minimum
 
 ### Build
-- symbol discovery
-- per-symbol identity minimum
+- universe discovery
+- minimum identity block per symbol
+- raw/normalized/canonical symbol handling
+- primary bucket assignment shell
+- unknown/custom/synthetic handling
+
+### Must prove
+- universe membership persists cleanly
+- identity blocks survive restart
+- symbol naming mismatches do not corrupt continuity
+
+### Test focus
+- broker symbol rename edge cases
+- custom symbols
+- disappearing and reappearing symbols
+
+## 6. Stage 3 — Layer 1 market truth
+
+### Build
 - triple confirmation open/closed logic
 - reason codes
 - next recheck logic
 - fastlane retry classes
 - full-universe Layer 1 batching
+- market-truth block in symbol files
 
 ### Must prove
 - closed is not declared from broker flags alone
-- stale/no-quote/unknown stay distinct
+- stale/no-quote/unknown remain distinct
 - every symbol reaches explicit Layer 1 result
-- recheck times are assigned honestly
+- recheck scheduling is honest
 
-### Failure points to test
+### Test focus
 - live quote but closed schedule reference
 - schedule present but no quote
 - stale feed
 - newly opened market
 - disabled symbol
-- custom symbol edge cases
+- crypto-like 24/7 edge cases
+- stock-like stale-off-session quotes
 
-## 6. Stage 3 — Layer 1.2 full broker snapshot
+## 7. Stage 4 — Layer 1.2 broker snapshot
 
 ### Build
-- broker spec intake
+- full broker spec intake
 - suspicious-zero handling
-- snapshot freshness
+- snapshot freshness clocks
 - field-family refresh cadences
-- universe dump minimum schema
-- per-symbol snapshot blocks
+- minimum universe dump schema
+- snapshot block in symbol files
 
 ### Must prove
 - all discoverable symbols get snapshot records
-- zero and missing are not confused
-- old valid spec truth is not wiped by one weak pass
+- zero and missing are never confused
+- prior strong spec truth is not wiped by one weak pass
 
-### Failure points to test
+### Test focus
 - unreadable broker fields
 - partial spec reads
 - dynamic trade mode changes
 - symbol disappears then returns
 
-## 7. Stage 4 — Persistence and publication shell
+## 8. Stage 5 — Persistence and publication shell
 
 ### Build
 - Class A atomic commit
 - temp/backup/final promotion flow
-- symbol-file writer
-- universe-dump writer
+- write journal
+- symbol writer
+- universe dump writer
 - summary writer shell
 - runtime state writer
-- last-good preservation
 - corruption detection
-- summary-last publication order
+- summary-last order
 
 ### Must prove
 - no half-written canonical files
-- summary only routes to already-committed symbol files
 - pending symbol files can exist safely
-- restore can reject corrupt files honestly
+- summary only routes to already-committed symbol files
+- restore rejects corrupt files honestly
 
-### Failure points to test
+### Test focus
 - interrupted write
-- corrupt prior file
 - failed temp validation
-- publish while some symbols remain pending
+- corrupt prior file
+- pending symbol population during publish
 
-## 8. Stage 5 — Layer 2 surface competition
+## 9. Stage 6 — Layer 2 surface competition
 
 ### Build
 - score families
@@ -150,132 +170,134 @@ Only then does the next stage begin.
 - top-5 ceiling logic
 - quality floors
 - 10-minute surface cadence
-- surface fields in symbol files and summary
+- surface block in symbol files and summary
 
 ### Must prove
 - weak symbols do not rank highly by accident
 - quiet low-spread junk cannot dominate
 - stale or degraded symbols are penalized hard
-- empty/weak buckets publish fewer than five leaders when appropriate
+- weak buckets publish fewer than five leaders when appropriate
 
-### Failure points to test
+### Test focus
 - bucket with few usable symbols
 - ranking churn on tiny score changes
 - unknown bucket behavior
-- stale leader versus fresh runner-up
+- stale leader vs fresh runner-up
 
-## 9. Stage 6 — Promotion engine and freeze model
+## 10. Stage 7 — Promotion engine and freeze model
 
 ### Build
 - promoted-set persistence
-- promotion tie-breaks
+- promotion tie-break rules
+- hysteresis logic
 - demotion freeze rules
-- recent-promoted continuity handling
-- summary leadership promotion contract
+- near-promoted allowance logic
 
 ### Must prove
 - promotion is stable enough
-- demotion preserves last good deep state
-- promoted set survives restart appropriately
+- demotion preserves useful deep state
+- promoted set survives restart honestly
 
-### Failure points to test
+### Test focus
 - rapid oscillation
 - promoted symbol closes
-- deep refresh fails during promotion
+- promoted symbol becomes stale
 - bucket leader replacement
 
-## 10. Stage 7 — Layer 3 rolling deep data
+## 11. Stage 8 — Layer 3 deep rolling data
 
 ### Build
 - tick window
 - OHLC rings
 - timeframe-specific cadence logic
 - ATR families
-- regime/environment surface-deep bridge
-- per-domain freshness
+- deep regime/environment
+- deep freshness clocks
 - deep block persistence
 
 ### Must prove
 - new bars update only when due
-- no full-history recompute each cycle
-- promoted symbols receive depth without starving the rest of the system
+- no full-history recompute every cycle
+- promoted symbols receive depth without starving the system
 - stale deep domains are downgraded honestly
 
-### Failure points to test
+### Test focus
 - no new bar boundary
 - missing bars
 - thin history
 - budget pressure
-- promoted symbol leaves active set
+- demotion freeze behavior
 
-## 11. Stage 8 — Final UI surfaces
+## 12. Stage 9 — Final UI surfaces
 
 ### Build
 - operator HUD final fields
-- trader HUD fields
-- menu controls that mutate config only
-- display of pending reasons, budget debt, and freshness
+- trader HUD final fields
+- menu controls that modify config/state only
+- visibility of pending reasons, budget debt, freshness, and promotion state
 
 ### Must prove
 - HUD uses prepared runtime state only
 - no heavy compute inside redraw
-- trader and operator surfaces are not blended badly
+- trader and operator surfaces stay distinct
+- manual actions enqueue work rather than execute it inline
 
-### Failure points to test
+### Test focus
 - repaint storms
 - stale HUD state
 - bad menu changes
-- huge universe counts
+- large universe counts
 
-## 12. Stage 9 — Hardening and recovery
+## 13. Stage 10 — Hardening, recovery, and retention
 
 ### Build
 - degraded mode actions
-- cleanup and retention rules
+- cleanup rules
+- retention rules
 - stale continuity rejection rules
-- backup retention
 - performance sampling
 - recovery tests
 
 ### Must prove
 - restart continuity is bounded and honest
 - degraded mode remains useful
-- logs explain what happened when something fails
+- logs explain failures well enough for recovery
 
-## 13. Stage acceptance checklist
+## 14. Stage acceptance checklist
 
 A stage is accepted only if all are true:
 - runtime behavior matches blueprint scope
 - logs prove execution path
 - HUD exposes stage health honestly
 - files commit safely
-- no hidden destructive resets
-- no forbidden jump was introduced
-- observed failure cases were tested
+- no hidden destructive reset exists
+- forbidden jumps were not introduced
+- relevant failure cases were tested
+- restart continuity remains intact
 
-## 14. Migration guidance from current ASC
+## 15. Migration guidance from the current ASC tree
 
-### 14.1 Keep
-- existing identity/classification work where truthful
-- existing session/snapshot read work where strong
-- existing storage helper pieces that are actually atomic-safe
-- existing summary and symbol render ideas where presentation is useful
+### 15.1 Carry forward carefully
+- truthful identity/classification work
+- truthful session/snapshot read helpers
+- storage helpers that are actually atomic-safe
+- useful render ideas for symbol and summary output
 
-### 14.2 Rewrite or reorganize
+### 15.2 Rewrite or reorganize
 - collapsed init configuration
 - engine single-pass orchestration
-- phase-text HUD language
-- publication too tightly coupled to processing pass
-- insufficiently explicit nervous-system state
-- mixed feature activation too early
+- workflow-like phase text on HUD
+- publication too tightly coupled to process pass
+- under-specified nervous-system state
+- mixed later-layer feature activation too early
 
-### 14.3 Do not carry forward
+### 15.3 Do not carry forward
 - “enable everything at init and hope”
 - summary publication before safe current symbol files
 - UI as a logic owner
 - giant later-stage assumptions before the kernel is real
 
-## 15. Final acceptance of the entire EA
+## 16. Final acceptance of the entire EA
 
 ASC is ready only when:
 - restart restore is honest and stable

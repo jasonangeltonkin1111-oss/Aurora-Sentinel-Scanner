@@ -1,34 +1,39 @@
-# ASC Blueprint Pack
+# ASC Blueprint Pack — Complete EA Design
 
-This folder is the **new canonical EA design pack** for ASC.
+This folder is the **canonical EA design pack** for **Aurora Sentinel Scanner (ASC)**.
 
-It is **not** an office/control pack, not an Aurora pack, and not a worker-management pack.  
-It defines **how the EA itself must work**.
+It defines **how the EA itself must behave at runtime**.
+It does **not** define office workflow, Aurora doctrine, worker roles, or repo governance.
 
-## Scope
+---
 
-ASC is a **restore-first, timer-driven market scanner** that:
+## 1. Scope
 
-- discovers the broker universe
-- determines truthful market-open/market-closed state per symbol
-- captures a truthful broker snapshot for the whole universe
-- performs a cheap open-symbol surface ranking every 10 minutes
-- promotes only the strongest symbols per bucket for deep enrichment
-- persists rolling data safely with atomic writes
-- publishes a universe dump, a top-5-by-bucket summary, and one file per symbol
-- exposes operator/trader HUD surfaces that only display prepared truth
+ASC is a **restore-first, timer-driven, multi-layer scanner EA** that must:
 
-ASC does **not**:
+- discover and preserve the full broker universe
+- determine truthful present market state per symbol
+- capture a truthful broker snapshot for the entire universe
+- surface-rank open symbols every 10 minutes to find the strongest current leaders per bucket
+- promote only a bounded shortlist for deeper rolling enrichment
+- persist rolling truth safely without destructive rewrites
+- publish a full universe dump, a top-5-by-bucket summary, one canonical file per symbol, runtime state, and logs
+- expose operator/trader HUD and menu surfaces that **display prepared state only**
+
+ASC must **not**:
 
 - place trades
-- generate entry signals
+- choose trade entries or exits
 - act as Aurora
-- behave like a dev workflow
-- recompute the full universe deeply on every timer cycle
-- wipe state on restart
-- hide unknown truth behind fake neat states
+- pretend weak truth is strong truth
+- restart from zero on every load
+- run full-universe deep analytics on every timer cycle
+- let UI own heavy calculations
+- let developer workflow language leak into trader-facing product surfaces
 
-## Read order
+---
+
+## 2. Read order
 
 1. `01_ASC_SYSTEM_BLUEPRINT.md`
 2. `02_ASC_RUNTIME_NERVOUS_SYSTEM.md`
@@ -36,69 +41,118 @@ ASC does **not**:
 4. `04_ASC_SURFACE_RANKING_AND_DEEP_ENRICHMENT.md`
 5. `05_ASC_BUILD_STAGES_AND_ACCEPTANCE.md`
 
-## Integrated legacy lineage
+---
 
-This pack was deliberately shaped using the strongest ideas that survived pressure from the old systems.
+## 3. Canonical laws snapshot
 
-### Preserved from legacy
-- restore-first runtime, not restart-from-zero
-- timer-driven orchestration
-- bounded round-robin work
-- active-set promotion for expensive work
-- dossier/symbol publication before summary publication
-- explicit stale/degraded/warmup truth
-- per-symbol continuity, not giant monolithic blobs
-- freeze-over-forget behavior when symbols leave the promoted set
-- HUD displays prepared state only
-- continuity/load/save honesty
+1. **Restore first.** Restart means restore and continue, not wipe and guess.
+2. **Closed is the only hard market block.** Most other weaknesses remain visible and are scored down rather than hidden.
+3. **The kernel decides what is due.** Layers do not run blindly.
+4. **Every data domain owns its own freshness clock.**
+5. **Cheap broad first, expensive narrow second.**
+6. **Promotion gives budget rights, not permanent privilege.**
+7. **Published files are atomic. Summary is last.**
+8. **Unknown stays explicit.**
+9. **No symbol is forgotten because it is weak, closed, stale, or demoted.**
+10. **HUD/menu display prepared truth only.**
+11. **Product surfaces speak operator/trader language, not dev workflow language.**
+12. **Rolling continuity outranks cosmetic cleanliness.**
 
-### Adapted for ASC
-- Layer 1 / 1.2 / 2 / 3 runtime spine
-- kernel scheduler with due services and budgets
-- truth-weighted ranking instead of overusing hard pass/fail gates
-- top-5-per-bucket competition
-- full-universe broker snapshot plus promoted deep rolling state
-- rolling OHLC / ATR / tick stores with domain-specific cadences
+---
 
-### Rejected from legacy
-- full-universe deep recomputation
-- publication from half-complete refreshes
-- giant unreadable continuity blobs
-- HUDs that compute or mutate scanner truth
-- mixing trader-facing surfaces with dev workflow wording
-- scattering control language inside product outputs
+## 4. Legacy lineage deliberately preserved here
 
-## Major contradictions fixed from the current ASC tree
+This pack was shaped by the strongest survivable ideas from the old systems:
 
-The current live ASC still does too much in one pass.
+- **AFS BP1 / BP2 / BP3 / scanner notes**
+  - timer-driven heartbeat
+  - warm-state continuity
+  - dossier-first / summary-last publication discipline
+  - HUD truthfulness
+  - explicit pending / stale / weak / known distinctions
+  - stage-specific cadence and bounded enrichment
 
-Examples of the current collapse that this pack corrects:
+- **EA1 marketcore lineage**
+  - timer-only runtime identity
+  - OnTick empty / OnTimer orchestration
+  - SymbolInfoTick and CopyTicks as distinct truth paths
+  - authoritative snapshot-path vs history-path separation
+  - bounded publish flow and truthful partial publication
+  - re-entry guard, tick ring, session model, state summary model
 
-- init enables history, ATR, surface, publication, HUD, and menu at once
-- engine performs discovery, symbol processing, snapshot save, and publish in the same runtime sweep
-- HUD exposes internal workflow text like `Layer 1 / Layer 1.2 / Surface`
-- summary publication happens from the same general pass that is still filling truth
-- persistence exists, but the runtime nervous system is not explicit enough yet
+- **ISSX runtime / scheduler / persistence lineage**
+  - kernel phases for boot, clock, budget, due scan, publish fastlane
+  - budget and fairness surfaces
+  - service classes and resumable runtime state
+  - continuity discipline and honest decode / restore failure handling
 
-This pack fixes that by splitting the EA into:
+These ideas are **translated** into ASC rather than copied raw.
+
+---
+
+## 5. What this pack deliberately corrects from the current tree
+
+The current repo already contains strong ideas, but the live implementation and older blueprint set still show the same recurring collapse:
+
+- startup enables too much later-stage work too early
+- discovery, truth fill, ranking, publication, and UI are too tightly coupled
+- publication is too close to in-progress truth filling
+- workflow text leaks into product surfaces
+- persistence exists without a fully explicit kernel/service/freshness constitution
+
+This blueprint pack fixes that by forcing a runtime shape of:
+
 - kernel
-- market truth
-- broker snapshot
-- surface competition
+- Layer 1 market truth
+- Layer 1.2 broker snapshot
+- Layer 2 surface competition
 - promotion
-- deep enrichment
+- Layer 3 deep enrichment
 - publication
 - UI/logging
 
-## Canonical laws snapshot
+---
 
-1. **Closed is the only hard market block.** Everything else remains visible and scored.
-2. **Restart means restore and continue, not wipe and guess.**
-3. **The kernel decides what is due; layers do not run blindly.**
-4. **Every data domain owns its own freshness clock.**
-5. **Deep work belongs only to promoted symbols.**
-6. **Summary output is last; it can only point to files already safely published.**
-7. **HUD/menu never calculate heavy truth.**
-8. **Unknown stays explicit.**
-9. **No symbol is forgotten merely because it is currently weak or closed.**
-10. **Product surfaces must speak trader/operator language, not dev workflow language.**
+## 6. File count discipline
+
+This pack intentionally stays **small**.
+
+It uses a few major constitutional documents rather than dozens of scattered mini-docs.
+The EA itself should reflect the same principle:
+
+- one canonical universe dump
+- one canonical summary
+- one canonical runtime state file
+- one rolling log family
+- one canonical file per symbol
+
+No front-door file explosion.
+
+---
+
+## 7. How to use this pack
+
+Use this pack in two ways:
+
+### A. As runtime truth
+When deciding how the EA should behave, this pack outranks older scattered design notes.
+
+### B. As build order law
+When implementing the EA, the build stages in `05_ASC_BUILD_STAGES_AND_ACCEPTANCE.md` must be followed in order.
+No stage may quietly assume a later subsystem already exists.
+
+---
+
+## 8. Final definition
+
+ASC is correct only when it behaves like this:
+
+- restore prior good state
+- fill missing minimum truths without a destructive full reset
+- maintain explicit market truth and broker truth for the whole universe
+- re-rank open symbols every 10 minutes on cheap broad logic
+- deepen only a bounded promoted set
+- write rolling state atomically and honestly
+- keep UI read-only and lightweight
+- preserve weak, stale, frozen, deferred, and resumed states explicitly
+- publish a truthful shortlist without hiding the universe behind it

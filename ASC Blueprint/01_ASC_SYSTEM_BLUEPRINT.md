@@ -3,8 +3,7 @@
 ## 1. Product identity
 
 ASC is a **multi-layer scanner EA**.
-
-Its job is to build and maintain a truthful, rolling view of the broker universe, then present the best currently-usable symbols per bucket without pretending to be a trading brain.
+Its job is to maintain a truthful, rolling, broker-facing and trader-usable view of the symbol universe.
 
 ### ASC is
 - a broker-universe discovery engine
@@ -18,64 +17,94 @@ Its job is to build and maintain a truthful, rolling view of the broker universe
 ### ASC is not
 - an execution EA
 - a signal generator
+- a strategy-family engine
 - a portfolio allocator
-- a strategy wrapper
-- a worker-orchestration system
-- a dev workflow viewer
+- an Aurora wrapper
+- a repo/worker workflow viewer
+- a “run everything every tick” analytics monolith
 
 ## 2. Core purpose
 
-The EA exists to answer these questions continuously and truthfully:
+ASC exists to answer, continuously and truthfully:
 
 1. Which symbols exist in the broker universe?
-2. Which of them are truly open now?
-3. What are their real broker specs and market conditions?
-4. Which open symbols are the strongest top-5 candidates per bucket right now?
-5. What deeper contextual data exists for the promoted shortlist?
-6. What state is current, stale, pending, frozen, resumed, or degraded?
+2. Which symbols are truly open now, and what evidence supports that answer?
+3. What are the real current broker conditions and specs for each symbol?
+4. Which open symbols are the strongest current leaders per bucket?
+5. What deeper rolling context exists for the promoted shortlist?
+6. What truth is current, stale, pending, resumed, frozen, degraded, or incompatible?
 
 ## 3. Non-negotiable design laws
 
 ### 3.1 Restore-first law
-Startup must restore all viable prior state before it begins filling gaps.  
-Restart is never a reason to erase useful truth.
+Startup must restore all viable prior state before gap-filling begins.
+Restart is not permission to wipe useful truth.
 
-### 3.2 Truth-before-ranking law
-No symbol may be surface-ranked until its market truth exists.  
-No symbol may be deep-enriched merely because it exists.
+### 3.2 Whole-universe law
+The scanner must preserve the whole known universe even when only a shortlist is promoted.
+The summary is not the universe.
 
-### 3.3 Cheap broad, expensive narrow law
-The full universe gets cheap truth and cheap ranking.  
+### 3.3 Truth-before-preference law
+A symbol must reach explicit market truth before it can participate honestly in surface competition.
+Truth may be weak or partial, but it must be explicit.
+
+### 3.4 Cheap broad, expensive narrow law
+The full universe gets light truth and light competition.
 Only promoted symbols receive expensive rolling enrichment.
 
-### 3.4 Closed-only hard block law
-A symbol that is truly closed is deferred.  
-Everything else remains visible, explicit, and rankable, with penalties rather than fake disappearance.
+### 3.5 Closed-only hard market block law
+If a symbol is truthfully closed, it is deferred from active competition.
+Most other weakness states remain visible and are penalized rather than erased.
 
-### 3.5 Domain freshness law
-Market truth, broker snapshot, surface rank, OHLC stores, ticks, ATR, indicators, regime, publication, and UI state each own separate freshness clocks.
+### 3.6 Domain freshness law
+Market truth, snapshot, surface, OHLC, ticks, ATR, indicators, regime, publication, runtime state, and HUD state each own separate freshness clocks.
 
-### 3.6 Rolling continuity law
-The system must roll forward from last good state, preserving continuity and replacing only what has been truthfully refreshed.
+### 3.7 Rolling continuity law
+ASC must roll forward from last good state, replacing only what has been truthfully refreshed.
 
-### 3.7 Atomic publication law
+### 3.8 Atomic publication law
 Canonical published files must be committed atomically and only from validated payloads.
 
-### 3.8 UI boundary law
-HUD/menu may display current prepared state but may never perform heavy calculations, file crawls, or truth mutation.
+### 3.9 UI boundary law
+HUD/menu may display prepared state but may never perform heavy calculations, file crawls, or truth mutation.
 
-### 3.9 Product language law
-The product surface must not expose dev workflow language such as packet, worker, wave, debug mirror, or raw layer jargon unless the operator explicitly switches to a diagnostic surface.
+### 3.10 Product language law
+Trader-facing surfaces must not expose internal dev workflow language such as worker, packet, wave, debug mirror, or raw build-stage chatter.
+Diagnostic/operator surfaces may expose technical runtime truth but still should not become dev workflow theater.
 
-### 3.10 No symbol amnesia law
-Closed, inactive, stale, demoted, and dead-feed symbols must remain represented by lifecycle state and recheck policy. They are not forgotten.
+### 3.11 No symbol amnesia law
+Closed, inactive, stale, demoted, or dead-feed symbols remain represented by lifecycle state and recheck policy.
+No symbol vanishes merely because current attention moved elsewhere.
 
-## 4. Canonical runtime architecture
+### 3.12 Stronger-truth-preservation law
+A weak current pass must not casually destroy stronger prior truth.
+Downgrades must be explicit.
 
-ASC is not one pipeline pass.  
-It is a runtime with a kernel and several due services.
+## 4. Inputs and outputs
 
-### 4.1 Runtime tiers
+### 4.1 Runtime inputs
+- broker symbol list
+- SymbolInfo* metadata
+- SymbolInfoTick snapshot path
+- CopyTicks rolling path
+- CopyRates / OHLC path
+- timer heartbeat time
+- persisted runtime/symbol files
+- operator configuration changes
+
+### 4.2 Runtime outputs
+- canonical per-symbol files
+- universe dump
+- top-5-by-bucket summary
+- runtime state
+- rolling logs
+- HUD/menu surfaces fed from prepared state
+
+## 5. Canonical runtime architecture
+
+ASC is not one pass. It is a runtime with a kernel and due services.
+
+### 5.1 Runtime tiers
 - **Kernel tier**
 - **Layer 1 market truth tier**
 - **Layer 1.2 broker snapshot tier**
@@ -85,378 +114,307 @@ It is a runtime with a kernel and several due services.
 - **Publication tier**
 - **UI and logging tier**
 
-### 4.2 Canonical runtime order
+### 5.2 Canonical runtime order
 1. boot shell
 2. restore persisted state
-3. load or validate universe membership
-4. run Layer 1 due work
-5. run Layer 1.2 due work
-6. run Layer 2 due work
+3. validate universe membership and continuity compatibility
+4. run due Layer 1 work
+5. run due Layer 1.2 work
+6. run due Layer 2 work
 7. update promoted set
-8. run Layer 3 due work
+8. run due Layer 3 work
 9. perform safe publication commits
-10. refresh logs and HUD state
+10. update runtime snapshot, logs, and HUD state
 
-This order repeats under the control of the kernel scheduler.  
-It is not allowed to collapse into “discover + compute + publish everything in one pass”.
+This order repeats under kernel control.
+It may not collapse into “discover + compute + publish everything in one pass”.
 
-## 5. Data domains
+## 6. Runtime object model
 
-### 5.1 Identity domain
-What symbol is this?
+### 6.1 Universe
+The full discovered broker symbol set known to ASC.
+Universe membership is persistent and versioned.
 
+### 6.2 Symbol record
+The in-memory authoritative record for one symbol.
+It contains logical blocks for identity, lifecycle, market truth, snapshot, surface, promotion, deep state, freshness, publication, and reasons.
+
+### 6.3 Bucket
+A stable comparison class, usually `PrimaryBucket`, used for fair ranking.
+A symbol competes first inside its assigned bucket.
+
+### 6.4 Promoted set
+The bounded set of symbols currently allowed to consume Layer 3 budget.
+Promotion gives budget rights, not eternal status.
+
+### 6.5 Runtime snapshot
+The kernel-produced read model used by logs and HUDs.
+It compresses runtime state but must not replace raw truth blocks.
+
+## 7. Data domains
+
+### 7.1 Identity domain
 Fields include:
 - raw broker symbol
 - normalized symbol
 - canonical symbol
-- display name
+- description
 - path
 - exchange
-- sector / industry where available
+- sector/industry if available
 - asset class
 - primary bucket
 - classification confidence
-- classification review reason
+- classification reason
+- custom/synthetic flag
 
-### 5.2 Market truth domain
-Is the symbol truly open now, and what evidence supports that?
-
+### 7.2 Market truth domain
 Fields include:
 - market state
 - session state
-- tick freshness state
 - quote usability state
-- trade-mode state
-- next recheck time
-- next expected open time
+- tick freshness state
+- tradeability reference state
 - reason code
 - confidence class
+- next recheck time
+- next expected open time
+- evidence timestamps
 
-### 5.3 Broker snapshot domain
-What broker metadata is currently known?
-
+### 7.3 Broker snapshot domain
 Fields include:
+- digits, point
+- tick size, tick value
 - contract size
-- tick size
-- tick value
-- point
-- digits
-- margin and profit modes
-- fill / order modes
-- volume min / max / step / limit
-- stops level
-- freeze level
+- volume min/max/step/limit
+- stops level, freeze level
 - swap fields
-- currency fields
-- session schedule metadata
-- raw broker class metadata
+- margin/profit/currency fields
+- fill mode, order mode, calc mode
+- session metadata
+- suspicious-zero markers
+- unreadable/missing markers
 
-### 5.4 Surface domain
-How attractive is the symbol right now on a cheap broad scan?
-
+### 7.4 Surface domain
 Fields include:
-- cost quality
-- movement quality
-- data quality
-- execution usability
-- environment quality
+- cost efficiency score family
+- movement quality score family
+- execution usability score family
+- data quality score family
+- environment quality score family
 - penalty bundle
 - surface score
 - rank inside bucket
 - rank reasons
+- quality-floor eligibility
 
-### 5.5 Deep domain
-What richer rolling context exists for promoted symbols?
-
+### 7.5 Promotion domain
 Fields include:
-- rolling OHLC windows
-- tick rolling window
+- promoted status
+- promotion source bucket
+- promotion timestamp
+- hysteresis/tie-break metadata
+- near-promoted status
+- freeze-on-demotion metadata
+
+### 7.6 Deep domain
+Fields include:
+- bounded tick window state
+- rolling OHLC rings by timeframe
 - ATR families
-- indicator families
-- regime classification
-- environment state
-- deeper friction and cost context
-- continuity metrics
-- deep freshness state
+- approved indicator families
+- regime/environment fields
+- friction persistence
+- deep freshness and stale markers
+- last good deep refresh
 
-### 5.6 Continuity domain
-How trustworthy is the current state origin?
-
+### 7.7 Continuity domain
 Fields include:
-- continuity origin
+- continuity origin (`FRESH`, `RESTORED`, `MIXED`, `FROZEN`, `DEGRADED`)
 - last good server time
 - restore outcome
-- stale outcome
 - compatibility outcome
-- resumed / fresh / mixed / frozen origin class
+- corruption outcome
+- frozen reason
 
-### 5.7 Publication domain
-What is safe to publish now?
-
+### 7.8 Publication domain
 Fields include:
-- symbol-file publish state
-- universe-dump publish state
+- symbol publish state
+- universe dump publish state
 - summary publish state
-- last commit success
+- last commit success/failure
 - pending reasons
-- validation outcome
+- validation result
+- last-good fallback presence
 
-## 6. Symbol lifecycle model
+## 8. Asset-class awareness
 
-Every symbol lives in an explicit lifecycle, not a silent boolean.
+ASC must not assume all symbols behave like spot FX.
 
-### 6.1 Lifecycle states
+### 8.1 FX / metals / energies / index CFDs
+Common issues:
+- sessions can close while stale prices remain visible
+- spreads can widen around opens and closes
+- trade mode may change independently of quote visibility
+
+### 8.2 Crypto CFDs or 24/7 products
+Common issues:
+- 24/7 expectations can break naive session-closed assumptions
+- maintenance pauses and stale-feed periods can mimic closure
+
+### 8.3 Stocks / stock CFDs / exchange products
+Common issues:
+- auction windows
+- lunch breaks in some markets
+- long off-session periods with plausible last quotes
+- trade-disabled pre-open and after-hours distinctions
+
+### 8.4 Futures / expiring contracts
+Common issues:
+- expiry/roll behavior
+- contract replacement
+- session gaps and overnight pauses
+
+### 8.5 Custom or synthetic symbols
+Common issues:
+- broker metadata may be incomplete or misleading
+- tick and quote semantics may differ from regular tradables
+
+Asset class does not change the runtime spine, but it changes interpretation thresholds and reason codes.
+
+## 9. Symbol lifecycle model
+
+Every symbol lives in an explicit lifecycle.
+
+### 9.1 Canonical lifecycle states
 - `DISCOVERED`
 - `RESTORED`
 - `PENDING_MARKET_TRUTH`
 - `DEFERRED_CLOSED`
 - `DEFERRED_DISABLED`
 - `DEFERRED_STALE`
-- `SNAPSHOT_READY`
+- `SNAPSHOT_MIN_READY`
 - `SURFACE_READY`
 - `PROMOTED`
 - `DEEP_ACTIVE`
 - `DEEP_FROZEN`
 - `ARCHIVED_INACTIVE`
 
-### 6.2 Lifecycle rules
+### 9.2 Lifecycle rules
 - discovery does not imply open
 - open does not imply promotion
-- promotion does not imply permanent deep rights
-- demotion freezes deep state when useful
-- inactive does not imply deletion
+- promotion does not imply permanence
+- demotion freezes useful deep state rather than deleting it
 - stale does not imply absence
-- unknown never silently turns into negative truth
+- unknown never silently becomes a negative fact
 
-## 7. File architecture
+## 10. File architecture
 
 The file model must stay simple.
 
-### 7.1 Canonical root files
-- `UNIVERSE_DUMP`
-- `SUMMARY_TOP5_BY_BUCKET`
-- `RUNTIME_STATE`
-- `ASC_LOG`
+### 10.1 Canonical root files
+- `UNIVERSE_DUMP.txt`
+- `SUMMARY_TOP5_BY_BUCKET.txt`
+- `RUNTIME_STATE.txt`
+- `ASC_LOG.txt` (rolled)
 
-### 7.2 Canonical symbol folder
-- `SYMBOLS/<symbol>`
+### 10.2 Canonical symbol folder
+- `SYMBOLS/<symbol>.txt`
 
-### 7.3 File philosophy
-- one full universe dump
-- one top-level summary
-- one file per symbol
-- one runtime state file
-- one rolling log file family
+### 10.3 Philosophy
+- one broad universe truth file
+- one shortlist routing file
+- one canonical file per symbol
+- one runtime read-model file
+- one rolled log family
 
-No explosion of dozens of front-door files.
+Internal helper fragments may exist, but they do not replace canonical files.
 
-## 8. Module family design
+## 11. UI and language boundary
 
-The live codebase should eventually collapse into a few major module families.
-
-### 8.1 Kernel
-Owns:
-- boot
-- restore
-- timer orchestration
-- due-service scheduling
-- budgets and debt
-- mode transitions
-- heartbeat state
-
-### 8.2 MarketTruth
-Owns:
-- triple confirmation of open/closed
-- session interpretation
-- quote/tick evidence
-- market reason codes
-- next recheck logic
-
-### 8.3 Snapshot
-Owns:
-- full-universe broker snapshot
-- field-read policies
-- suspicious-zero handling
-- snapshot freshness
-
-### 8.4 Surface
-Owns:
-- cheap ranking inputs
-- bucket competition
-- top-5 selection
-- promotion inputs
-
-### 8.5 Deep
-Owns:
-- rolling OHLC windows
-- tick window
-- ATR/indicator families
-- regime and environment
-- promoted-symbol enrichments
-
-### 8.6 Persistence
-Owns:
-- restore
-- rolling state storage
-- schema / compatibility
-- corruption handling
-- atomic commit mechanics
-
-### 8.7 Publication
-Owns:
-- universe dump render
-- summary render
-- symbol render
-- publish gating
-- last-good preservation
-
-### 8.8 UI
-Owns:
-- operator HUD
-- trader HUD
-- menu surfaces
-- only read-model logic
-
-### 8.9 Logging
-Owns:
-- structured runtime event log
-- cycle stats
-- service outcomes
-- publish outcomes
-- restore outcomes
-
-## 9. UI and language boundary
-
-The HUD/menu must exist from the beginning, but as a read surface.
-
-### 9.1 Operator HUD
-Shows:
+### 11.1 Operator HUD
+Shows runtime reality:
 - mode
 - heartbeat age
-- due-service states
-- universe counts
-- open / closed / pending / stale counts
-- promoted / deep counts
-- last publish result
+- due service states
+- counts by lifecycle and truth class
 - budget debt
-- cursor positions
-- pending reason clusters
+- current cursors
+- fastlane size
+- publish headline
+- pending clusters
 
-### 9.2 Trader HUD
-Shows:
-- bucket leaders
-- symbol readiness
-- market freshness
-- cost / movement summary
+### 11.2 Trader HUD
+Shows trader-usable summary:
+- leading buckets
+- leader freshness
+- high-level cost/movement summary
 - last deep refresh age
+- quality caveats
 
-### 9.3 UI restrictions
-The UI must not:
-- scan files heavily every paint
-- call heavy history functions
+### 11.3 UI restrictions
+HUD/menu must not:
 - compute ranking
-- mutate scheduler state beyond user input intent
+- call deep history paths on redraw
+- crawl symbol files heavily every paint
+- mutate runtime state beyond explicit operator actions
 - become a runtime stall point
 
-### 9.4 Language rules
-Operator surfaces may use technical phrases like freshness, deferred, pending, resumed, degraded, deep refresh.  
-Trader surfaces may use simpler product language like open, fresh, active, cheap, expensive, fast-moving, quiet, top-ranked.
+## 12. Operator actions
 
-Do not expose wording like:
-- packet
-- worker
-- wave
-- debug mirror
-- layer 1 / 1.2 / 3 to trader surfaces
-- build slice / clerk / HQ
+Operator actions are allowed, but must schedule work rather than execute heavy work inline.
+Examples:
+- request immediate Layer 1 refresh
+- request republish
+- request summary rebuild
+- pause/resume scanner
+- adjust timer or budget parameters
 
-## 10. Major failure points and countermeasures
+Menu actions must feed config/state and let the kernel execute them safely later.
 
-### 10.1 Failure: false closed detection
-Cause:
-- trusting broker closed flags without live evidence discipline
+## 13. Major failure points and countermeasures
 
-Countermeasure:
-- triple confirmation with quote, tick, and broker session/trade reference
+### 13.1 False closed detection
+Cause: trusting broker-closed/session flags without live-evidence discipline.
+Countermeasure: triple confirmation with quote, tick, and session/trade reference.
 
-### 10.2 Failure: stale symbols ranking highly
-Cause:
-- movement/cost ranking without freshness penalties
+### 13.2 Quiet symbols ranking well for the wrong reason
+Cause: low spread outranks low movement.
+Countermeasure: cost must be evaluated relative to movement and quality.
 
-Countermeasure:
-- freshness and data quality are weighted score families with strong penalties
+### 13.3 Fast garbage symbols dominate
+Cause: movement outranks economics and freshness.
+Countermeasure: strong penalties for stale feed, suspicious-zero economics, degraded continuity, thin history, and poor usability.
 
-### 10.3 Failure: weak symbols filling buckets
-Cause:
-- forcing five symbols even when bucket quality is poor
+### 13.4 Restart wipes good state
+Cause: no restore-first nervous system.
+Countermeasure: compatibility-aware restore, carry-forward until verified replacement, and explicit stale/frozen labels.
 
-Countermeasure:
-- top-5 is a ceiling, not a quota; weak buckets may publish fewer than five leaders
+### 13.5 Publication exposes half-written truth
+Cause: writing live files before validation succeeds.
+Countermeasure: classed atomic commit, symbol-file-first then summary-last order, and last-good preservation.
 
-### 10.4 Failure: restart wipes useful state
-Cause:
-- no restore-first nervous system
+### 13.6 UI stalls runtime
+Cause: HUD/menu compute or crawl too much.
+Countermeasure: strict read-model contract.
 
-Countermeasure:
-- bounded restore, compatibility checks, stale policy, carry-forward until verified replacement
+### 13.7 Universe amnesia
+Cause: symbols disappear if not processed in the current pass.
+Countermeasure: universe persistence, lifecycle states, revisit classes, and retention rules.
 
-### 10.5 Failure: publication exposes half-written truth
-Cause:
-- writing live files before payload validation completes
+### 13.8 Scheduler starvation
+Cause: fastlane or promoted set monopolizes cycles.
+Countermeasure: budgets, debt, fairness shares, and independent cursors.
 
-Countermeasure:
-- strict atomic commit classes, summary last, last-good preservation
-
-### 10.6 Failure: UI stalls the runtime
-Cause:
-- UI recomputes or crawls heavy data
-
-Countermeasure:
-- UI consumes only prepared runtime snapshots
-
-### 10.7 Failure: universe amnesia
-Cause:
-- symbols vanish when not processed in the current cycle
-
-Countermeasure:
-- universe membership persistence, lifecycle states, slow recheck classes for inactive symbols
-
-### 10.8 Failure: one heartbeat does everything
-Cause:
-- collapsed pipeline
-
-Countermeasure:
-- kernel plus due-service architecture with budgets, debt, and separate cadences
-
-## 11. Current-tree contradictions this blueprint corrects
-
-### 11.1 Init is too feature-heavy
-The live init currently enables history, ATR, surface, summary, symbol files, HUD, and menu immediately.  
-That couples startup to later-stage work too early.
-
-### 11.2 Engine pass is too collapsed
-The current engine still does discovery, process, save snapshot, and publish in the same broad pass.
-
-### 11.3 Runtime text leaks workflow language
-The current HUD uses internal phase text like `Layer 1 / Layer 1.2 / Surface`.  
-That is not acceptable product-facing language.
-
-### 11.4 Publication is too close to fill-pass truth
-Publishing from the same runtime sweep that is still filling foundational truth risks half-complete surfaces.
-
-### 11.5 Persistence exists without a complete nervous system
-Storage logic exists, but the kernel mode model, service classes, debt, fastlane retries, and per-domain cadences are not yet fully constitutional.
-
-## 12. End-state definition
+## 14. End-state definition
 
 ASC is correct only when it behaves like this:
 
 - restart loads useful prior state
-- the kernel knows what is due
-- every symbol eventually reaches explicit market truth
-- every symbol has a truthful broker snapshot
+- every symbol reaches explicit market truth
+- every symbol has a truthful minimum broker snapshot
 - the full open universe competes every 10 minutes on cheap broad logic
 - only promoted symbols receive expensive rolling depth
 - per-domain refresh happens only when due
-- published files are atomic, validated, and rolling-safe
-- the HUD tells the operator what is known, pending, stale, resumed, degraded, and promoted without doing heavy work itself
+- published files are atomic, validated, and continuity-safe
+- the HUD tells the operator what is known, pending, stale, resumed, degraded, frozen, and promoted without doing the work itself

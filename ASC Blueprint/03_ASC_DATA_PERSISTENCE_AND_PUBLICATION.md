@@ -3,319 +3,170 @@
 ## 1. Persistence philosophy
 
 ASC persistence exists to preserve useful truth and continue rolling work safely.
-
 It does not exist to:
+
 - archive everything forever
 - create giant monolithic blobs
-- masquerade stale continuity as live truth
+- masquerade stale continuity as fresh truth
 - erase prior good state because one read failed
+- let partial current results destroy stronger older truth silently
 
 ## 2. Persistence classes
 
 ### 2.1 Universe continuity
 Applies to all symbols.
-
 Stores:
 - identity
+- lifecycle
 - market truth
 - broker snapshot
-- lifecycle state
 - recheck timing
 - surface freshness metadata
-- summary eligibility markers
 - continuity origin
+- publish eligibility markers
 
 ### 2.2 Deep continuity
-Applies only to promoted or previously promoted symbols.
-
+Applies to promoted or previously promoted symbols.
 Stores:
-- rolling OHLC windows
-- bounded tick window
+- tick window state
+- OHLC rings
 - ATR families
 - indicator families
-- regime/environment state
-- deep freshness state
+- regime/environment
+- deep freshness
 - last good deep refresh
+- frozen reason when demoted
 
 ### 2.3 Runtime continuity
 Stores:
-- kernel cursors
 - scheduler state
 - mode state
 - service last-run times
-- budget debt
-- last publish state
+- cursors
+- budget and coverage debt
+- publish headline
+- warmup completeness markers
 
-## 3. File model
+## 3. Canonical file model
 
-### 3.1 Canonical root files
-- `UNIVERSE_DUMP`
-- `SUMMARY_TOP5_BY_BUCKET`
-- `RUNTIME_STATE`
-- `ASC_LOG`
+### 3.1 Published root files
+- `UNIVERSE_DUMP.txt`
+- `SUMMARY_TOP5_BY_BUCKET.txt`
+- `RUNTIME_STATE.txt`
+- `ASC_LOG_*.txt`
 
-### 3.2 Symbol files
-- `SYMBOLS/<symbol>`
+### 3.2 Published symbol files
+- `SYMBOLS/<symbol>.txt`
 
-### 3.3 Optional internal files
+### 3.3 Internal helper files
+Allowed where useful:
 - temp stage files
-- backup files
+- backups
+- write journal
+- service journal
+- compact deep fragments
 - lock/guard files
-- runtime service journal
-- deep ring-buffer fragments if needed
 
-## 4. One-symbol-one-file law
+Internal helpers never replace canonical published files.
 
-Each symbol must have one canonical symbol file.
+## 4. Canonical naming and structure
 
-Reasons:
+### 4.1 One-symbol-one-file law
+Each symbol owns one canonical symbol file.
+This file may contain multiple blocks, but it remains one canonical document.
+
+### 4.2 Why this law exists
 - simple recoverability
 - easier atomic replacement
-- no giant monolithic per-universe symbol truth blob
-- aligns with old per-symbol continuity logic
-- easier selective refresh and fallback
+- natural fit for symbol-specific truth and fallback
+- aligns with old continuity lessons
+- avoids giant monolithic symbol-state blobs
 
-The symbol file may contain multiple logical sections, but it remains one canonical symbol document.
-
-## 5. Symbol file structure
+## 5. Symbol file contract
 
 Suggested block order:
-
-1. identity block
-2. lifecycle / continuity block
-3. market truth block
-4. broker snapshot block
-5. surface block
-6. promotion block
-7. deep block
-8. freshness block
-9. publication block
-10. pending/degraded reasons block
+1. identity
+2. lifecycle and continuity
+3. market truth
+4. broker snapshot
+5. surface
+6. promotion
+7. deep
+8. freshness
+9. publication
+10. pending/degraded reasons
 
 ### 5.1 Pending-safe rule
-A symbol file may exist even when some domains are pending, as long as pending state is explicit.
+A symbol file may exist while some domains are pending, as long as pending state is explicit.
 
-This solves the need to:
-- preserve all symbols
-- retain partial truth
-- avoid fake completeness
+### 5.2 Stronger-truth rule
+A current weak domain may not erase older stronger truth unless the downgrade is explicit.
+Examples:
+- failed quote read must not erase prior valid specs
+- temporary history outage must not erase prior OHLC rings
+- failed deep refresh must not destroy last good deep block
 
-### 5.2 Summary-safe rule
-The top-level summary may only include symbols whose surface result is current enough and whose symbol file has been safely committed.
+### 5.3 Frozen deep rule
+If a symbol is demoted, the deep block is retained as frozen context until retention policy says otherwise.
 
-## 6. Universe dump structure
+## 6. Universe dump contract
 
 The universe dump is the broad truth baseline.
-
-It should include, per symbol:
+For each symbol it should include:
 - identity
-- market truth
+- lifecycle
+- market truth headline
 - broker snapshot essentials
 - surface score if available
 - promotion status
 - continuity origin
 - freshness ages
-- pending reasons
+- pending/degraded reasons
 - next recheck
 
-It must contain all known symbols in the canonical universe, not only leaders.
+The universe dump contains all known symbols, not just leaders.
 
-## 7. Summary file structure
+## 7. Summary contract
 
 The summary is the trader/operator shortlist surface.
-
-It should contain:
+It must include:
 - scanner mode and freshness headline
 - last summary commit time
-- top 5 per bucket
-- bucket counts
-- symbol score breakdown headline
-- caveats and penalties per leader
-- pointers to symbol files
-- quality floor notes when a bucket has fewer than five leaders
+- top leaders per bucket
+- bucket counts and quality floor notes
+- score family highlights
+- penalties/caveats per leader
+- pointer to symbol files
+- deep freshness age for promoted leaders
 
-The summary is a routing surface, not a hidden analytics engine.
+The summary routes attention. It does not replace symbol files.
 
-## 8. Rolling data stores
+## 8. Runtime state contract
 
-### 8.1 Tick window
-Store only the last hour of tick-derived rolling state.
+The runtime state file is the read-model source for HUD/menu.
+It should include:
+- mode
+- last kernel heartbeat
+- last successful runs per service family
+- current cursors
+- budget and coverage debt
+- degraded status
+- warmup completeness markers
+- publish headline
+- pending clusters
 
-Suggested policy:
-- refresh every 10 seconds
-- bounded size
-- compact representation
-- primarily for promoted symbols
-- optionally for near-promoted active candidates if budget allows
+## 9. Logging contract
 
-### 8.2 OHLC windows
-Each timeframe maintains its own bounded ring.
-
-Rules:
-- append only when a new bar closes
-- do not rewrite unchanged bars
-- drop oldest when capacity is reached
-- commit atomically for the symbol domain
-
-### 8.3 ATR and indicators
-Derived metrics refresh only when their underlying timeframe domain updates.
-
-Do not recompute ATR/indicators when no new relevant bar exists.
-
-## 9. Freshness and staleness
-
-### 9.1 Separate freshness clocks
-Track freshness separately for:
-- market truth
-- snapshot
-- surface
-- ticks
-- M1 OHLC
-- M5 OHLC
-- M15 OHLC
-- H1 OHLC
-- H4 OHLC
-- D1 OHLC
-- ATR families
-- indicator families
-- regime
-- publication
-- HUD state
-
-### 9.2 Stale meaning
-Stale means:
-- still useful as retained context
-- not trustworthy as current truth without downgrade
-
-### 9.3 Stale handling
-- stale current domains are downgraded explicitly
-- stale deep domains may remain frozen
-- stale continuity may be discarded on restore if beyond policy windows
-- stale does not imply deletion
-
-## 10. Atomic commit classes
-
-### 10.1 Class A strict canonical files
-Use full atomic commit for:
-- universe dump
-- summary
-- symbol files
-- runtime state
-
-### 10.2 Class B bounded append/roll files
-Use bounded roll-safe semantics for:
-- log files
-- event ring files
-- telemetry traces
-
-## 11. Canonical atomic commit flow
-
-1. build payload in memory
-2. validate required structure
-3. write temp file
-4. flush temp file
-5. close temp file
-6. optionally re-read/verify staged content
-7. preserve prior good file when policy requires
-8. promote temp to final atomically
-9. stamp commit success
-10. clean temp safely
-
-No canonical file may appear half-written.
-
-## 12. Write gating
-
-### 12.1 What may always be written
-- logs
-- runtime state
-- pending symbol files
-- degraded state files
-- internal event journals
-
-### 12.2 What may only be written after validation
-- summary
-- publish-ready symbol files
-- universe dump if structural requirements fail
-
-### 12.3 Never overwrite with weaker truth
-A fresh partial result must not overwrite an older stronger result unless the downgrade is explicit and intentional.
-
-Examples:
-- a failed quote read cannot erase prior broker specs
-- a temporary history outage cannot erase prior OHLC arrays
-- a weak current pass cannot destroy last good deep block
-
-## 13. Last-good preservation
-
-### 13.1 Symbol demotion
-If a symbol leaves the promoted set:
-- stop active deep refresh
-- retain the last good deep block as frozen context
-- mark it non-current
-
-### 13.2 Failed promotion refresh
-If new deep refresh fails:
-- preserve prior good deep state
-- mark current deep refresh as failed/deferred
-
-### 13.3 Summary routing
-Summary must only point to symbol files already safely committed.
-
-This preserves the old “dossiers first, summary last” lesson, translated into ASC symbol files.
-
-## 14. Continuity compatibility checks
-
-On restore, validate:
-- schema version
-- file readability
-- required block presence
-- identity compatibility
-- broker fingerprint compatibility where needed
-- content freshness
-- optional hash compatibility for sensitive domains
-
-Reject or downgrade cleanly when incompatible.
-
-## 15. Corruption handling
-
-### 15.1 Corrupt file policy
-If a file is corrupt:
-- do not pretend restore success
-- move to reject/degraded path if policy allows
-- fall back to backup or clean rebuild of that domain
-- record the reason visibly
-
-### 15.2 Backup policy
-Keep bounded backups for Class A files where useful:
-- previous symbol file
-- previous summary
-- previous universe dump
-
-## 16. Cleanup policy
-
-### 16.1 What may be cleaned
-- stale temp files
-- superseded backups beyond retention count
-- obsolete symbol files only after strong proof the symbol truly left the broker universe and retention rules allow it
-
-### 16.2 What may not be auto-deleted casually
-- last good promoted symbol files
-- frozen retained deep state
-- summary backups during instability
-- runtime evidence needed for debugging recent failures
-
-## 17. Logging contract
-
-### 17.1 The log must answer
+### 9.1 Log must answer
 - did the function run?
 - what did it try to do?
-- what symbols did it touch?
-- what conclusion did it reach?
-- what got deferred?
+- which symbols were touched?
+- what outcome occurred?
+- what got deferred and why?
 - what got published?
 - what failed and why?
 
-### 17.2 Log event classes
+### 9.2 Log event classes
 - startup
 - restore
 - compatibility
@@ -327,58 +178,230 @@ Keep bounded backups for Class A files where useful:
 - atomic commit
 - cleanup
 - mode transition
-- budget event
+- budget/coverage
 - degraded event
 
-### 17.3 Log shape
-Each event should include:
+### 9.3 Minimum event shape
 - timestamp
 - cycle number
-- service name
+- service family
 - symbol if applicable
 - outcome
 - reason code
-- budget/cadence context if relevant
+- budget context where relevant
 
-## 18. Runtime state file contract
+## 10. Rolling data stores
 
-The runtime state file should include:
-- mode
-- last kernel heartbeat
-- last successful Layer 1/1.2/2/3 runs
-- current cursors
-- backlog counts
-- budget debt
-- degraded status
-- publish headline
-- warmup completeness markers
+### 10.1 Tick window
+Policy:
+- keep last hour only
+- update every 10 seconds when due
+- compact representation
+- promoted symbols by default
+- near-promoted candidates only if budget allows
 
-It is the UI read-model foundation.
+### 10.2 OHLC windows
+Each timeframe owns its own bounded ring.
+Rules:
+- append only when new bar closes
+- do not rewrite unchanged bars
+- drop oldest when capacity is reached
+- commit atomically to the symbol domain
 
-## 19. Failure points and countermeasures
+### 10.3 ATR and indicator families
+Refresh only when the underlying timeframe domain updates.
+No relevant new bar means no recalculation.
 
-### 19.1 File churn too high
-Fix:
+## 11. Freshness model
+
+### 11.1 Separate clocks
+Track freshness separately for:
+- market truth
+- broker snapshot
+- surface
+- tick window
+- M1 OHLC
+- M5 OHLC
+- M15 OHLC
+- H1 OHLC
+- H4 OHLC
+- D1 OHLC
+- ATR families
+- indicator families
+- regime
+- symbol publication
+- summary publication
+- runtime state
+- HUD snapshot
+
+### 11.2 Stale meaning
+Stale means:
+- still useful as retained context
+- not acceptable as fresh current truth without downgrade
+
+### 11.3 Freeze vs downgrade vs discard
+- **Freeze** when older truth is still useful but no longer current promoted truth
+- **Downgrade** when a domain remains readable but too old for fresh use
+- **Discard** only when corruption or incompatibility makes the domain unsafe to trust at all
+
+## 12. Schema versioning and compatibility
+
+### 12.1 Every canonical file must carry
+- schema version
+- writer version or build id
+- creation/update timestamps
+- continuity origin
+
+### 12.2 Restore compatibility checks
+Validate:
+- schema version
+- file readability
+- required block presence
+- identity compatibility
+- broker fingerprint compatibility where needed
+- freshness limits
+
+### 12.3 Migration policy
+When schema changes:
+- preserve old last-good files until migration succeeds
+- migrate block-by-block where feasible
+- do not silently reinterpret incompatible fields
+- record migration outcome visibly
+
+## 13. Atomic commit classes
+
+### 13.1 Class A strict canonical
+Use full atomic commit for:
+- symbol files
+- universe dump
+- summary
+- runtime state
+
+### 13.2 Class B bounded append/roll
+Use bounded roll-safe semantics for:
+- logs
+- event rings
+- telemetry traces
+
+## 14. Canonical atomic commit flow
+
+1. build payload in memory
+2. validate structure and required fields
+3. write temp file
+4. flush temp file
+5. close temp file
+6. optionally re-read staged content
+7. preserve prior good file when policy requires
+8. promote temp to final atomically
+9. stamp commit success
+10. clean temp safely
+
+No canonical file may appear half-written.
+
+## 15. Write journal and crash recovery
+
+For Class A writes, a small journal should record:
+- file target
+- temp target
+- intended commit sequence
+- commit start time
+- commit finish outcome
+
+If a crash occurs mid-commit, startup uses the journal to:
+- detect incomplete transactions
+- ignore orphan temps when safe
+- restore last-good final file
+- log the event honestly
+
+## 16. Write gating
+
+### 16.1 May always be written
+- logs
+- runtime state
+- pending symbol files
+- degraded state files
+- internal journals
+
+### 16.2 Require validation
+- summary
+- publish-ready symbol files
+- universe dump
+- promoted deep blocks
+
+### 16.3 Never overwrite with weaker truth unless explicit
+A fresh partial result must not overwrite an older stronger result unless the downgrade is intentional, marked, and safer than pretending freshness.
+
+## 17. Publication order
+
+### 17.1 Canonical order
+1. runtime state as needed
+2. symbol files
+3. universe dump
+4. summary last
+
+### 17.2 Why summary is last
+The summary must only point to already-committed symbol files.
+This translates the old dossier-first / summary-last lesson into ASC.
+
+## 18. Last-good preservation
+
+### 18.1 Promotion refresh fails
+- preserve prior good deep state
+- mark current deep refresh failed/deferred
+
+### 18.2 Summary commit fails
+- preserve prior good summary
+- do not publish half-new partial summary
+
+### 18.3 Universe dump fails
+- keep prior good dump
+- log the failed attempt
+
+## 19. Corruption handling
+
+### 19.1 Corrupt file policy
+If a file is corrupt:
+- do not pretend restore success
+- fall back to backup or clean rebuild of that domain
+- record the reason visibly
+- preserve safety over convenience
+
+### 19.2 Backup policy
+Keep bounded last-good backups for Class A files where useful.
+At minimum, recent previous versions of symbol files, universe dump, and summary should be available during instability.
+
+## 20. Cleanup and retention
+
+### 20.1 May be cleaned
+- stale temp files
+- superseded backups beyond retention count
+- obsolete symbol files only when the symbol has truly left the broker universe and retention permits removal
+
+### 20.2 Must not be casually auto-deleted
+- last good promoted symbol files
+- frozen retained deep state still within retention
+- recent summary backups during instability
+- evidence needed for recent failure analysis
+
+## 21. Failure points and countermeasures
+
+### 21.1 File churn too high
+Countermeasure:
 - delta-first writes
-- per-domain due checks
+- domain due checks
 - bar-boundary updates only for OHLC families
 
-### 19.2 Large tick store cost
-Fix:
-- promote-only tick persistence by default
-- bounded last-hour window
-- compact representations
+### 21.2 Tick store too expensive
+Countermeasure:
+- promote-first persistence
+- bounded one-hour window
+- compact representation
 
-### 19.3 Universe dump too heavy
-Fix:
-- keep one broad file, but allow compact render shape
-- separate internal runtime state from trader summary
+### 21.3 Summary freshness lies
+Countermeasure:
+- include summary freshness and leader freshness ages
+- never hide degraded domains
 
-### 19.4 Summary lies about freshness
-Fix:
-- include summary freshness and source freshness fields
-- never hide downgraded domains
-
-### 19.5 Pending forever
-Fix:
-- pending files must carry reason, retry, and expiry logic
+### 21.4 Pending forever
+Countermeasure:
+- pending records must carry reason, retry, and eventual expiry/escalation path
