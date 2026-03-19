@@ -71,3 +71,8 @@ Only record load-bearing decisions that matter for future HQ recovery.
 - Decision: add `office/LEGACY_RECOVERY_EXECUTION_PLAN.md` as the operational bridge between the master archive map and future archive-to-ASC recovery packets
 - Why: the repository now had strong lineage and code-translation intelligence, but future HQ still needed one canonical document that converts that intelligence into bounded module-specific recovery order, readiness states, and worker-packet requirements
 - Result: future HQ can now issue surgical recovery prompts with explicit ready-now vs blocked vs future-layer distinctions without re-deriving archive sequencing from scratch
+
+### 2026-03-19 — AFS classification lineage selected for identity recovery
+- Decision: AFS classification lineage is the active identity recovery source for ASC Layer 1.2 classification repair and backfill
+- Why: ASC currently compresses identity lineage into normalized/canonical outputs plus prose, while archived AFS material preserves raw/canonical/alias/confidence/review/note fields together at both row and shared-record level
+- Result: HQ opened `office/HANDOFF_L12_IDENTITY_CLASSIFICATION_RECOVERY.md` as the bounded recovery packet and directed future backfill toward archived AFS classification material before widening other identity sources
