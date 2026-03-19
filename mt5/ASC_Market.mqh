@@ -46,6 +46,16 @@ namespace ASC_Market_Internal
       return s;
    }
 
+   void AppendReason(string &reason,const string message)
+   {
+      if(StringLen(message) == 0)
+         return;
+      if(StringLen(reason) == 0)
+         reason = message;
+      else if(StringFind(reason, message) < 0)
+         reason += "; " + message;
+   }
+
    void ResetIdentity(ASC_SymbolIdentity &identity)
    {
       identity.RawSymbol              = "";
@@ -942,26 +952,31 @@ namespace ASC_Market_Internal
       MqlDateTime current_time_struct;
       TimeToStruct(current_time, current_time_struct);
       const int day = current_time_struct.day_of_week;
-      const SessionDayWindow &day_window = quote_window ? schedule.QuoteDays[day] : schedule.TradeDays[day];
 
-      probe.Readable = day_window.Readable;
-      probe.HasData = day_window.HasData;
+      const bool day_readable = quote_window ? schedule.QuoteDays[day].Readable : schedule.TradeDays[day].Readable;
+      const bool has_day_data = quote_window ? schedule.QuoteDays[day].HasData : schedule.TradeDays[day].HasData;
+      const int day_count = quote_window ? schedule.QuoteDays[day].Count : schedule.TradeDays[day].Count;
 
-      if(!day_window.Readable)
+      probe.Readable = day_readable;
+      probe.HasData = has_day_data;
+
+      if(!day_readable)
       {
          probe.Issue = quote_window ? "quote_session unreadable" : "trade_session unreadable";
          return;
       }
 
-      if(!day_window.HasData || day_window.Count <= 0)
+      if(!has_day_data || day_count <= 0)
       {
          probe.Issue = quote_window ? "quote_session missing" : "trade_session missing";
          return;
       }
 
-      for(int session_index = 0; session_index < day_window.Count; ++session_index)
+      for(int session_index = 0; session_index < day_count; ++session_index)
       {
-         if(IsWithinSessionRange(now_seconds, day_window.From[session_index], day_window.To[session_index]))
+         const datetime from_time = quote_window ? schedule.QuoteDays[day].From[session_index] : schedule.TradeDays[day].From[session_index];
+         const datetime to_time = quote_window ? schedule.QuoteDays[day].To[session_index] : schedule.TradeDays[day].To[session_index];
+         if(IsWithinSessionRange(now_seconds, from_time, to_time))
          {
             probe.IsOpen = true;
             return;
@@ -1055,13 +1070,15 @@ namespace ASC_Market_Internal
          const datetime base_day = start_of_day + offset * 86400;
          const int probe_seconds = (offset == 0 ? now_seconds : -1);
 
-         const SessionDayWindow &primary = prefer_trade ? schedule.TradeDays[day] : schedule.QuoteDays[day];
-         datetime boundary = ResolveNextOpenBoundary(primary, probe_seconds, base_day);
+         datetime boundary = prefer_trade
+                             ? ResolveNextOpenBoundary(schedule.TradeDays[day], probe_seconds, base_day)
+                             : ResolveNextOpenBoundary(schedule.QuoteDays[day], probe_seconds, base_day);
          if(boundary > now)
             return boundary;
 
-         const SessionDayWindow &secondary = prefer_trade ? schedule.QuoteDays[day] : schedule.TradeDays[day];
-         boundary = ResolveNextOpenBoundary(secondary, probe_seconds, base_day);
+         boundary = prefer_trade
+                    ? ResolveNextOpenBoundary(schedule.QuoteDays[day], probe_seconds, base_day)
+                    : ResolveNextOpenBoundary(schedule.TradeDays[day], probe_seconds, base_day);
          if(boundary > now)
             return boundary;
       }
