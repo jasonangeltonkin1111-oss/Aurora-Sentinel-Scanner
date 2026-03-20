@@ -14,6 +14,22 @@ bool ASC_ParseKeyValueLine(const string line,string &key,string &value)
    return(key!="");
   }
 
+bool ASC_ReadContinuityWithFallback(const string primary_path,string &body,ASC_Logger &logger)
+  {
+   if(ASC_ReadTextFile(primary_path,body) && body!="")
+      return(true);
+
+   string backup_path=primary_path + ".last-good";
+   if(ASC_ReadTextFile(backup_path,body) && body!="")
+     {
+      logger.Warn("Persistence","restored from last-good backup for " + primary_path);
+      return(true);
+     }
+
+   body="";
+   return(false);
+  }
+
 void ASC_AssignRuntimeField(ASC_RuntimeState &state,const string key,const string value)
   {
    if(key=="Schema Version") state.schema_version=value;
@@ -37,7 +53,7 @@ void ASC_AssignRuntimeField(ASC_RuntimeState &state,const string key,const strin
 bool ASC_LoadRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,ASC_Logger &logger)
   {
    string body="";
-   if(!ASC_ReadTextFile(paths.runtime_state_file,body))
+   if(!ASC_ReadContinuityWithFallback(paths.runtime_state_file,body,logger))
       return(false);
 
    string lines[];
@@ -50,6 +66,12 @@ bool ASC_LoadRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
          ASC_AssignRuntimeField(state,key,value);
      }
 
+   if(state.schema_version=="")
+     {
+      logger.Warn("RuntimeState","runtime continuity missing schema version; ignoring restore");
+      return(false);
+     }
+
    state.runtime_dirty=false;
    logger.Info("RuntimeState","restored runtime continuity");
    return(true);
@@ -58,7 +80,7 @@ bool ASC_LoadRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
 bool ASC_LoadSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
    string body="";
-   if(!ASC_ReadTextFile(paths.scheduler_state_file,body))
+   if(!ASC_ReadContinuityWithFallback(paths.scheduler_state_file,body,logger))
       return(false);
 
    string lines[];
@@ -67,7 +89,7 @@ bool ASC_LoadSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
    for(int i=0;i<line_count;i++)
      {
       string line=ASC_Trim(lines[i]);
-      if(line=="" || StringFind(line,"|")<0)
+      if(line=="" || StringFind(line,"|")<0 || StringFind(line,"=")>=0)
          continue;
 
       string parts[];
@@ -98,8 +120,11 @@ bool ASC_LoadSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
 
 bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,ASC_Logger &logger)
   {
+   string now_text=ASC_DateTimeText(TimeCurrent());
    string body="";
    body+="Schema Version=ASC Foundation v1\r\n";
+   body+="Format Family=Runtime Continuity\r\n";
+   body+="Generated At=" + now_text + "\r\n";
    body+="Server Raw=" + state.server_raw + "\r\n";
    body+="Server Clean=" + state.server_clean + "\r\n";
    body+="Runtime Mode=" + ASC_RuntimeModeText(state.mode) + "\r\n";
@@ -126,7 +151,9 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
 
 bool ASC_SaveSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
-   string body="Scheduler State\r\n\r\n";
+   string body="Schema Version=ASC Foundation v1\r\n";
+   body+="Format Family=Scheduler Continuity\r\n";
+   body+="Generated At=" + ASC_DateTimeText(TimeCurrent()) + "\r\n\r\n";
    for(int i=0;i<count;i++)
      {
       body+=states[i].symbol + "|" + ASC_MarketStatusText(states[i].market_status) + "|" + ASC_DateTimeText(states[i].next_check_at) + "|" + ASC_DateTimeText(states[i].last_tick_seen_at) + "|" + ASC_DateTimeText(states[i].last_checked_at) + "|" + IntegerToString(states[i].uncertain_burst_count) + "|" + states[i].status_note + "\r\n";
@@ -155,7 +182,11 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
      }
 
    string body="Summary Top 5 per Basket\r\n\r\n";
+   body+="Schema Version: ASC Foundation v1\r\n";
+   body+="Generated At: " + ASC_DateTimeText(TimeCurrent()) + "\r\n";
    body+="Server: " + runtime.server_clean + "\r\n";
+   body+="Runtime Mode: " + ASC_RuntimeModeText(runtime.mode) + "\r\n";
+   body+="Degraded: " + ASC_BoolText(runtime.degraded) + "\r\n";
    body+="Last Heartbeat: " + ASC_DateTimeText(runtime.last_heartbeat_at) + "\r\n";
    body+="Universe Size: " + IntegerToString(count) + "\r\n";
    body+="Open: " + IntegerToString(open_count) + "\r\n";

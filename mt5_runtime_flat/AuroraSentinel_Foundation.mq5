@@ -75,6 +75,12 @@ void ASC_ApplyRestoredRuntimeDefaults(void)
    g_runtime.summary_dirty=true;
   }
 
+bool ASC_IsDossierPresent(const ASC_SymbolState &state)
+  {
+   string dossier_path=ASC_JoinPath(g_paths.universe_folder,state.dossier_file);
+   return(FileIsExist(dossier_path,FILE_COMMON));
+  }
+
 void ASC_SyncUniverse(void)
   {
    int total=SymbolsTotal(false);
@@ -92,8 +98,9 @@ void ASC_SyncUniverse(void)
          g_symbols[i].dossier_file=ASC_DossierFileName(symbol);
          if(g_symbols[i].next_check_at<=0)
             g_symbols[i].next_check_at=TimeCurrent();
-         g_symbols[i].dirty=(g_symbols[i].dirty || g_symbols[i].last_dossier_write_at<=0);
         }
+      if(!ASC_IsDossierPresent(g_symbols[i]))
+         g_symbols[i].dirty=true;
      }
 
    g_runtime.symbol_count=total;
@@ -108,10 +115,11 @@ void ASC_RestoreContinuity(void)
   {
    bool runtime_restored=ASC_LoadRuntimeState(g_paths,g_runtime,g_logger);
    ASC_ApplyRestoredRuntimeDefaults();
-   g_runtime.recovery_used=runtime_restored || FileIsExist(g_paths.scheduler_state_file,FILE_COMMON);
+   g_runtime.recovery_used=runtime_restored || FileIsExist(g_paths.scheduler_state_file,FILE_COMMON) || FileIsExist(g_paths.scheduler_state_file + ".last-good",FILE_COMMON);
    ASC_SyncUniverse();
    if(ASC_LoadSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger))
       g_runtime.scheduler_dirty=true;
+   g_logger.Info("Recovery",(g_runtime.recovery_used ? "continuity available" : "no prior continuity found"));
   }
 
 bool ASC_ShouldSaveRuntime(const datetime now)
@@ -127,6 +135,31 @@ bool ASC_ShouldSaveScheduler(const datetime now)
 bool ASC_ShouldSaveSummary(const datetime now)
   {
    return(g_runtime.summary_dirty || g_runtime.last_summary_save_at<=0 || (now-g_runtime.last_summary_save_at)>=ASC_SUMMARY_SAVE_SECONDS);
+  }
+
+int ASC_CountMissingDossiers(void)
+  {
+   int missing=0;
+   for(int i=0;i<g_symbol_count;i++)
+     {
+      if(!ASC_IsDossierPresent(g_symbols[i]))
+         missing++;
+     }
+   return(missing);
+  }
+
+void ASC_UpdateRuntimeMode(const int missing_dossiers)
+  {
+   if(g_runtime.degraded)
+     {
+      g_runtime.mode=ASC_RUNTIME_DEGRADED;
+      return;
+     }
+
+   if(missing_dossiers>0)
+      g_runtime.mode=ASC_RUNTIME_WARMUP;
+   else
+      g_runtime.mode=ASC_RUNTIME_STEADY;
   }
 
 void ASC_RunHeartbeat(void)
@@ -166,16 +199,12 @@ void ASC_RunHeartbeat(void)
         }
      }
 
-   if(g_runtime.mode==ASC_RUNTIME_BOOT || g_runtime.mode==ASC_RUNTIME_RECOVERING)
-      g_runtime.mode=ASC_RUNTIME_WARMUP;
-   else
-      g_runtime.mode=ASC_RUNTIME_STEADY;
-
    g_runtime.degraded=(g_runtime.processed_this_heartbeat>=ASC_HEARTBEAT_SYMBOL_BUDGET && g_symbol_count>ASC_HEARTBEAT_SYMBOL_BUDGET);
-   if(g_runtime.degraded)
-      g_runtime.mode=ASC_RUNTIME_DEGRADED;
-
+   ASC_UpdateRuntimeMode(ASC_CountMissingDossiers());
    g_runtime.runtime_dirty=true;
+
+   if(g_runtime.degraded)
+      g_logger.Warn("Heartbeat","bounded work cap reached; remaining symbols will roll forward next heartbeat");
 
    if(ASC_ShouldSaveRuntime(now))
      {

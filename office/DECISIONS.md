@@ -12,8 +12,10 @@
 - dossiers must use human-readable functional names
 - internal mechanic names must not leak into dossier, HUD, or menu wording
 - startup restores and repairs; it must not blindly wipe and rebuild
-- atomic temp-to-final persistence is mandatory
-- foundation scope stays limited to runtime, scheduler, persistence, dossiers, logging, and market-state truth
+- atomic temp-to-final persistence with `.last-good` protection is mandatory
+- continuity restore may use `.last-good` fallback when the primary file is missing or invalid, but that fallback must be logged honestly
+- foundation scope stays limited to runtime, scheduler, persistence, dossiers, logging, summary scaffolds, bridge readiness, and market-state truth
+- ASC is the sensing substrate; Aurora remains the downstream interpretation and execution-intelligence layer
 - ranking, basket selection, strategy logic, trade logic, and account logic remain blocked
 
 ## Archive-derived control decisions
