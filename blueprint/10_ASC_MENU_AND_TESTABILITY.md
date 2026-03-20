@@ -58,12 +58,12 @@ Owns:
 - inclusion of pending layer placeholders
 - publication metadata stability
 
-## Reserved menu groups for later layers
+## Reserved menu groups for later capabilities
 
 These groups should already exist in menu design even when their logic is pending.
 
 ### Snapshot Controls (Pending)
-Reserved for Layer 2 open-symbol snapshot behavior.
+Reserved for Open Symbol Snapshot behavior.
 
 ### Timeframe History (Pending)
 Reserved for future OHLC and timeframe retention controls such as:
@@ -75,10 +75,10 @@ Reserved for future OHLC and timeframe retention controls such as:
 - D1 Bars
 
 ### Deep Analysis (Pending)
-Reserved for Layer 5 selective enrichment controls.
+Reserved for Deep Selective Analysis controls.
 
 ### Future Selection / Ranking (Pending)
-Reserved for Layer 3 and Layer 4 controls such as later selected-set limits.
+Reserved for Candidate Filtering and Shortlist Selection controls such as later selected-set limits.
 
 ## Menu naming rules
 
@@ -131,7 +131,7 @@ Pass means:
 - `.last-good` fallback is attempted when needed
 - missing dossiers are queued for repair honestly
 
-### Stage 4 — Layer 1 market-state heartbeat
+### Stage 4 — Market State Detection heartbeat
 Pass means:
 - open / closed / uncertain / unknown states advance under bounded work
 - fairness cursor prevents head-of-list starvation
@@ -141,7 +141,7 @@ Pass means:
 Pass means:
 - dossiers write atomically
 - runtime, scheduler, and summary continuity files carry schema and generated-at metadata
-- future-layer sections remain Reserved or Pending rather than missing
+- future-capability sections remain Reserved or Pending rather than missing
 
 ## Foundation test matrix summary
 
@@ -164,7 +164,7 @@ A runtime that cannot be configured cleanly or verified in sequence is not harde
 
 ## Logging verification signals
 
-A healthy Layer 1 test run should make it easy to find:
+A healthy Market State Detection test run should make it easy to find:
 - one init settings summary
 - one recovery outcome line
 - dossier repair queue lines when files are missing

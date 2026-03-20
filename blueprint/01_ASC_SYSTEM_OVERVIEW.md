@@ -65,20 +65,20 @@ The runtime is built from:
 - a 1-second kernel heartbeat
 - a due-based scheduler
 - retrieval modules with collector/store/accessor separation
-- five processing layers
+- an explicit ordered capability stack
 - atomic publication rules
 - symbol files that evolve over time
 
-## Canonical processing layers
+## Canonical ordered capability stack
 
-- `LAYER_1_OPEN_CLOSED_STATE`
-- `LAYER_2_OPEN_SYMBOL_SNAPSHOT`
-- `LAYER_3_FILTER`
-- `LAYER_4_TOP_LIST_SELECTION`
-- `LAYER_5_DEEP_SELECTIVE_ANALYSIS`
+1. Market State Detection
+2. Open Symbol Snapshot
+3. Candidate Filtering
+4. Shortlist Selection
+5. Deep Selective Analysis
 
-These are architecture ownership names.
-They are not HUD labels.
+The ordered progression must stay explicit for debugging and future implementation sequencing.
+Internal ownership keys may still retain stable architecture identifiers in code, but operator-facing naming must stay capability-first.
 
 ## Canonical discovery modules
 
@@ -91,7 +91,7 @@ They do not decide ranking, filtering, or selection.
 ## Canonical publication order
 
 1. symbol file exists
-2. layer-owned sections fill over time
+2. capability-owned sections fill over time
 3. selection and deep-analysis sections appear when earned
 4. summary appears later from already prepared state
 
@@ -110,15 +110,29 @@ That structure is described in `07_ASC_MT5_STRUCTURE_MAP.md`.
 
 ## Current active implementation boundary
 
-Right now the active implementation is Layer 1 only.
+Right now the active implementation is **Market State Detection** only.
 
-That means the tested foundation owns:
-- market status truth
-- session usage
-- tick freshness
-- next recheck timing
-- dossier creation and repair
-- runtime and scheduler continuity
+That tested foundation owns:
+- universe sync
+- tick presence and freshness
+- trade session awareness
+- market-status classification
+- next-check scheduling
+- dossier publication
+- runtime continuity
+- scheduler continuity
+- summary scaffold continuity
+- degraded/backlog honesty
 
-Layers 2 through 5 remain architecturally present but behaviorally pending.
-They must stay visible in layout, menu planning, and dossier placeholders without pretending they are already implemented.
+It does **not** own:
+- Open Symbol Snapshot
+- Candidate Filtering
+- Shortlist Selection
+- Deep Selective Analysis
+- execution readiness
+- volume validation
+- strategy logic
+- order-send feasibility logic
+
+The later capabilities remain architecturally present but behaviorally reserved.
+They must stay visible in layout, menu planning, runtime insertion points, and dossier placeholders without pretending they are already implemented.

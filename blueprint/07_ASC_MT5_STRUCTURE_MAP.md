@@ -44,7 +44,7 @@ Kernel heartbeat, due scheduler, restore flow, mode control, fairness, and bound
 
 ### Layers
 Layer-owned processing logic.
-This includes Layer 1 through Layer 5 behavior.
+This includes the explicit ordered capability stack from Market State Detection through Deep Selective Analysis.
 
 ### Publication
 Symbol file building, temp writes, safe promotion, summary building, and write-state handling.

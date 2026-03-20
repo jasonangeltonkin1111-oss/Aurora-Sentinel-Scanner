@@ -30,15 +30,15 @@ Examples:
 Used for frequently changing but bounded-refresh fields.
 
 Examples:
-- Layer 2 Market Watch snapshot writes
-- Layer 3 filter reevaluation
+- Open Symbol Snapshot market-watch writes
+- Candidate Filtering reevaluation
 - ATR refreshes where current design targets 10 seconds
 
 ### Near-open aggressive 1-second
 Used only around expected session-open windows.
 
 Examples:
-- Layer 1 open-state rechecks for a symbol expected to reopen soon
+- Market State Detection rechecks for a symbol expected to reopen soon
 
 ### Timeframe-boundary
 Used for timeframe-owned OHLC and close-dependent calculations.
@@ -85,7 +85,7 @@ Faster is not automatically better.
 - official bar completion must obey timeframe boundary
 
 ### ATR and indicators
-- owned by Layer 5
+- owned by Deep Selective Analysis
 - selective by timeframe
 - never universal just because one selected symbol needs an update
 

@@ -131,6 +131,6 @@ Bridge-friendly scanner outputs should include, directly or indirectly:
 
 ## Final rule
 
-ASC is the trustworthy sensing and continuity layer.
-Aurora is the downstream interpretation and execution-intelligence layer.
+ASC is the trustworthy sensing and continuity foundation.
+Aurora is the downstream interpretation and execution-intelligence system.
 The bridge succeeds only if ASC stays honest, bounded, and stable rather than trying to become Aurora early.

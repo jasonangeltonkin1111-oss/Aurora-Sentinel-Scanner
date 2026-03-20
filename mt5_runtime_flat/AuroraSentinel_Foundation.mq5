@@ -34,7 +34,7 @@ input bool InpRepairMissingDossiersOnBoot=true;       // Repair Missing Dossiers
 
 input group "Dossiers & Publication"
 input bool InpWriteDossiersWhenDue=true;              // Write Dossiers When Due
-input bool InpIncludePendingLayerPlaceholders=true;   // Include Pending Layer Placeholders
+input bool InpIncludeReservedCapabilityPlaceholders=true; // Include Reserved Capability Placeholders
 
 input group "Logging"
 input int InpLogVerbosity=1;                          // Log Verbosity: 0 Errors, 1 Normal, 2 Debug
@@ -42,8 +42,8 @@ input bool InpLogSchedulerDecisions=true;             // Log Scheduler Decisions
 input bool InpLogRecoveryEvents=true;                 // Log Recovery Events
 input bool InpLogDossierRepairs=true;                 // Log Dossier Repairs
 
-input group "Snapshot Controls (Pending)"
-input bool InpReserveLayer2SnapshotControls=true;     // Reserved: Layer 2 Snapshot Controls
+input group "Open Symbol Snapshot (Reserved)"
+input bool InpReserveOpenSymbolSnapshotControls=true; // Reserved: Open Symbol Snapshot Controls
 input bool InpReserveSnapshotControls=true;           // Reserved: Snapshot Controls Active Later
 
 input group "Timeframe History (Pending)"
@@ -55,14 +55,14 @@ input int InpReservedH1Bars=500;                      // Reserved: H1 Bars
 input int InpReservedH4Bars=300;                      // Reserved: H4 Bars
 input int InpReservedD1Bars=300;                      // Reserved: D1 Bars
 
-input group "Deep Analysis Controls (Pending)"
-input bool InpReserveLayer5Controls=true;             // Reserved: Deep Analysis Controls
+input group "Deep Selective Analysis (Reserved)"
+input bool InpReserveDeepSelectiveAnalysisControls=true; // Reserved: Deep Selective Analysis Controls
 input bool InpReserveDeepAnalysisControls=true;       // Reserved: Deep Analysis Active Later
 input int InpReservedAtrRefreshSeconds=60;            // Reserved: ATR Refresh Seconds
 
-input group "Future Selection / Ranking (Pending)"
-input bool InpReserveLayer3FilterControls=true;       // Reserved: Layer 3 Filter Controls
-input bool InpReserveLayer4SelectionControls=true;    // Reserved: Layer 4 Selection Controls
+input group "Filtering and Selection (Reserved)"
+input bool InpReserveCandidateFilteringControls=true; // Reserved: Candidate Filtering Controls
+input bool InpReserveShortlistSelectionControls=true; // Reserved: Shortlist Selection Controls
 input bool InpReserveSelectionControls=true;          // Reserved: Selection Controls Active Later
 input int InpReservedSelectedSymbolLimit=25;          // Reserved: Selected Symbol Limit
 
@@ -104,15 +104,15 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.unknown_recheck_seconds=(InpUnknownRecheckSeconds>0 ? InpUnknownRecheckSeconds : 120);
    g_settings.write_dossiers_when_due=InpWriteDossiersWhenDue;
    g_settings.repair_missing_dossiers_on_boot=InpRepairMissingDossiersOnBoot;
-   g_settings.include_pending_layer_placeholders=InpIncludePendingLayerPlaceholders;
+   g_settings.include_reserved_capability_placeholders=InpIncludeReservedCapabilityPlaceholders;
    g_settings.log_verbosity=ASC_InputVerbosity(InpLogVerbosity);
    g_settings.log_scheduler_decisions=InpLogSchedulerDecisions;
    g_settings.log_recovery_events=InpLogRecoveryEvents;
    g_settings.log_dossier_repairs=InpLogDossierRepairs;
-   g_settings.layer2_snapshot_reserved=InpReserveLayer2SnapshotControls;
-   g_settings.layer3_filter_reserved=InpReserveLayer3FilterControls;
-   g_settings.layer4_selection_reserved=InpReserveLayer4SelectionControls;
-   g_settings.layer5_deep_analysis_reserved=InpReserveLayer5Controls;
+   g_settings.open_symbol_snapshot_reserved=InpReserveOpenSymbolSnapshotControls;
+   g_settings.candidate_filtering_reserved=InpReserveCandidateFilteringControls;
+   g_settings.shortlist_selection_reserved=InpReserveShortlistSelectionControls;
+   g_settings.deep_selective_analysis_reserved=InpReserveDeepSelectiveAnalysisControls;
    g_settings.reserved_atr_refresh_seconds=(InpReservedAtrRefreshSeconds>0 ? InpReservedAtrRefreshSeconds : 1);
    g_settings.snapshot_controls_reserved=InpReserveSnapshotControls;
    g_settings.timeframe_history_reserved=InpReserveTimeframeHistoryControls;
@@ -130,7 +130,7 @@ void ASC_LoadSettingsFromInputs(void)
 void ASC_LogSettingsSummary(void)
   {
    g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, verbosity=" + ASC_LogVerbosityText(g_settings.log_verbosity));
-   g_logger.Debug("Settings","future layers reserved: snapshot=" + ASC_BoolText(g_settings.layer2_snapshot_reserved) + ", filter=" + ASC_BoolText(g_settings.layer3_filter_reserved) + ", selection=" + ASC_BoolText(g_settings.layer4_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.layer5_deep_analysis_reserved));
+   g_logger.Debug("Settings","future capabilities reserved: snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + ", filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", selection=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved));
   }
 
 void ASC_ResetRuntimeState(void)
@@ -290,7 +290,7 @@ void ASC_LogSchedulerDecision(const ASC_SymbolState &state)
   }
 
 
-bool ASC_ProcessLayer1Symbol(const int index)
+bool ASC_ProcessMarketStateSymbol(const int index)
   {
    ASC_AssessSymbol(g_symbols[index].symbol,g_symbols[index],g_settings);
    ASC_LogSchedulerDecision(g_symbols[index]);
@@ -302,24 +302,24 @@ bool ASC_ProcessLayer1Symbol(const int index)
    return(ASC_WriteDossier(g_paths,g_runtime,g_symbols[index],g_logger));
   }
 
-void ASC_Layer2_SnapshotPlaceholder(void)
+void ASC_OpenSymbolSnapshotPlaceholder(void)
   {
-   // Reserved for future Layer 2 snapshot dispatch.
+   // Reserved insertion point for future Open Symbol Snapshot dispatch.
   }
 
-void ASC_Layer3_FilterPlaceholder(void)
+void ASC_CandidateFilteringPlaceholder(void)
   {
-   // Reserved for future Layer 3 filter dispatch.
+   // Reserved insertion point for future Candidate Filtering dispatch.
   }
 
-void ASC_Layer4_SelectionPlaceholder(void)
+void ASC_ShortlistSelectionPlaceholder(void)
   {
-   // Reserved for future Layer 4 selection dispatch.
+   // Reserved insertion point for future Shortlist Selection dispatch.
   }
 
-void ASC_Layer5_DeepAnalysisPlaceholder(void)
+void ASC_DeepSelectiveAnalysisPlaceholder(void)
   {
-   // Reserved for future Layer 5 deep-analysis dispatch.
+   // Reserved insertion point for future Deep Selective Analysis dispatch.
   }
 void ASC_RunHeartbeat(void)
   {
@@ -352,7 +352,7 @@ void ASC_RunHeartbeat(void)
          continue;
 
       touched_this_heartbeat++;
-      bool success=ASC_ProcessLayer1Symbol(index);
+      bool success=ASC_ProcessMarketStateSymbol(index);
       g_runtime.scheduler_cursor=index+1;
       g_runtime.scheduler_dirty=true;
       g_runtime.summary_dirty=true;

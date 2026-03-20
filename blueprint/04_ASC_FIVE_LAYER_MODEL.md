@@ -1,39 +1,54 @@
-# ASC Five-Layer Model
+# ASC Ordered Capability Model
 
 ## Purpose
 
-This document defines the current processing model for ASC.
-The layer names are internal architecture names and must remain searchable and stable.
-They are not trader-facing labels.
+This document keeps the ASC processing order explicit while moving active canon toward capability-first naming.
+The sequence must stay visible for debugging, ownership, and future implementation order.
 
-## LAYER_1_OPEN_CLOSED_STATE
+## Ordered capability stack
+
+1. **Market State Detection**
+2. **Open Symbol Snapshot**
+3. **Candidate Filtering**
+4. **Shortlist Selection**
+5. **Deep Selective Analysis**
+
+Internal schema/search keys may still preserve stable architecture identifiers where needed, but active canonical language should prefer the capability names above.
+
+## Capability 1 — Market State Detection
+
+### Internal mapping
+- `LAYER_1_OPEN_CLOSED_STATE`
 
 ### Purpose
-Determine whether each symbol is open or closed and decide when it should be checked again.
+Determine whether each symbol is open, closed, uncertain, or unknown and decide when it should be checked again.
 
 ### Owns
-- boot restore support for open-state continuity
+- universe-linked market-state truth
 - live tick reality check
-- session-schedule capture use for recheck timing
+- session-schedule use for recheck timing
 - next open/closed recheck scheduling
 - base symbol-file creation
-- placeholder-section creation
+- reserved capability-section scaffolding
 
 ### Does not own
-- deep calculations
-- filtering
-- ranking
-- summary creation
+- open-symbol snapshots
+- candidate filtering
+- shortlist ranking
+- deep selective analysis
+- final ranked summary creation
 
 ### Runtime law
 - live tick reality first
 - session schedule second
 - restored persisted state as support
 - closed symbols do not get pointless every-second checks forever
-- closed symbols get next likely open scheduling
 - near expected open, aggressive 1-second rechecks may run for up to 1 minute
 
-## LAYER_2_OPEN_SYMBOL_SNAPSHOT
+## Capability 2 — Open Symbol Snapshot
+
+### Internal mapping
+- `LAYER_2_OPEN_SYMBOL_SNAPSHOT`
 
 ### Purpose
 Capture a controlled snapshot of open symbols only.
@@ -42,20 +57,17 @@ Capture a controlled snapshot of open symbols only.
 - open-symbol snapshot assembly
 - static specs merge for open symbols
 - changing Market Watch snapshot writes on controlled cadence
-- atomic writes for Layer 2 owned sections
+- atomic writes for snapshot-owned sections
 
 ### Does not own
-- filtering
-- ranking
-- deep analysis
+- candidate filtering
+- shortlist ranking
+- deep selective analysis
 
-### Runtime law
-- specs are reboot-time or slow-refresh data
-- live Market Watch fields are scheduled changing data
-- changing fields should not be rewritten every second without reason
-- current target cadence for changing fields is 10 seconds
+## Capability 3 — Candidate Filtering
 
-## LAYER_3_FILTER
+### Internal mapping
+- `LAYER_3_FILTER`
 
 ### Purpose
 Reduce the open universe to symbols worth further attention using cheap checks only.
@@ -69,17 +81,12 @@ Reduce the open universe to symbols worth further attention using cheap checks o
 ### Does not own
 - deep indicator engines
 - heavy history work
-- final ranking authority
+- final shortlist authority
 
-### Typical cheap checks
-- spread too wide
-- stale or suspicious feed
-- weak movement
-- low activity
-- missing critical values
-- invalid bucket eligibility
+## Capability 4 — Shortlist Selection
 
-## LAYER_4_TOP_LIST_SELECTION
+### Internal mapping
+- `LAYER_4_TOP_LIST_SELECTION`
 
 ### Purpose
 Rank filtered symbols inside each bucket and choose the bounded active set.
@@ -87,23 +94,21 @@ Rank filtered symbols inside each bucket and choose the bounded active set.
 ### Owns
 - bucket competition
 - score composition for selection
-- top-list cut
+- shortlist cut
 - anti-churn and stability controls
-- final selected-set authority for Layer 5 entry
+- final selected-set authority for deep-analysis entry
 
 ### Does not own
 - full deep analysis
 - raw discovery
 
-### Runtime law
-- selection remains bounded
-- around 90 symbols is considered manageable for deep selective work on the largest broker
-- membership should not flap constantly
+## Capability 5 — Deep Selective Analysis
 
-## LAYER_5_DEEP_SELECTIVE_ANALYSIS
+### Internal mapping
+- `LAYER_5_DEEP_SELECTIVE_ANALYSIS`
 
 ### Purpose
-Maintain high-detail rolling analytics only for the final selected set from Layer 4.
+Maintain high-detail rolling analytics only for the final selected set from Shortlist Selection.
 
 ### Owns
 - last-minute tick memory
@@ -117,15 +122,8 @@ Maintain high-detail rolling analytics only for the final selected set from Laye
 - broad-universe scanning
 - cheap first-pass filtering
 
-### Runtime law
-- selected-set only
-- tick data is maintained continuously in memory and written on schedule
-- ATR target cadence is currently 10 seconds
-- OHLC updates follow timeframe boundaries and forming-bar refresh rules
-- not every field updates at the same cadence
+## Cross-capability law
 
-## Cross-layer law
-
-The five layers are ordered.
+The five capabilities are ordered.
 They must not collapse into one giant function.
-Each layer owns its meaning and its publication blocks.
+Each capability owns its meaning, its publication blocks, and its insertion point in the runtime sequence.

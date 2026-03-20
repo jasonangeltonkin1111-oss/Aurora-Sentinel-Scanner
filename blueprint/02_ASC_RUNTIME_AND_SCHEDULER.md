@@ -18,7 +18,7 @@ Its job is orchestration only.
 
 It does not mean:
 - every symbol updates every second
-- every layer updates every second
+- every capability updates every second
 - every field rewrites every second
 
 It means:
@@ -80,18 +80,18 @@ Bad example:
 - asking for `Daily Change` triggers a full universe recollect
 
 Good example:
-- Layer 2 refresh updates stored snapshot
-- Layer 3 notices the snapshot changed and becomes due later
+- Open Symbol Snapshot refresh updates stored snapshot truth
+- Candidate Filtering notices the snapshot changed and becomes due later
 
 ## Canonical dispatch priority
 
 1. runtime safety and continuity
-2. Layer 1 open/closed truth
-3. Layer 2 open-symbol snapshot
-4. Layer 3 filter
-5. Layer 4 top-list selection
+2. Market State Detection
+3. Open Symbol Snapshot
+4. Candidate Filtering
+5. Shortlist Selection
 6. publication commits that are safe and due
-7. Layer 5 deep selective analysis
+7. Deep Selective Analysis
 8. cosmetic presentation extras
 
 ## Dirty propagation
@@ -99,9 +99,9 @@ Good example:
 Use meaning-based downstream dirtiness.
 
 Examples:
-- Layer 2 snapshot changed -> mark Layer 3 dirty for that symbol
-- Layer 3 outcome changed -> mark the relevant bucket dirty for Layer 4
-- Layer 4 membership changed -> mark Layer 5 membership sync dirty
+- Open Symbol Snapshot changed -> mark Candidate Filtering dirty for that symbol
+- Candidate Filtering outcome changed -> mark the relevant bucket dirty for Shortlist Selection
+- Shortlist Selection membership changed -> mark Deep Selective Analysis membership sync dirty
 
 ## Bounded work law
 

@@ -24,7 +24,7 @@ ASC is:
 - symbol-file-first
 - summary-last
 - cheap broad first, expensive narrow second
-- architecture-layered
+- ordered-capability architecture
 - publication-safe
 - human-readable on the outside
 - mechanically explicit on the inside
@@ -106,8 +106,13 @@ Heartbeat, due items, budgets, fairness, degradation, restore orchestration.
 ### Discovery
 Raw retrieval and storage of symbol specs, market-watch data, sessions, feed status, and time-domain truth.
 
-### Layers
-The processing pipeline that transforms retrieved truth into eligibility, ranking, and deeper enrichment.
+### Ordered capabilities
+The processing pipeline that transforms retrieved truth into eligibility, ranking, and deeper enrichment while preserving the explicit sequence:
+1. Market State Detection
+2. Open Symbol Snapshot
+3. Candidate Filtering
+4. Shortlist Selection
+5. Deep Selective Analysis
 
 ### Publication
 Dossiers, summary, runtime state, scheduler state, and safe writes.
@@ -123,7 +128,7 @@ The earliest working foundation should do only:
 - server paths
 - restore-safe continuity
 - per-symbol minimum dossier creation
-- market status truth
+- Market State Detection truth
 - scheduler persistence
 - runtime persistence
 - summary scaffold

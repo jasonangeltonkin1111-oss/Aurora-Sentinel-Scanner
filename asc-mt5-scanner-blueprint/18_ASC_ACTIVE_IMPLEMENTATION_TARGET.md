@@ -66,7 +66,7 @@ These are three different things.
 
 ### Future target
 - long-term semantic source tree
-- richer layer implementation
+- richer capability implementation
 - deeper publication and selection systems
 
 ## Immediate implementation law

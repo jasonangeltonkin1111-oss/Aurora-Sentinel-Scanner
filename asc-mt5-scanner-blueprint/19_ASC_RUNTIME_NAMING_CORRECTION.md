@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This file records a corrected drift: phase/dev naming leaked into an earlier MT5 runtime seed and had to be removed from the active surface.
+This file records a corrected drift: numeric layer/dev naming leaked into an earlier MT5 runtime seed and had to be removed from active operator and runtime surfaces.
 
 That is not acceptable as a stable runtime naming model.
 

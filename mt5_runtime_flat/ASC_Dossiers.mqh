@@ -46,13 +46,13 @@ string ASC_BuildDossierText(const ASC_ServerPaths &paths,const ASC_RuntimeState 
    body+="Next Due: " + ASC_DateTimeText(state.next_check_at) + "\r\n";
    body+="Uncertain Burst Count: " + IntegerToString(state.uncertain_burst_count) + "\r\n\r\n";
 
-   body+="Layer Progress\r\n";
+   body+="Capability Progress\r\n";
    body+="----------------------------------------\r\n";
-   body+="Layer 1 Market Status: Active\r\n";
-   body+="Layer 2 Snapshot: Pending\r\n";
-   body+="Layer 3 Filter: Pending\r\n";
-   body+="Layer 4 Selection: Pending\r\n";
-   body+="Layer 5 Deep Analysis: Pending\r\n\r\n";
+   body+="Market State Detection: Working\r\n";
+   body+="Open Symbol Snapshot: Reserved\r\n";
+   body+="Candidate Filtering: Reserved\r\n";
+   body+="Shortlist Selection: Reserved\r\n";
+   body+="Deep Selective Analysis: Reserved\r\n\r\n";
 
    body+="Tick Activity\r\n";
    body+="----------------------------------------\r\n";

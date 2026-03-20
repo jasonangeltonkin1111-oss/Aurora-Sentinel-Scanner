@@ -73,7 +73,7 @@ The active flat foundation files should map approximately as:
 - `ASC_ServerPaths.mqh` -> publication paths
 - `ASC_Logging.mqh` -> diagnostics
 - `ASC_FileIO.mqh` -> atomic write helpers
-- `ASC_MarketState.mqh` -> Layer 1 market state logic
+- `ASC_MarketState.mqh` -> Market State Detection logic
 - `ASC_Persistence.mqh` -> runtime/scheduler/summary persistence
 - `ASC_Dossiers.mqh` -> dossier text builder
 - `AuroraSentinel_Foundation.mq5` -> root EA kernel shell

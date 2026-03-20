@@ -31,7 +31,7 @@ The dossier should have:
 - a compact readable top
 - machine-stable section ownership
 - explicit freshness/validity markers
-- reserved sections for future layers
+- reserved sections for future capabilities
 - no fake completeness
 
 ## New canonical section model
@@ -42,11 +42,11 @@ Recommended section order:
 2. `SYMBOL_IDENTITY`
 3. `SYMBOL_RUNTIME_STATE`
 4. `SYMBOL_SCHEDULE_STATE`
-5. `LAYER_1_OPEN_CLOSED_STATE`
-6. `LAYER_2_OPEN_SYMBOL_SNAPSHOT`
-7. `LAYER_3_FILTER`
-8. `LAYER_4_TOP_LIST_SELECTION`
-9. `LAYER_5_DEEP_SELECTIVE_ANALYSIS`
+5. `MARKET_STATE_DETECTION`
+6. `OPEN_SYMBOL_SNAPSHOT`
+7. `CANDIDATE_FILTERING`
+8. `SHORTLIST_SELECTION`
+9. `DEEP_SELECTIVE_ANALYSIS`
 10. `PUBLICATION_STATE`
 11. `WRITE_STATE`
 12. `ERROR_STATE`
@@ -117,17 +117,17 @@ Do not express all of those as `0` or blank.
 Owner:
 - identity discovery / universe service
 
-### `LAYER_1_OPEN_CLOSED_STATE`
+### `MARKET_STATE_DETECTION`
 Owner:
-- market-state layer service
+- market-state detection service
 
-### `LAYER_2_OPEN_SYMBOL_SNAPSHOT`
+### `OPEN_SYMBOL_SNAPSHOT`
 Owner:
-- snapshot publication service
+- open-symbol snapshot service
 
-### `LAYER_4_TOP_LIST_SELECTION`
+### `SHORTLIST_SELECTION`
 Owner:
-- selection/ranking service
+- shortlist selection service
 
 ### `WRITE_STATE`
 Owner:

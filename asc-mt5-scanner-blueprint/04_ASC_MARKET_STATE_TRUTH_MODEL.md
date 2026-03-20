@@ -2,7 +2,8 @@
 
 ## Purpose
 
-ASC must answer “is this symbol open enough now?” without faking certainty.
+Market State Detection is the only active foundation capability today.
+It must answer “is this symbol open enough now?” without faking certainty.
 
 This is not trivial because:
 - broker session metadata can exist while feed is stale
@@ -158,6 +159,22 @@ Examples:
 - `Next Session Open`
 - `Next Recheck`
 - `Reason Code`
+
+## Ownership boundary
+
+Market State Detection owns:
+- universe-linked per-symbol market-state truth
+- tick presence and freshness
+- session-aware recheck timing
+- honest uncertain/unknown/degraded outcomes
+- dossier-ready state for publication
+
+It does not own:
+- Open Symbol Snapshot
+- Candidate Filtering
+- Shortlist Selection
+- Deep Selective Analysis
+- execution readiness or strategy logic
 
 ## Important anti-patterns
 

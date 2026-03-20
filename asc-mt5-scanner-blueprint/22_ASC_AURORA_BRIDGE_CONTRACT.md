@@ -21,7 +21,7 @@ Aurora doctrine makes clear that a downstream system will eventually need:
 - broad symbol coverage before selective narrowing
 - scanner outputs that remain readable to humans and parseable to machines
 
-ASC must satisfy those needs as a foundation layer while staying out of strategy and execution logic.
+ASC must satisfy those needs as a foundation capability stack while staying out of strategy and execution logic.
 
 ## Scanner-to-Aurora boundary
 
