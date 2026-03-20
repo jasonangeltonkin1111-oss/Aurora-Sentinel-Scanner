@@ -5,7 +5,8 @@
 - active blueprint canon exists and now includes an ASC-to-Aurora bridge requirement layer
 - flat MT5 foundation exists and remains the active runtime surface
 - office normalization is active and now needs disciplined checkpoint maintenance
-- restart continuity, bounded scheduler behavior, dossier integrity, and clean menu/test wiring remain the active hardening center
+- restart continuity, bounded scheduler behavior, dossier integrity, menu discipline, and explorer shell safety remain the active hardening center
+- Market State Detection remains the only working capability; later explorer surfaces stay placeholder-only
 - ranking, basket logic, strategy logic, and trade logic remain blocked
 
 ## Active streams
@@ -14,7 +15,7 @@
 |---|---|---|---|
 | Office control | ACTIVE | keep repo control compact, current, and checkpointed | refresh board, decisions, work log, and SHA ledger on meaningful passes only |
 | Blueprint clarification | ACTIVE | remove ambiguity around runtime, dossier, publication, and bridge law | keep root blueprint ahead of pack drift |
-| Foundation runtime | ACTIVE | timer, heartbeat, fairness, recovery, persistence, dossiers, summary scaffold | continue compile-hardening and restore validation |
+| Foundation runtime | ACTIVE | timer, heartbeat, fairness, recovery, persistence, dossiers, summary scaffold, explorer shell | continue compile-hardening and restore validation |
 | Market-state truth | ACTIVE | open / closed / uncertain symbol truth with session-aware pacing | preserve edge-case honesty around stale and missing feed evidence |
 | Persistence and atomic writing | ACTIVE | continuity files, dossier writes, summary writes, last-good protection | expand validation and repair discipline without widening scope |
 | ASC ⇄ Aurora bridge | ACTIVE | define upstream scanner guarantees for later Aurora ingestion | keep bridge contract bounded to sensing and continuity only |
@@ -28,6 +29,7 @@
 3. keep dossier and continuity contracts stable enough for future Aurora ingestion
 4. complete Market State Detection compile validation and first-run/restore test passes in MetaEditor
 5. keep the MT5 menu/input surface clean as reserved capability controls are added
+6. verify the Explorer HUD shell stays presentation-only, navigation-safe, and bounded
 
 ## Blocking rules
 

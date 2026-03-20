@@ -71,45 +71,78 @@ void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state,const ASC_Runti
    state.within_trade_session=within_session;
    state.next_session_open_at=next_open_at;
 
-   if(state.has_tick && state.tick_age_seconds>=0 && state.tick_age_seconds<=settings.fresh_tick_seconds)
+   bool fresh_tick=(state.has_tick && state.tick_age_seconds>=0 && state.tick_age_seconds<=settings.fresh_tick_seconds);
+
+   if(state.has_trade_sessions)
      {
-      state.market_status=ASC_MARKET_OPEN;
-      state.status_note="Fresh tick observed";
-      state.next_check_at=now+settings.open_recheck_seconds;
-      state.uncertain_burst_count=0;
-     }
-   else if(within_session)
-     {
-      state.market_status=ASC_MARKET_UNCERTAIN;
-      state.status_note="Inside trade session without a fresh tick";
-      if(state.uncertain_burst_count<settings.uncertain_burst_limit)
+      if(state.within_trade_session)
         {
-         state.next_check_at=now+settings.uncertain_fast_recheck_seconds;
-         state.uncertain_burst_count++;
+         if(fresh_tick)
+           {
+            state.market_status=ASC_MARKET_OPEN;
+            state.status_note="Fresh tick inside broker trade session";
+            state.next_check_at=now+settings.open_recheck_seconds;
+            state.next_check_reason="Open market refresh cadence";
+            state.uncertain_burst_count=0;
+           }
+         else
+           {
+            state.market_status=ASC_MARKET_UNCERTAIN;
+            state.status_note="Inside broker trade session without a fresh tick";
+            if(state.uncertain_burst_count<settings.uncertain_burst_limit)
+              {
+               state.next_check_at=now+settings.uncertain_fast_recheck_seconds;
+               state.next_check_reason="Uncertain fast follow-up inside trade session";
+               state.uncertain_burst_count++;
+              }
+            else
+              {
+               state.next_check_at=now+settings.uncertain_slow_recheck_seconds;
+               state.next_check_reason="Uncertain slow follow-up after burst limit";
+              }
+           }
         }
       else
-         state.next_check_at=now+settings.uncertain_slow_recheck_seconds;
+        {
+         state.market_status=ASC_MARKET_CLOSED;
+         state.status_note=(fresh_tick ? "Outside broker trade session; recent tick preserved but market treated as closed" : "Outside broker trade session");
+         if(next_open_at>0 && (next_open_at-now)<=settings.closed_near_open_seconds)
+           {
+            state.next_check_at=now+settings.closed_near_open_recheck_seconds;
+            state.next_check_reason="Near broker session open";
+           }
+         else if(next_open_at>0 && (next_open_at-now)<=settings.closed_soon_window_seconds)
+           {
+            state.next_check_at=now+settings.closed_soon_recheck_seconds;
+            state.next_check_reason="Broker session opens soon";
+           }
+         else
+           {
+            state.next_check_at=now+settings.closed_idle_recheck_seconds;
+            state.next_check_reason="Closed-session maintenance cadence";
+           }
+         state.uncertain_burst_count=0;
+        }
      }
-   else if(has_sessions)
+   else if(fresh_tick)
      {
-      state.market_status=ASC_MARKET_CLOSED;
-      state.status_note="Outside trade session";
-      if(next_open_at>0 && (next_open_at-now)<=settings.closed_near_open_seconds)
-         state.next_check_at=now+settings.closed_near_open_recheck_seconds;
-      else if(next_open_at>0 && (next_open_at-now)<=settings.closed_soon_window_seconds)
-         state.next_check_at=now+settings.closed_soon_recheck_seconds;
-      else
-         state.next_check_at=now+settings.closed_idle_recheck_seconds;
+      state.market_status=ASC_MARKET_OPEN;
+      state.status_note="Fresh tick observed while broker session data is unavailable";
+      state.next_check_at=now+settings.open_recheck_seconds;
+      state.next_check_reason="Open cadence using live tick evidence";
       state.uncertain_burst_count=0;
      }
    else
      {
       state.market_status=ASC_MARKET_UNKNOWN;
-      state.status_note="Trade session information is not available";
+      state.status_note="Trade session information is not available and no fresh tick confirms activity";
       state.next_check_at=now+settings.unknown_recheck_seconds;
+      state.next_check_reason="Unknown-state safety recheck";
       state.uncertain_burst_count=0;
      }
 
+   state.is_due_now=(state.next_check_at<=now);
+   state.publication_ok=(state.last_dossier_write_at>0);
    state.dirty=true;
   }
 
