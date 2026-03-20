@@ -135,6 +135,7 @@ Interpretation law:
 - this class answers “what intraday holding shape is still plausible if geometry is later emitted?”
 - it does not answer whether geometry is valid yet
 - it does not answer whether a card is allowed yet
+- when execution/timebox evidence is too incomplete to justify even a provisional intraday shape, `HORIZON_UNKNOWN` is the conservative result
 
 ## 3.5 Geometry validity
 Canonical owner:

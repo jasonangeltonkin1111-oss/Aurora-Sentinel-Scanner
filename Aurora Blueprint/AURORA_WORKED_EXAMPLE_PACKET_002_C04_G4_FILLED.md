@@ -180,14 +180,14 @@ What this packet is not allowed to claim:
 ## Canonical classifications
 - `deployability_class`: `WATCH_ONLY`
 - `opportunity_status`: `OBSERVE_ONLY`
-- `horizon_class`: `H2_STANDARD_INTRADAY`
+- `horizon_class`: `HORIZON_UNKNOWN`
 - `geometry_validity`: `GEOMETRY_INVALID`
 - `card_eligibility_gate`: `CARD_BLOCKED_GEOMETRY`
 
 ## Why these classifications were chosen
 - structure can be interesting without earning deployment confidence
 - execution/timebox truth is incomplete enough to keep deployability at watch-only posture
-- the packet can frame an intraday horizon conceptually, but not justify honest entry/invalidation geometry
+- the packet cannot justify a stronger horizon classification while execution and timebox truth remain illustrative
 - card emission would overstate precision
 
 ## Idea-valid-but-geometry-invalid truth
@@ -216,6 +216,13 @@ What this packet is not allowed to claim:
 ## Why no-card is the correct result
 - forcing a card would invent execution precision Aurora does not own here
 - preserving the opportunity object is more honest than pretending the scenario is executable
+
+## Real-case upgrade note
+To upgrade this packet later into a real ASC-backed case, replace the illustrative placeholders with:
+- one concrete ASC context reference
+- one real context timestamp and review timestamp
+- measured execution/freshness/session values
+- horizon classification justified from those measured values rather than from scenario shape alone
 
 ---
 

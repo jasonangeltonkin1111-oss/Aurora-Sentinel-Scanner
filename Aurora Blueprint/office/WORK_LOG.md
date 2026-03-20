@@ -72,3 +72,27 @@ The active Aurora execution-side stack had specific known drift risks: incomplet
 
 ### Result
 Aurora now has an explicit normalization spec, an active workflow packet that matches current routing/review law more closely, and the first concrete packet artifacts needed to turn the current schema-only layers into usable continuation surfaces.
+
+
+## 2026-03-20 — Aurora second-pass micro-audit and precision tightening
+
+### Why
+The first execution-side hardening wave was already strong, so this pass was limited to verifying whether any new file still slightly overstated certainty or left an awkward upgrade path for a later real ASC-backed case.
+
+### What changed
+- tightened the alignment spec so horizon classification explicitly allows `HORIZON_UNKNOWN` when even provisional intraday shape is not justified
+- clarified in workflow packet v2 that save/log packaging is a manual continuity step rather than implied automation or ASC-side logging behavior
+- downgraded the illustrative C-04 / G4 worked example from `H2_STANDARD_INTRADAY` to `HORIZON_UNKNOWN` because the available evidence was not strong enough to justify a stronger horizon label
+- added one narrow real-case upgrade note so later replacement of illustrative placeholders is cleaner
+
+### What was intentionally not done
+- no new architecture layer was created
+- no bridge file was changed
+- no broader enum or schema wave was started
+- no extra example families were created
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+The new Aurora hardening files remain in place, but the most evidence-sensitive illustrative horizon wording is now more conservative and the later real-case upgrade path is slightly cleaner.

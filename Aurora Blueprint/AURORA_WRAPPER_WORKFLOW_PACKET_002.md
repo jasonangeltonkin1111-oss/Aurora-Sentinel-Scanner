@@ -210,6 +210,11 @@ Do not manufacture geometry to avoid a no-card-valid outcome.
 
 # 9. STAGE 6 — SAVE / LOG PACKAGING
 
+Save/log packaging is a continuity step.
+It means manual preservation into Aurora packets, run notes, or related evidence objects.
+It does not imply automatic persistence, automation, or ASC-side logging changes.
+
+
 ## Save each run
 - ASC context reference used
 - group-context object or example used
@@ -224,6 +229,7 @@ Do not manufacture geometry to avoid a no-card-valid outcome.
 - preserve lineage references
 - preserve historical packet versions rather than deleting them
 - use normalized enums from the alignment spec and registry
+- if the case is illustrative, mark exactly which placeholders must be replaced before a real ASC-backed upgrade
 
 ---
 
