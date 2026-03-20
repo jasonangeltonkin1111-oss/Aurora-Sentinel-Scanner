@@ -75,7 +75,7 @@ void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state,const ASC_Runti
      {
       state.market_status=ASC_MARKET_OPEN;
       state.status_note="Fresh tick observed";
-      state.next_check_at=now+10;
+      state.next_check_at=now+settings.open_recheck_seconds;
       state.uncertain_burst_count=0;
      }
    else if(within_session)

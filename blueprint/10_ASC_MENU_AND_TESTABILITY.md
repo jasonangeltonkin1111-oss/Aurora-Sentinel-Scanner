@@ -25,7 +25,14 @@ Owns:
 
 ### Scheduler
 Owns:
+- fairness budget
+- due pacing
+- bounded work progression
+
+### Market Status Detection
+Owns:
 - fresh tick threshold
+- open-market recheck cadence
 - uncertain-state burst limits
 - fast and slow uncertain rechecks
 - closed-market pacing windows
@@ -45,10 +52,11 @@ Owns:
 - recovery logging
 - dossier repair logging
 
-### Symbol Dossiers
+### Dossiers & Publication
 Owns:
 - due-based dossier writing toggle
 - inclusion of pending layer placeholders
+- publication metadata stability
 
 ## Reserved menu groups for later layers
 
@@ -152,3 +160,14 @@ The minimum foundation pass should verify:
 
 The menu and staged test order are part of the foundation design, not optional polish.
 A runtime that cannot be configured cleanly or verified in sequence is not hardened enough for future layer expansion.
+
+
+## Logging verification signals
+
+A healthy Layer 1 test run should make it easy to find:
+- one init settings summary
+- one recovery outcome line
+- dossier repair queue lines when files are missing
+- scheduler decision lines only when debug logging is enabled
+- bounded-work warnings only when the heartbeat cap binds
+- save and restore events for runtime, scheduler, summary, and dossiers

@@ -13,8 +13,9 @@ input int InpHeartbeatSeconds=1;                       // Heartbeat Interval Sec
 input int InpUniverseSyncSeconds=300;                 // Universe Sync Interval Seconds
 input int InpSymbolBudgetPerHeartbeat=25;             // Symbol Budget Per Heartbeat
 
-input group "Scheduler"
+input group "Market Status Detection"
 input int InpFreshTickSeconds=90;                     // Fresh Tick Threshold Seconds
+input int InpOpenRecheckSeconds=10;                  // Open Market Recheck Seconds
 input int InpUncertainBurstLimit=6;                   // Uncertain Burst Limit
 input int InpUncertainFastRecheckSeconds=5;           // Uncertain Fast Recheck Seconds
 input int InpUncertainSlowRecheckSeconds=30;          // Uncertain Slow Recheck Seconds
@@ -31,15 +32,15 @@ input int InpSchedulerSaveSeconds=15;                 // Scheduler Save Interval
 input int InpSummarySaveSeconds=60;                   // Summary Save Interval Seconds
 input bool InpRepairMissingDossiersOnBoot=true;       // Repair Missing Dossiers On Boot
 
+input group "Dossiers & Publication"
+input bool InpWriteDossiersWhenDue=true;              // Write Dossiers When Due
+input bool InpIncludePendingLayerPlaceholders=true;   // Include Pending Layer Placeholders
+
 input group "Logging"
 input int InpLogVerbosity=1;                          // Log Verbosity: 0 Errors, 1 Normal, 2 Debug
 input bool InpLogSchedulerDecisions=true;             // Log Scheduler Decisions
 input bool InpLogRecoveryEvents=true;                 // Log Recovery Events
 input bool InpLogDossierRepairs=true;                 // Log Dossier Repairs
-
-input group "Symbol Dossiers"
-input bool InpWriteDossiersWhenDue=true;              // Write Dossiers When Due
-input bool InpIncludePendingLayerPlaceholders=true;   // Include Pending Layer Placeholders
 
 input group "Snapshot Controls (Pending)"
 input bool InpReserveLayer2SnapshotControls=true;     // Reserved: Layer 2 Snapshot Controls
@@ -54,9 +55,10 @@ input int InpReservedH1Bars=500;                      // Reserved: H1 Bars
 input int InpReservedH4Bars=300;                      // Reserved: H4 Bars
 input int InpReservedD1Bars=300;                      // Reserved: D1 Bars
 
-input group "Deep Analysis (Pending)"
+input group "Deep Analysis Controls (Pending)"
 input bool InpReserveLayer5Controls=true;             // Reserved: Deep Analysis Controls
 input bool InpReserveDeepAnalysisControls=true;       // Reserved: Deep Analysis Active Later
+input int InpReservedAtrRefreshSeconds=60;            // Reserved: ATR Refresh Seconds
 
 input group "Future Selection / Ranking (Pending)"
 input bool InpReserveLayer3FilterControls=true;       // Reserved: Layer 3 Filter Controls
@@ -90,6 +92,7 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.scheduler_save_seconds=(InpSchedulerSaveSeconds>0 ? InpSchedulerSaveSeconds : 15);
    g_settings.summary_save_seconds=(InpSummarySaveSeconds>0 ? InpSummarySaveSeconds : 60);
    g_settings.fresh_tick_seconds=(InpFreshTickSeconds>0 ? InpFreshTickSeconds : 90);
+   g_settings.open_recheck_seconds=(InpOpenRecheckSeconds>0 ? InpOpenRecheckSeconds : 10);
    g_settings.uncertain_burst_limit=(InpUncertainBurstLimit>=0 ? InpUncertainBurstLimit : 0);
    g_settings.uncertain_fast_recheck_seconds=(InpUncertainFastRecheckSeconds>0 ? InpUncertainFastRecheckSeconds : 5);
    g_settings.uncertain_slow_recheck_seconds=(InpUncertainSlowRecheckSeconds>0 ? InpUncertainSlowRecheckSeconds : 30);
@@ -110,6 +113,7 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.layer3_filter_reserved=InpReserveLayer3FilterControls;
    g_settings.layer4_selection_reserved=InpReserveLayer4SelectionControls;
    g_settings.layer5_deep_analysis_reserved=InpReserveLayer5Controls;
+   g_settings.reserved_atr_refresh_seconds=(InpReservedAtrRefreshSeconds>0 ? InpReservedAtrRefreshSeconds : 1);
    g_settings.snapshot_controls_reserved=InpReserveSnapshotControls;
    g_settings.timeframe_history_reserved=InpReserveTimeframeHistoryControls;
    g_settings.deep_analysis_controls_reserved=InpReserveDeepAnalysisControls;
@@ -125,7 +129,7 @@ void ASC_LoadSettingsFromInputs(void)
 
 void ASC_LogSettingsSummary(void)
   {
-   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, verbosity=" + ASC_LogVerbosityText(g_settings.log_verbosity));
+   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, verbosity=" + ASC_LogVerbosityText(g_settings.log_verbosity));
    g_logger.Debug("Settings","future layers reserved: snapshot=" + ASC_BoolText(g_settings.layer2_snapshot_reserved) + ", filter=" + ASC_BoolText(g_settings.layer3_filter_reserved) + ", selection=" + ASC_BoolText(g_settings.layer4_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.layer5_deep_analysis_reserved));
   }
 
@@ -281,6 +285,35 @@ void ASC_LogSchedulerDecision(const ASC_SymbolState &state)
    g_logger.Debug("Scheduler","symbol=" + state.symbol + ", status=" + ASC_MarketStatusText(state.market_status) + ", next due=" + ASC_DateTimeText(state.next_check_at));
   }
 
+
+bool ASC_ProcessLayer1Symbol(const int index)
+  {
+   ASC_AssessSymbol(g_symbols[index].symbol,g_symbols[index],g_settings);
+   ASC_LogSchedulerDecision(g_symbols[index]);
+   if(!g_settings.write_dossiers_when_due)
+      return(false);
+   return(ASC_WriteDossier(g_paths,g_runtime,g_symbols[index],g_logger));
+  }
+
+void ASC_Layer2_SnapshotPlaceholder(void)
+  {
+   // Reserved for future Layer 2 snapshot dispatch.
+  }
+
+void ASC_Layer3_FilterPlaceholder(void)
+  {
+   // Reserved for future Layer 3 filter dispatch.
+  }
+
+void ASC_Layer4_SelectionPlaceholder(void)
+  {
+   // Reserved for future Layer 4 selection dispatch.
+  }
+
+void ASC_Layer5_DeepAnalysisPlaceholder(void)
+  {
+   // Reserved for future Layer 5 deep-analysis dispatch.
+  }
 void ASC_RunHeartbeat(void)
   {
    if(g_heartbeat_running)
@@ -308,9 +341,7 @@ void ASC_RunHeartbeat(void)
       if(g_symbols[index].next_check_at>now && !g_symbols[index].dirty)
          continue;
 
-      ASC_AssessSymbol(g_symbols[index].symbol,g_symbols[index],g_settings);
-      ASC_LogSchedulerDecision(g_symbols[index]);
-      if(g_settings.write_dossiers_when_due && ASC_WriteDossier(g_paths,g_runtime,g_symbols[index],g_logger))
+      if(ASC_ProcessLayer1Symbol(index))
         {
          g_runtime.processed_this_heartbeat++;
          g_runtime.scheduler_cursor=index+1;

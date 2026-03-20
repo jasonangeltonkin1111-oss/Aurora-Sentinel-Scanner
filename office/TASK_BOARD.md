@@ -26,8 +26,8 @@
 1. compile-validate the active MT5 runtime in a real MetaEditor environment
 2. deepen restore validation and fallback handling without adding account or trade contamination
 3. keep dossier and continuity contracts stable enough for future Aurora ingestion
-4. keep the MT5 menu/input surface clean as reserved layer controls are added
-5. refine office checkpoint discipline so SHA snapshots stay useful and compact
+4. complete Layer 1 compile validation and first-run/restore test passes in MetaEditor
+5. keep the MT5 menu/input surface clean as reserved layer controls are added
 
 ## Blocking rules
 
