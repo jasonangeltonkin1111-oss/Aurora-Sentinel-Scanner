@@ -139,11 +139,12 @@ Recommended fields:
 - SymbolSpecs refresh
 - MarketWatch snapshot refresh
 
-### Layer services
-- filter recompute
-- ranking recompute
-- shortlist sync
-- deep-analysis refresh by timeframe
+### Ordered capability services
+- Market State Detection rechecks
+- Open Symbol Snapshot refresh
+- Candidate Filtering recompute
+- Shortlist Selection recompute
+- Deep Selective Analysis refresh by timeframe
 
 ### Publication
 - dossier write
@@ -157,12 +158,12 @@ Suggested priority order:
 
 1. runtime safety
 2. restore continuity
-3. market-state truth
-4. snapshot truth
-5. layer 3 filter
-6. layer 4 selection
+3. Market State Detection
+4. Open Symbol Snapshot
+5. Candidate Filtering
+6. Shortlist Selection
 7. essential publication
-8. layer 5 deep analysis
+8. Deep Selective Analysis
 9. cosmetic/HUD refresh
 
 ## Bounded-work law

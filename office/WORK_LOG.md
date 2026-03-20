@@ -53,7 +53,7 @@ Read-only evidence was also checked in:
 - added explicit ASC-to-Aurora bridge requirements in the active blueprint and deep implementation pack
 - tightened runtime and publication docs around restore fallback, fairness, degraded behavior, and dossier bridge use
 - added a dedicated menu/input and staged-test blueprint so the runtime can grow into later layers without menu retrofit drift
-- finalized Layer 1 menu grouping with explicit Market Status Detection and Dossiers & Publication sections
+- finalized Market State Detection menu grouping with explicit Market Status Detection and Dossiers & Publication sections
 - strengthened runtime continuity loading with `.last-good` fallback and richer continuity metadata
 - improved heartbeat repair behavior for missing dossiers and added clearer recovery and bounded-work logging
 - refreshed office task, decision, work-log, and SHA-checkpoint discipline to match the new pass
@@ -62,10 +62,10 @@ Read-only evidence was also checked in:
 ASC is still bounded to scanner-foundation scope, but it is now more explicit about what it must preserve for Aurora later and more controlled about how runtime continuity and office checkpoints are handled.
 
 ---
-## 2026-03-20 — Layer 1 promotion failure stabilization
+## 2026-03-20 — Market State Detection promotion failure stabilization
 
 ### Why
-Layer 1 was running but leaving only `.tmp` files behind, which blocked real dossier, runtime, scheduler, and summary publication.
+Market State Detection was running but leaving only `.tmp` files behind, which blocked real dossier, runtime, scheduler, and summary publication.
 
 ### What changed
 - replaced text-mode temp validation reads with binary-safe whole-file reads so atomic validation compares the actual written payload instead of a line-truncated text read
@@ -75,4 +75,19 @@ Layer 1 was running but leaving only `.tmp` files behind, which blocked real dos
 - reduced repair spam by summarizing queued missing dossier repairs while keeping per-symbol detail for debug verbosity
 
 ### Result
-Layer 1 publication is materially easier to verify: real promotion attempts are now diagnosable, bounded work remains fair under failure, and continuity saves no longer hide write failures.
+Market State Detection publication is materially easier to verify: real promotion attempts are now diagnosable, bounded work remains fair under failure, and continuity saves no longer hide write failures.
+
+---
+## 2026-03-20 — ASC capability naming and working-stage ledger hardening
+
+### Why
+The active ASC foundation was working, but active canon still preferred numeric layer wording in too many places and lacked a compact regression ledger tied to the current Market State Detection boundary.
+
+### What changed
+- shifted active blueprint and deep-pack references toward capability-first naming while keeping the ordered capability stack explicit
+- hardened the Market State Detection ownership boundary and kept later capabilities visibly reserved
+- renamed runtime placeholder inputs/hooks away from numeric layer wording without changing behavior
+- created an operational `office/WORKING_STAGE_LEDGER.md` for current working-stage regression checks
+
+### Result
+The current foundation stays behaviorally intact, future insertion points remain explicit, and regressions against the working Market State Detection pass should now be easier to localize.

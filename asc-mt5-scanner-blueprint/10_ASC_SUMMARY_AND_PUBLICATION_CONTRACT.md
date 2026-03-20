@@ -29,7 +29,7 @@ Do not fake “Top 5 per Basket” before the ranking layer exists.
 
 ## Future ranked summary
 
-When Layer 4 exists, the summary should provide:
+When Shortlist Selection exists, the summary should provide:
 - grouped results by `Primary Bucket`
 - top 5 only per bucket
 - truthful smaller counts where fewer qualify
@@ -63,7 +63,7 @@ FX Majors
 
 - use readable labels
 - no internal enum leakage
-- no architecture chatter like `Layer 4` in trader-facing text
+- no architecture chatter like `Shortlist Selection` or numeric layer names in trader-facing text
 - no fake zero placeholders
 - do not pad to 5 when fewer are valid
 - preserve source timestamps where helpful
@@ -95,7 +95,7 @@ Trader/public summary labels should be:
 - full-universe dump masquerading as summary
 - direct raw-object reads from writers
 - writer-side ranking math
-- leaking `LAYER_4_TOP_LIST_SELECTION` into the UI
+- leaking internal shortlist-selection identifiers into the UI
 
 ## Summary bridge note
 

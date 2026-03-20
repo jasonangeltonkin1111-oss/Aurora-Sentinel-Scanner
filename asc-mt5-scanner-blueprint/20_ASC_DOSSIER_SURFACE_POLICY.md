@@ -28,8 +28,8 @@ Because the dossier is operator-readable, visible section headers inside the pri
 
 ### Internal architecture concepts may still exist in code and persistence models
 Examples:
-- Layer 1
-- Layer 2
+- Market State Detection
+- Open Symbol Snapshot
 - publication state
 - write state
 - dirty domains
@@ -105,6 +105,6 @@ That is the final policy.
 
 ## Layer-progress placeholder rule
 
-Because the active system is Layer 1 only, the dossier should still show later layers as Pending rather than omitting them.
+Because the active system is Market State Detection only, the dossier should still show the later reserved capabilities as Reserved rather than omitting them.
 
 That preserves structural completeness for operators and future Aurora-side consumers without pretending later logic already exists.

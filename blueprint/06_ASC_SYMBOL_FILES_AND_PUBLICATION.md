@@ -9,15 +9,15 @@ They are created early and fill gradually as layers do their work.
 
 The symbol file exists before the summary.
 The summary is downstream and later.
-Layer 1 must not create the summary.
+Market State Detection must not create the final ranked summary.
 
 ## Evolution model
 
-1. Layer 1 creates the base file and placeholder sections
-2. Layer 2 adds open-symbol snapshot content
-3. Layer 3 adds filter content
-4. Layer 4 adds top-list selection content
-5. Layer 5 adds deep selective-analysis content
+1. Market State Detection creates the base file and reserved capability sections
+2. Open Symbol Snapshot adds snapshot content
+3. Candidate Filtering adds filter content
+4. Shortlist Selection adds shortlist content
+5. Deep Selective Analysis adds deep-analysis content
 6. summary publication happens later from prepared state
 
 ## Canonical major sections
@@ -40,9 +40,9 @@ Layer 1 must not create the summary.
 Each section has one owner.
 
 Examples:
-- Layer 1 writes only Layer 1 state and base scaffolding it owns
-- Layer 2 writes only Layer 2 snapshot state
-- Layer 4 writes only selection state
+- Market State Detection writes only its owned state and the reserved scaffolding it owns
+- Open Symbol Snapshot writes only snapshot state
+- Shortlist Selection writes only shortlist state
 - the HUD writes nothing to symbol files
 
 ## Atomic write law
