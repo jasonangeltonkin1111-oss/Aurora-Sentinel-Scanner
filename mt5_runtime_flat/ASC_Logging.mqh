@@ -6,24 +6,41 @@
 class ASC_Logger
   {
 private:
-   string m_log_file;
-   bool   m_ready;
+   string            m_log_file;
+   bool              m_ready;
+   ASC_LogVerbosity  m_verbosity;
+
+   bool     ShouldWrite(const string level)
+            {
+             if(level=="ERROR")
+                return(true);
+             if(level=="WARN")
+                return(m_verbosity>=ASC_LOG_NORMAL);
+             if(level=="DEBUG")
+                return(m_verbosity>=ASC_LOG_DEBUG);
+             return(m_verbosity>=ASC_LOG_NORMAL);
+            }
 
 public:
             ASC_Logger(void)
             {
              m_log_file="";
              m_ready=false;
+             m_verbosity=ASC_LOG_NORMAL;
             }
 
-   void     Configure(const string log_file)
+   void     Configure(const string log_file,const ASC_LogVerbosity verbosity)
             {
              m_log_file=log_file;
              m_ready=(m_log_file!="");
+             m_verbosity=verbosity;
             }
 
    void     Write(const string level,const string scope,const string message)
             {
+             if(!ShouldWrite(level))
+                return;
+
              string line=TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS) + " | " + level + " | " + scope + " | " + message;
              Print(line);
              if(!m_ready)
@@ -40,6 +57,7 @@ public:
              FileClose(handle);
             }
 
+   void     Debug(const string scope,const string message)   { Write("DEBUG",scope,message); }
    void     Info(const string scope,const string message)    { Write("INFO",scope,message); }
    void     Warn(const string scope,const string message)    { Write("WARN",scope,message); }
    void     Error(const string scope,const string message)   { Write("ERROR",scope,message); }

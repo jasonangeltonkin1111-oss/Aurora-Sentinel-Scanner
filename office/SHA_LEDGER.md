@@ -3,12 +3,12 @@
 ## Purpose
 
 This file is the active checkpoint ledger for meaningful repo-state snapshots.
-It is intentionally compact and focuses on active control, blueprint, and runtime surfaces rather than re-listing the full archive on every pass.
+It is intentionally compact and focuses on active control, blueprint, layout-plan, and runtime surfaces rather than re-listing the full archive on every pass.
 
 ## Current checkpoint
 
 - checkpoint date: 2026-03-20
-- checkpoint scope: active office + touched blueprint + touched runtime surfaces
+- checkpoint scope: active office + touched blueprint + touched layout plan + touched runtime surfaces
 - hash type: SHA-256
 - note: this ledger does not hash itself to avoid self-reference churn
 - rule: refresh this file when a pass materially changes active control or scanner-foundation truth
@@ -18,17 +18,25 @@ It is intentionally compact and focuses on active control, blueprint, and runtim
 ```text
 3c4ad6ec1b628e7e35c9673610aa3ee92377ed510c88c4096343fbfa90046f7f  office/README.md
 a1a0fcf8200512cec5eee0e91bc68c5bc08f4816b4faf7c600b8a9d9814c8d1b  office/OFFICE_CANON.md
-b299218a572186701c0b22c03fe2bbe50f552ecae3588e74dc31ea80e495495b  office/TASK_BOARD.md
-0825e30bd10e96c90452f4d62b86668972fbe87d8547897c6f58f63b93d16fdf  office/DECISIONS.md
-68e751433208ac584c3e96d151112c6cfc64bb72798cb30d1bf59cb1e64da28b  office/WORK_LOG.md
-da129e65a29b418111254e7e8a14a54ac59b6aee1e61482b650682bdba2ae9a9  blueprint/README.md
+8b84eee5c48e4ff85dca3cd12d7aafb34e1b77ecaba05462178dbdfe172d44d3  office/TASK_BOARD.md
+f28f2182d84050b6d5a981c504a4098cb8c80530666900d681c1dd0f643523a2  office/DECISIONS.md
+d663ae50151b75eb6b337cc4950f1e6a2f18d0b9fe98f3ee9f699e1f770359a7  office/WORK_LOG.md
+38a0d81faabb490acb37b2b90cc56f98c9caabdfcc4ea5cd37b012979740987e  blueprint/README.md
 333f1ff617f9d5d740d0c8886e0302e2380193de29c554bfbc13a22e2fa9af57  blueprint/02_ASC_RUNTIME_AND_SCHEDULER.md
 4dc4de5c5c55c21f9a539f6e92712f6b6d4e8b0b7cd06d4afa53e4131518e611  blueprint/06_ASC_SYMBOL_FILES_AND_PUBLICATION.md
 9f5ecceaebd7868a5fb521849d9b314680d469b640f6577fbfea7411697b9b4f  blueprint/09_ASC_AURORA_BRIDGE_REQUIREMENTS.md
+cadaf40c891925e379f7669a971c808a14ccf88e6eabd7ea24d5937edbb36a48  blueprint/10_ASC_MENU_AND_TESTABILITY.md
 894467eef7cf1812fd58aabaa8e292d6e2e3101d464ca18b2ebfa04f5acbeacc  asc-mt5-scanner-blueprint/03_ASC_RUNTIME_KERNEL_AND_EVENT_MODEL.md
 3823da3294ecb32254438d115015729227f5feaf34bccfbe45f60a50a0892e37  asc-mt5-scanner-blueprint/09_ASC_SYMBOL_DOSSIER_CONTRACT.md
 175b33141fca872adc344d690db552aa9c007b0730e3d6d0c5429a9adcce55b8  asc-mt5-scanner-blueprint/10_ASC_SUMMARY_AND_PUBLICATION_CONTRACT.md
+e4af6d4c687441688e2683d41dd4dd4efb9375b1a4ed447f87f0a719d5fbed70  asc-mt5-scanner-blueprint/14_ASC_ACCEPTANCE_TEST_MATRIX.md
 c28ca1e0b667758700f940abb8999e62bf64db5fed9752d5571bdaf57cbbb8c9  asc-mt5-scanner-blueprint/22_ASC_AURORA_BRIDGE_CONTRACT.md
-afef1971ba3767f4ff4f16255fca8e2b3c54719cdcc40d93a1861062a943fde5  mt5_runtime_flat/AuroraSentinel_Foundation.mq5
+9d326861b3acf664b2860b55c1f7c6705afe4dbf2012344d5c074e60fd2549fc  mt5_layout_plan/README.md
+b23bd7f546edbd41f1bca0a37ab7ae9a9db59aa105e2e1e45b921b2e632db542  mt5_layout_plan/Include/ASC/Runtime/README.md
+02623a565b780f7820f975d8f5790bd211e2ab58507ee2825956d90ba481daf4  mt5_layout_plan/Include/ASC/Publication/README.md
+294f0a7c29c55358af3b31d7ef9117ed83051f0c59742eabad309e87fd41251c  mt5_runtime_flat/AuroraSentinel_Foundation.mq5
+e66b122bc5009a364734f78f823f9b5ab84421f4aa00ec857b2029ddb347f9b7  mt5_runtime_flat/ASC_Common.mqh
+5aaa554145c66ee6d431517d1a6cc372bf437efe7b2079a931a31b15eca63822  mt5_runtime_flat/ASC_Logging.mqh
+78dec9015230245a3b909db148c8d771066bde7d64c384352d53b39c80b611da  mt5_runtime_flat/ASC_MarketState.mqh
 f2a209af2d3e00ff2f45329df5e8e2300498be2290d90b504d39ae445234cf06  mt5_runtime_flat/ASC_Persistence.mqh
 ```

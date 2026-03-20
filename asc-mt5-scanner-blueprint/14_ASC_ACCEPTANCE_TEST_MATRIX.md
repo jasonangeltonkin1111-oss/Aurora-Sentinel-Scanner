@@ -24,6 +24,21 @@ It must prove runtime behavior.
 - files write outside `FILE_COMMON`
 - no temp-to-final pattern
 
+
+## Stage A.5 — Menu wiring and staged testability
+
+### Must prove
+- MT5 inputs are grouped cleanly
+- active controls load into one settings surface
+- reserved controls are marked Reserved or Pending
+- init logs one concise settings summary
+
+### Fail examples
+- random loose inputs with no grouping
+- future controls missing entirely
+- pending controls pretending to be active
+- noisy init logs that dump every placeholder every second
+
 ## Stage B — Restore continuity
 
 ### Must prove

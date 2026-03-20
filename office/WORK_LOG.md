@@ -52,6 +52,7 @@ Read-only evidence was also checked in:
 ### What changed
 - added explicit ASC-to-Aurora bridge requirements in the active blueprint and deep implementation pack
 - tightened runtime and publication docs around restore fallback, fairness, degraded behavior, and dossier bridge use
+- added a dedicated menu/input and staged-test blueprint so the runtime can grow into later layers without menu retrofit drift
 - strengthened runtime continuity loading with `.last-good` fallback and richer continuity metadata
 - improved heartbeat repair behavior for missing dossiers and added clearer recovery and bounded-work logging
 - refreshed office task, decision, work-log, and SHA-checkpoint discipline to match the new pass

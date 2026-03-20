@@ -30,11 +30,8 @@ bool ASC_IsWithinTradeSession(const string symbol,const datetime now,datetime &n
                if(now_seconds>=from_value || now_seconds<to_value)
                   return(true);
               }
-            else
-              {
-               if(now_seconds>=from_value && now_seconds<to_value)
-                  return(true);
-              }
+            else if(now_seconds>=from_value && now_seconds<to_value)
+               return(true);
 
             if(now_seconds<from_value && (next_open_at<=0 || now + (from_value-now_seconds) < next_open_at))
                next_open_at=now + (from_value-now_seconds);
@@ -52,7 +49,7 @@ bool ASC_IsWithinTradeSession(const string symbol,const datetime now,datetime &n
    return(false);
   }
 
-void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state)
+void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state,const ASC_RuntimeSettings &settings)
   {
    datetime now=TimeTradeServer();
    if(now<=0)
@@ -74,7 +71,7 @@ void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state)
    state.within_trade_session=within_session;
    state.next_session_open_at=next_open_at;
 
-   if(state.has_tick && state.tick_age_seconds>=0 && state.tick_age_seconds<=90)
+   if(state.has_tick && state.tick_age_seconds>=0 && state.tick_age_seconds<=settings.fresh_tick_seconds)
      {
       state.market_status=ASC_MARKET_OPEN;
       state.status_note="Fresh tick observed";
@@ -85,35 +82,31 @@ void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state)
      {
       state.market_status=ASC_MARKET_UNCERTAIN;
       state.status_note="Inside trade session without a fresh tick";
-      if(state.uncertain_burst_count<6)
+      if(state.uncertain_burst_count<settings.uncertain_burst_limit)
         {
-         state.next_check_at=now+5;
+         state.next_check_at=now+settings.uncertain_fast_recheck_seconds;
          state.uncertain_burst_count++;
         }
       else
-        {
-         state.next_check_at=now+30;
-        }
+         state.next_check_at=now+settings.uncertain_slow_recheck_seconds;
      }
    else if(has_sessions)
      {
       state.market_status=ASC_MARKET_CLOSED;
       state.status_note="Outside trade session";
-      if(next_open_at>0 && (next_open_at-now)<=60)
-         state.next_check_at=now+5;
-      else if(next_open_at>0 && (next_open_at-now)<=900)
-         state.next_check_at=now+60;
-      else if(next_open_at>0)
-         state.next_check_at=now+300;
+      if(next_open_at>0 && (next_open_at-now)<=settings.closed_near_open_seconds)
+         state.next_check_at=now+settings.closed_near_open_recheck_seconds;
+      else if(next_open_at>0 && (next_open_at-now)<=settings.closed_soon_window_seconds)
+         state.next_check_at=now+settings.closed_soon_recheck_seconds;
       else
-         state.next_check_at=now+600;
+         state.next_check_at=now+settings.closed_idle_recheck_seconds;
       state.uncertain_burst_count=0;
      }
    else
      {
       state.market_status=ASC_MARKET_UNKNOWN;
       state.status_note="Trade session information is not available";
-      state.next_check_at=now+120;
+      state.next_check_at=now+settings.unknown_recheck_seconds;
       state.uncertain_burst_count=0;
      }
 

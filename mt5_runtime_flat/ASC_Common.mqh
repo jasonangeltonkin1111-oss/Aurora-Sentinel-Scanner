@@ -18,6 +18,13 @@ enum ASC_MarketStatus
    ASC_MARKET_UNCERTAIN=3
   };
 
+enum ASC_LogVerbosity
+  {
+   ASC_LOG_ERRORS_ONLY=0,
+   ASC_LOG_NORMAL=1,
+   ASC_LOG_DEBUG=2
+  };
+
 struct ASC_ServerPaths
   {
    string server_raw;
@@ -30,6 +37,48 @@ struct ASC_ServerPaths
    string scheduler_state_file;
    string summary_file;
    string log_file;
+  };
+
+struct ASC_RuntimeSettings
+  {
+   int               heartbeat_seconds;
+   int               universe_sync_seconds;
+   int               symbol_budget_per_heartbeat;
+   int               runtime_save_seconds;
+   int               scheduler_save_seconds;
+   int               summary_save_seconds;
+   int               fresh_tick_seconds;
+   int               uncertain_burst_limit;
+   int               uncertain_fast_recheck_seconds;
+   int               uncertain_slow_recheck_seconds;
+   int               closed_near_open_seconds;
+   int               closed_near_open_recheck_seconds;
+   int               closed_soon_window_seconds;
+   int               closed_soon_recheck_seconds;
+   int               closed_idle_recheck_seconds;
+   int               unknown_recheck_seconds;
+   bool              write_dossiers_when_due;
+   bool              repair_missing_dossiers_on_boot;
+   bool              include_pending_layer_placeholders;
+   ASC_LogVerbosity  log_verbosity;
+   bool              log_scheduler_decisions;
+   bool              log_recovery_events;
+   bool              log_dossier_repairs;
+   bool              layer2_snapshot_reserved;
+   bool              layer3_filter_reserved;
+   bool              layer4_selection_reserved;
+   bool              layer5_deep_analysis_reserved;
+   bool              snapshot_controls_reserved;
+   bool              timeframe_history_reserved;
+   bool              deep_analysis_controls_reserved;
+   bool              selection_controls_reserved;
+   int               reserved_m1_bars;
+   int               reserved_m5_bars;
+   int               reserved_m15_bars;
+   int               reserved_h1_bars;
+   int               reserved_h4_bars;
+   int               reserved_d1_bars;
+   int               reserved_selected_symbol_limit;
   };
 
 struct ASC_RuntimeState
@@ -73,6 +122,29 @@ struct ASC_SymbolState
    string            status_note;
    bool              dirty;
   };
+
+string ASC_Trim(const string value)
+  {
+   int start=0;
+   int finish=(int)StringLen(value)-1;
+   while(start<=finish)
+     {
+      ushort ch=(ushort)StringGetCharacter(value,start);
+      if(ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n')
+         break;
+      start++;
+     }
+   while(finish>=start)
+     {
+      ushort ch=(ushort)StringGetCharacter(value,finish);
+      if(ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n')
+         break;
+      finish--;
+     }
+   if(finish<start)
+      return("");
+   return(StringSubstr(value,start,finish-start+1));
+  }
 
 string ASC_ToLower(const string value)
   {
@@ -144,27 +216,14 @@ ASC_MarketStatus ASC_MarketStatusFromText(const string text)
    return(ASC_MARKET_UNKNOWN);
   }
 
-string ASC_Trim(const string value)
+string ASC_LogVerbosityText(const ASC_LogVerbosity value)
   {
-   int start=0;
-   int finish=(int)StringLen(value)-1;
-   while(start<=finish)
+   switch(value)
      {
-      ushort ch=(ushort)StringGetCharacter(value,start);
-      if(ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n')
-         break;
-      start++;
+      case ASC_LOG_ERRORS_ONLY: return("Errors Only");
+      case ASC_LOG_DEBUG:       return("Debug");
      }
-   while(finish>=start)
-     {
-      ushort ch=(ushort)StringGetCharacter(value,finish);
-      if(ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n')
-         break;
-      finish--;
-     }
-   if(finish<start)
-      return("");
-   return(StringSubstr(value,start,finish-start+1));
+   return("Normal");
   }
 
 string ASC_CompressSeparators(const string value)
@@ -303,11 +362,6 @@ bool ASC_BoolFromText(const string text)
   {
    string value=ASC_ToLower(ASC_Trim(text));
    return(value=="yes" || value=="true" || value=="1");
-  }
-
-string ASC_IntegerText(const int value)
-  {
-   return(IntegerToString(value));
   }
 
 int ASC_IntegerFromText(const string text)

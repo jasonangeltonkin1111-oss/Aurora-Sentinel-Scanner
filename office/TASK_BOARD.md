@@ -5,7 +5,7 @@
 - active blueprint canon exists and now includes an ASC-to-Aurora bridge requirement layer
 - flat MT5 foundation exists and remains the active runtime surface
 - office normalization is active and now needs disciplined checkpoint maintenance
-- restart continuity, bounded scheduler behavior, and dossier integrity remain the active hardening center
+- restart continuity, bounded scheduler behavior, dossier integrity, and clean menu/test wiring remain the active hardening center
 - ranking, basket logic, strategy logic, and trade logic remain blocked
 
 ## Active streams
@@ -26,8 +26,8 @@
 1. compile-validate the active MT5 runtime in a real MetaEditor environment
 2. deepen restore validation and fallback handling without adding account or trade contamination
 3. keep dossier and continuity contracts stable enough for future Aurora ingestion
-4. refine office checkpoint discipline so SHA snapshots stay useful and compact
-5. continue blueprint cleanup when archive lineage or downstream Aurora expectations reveal scanner gaps
+4. keep the MT5 menu/input surface clean as reserved layer controls are added
+5. refine office checkpoint discipline so SHA snapshots stay useful and compact
 
 ## Blocking rules
 

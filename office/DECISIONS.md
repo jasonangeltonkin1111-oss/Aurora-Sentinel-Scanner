@@ -16,6 +16,7 @@
 - continuity restore may use `.last-good` fallback when the primary file is missing or invalid, but that fallback must be logged honestly
 - foundation scope stays limited to runtime, scheduler, persistence, dossiers, logging, summary scaffolds, bridge readiness, and market-state truth
 - ASC is the sensing substrate; Aurora remains the downstream interpretation and execution-intelligence layer
+- MT5 properties inputs must be grouped early and reserved cleanly for future layers
 - ranking, basket selection, strategy logic, trade logic, and account logic remain blocked
 
 ## Archive-derived control decisions
