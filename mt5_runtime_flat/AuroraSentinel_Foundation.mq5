@@ -1,5 +1,17 @@
 #property strict
 
+// Aurora Sentinel Scanner
+// Wrapper Version: 1.001
+// Schema Family: ASC Foundation
+// Active Capability: Market State Detection
+// Next Planned Capability: Open Symbol Snapshot
+// Runtime Posture: Foundation / Layer 1 Truth
+// Explorer Subsystem Version: 0.100
+// Update Bump Law:
+// - 1.001 -> 1.002 for non-breaking fixes and polish
+// - 1.001 -> 1.010 for meaningful subsystem expansion
+// - 1.x -> 2.000 for major architecture revision
+
 #include "ASC_Common.mqh"
 #include "ASC_ServerPaths.mqh"
 #include "ASC_Logging.mqh"
@@ -7,72 +19,84 @@
 #include "ASC_MarketState.mqh"
 #include "ASC_Persistence.mqh"
 #include "ASC_Dossiers.mqh"
+#include "ASC_ExplorerHUD.mqh"
 
 input group "Runtime"
-input int InpHeartbeatSeconds=1;                       // Heartbeat Interval Seconds
-input int InpUniverseSyncSeconds=300;                 // Universe Sync Interval Seconds
-input int InpSymbolBudgetPerHeartbeat=25;             // Symbol Budget Per Heartbeat
+input int InpHeartbeatSeconds=1;                        // Heartbeat Interval Seconds
+input int InpUniverseSyncSeconds=300;                  // Universe Sync Interval Seconds
+input int InpSymbolBudgetPerHeartbeat=25;              // Symbol Budget Per Heartbeat
 
-input group "Market Status Detection"
-input int InpFreshTickSeconds=90;                     // Fresh Tick Threshold Seconds
-input int InpOpenRecheckSeconds=10;                  // Open Market Recheck Seconds
-input int InpUncertainBurstLimit=6;                   // Uncertain Burst Limit
-input int InpUncertainFastRecheckSeconds=5;           // Uncertain Fast Recheck Seconds
-input int InpUncertainSlowRecheckSeconds=30;          // Uncertain Slow Recheck Seconds
-input int InpClosedNearOpenWindowSeconds=60;          // Near Open Window Seconds
-input int InpClosedNearOpenRecheckSeconds=5;          // Near Open Recheck Seconds
-input int InpClosedSoonWindowSeconds=900;             // Closed Soon Window Seconds
-input int InpClosedSoonRecheckSeconds=60;             // Closed Soon Recheck Seconds
-input int InpClosedIdleRecheckSeconds=300;            // Closed Idle Recheck Seconds
-input int InpUnknownRecheckSeconds=120;               // Unknown State Recheck Seconds
+input group "Scheduler"
+input int InpBacklogAttentionThreshold=10;             // Backlog Attention Threshold Symbols
+
+input group "Market State Detection"
+input int InpFreshTickSeconds=90;                      // Fresh Tick Threshold Seconds
+input int InpOpenRecheckSeconds=10;                    // Open Market Recheck Seconds
+input int InpUncertainBurstLimit=6;                    // Uncertain Burst Limit
+input int InpUncertainFastRecheckSeconds=5;            // Uncertain Fast Recheck Seconds
+input int InpUncertainSlowRecheckSeconds=30;           // Uncertain Slow Recheck Seconds
+input int InpClosedNearOpenWindowSeconds=60;           // Near Open Window Seconds
+input int InpClosedNearOpenRecheckSeconds=5;           // Near Open Recheck Seconds
+input int InpClosedSoonWindowSeconds=900;              // Closed Soon Window Seconds
+input int InpClosedSoonRecheckSeconds=60;              // Closed Soon Recheck Seconds
+input int InpClosedIdleRecheckSeconds=300;             // Closed Idle Recheck Seconds
+input int InpUnknownRecheckSeconds=120;                // Unknown State Recheck Seconds
 
 input group "Recovery & Persistence"
-input int InpRuntimeSaveSeconds=30;                   // Runtime Save Interval Seconds
-input int InpSchedulerSaveSeconds=15;                 // Scheduler Save Interval Seconds
-input int InpSummarySaveSeconds=60;                   // Summary Save Interval Seconds
-input bool InpRepairMissingDossiersOnBoot=true;       // Repair Missing Dossiers On Boot
+input int InpRuntimeSaveSeconds=30;                    // Runtime Save Interval Seconds
+input int InpSchedulerSaveSeconds=15;                  // Scheduler Save Interval Seconds
+input int InpSummarySaveSeconds=60;                    // Summary Save Interval Seconds
+input bool InpRepairMissingDossiersOnBoot=true;        // Repair Missing Dossiers On Boot
+
+input group "Logging and Attention"
+input int InpLogVerbosity=1;                           // Log Verbosity: 0 Errors, 1 Normal, 2 Debug
+input bool InpLogSchedulerDecisions=false;             // Log Scheduler Decisions
+input bool InpLogRecoveryEvents=true;                  // Log Recovery Events
+input bool InpLogDossierRepairs=true;                  // Log Dossier Repairs
 
 input group "Dossiers & Publication"
-input bool InpWriteDossiersWhenDue=true;              // Write Dossiers When Due
+input bool InpWriteDossiersWhenDue=true;               // Write Dossiers When Due
 input bool InpIncludeReservedCapabilityPlaceholders=true; // Include Reserved Capability Placeholders
 
-input group "Logging"
-input int InpLogVerbosity=1;                          // Log Verbosity: 0 Errors, 1 Normal, 2 Debug
-input bool InpLogSchedulerDecisions=true;             // Log Scheduler Decisions
-input bool InpLogRecoveryEvents=true;                 // Log Recovery Events
-input bool InpLogDossierRepairs=true;                 // Log Dossier Repairs
+input group "Explorer HUD"
+input bool InpExplorerEnabled=true;                    // Explorer HUD Enabled
+input int InpExplorerRefreshSeconds=1;                 // Explorer Refresh Seconds
+input int InpExplorerScrollStepRows=1;                 // Explorer Scroll Step Rows
+input bool InpExplorerShowBreadcrumbs=true;            // Explorer Show Path
+
+input group "Symbol Identity and Bucketing (Reserved)"
+input bool InpReserveIdentityAndBucketingControls=true; // Reserved: Symbol Identity and Bucketing Controls
 
 input group "Open Symbol Snapshot (Reserved)"
-input bool InpReserveOpenSymbolSnapshotControls=true; // Reserved: Open Symbol Snapshot Controls
-input bool InpReserveSnapshotControls=true;           // Reserved: Snapshot Controls Active Later
+input bool InpReserveOpenSymbolSnapshotControls=true;  // Reserved: Open Symbol Snapshot Controls
 
-input group "Timeframe History (Pending)"
-input bool InpReserveTimeframeHistoryControls=true;   // Reserved: Timeframe History Active Later
-input int InpReservedM1Bars=500;                      // Reserved: M1 Bars
-input int InpReservedM5Bars=500;                      // Reserved: M5 Bars
-input int InpReservedM15Bars=500;                     // Reserved: M15 Bars
-input int InpReservedH1Bars=500;                      // Reserved: H1 Bars
-input int InpReservedH4Bars=300;                      // Reserved: H4 Bars
-input int InpReservedD1Bars=300;                      // Reserved: D1 Bars
+input group "Candidate Filtering (Reserved)"
+input bool InpReserveCandidateFilteringControls=true;  // Reserved: Candidate Filtering Controls
+
+input group "Shortlist Selection (Reserved)"
+input bool InpReserveShortlistSelectionControls=true;  // Reserved: Shortlist Selection Controls
+input int InpReservedSelectedSymbolLimit=25;           // Reserved: Selected Symbol Limit
 
 input group "Deep Selective Analysis (Reserved)"
 input bool InpReserveDeepSelectiveAnalysisControls=true; // Reserved: Deep Selective Analysis Controls
-input bool InpReserveDeepAnalysisControls=true;       // Reserved: Deep Analysis Active Later
-input int InpReservedAtrRefreshSeconds=60;            // Reserved: ATR Refresh Seconds
+input int InpReservedAtrRefreshSeconds=60;             // Reserved: ATR Refresh Seconds
 
-input group "Filtering and Selection (Reserved)"
-input bool InpReserveCandidateFilteringControls=true; // Reserved: Candidate Filtering Controls
-input bool InpReserveShortlistSelectionControls=true; // Reserved: Shortlist Selection Controls
-input bool InpReserveSelectionControls=true;          // Reserved: Selection Controls Active Later
-input int InpReservedSelectedSymbolLimit=25;          // Reserved: Selected Symbol Limit
+input group "Combined Opportunity Summary (Reserved)"
+input bool InpReserveCombinedSummaryControls=true;     // Reserved: Combined Opportunity Summary Controls
+
+input group "Future Signal Surface (Reserved)"
+input bool InpReserveFutureSignalSurfaceControls=true; // Reserved: Future Signal Surface Controls
 
 ASC_ServerPaths g_paths;
 ASC_RuntimeSettings g_settings;
 ASC_RuntimeState g_runtime;
 ASC_Logger g_logger;
 ASC_SymbolState g_symbols[];
+ASC_ExplorerContext g_explorer;
 int g_symbol_count=0;
 bool g_heartbeat_running=false;
+bool g_last_degraded_state=false;
+int g_backlog_attention_threshold=10;
 
 ASC_LogVerbosity ASC_InputVerbosity(const int value)
   {
@@ -85,6 +109,10 @@ ASC_LogVerbosity ASC_InputVerbosity(const int value)
 
 void ASC_LoadSettingsFromInputs(void)
   {
+   g_settings.explorer_enabled=InpExplorerEnabled;
+   g_settings.explorer_refresh_seconds=(InpExplorerRefreshSeconds>0 ? InpExplorerRefreshSeconds : 1);
+   g_settings.explorer_scroll_step_rows=(InpExplorerScrollStepRows>0 ? InpExplorerScrollStepRows : 1);
+   g_settings.explorer_show_breadcrumbs=InpExplorerShowBreadcrumbs;
    g_settings.heartbeat_seconds=(InpHeartbeatSeconds>0 ? InpHeartbeatSeconds : 1);
    g_settings.universe_sync_seconds=(InpUniverseSyncSeconds>0 ? InpUniverseSyncSeconds : 300);
    g_settings.symbol_budget_per_heartbeat=(InpSymbolBudgetPerHeartbeat>0 ? InpSymbolBudgetPerHeartbeat : 1);
@@ -114,23 +142,25 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.shortlist_selection_reserved=InpReserveShortlistSelectionControls;
    g_settings.deep_selective_analysis_reserved=InpReserveDeepSelectiveAnalysisControls;
    g_settings.reserved_atr_refresh_seconds=(InpReservedAtrRefreshSeconds>0 ? InpReservedAtrRefreshSeconds : 1);
-   g_settings.snapshot_controls_reserved=InpReserveSnapshotControls;
-   g_settings.timeframe_history_reserved=InpReserveTimeframeHistoryControls;
-   g_settings.deep_analysis_controls_reserved=InpReserveDeepAnalysisControls;
-   g_settings.selection_controls_reserved=InpReserveSelectionControls;
-   g_settings.reserved_m1_bars=(InpReservedM1Bars>0 ? InpReservedM1Bars : 1);
-   g_settings.reserved_m5_bars=(InpReservedM5Bars>0 ? InpReservedM5Bars : 1);
-   g_settings.reserved_m15_bars=(InpReservedM15Bars>0 ? InpReservedM15Bars : 1);
-   g_settings.reserved_h1_bars=(InpReservedH1Bars>0 ? InpReservedH1Bars : 1);
-   g_settings.reserved_h4_bars=(InpReservedH4Bars>0 ? InpReservedH4Bars : 1);
-   g_settings.reserved_d1_bars=(InpReservedD1Bars>0 ? InpReservedD1Bars : 1);
+   g_settings.snapshot_controls_reserved=InpReserveOpenSymbolSnapshotControls;
+   g_settings.timeframe_history_reserved=true;
+   g_settings.deep_analysis_controls_reserved=InpReserveDeepSelectiveAnalysisControls;
+   g_settings.selection_controls_reserved=InpReserveShortlistSelectionControls;
+   g_settings.reserved_m1_bars=500;
+   g_settings.reserved_m5_bars=500;
+   g_settings.reserved_m15_bars=500;
+   g_settings.reserved_h1_bars=500;
+   g_settings.reserved_h4_bars=300;
+   g_settings.reserved_d1_bars=300;
    g_settings.reserved_selected_symbol_limit=(InpReservedSelectedSymbolLimit>0 ? InpReservedSelectedSymbolLimit : 1);
+   g_backlog_attention_threshold=(InpBacklogAttentionThreshold>0 ? InpBacklogAttentionThreshold : 1);
   }
 
 void ASC_LogSettingsSummary(void)
   {
-   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, verbosity=" + ASC_LogVerbosityText(g_settings.log_verbosity));
-   g_logger.Debug("Settings","future capabilities reserved: snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + ", filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", selection=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved));
+   g_logger.Info("Settings",ASC_WrapperHeaderText());
+   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, explorer=" + ASC_BoolText(g_settings.explorer_enabled));
+   g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + ", filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + ", combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
   }
 
 void ASC_ResetRuntimeState(void)
@@ -154,10 +184,14 @@ void ASC_ResetRuntimeState(void)
    g_runtime.processed_this_heartbeat=0;
    g_runtime.scheduler_cursor=0;
    g_runtime.heartbeats_since_boot=0;
+   g_last_degraded_state=false;
   }
 
 void ASC_ResetSymbolState(ASC_SymbolState &state,const string symbol)
   {
+   state.is_due_now=true;
+   state.publication_ok=false;
+   state.next_check_reason="Initial assessment pending";
    state.symbol=symbol;
    state.dossier_file=ASC_DossierFileName(symbol);
    state.has_tick=false;
@@ -211,7 +245,9 @@ void ASC_SyncUniverse(void)
          if(g_symbols[i].next_check_at<=0)
             g_symbols[i].next_check_at=TimeCurrent();
         }
-      if(g_settings.repair_missing_dossiers_on_boot && !ASC_IsDossierPresent(g_symbols[i]))
+
+      g_symbols[i].publication_ok=ASC_IsDossierPresent(g_symbols[i]);
+      if(g_settings.repair_missing_dossiers_on_boot && !g_symbols[i].publication_ok)
         {
          g_symbols[i].dirty=true;
          missing_repairs++;
@@ -220,6 +256,8 @@ void ASC_SyncUniverse(void)
         }
      }
 
+   if(g_runtime.scheduler_cursor>=g_symbol_count)
+      g_runtime.scheduler_cursor=0;
    g_runtime.symbol_count=total;
    g_runtime.last_universe_sync_at=TimeCurrent();
    g_runtime.runtime_dirty=true;
@@ -268,6 +306,18 @@ int ASC_CountMissingDossiers(void)
    return(missing);
   }
 
+int ASC_CountDueSymbols(const datetime now)
+  {
+   int due_count=0;
+   for(int i=0;i<g_symbol_count;i++)
+     {
+      g_symbols[i].is_due_now=(g_symbols[i].next_check_at<=now || g_symbols[i].dirty);
+      if(g_symbols[i].is_due_now)
+         due_count++;
+     }
+   return(due_count);
+  }
+
 void ASC_UpdateRuntimeMode(const int missing_dossiers)
   {
    if(g_runtime.degraded)
@@ -286,9 +336,8 @@ void ASC_LogSchedulerDecision(const ASC_SymbolState &state)
   {
    if(!g_settings.log_scheduler_decisions)
       return;
-   g_logger.Debug("Scheduler","symbol=" + state.symbol + ", status=" + ASC_MarketStatusText(state.market_status) + ", next due=" + ASC_DateTimeText(state.next_check_at));
+   g_logger.Debug("Scheduler","symbol=" + state.symbol + ", status=" + ASC_MarketStatusText(state.market_status) + ", next due=" + ASC_DateTimeText(state.next_check_at) + ", reason=" + state.next_check_reason);
   }
-
 
 bool ASC_ProcessMarketStateSymbol(const int index)
   {
@@ -296,31 +345,18 @@ bool ASC_ProcessMarketStateSymbol(const int index)
    ASC_LogSchedulerDecision(g_symbols[index]);
    if(!g_settings.write_dossiers_when_due)
      {
+      g_symbols[index].publication_ok=ASC_IsDossierPresent(g_symbols[index]);
       g_symbols[index].dirty=false;
       return(true);
      }
    return(ASC_WriteDossier(g_paths,g_runtime,g_symbols[index],g_logger));
   }
 
-void ASC_OpenSymbolSnapshotPlaceholder(void)
-  {
-   // Reserved insertion point for future Open Symbol Snapshot dispatch.
-  }
+void ASC_OpenSymbolSnapshotPlaceholder(void) { }
+void ASC_CandidateFilteringPlaceholder(void) { }
+void ASC_ShortlistSelectionPlaceholder(void) { }
+void ASC_DeepSelectiveAnalysisPlaceholder(void) { }
 
-void ASC_CandidateFilteringPlaceholder(void)
-  {
-   // Reserved insertion point for future Candidate Filtering dispatch.
-  }
-
-void ASC_ShortlistSelectionPlaceholder(void)
-  {
-   // Reserved insertion point for future Shortlist Selection dispatch.
-  }
-
-void ASC_DeepSelectiveAnalysisPlaceholder(void)
-  {
-   // Reserved insertion point for future Deep Selective Analysis dispatch.
-  }
 void ASC_RunHeartbeat(void)
   {
    if(g_heartbeat_running)
@@ -344,16 +380,18 @@ void ASC_RunHeartbeat(void)
    int touched_this_heartbeat=0;
    int promoted_this_heartbeat=0;
    int failed_promotions_this_heartbeat=0;
+   int initial_due=ASC_CountDueSymbols(now);
    int start=(g_symbol_count>0 ? (g_runtime.scheduler_cursor % g_symbol_count) : 0);
+
    for(int offset=0; offset<g_symbol_count && touched_this_heartbeat<g_settings.symbol_budget_per_heartbeat; offset++)
      {
       int index=(start + offset) % g_symbol_count;
-      if(g_symbols[index].next_check_at>now && !g_symbols[index].dirty)
+      if(!g_symbols[index].is_due_now)
          continue;
 
       touched_this_heartbeat++;
       bool success=ASC_ProcessMarketStateSymbol(index);
-      g_runtime.scheduler_cursor=index+1;
+      g_runtime.scheduler_cursor=(g_symbol_count>0 ? ((index+1)%g_symbol_count) : 0);
       g_runtime.scheduler_dirty=true;
       g_runtime.summary_dirty=true;
 
@@ -363,28 +401,32 @@ void ASC_RunHeartbeat(void)
          failed_promotions_this_heartbeat++;
      }
 
-   g_runtime.processed_this_heartbeat=touched_this_heartbeat;
-   int remaining_due=0;
-   for(int i=0;i<g_symbol_count;i++)
-     {
-      if(g_symbols[i].next_check_at<=now || g_symbols[i].dirty)
-         remaining_due++;
-     }
+   if(touched_this_heartbeat==0 && g_symbol_count>0)
+      g_runtime.scheduler_cursor=(start+1)%g_symbol_count;
 
+   g_runtime.processed_this_heartbeat=touched_this_heartbeat;
+   int remaining_due=ASC_CountDueSymbols(now);
    g_runtime.degraded=(remaining_due>0 && touched_this_heartbeat>=g_settings.symbol_budget_per_heartbeat);
    ASC_UpdateRuntimeMode(ASC_CountMissingDossiers());
    g_runtime.runtime_dirty=true;
 
-   g_logger.Info("Heartbeat","processed " + IntegerToString(touched_this_heartbeat) + " due symbols; promoted " + IntegerToString(promoted_this_heartbeat) + " dossiers; failed " + IntegerToString(failed_promotions_this_heartbeat) + "; backlog " + IntegerToString(remaining_due));
-   if(g_runtime.degraded)
+   g_logger.Info("Heartbeat","processed " + IntegerToString(touched_this_heartbeat) + " due symbols from " + IntegerToString(initial_due) + "; promoted " + IntegerToString(promoted_this_heartbeat) + " dossiers; failed " + IntegerToString(failed_promotions_this_heartbeat) + "; backlog " + IntegerToString(remaining_due));
+   if(g_runtime.degraded && !g_last_degraded_state)
       g_logger.Warn("Heartbeat","bounded work cap reached; " + IntegerToString(remaining_due) + " due symbols remain queued for the next heartbeat");
+   else if(!g_runtime.degraded && g_last_degraded_state)
+      g_logger.Info("Heartbeat","bounded work backlog has cleared");
+   else if(remaining_due>=g_backlog_attention_threshold && g_settings.log_verbosity>=ASC_LOG_DEBUG)
+      g_logger.Debug("Heartbeat","backlog remains visible at " + IntegerToString(remaining_due) + " due symbols");
+   g_last_degraded_state=g_runtime.degraded;
 
+   bool attempted_save=false;
    bool runtime_saved=true;
    bool scheduler_saved=true;
    bool summary_saved=true;
 
    if(ASC_ShouldSaveRuntime(now))
      {
+      attempted_save=true;
       runtime_saved=ASC_SaveRuntimeState(g_paths,g_runtime,g_logger);
       if(!runtime_saved)
          g_logger.Error("RuntimeState","runtime save failed");
@@ -392,6 +434,7 @@ void ASC_RunHeartbeat(void)
 
    if(ASC_ShouldSaveScheduler(now))
      {
+      attempted_save=true;
       scheduler_saved=ASC_SaveSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger);
       if(scheduler_saved)
         {
@@ -404,13 +447,16 @@ void ASC_RunHeartbeat(void)
 
    if(ASC_ShouldSaveSummary(now))
      {
+      attempted_save=true;
       summary_saved=ASC_SaveSummary(g_paths,g_runtime,g_symbols,g_symbol_count,g_logger);
       if(!summary_saved)
          g_logger.Error("Summary","summary save failed");
      }
 
-   g_logger.Info("Persistence","runtime save " + (runtime_saved ? "succeeded" : "failed") + "; scheduler save " + (scheduler_saved ? "succeeded" : "failed") + "; summary save " + (summary_saved ? "succeeded" : "failed"));
+   if(attempted_save || !runtime_saved || !scheduler_saved || !summary_saved)
+      g_logger.Info("Persistence","runtime save " + (runtime_saved ? "succeeded" : "failed") + "; scheduler save " + (scheduler_saved ? "succeeded" : "failed") + "; summary save " + (summary_saved ? "succeeded" : "failed"));
 
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
    g_heartbeat_running=false;
   }
 
@@ -428,6 +474,8 @@ int OnInit()
    ASC_LogSettingsSummary();
 
    ASC_RestoreContinuity();
+   ASC_ExplorerInit(g_explorer,ChartID());
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
    EventSetTimer(g_settings.heartbeat_seconds);
    return(INIT_SUCCEEDED);
   }
@@ -442,14 +490,31 @@ void OnDeinit(const int reason)
    ASC_SaveRuntimeState(g_paths,g_runtime,g_logger);
    ASC_SaveSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger);
    ASC_SaveSummary(g_paths,g_runtime,g_symbols,g_symbol_count,g_logger);
+   ASC_ExplorerShutdown(g_explorer);
    g_logger.Info("Deinit","foundation stopping with reason " + IntegerToString(reason));
   }
 
-void OnTick()
-  {
-  }
+void OnTick() { }
 
 void OnTimer()
   {
    ASC_RunHeartbeat();
+  }
+
+void OnChartEvent(const int id,const long &lparam,const double &dparam,const string &sparam)
+  {
+   if(id==CHARTEVENT_CHART_CHANGE)
+     {
+      g_explorer.nav.dirty=true;
+      ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
+      return;
+     }
+
+   if(id!=CHARTEVENT_OBJECT_CLICK)
+      return;
+   if(StringFind(sparam,ASC_HUD_PREFIX)!=0)
+      return;
+
+   ASC_ExplorerHandleAction(g_explorer,g_settings,sparam,g_symbols,g_symbol_count,g_logger);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
   }

@@ -1,6 +1,14 @@
 #ifndef __ASC_COMMON_MQH__
 #define __ASC_COMMON_MQH__
 
+#define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
+#define ASC_WRAPPER_VERSION "1.001"
+#define ASC_SCHEMA_FAMILY "ASC Foundation"
+#define ASC_ACTIVE_CAPABILITY "Market State Detection"
+#define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
+#define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.100"
+
 enum ASC_RuntimeMode
   {
    ASC_RUNTIME_BOOT=0,
@@ -41,6 +49,10 @@ struct ASC_ServerPaths
 
 struct ASC_RuntimeSettings
   {
+   bool              explorer_enabled;
+   int               explorer_refresh_seconds;
+   int               explorer_scroll_step_rows;
+   bool              explorer_show_breadcrumbs;
    int               heartbeat_seconds;
    int               universe_sync_seconds;
    int               symbol_budget_per_heartbeat;
@@ -108,6 +120,9 @@ struct ASC_RuntimeState
 
 struct ASC_SymbolState
   {
+   bool              is_due_now;
+   bool              publication_ok;
+   string            next_check_reason;
    string            symbol;
    string            dossier_file;
    bool              has_tick;
@@ -369,6 +384,21 @@ bool ASC_BoolFromText(const string text)
 int ASC_IntegerFromText(const string text)
   {
    return((int)StringToInteger(ASC_Trim(text)));
+  }
+
+string ASC_WrapperHeaderText(void)
+  {
+   return(ASC_PRODUCT_NAME + " | Wrapper " + ASC_WRAPPER_VERSION + " | Schema " + ASC_SCHEMA_FAMILY + " | Active " + ASC_ACTIVE_CAPABILITY + " | Next " + ASC_NEXT_CAPABILITY + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION);
+  }
+
+string ASC_UpdateBumpLawText(void)
+  {
+   return("Patch 1.001->1.002 for non-breaking fixes; minor 1.001->1.010 for meaningful subsystem expansion; major 1.x->2.000 for architecture revision.");
+  }
+
+string ASC_YesNoPending(const bool condition,const string pending_text)
+  {
+   return(condition ? "Yes" : pending_text);
   }
 
 #endif
