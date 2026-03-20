@@ -391,7 +391,7 @@ void ASC_RunHeartbeat(void)
 
       touched_this_heartbeat++;
       bool success=ASC_ProcessMarketStateSymbol(index);
-      g_runtime.scheduler_cursor=(index+1)%MathMax(g_symbol_count,1);
+      g_runtime.scheduler_cursor=(g_symbol_count>0 ? ((index+1)%g_symbol_count) : 0);
       g_runtime.scheduler_dirty=true;
       g_runtime.summary_dirty=true;
 

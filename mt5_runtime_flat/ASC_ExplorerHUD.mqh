@@ -286,6 +286,12 @@ void ASC_ExplorerRenderBuckets(ASC_ExplorerContext &ctx,const int x,const int y,
    ASC_ExplorerButton(ctx,"action.scroll_down","Down",x+w-ctx.theme.padding-70,y+h-ctx.theme.button_height-2,70,ctx.theme.button_height,ctx.theme.panel_alt);
   }
 
+bool ASC_ExplorerReadDouble(const string symbol,const ENUM_SYMBOL_INFO_DOUBLE property,double &value)
+  {
+   value=0.0;
+   return(SymbolInfoDouble(symbol,property,value));
+  }
+
 int ASC_ExplorerSymbolDigits(const string symbol)
   {
    long digits=0;
@@ -312,13 +318,14 @@ void ASC_ExplorerRenderSymbolDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeSt
    int digits=ASC_ExplorerSymbolDigits(state.symbol);
    MqlTick tick={};
    bool have_tick=SymbolInfoTick(state.symbol,tick);
-   double bid=0.0,ask=0.0,spread=0.0,open=0.0,high=0.0,low=0.0;
-   SymbolInfoDouble(state.symbol,SYMBOL_BID,bid);
-   SymbolInfoDouble(state.symbol,SYMBOL_ASK,ask);
-   SymbolInfoDouble(state.symbol,SYMBOL_SPREAD,spread);
-   SymbolInfoDouble(state.symbol,SYMBOL_SESSION_OPEN,open);
-   SymbolInfoDouble(state.symbol,SYMBOL_SESSION_HIGH,high);
-   SymbolInfoDouble(state.symbol,SYMBOL_SESSION_LOW,low);
+   double bid=0.0,ask=0.0,day_high=0.0,day_low=0.0,point=0.0;
+   long spread_points=0;
+   ASC_ExplorerReadDouble(state.symbol,SYMBOL_BID,bid);
+   ASC_ExplorerReadDouble(state.symbol,SYMBOL_ASK,ask);
+   ASC_ExplorerReadDouble(state.symbol,SYMBOL_BIDHIGH,day_high);
+   ASC_ExplorerReadDouble(state.symbol,SYMBOL_BIDLOW,day_low);
+   ASC_ExplorerReadDouble(state.symbol,SYMBOL_POINT,point);
+   SymbolInfoInteger(state.symbol,SYMBOL_SPREAD,spread_points);
 
    string lines[];
    ArrayResize(lines,15);
@@ -330,8 +337,10 @@ void ASC_ExplorerRenderSymbolDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeSt
    lines[5]="Runtime Health: last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at) + " | mode " + ASC_RuntimeModeText(runtime.mode);
    lines[6]="Scheduler State: last checked " + ASC_DateTimeText(state.last_checked_at) + " | burst count " + IntegerToString(state.uncertain_burst_count);
    lines[7]="Publication: " + (state.publication_ok ? "Dossier promoted" : "Pending promotion or retry") + " | Last write " + ASC_DateTimeText(state.last_dossier_write_at);
-   lines[8]="Bid: " + DoubleToString(bid,digits) + " | Ask: " + DoubleToString(ask,digits) + " | Spread: " + DoubleToString(spread,0);
-   lines[9]="Open: " + DoubleToString(open,digits) + " | High: " + DoubleToString(high,digits) + " | Low: " + DoubleToString(low,digits);
+   double spread_value=(ask>=bid ? (ask-bid) : 0.0);
+   string spread_text=(spread_points>0 ? IntegerToString((int)spread_points) + " points" : (point>0.0 ? DoubleToString(spread_value/point,1) + " points" : DoubleToString(spread_value,digits)));
+   lines[8]="Bid: " + DoubleToString(bid,digits) + " | Ask: " + DoubleToString(ask,digits) + " | Spread: " + spread_text;
+   lines[9]="Day High: " + DoubleToString(day_high,digits) + " | Day Low: " + DoubleToString(day_low,digits);
    lines[10]="Market Watch Update: " + (have_tick ? ASC_DateTimeText((datetime)tick.time) : "Not Yet Available");
    lines[11]="Bucket Surface: Reserved placeholder pending Symbol Identity and Bucketing activation.";
    lines[12]="Open Symbol Snapshot: Reserved placeholder only.";
@@ -492,7 +501,10 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings
      {
       ctx.nav.selected_bucket_index=(int)StringToInteger(StringSubstr(action,StringLen("action.bucket.")));
       ASC_ExplorerOpenView(ctx,ASC_EXPLORER_VIEW_SYMBOL_DETAIL);
-      ctx.nav.selected_symbol_index=(count>0 ? MathMin(ctx.nav.selected_bucket_index,count-1) : 0);
+      if(count>0)
+         ctx.nav.selected_symbol_index=(ctx.nav.selected_bucket_index<count ? ctx.nav.selected_bucket_index : count-1);
+      else
+         ctx.nav.selected_symbol_index=0;
       ctx.nav.symbol_scroll=0;
      }
    else

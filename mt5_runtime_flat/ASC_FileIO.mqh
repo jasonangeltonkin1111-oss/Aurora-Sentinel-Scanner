@@ -36,14 +36,15 @@ bool ASC_ReadTextFile(const string path,string &content)
    if(handle==INVALID_HANDLE)
       return(false);
 
-   int size=(int)FileSize(handle);
-   if(size>0)
+   long size_long=FileSize(handle);
+   if(size_long>0 && size_long<=2147483647)
      {
+      int size=(int)size_long;
       uchar bytes[];
       ArrayResize(bytes,size);
-      int read=FileReadArray(handle,bytes,0,size);
-      if(read>0)
-         content=CharArrayToString(bytes,0,read);
+      uint read_count=FileReadArray(handle,bytes,0,size);
+      if(read_count>0 && read_count<=2147483647)
+         content=CharArrayToString(bytes,0,(int)read_count);
      }
    FileClose(handle);
    return(true);

@@ -108,3 +108,18 @@ The active foundation was close, but it still needed a final hardening sweep aro
 
 ### Result
 Market State Detection is materially more trustworthy at the edges, the Explorer HUD shell is now active for Layer 1 truth display, and later capabilities remain visible only as honest placeholders.
+
+---
+## 2026-03-20 — Compile-fix and correctness debug pass
+
+### Why
+The prior hardening pass introduced useful structure, but MT5 compile feedback exposed unsupported HUD symbol fields and a file-read type warning that needed a focused correction pass.
+
+### What changed
+- fixed the `FileReadArray` type warning by reading into an unsigned count with safe casts only at string conversion boundaries
+- replaced unsupported HUD symbol-detail fields with compile-safe live fields: Bid, Ask, Spread, Day High, Day Low, and Market Watch Update Time
+- removed unsafe `MathMax`/`MathMin` mixed-type usage in scheduler and HUD selection paths where straightforward integer-only logic was clearer
+- rechecked HUD action routing, prefix ownership, placeholder honesty, and Layer 1 wording without widening capability scope
+
+### Result
+The active runtime should now be materially closer to MT5 compile-clean status while preserving Market State Detection as the only working capability and keeping the Explorer shell truthful.
