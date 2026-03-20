@@ -9,7 +9,7 @@ This file tells GPT/Codex how the MT5 codebase should physically look so archite
 The repo currently contains:
 - active blueprint docs
 - a flat `mt5_runtime_flat/` implementation surface
-- newer correction files that prohibit phase/dev naming in active runtime modules
+- responsibility-based runtime module names on that active surface
 - older archive code in flat MT5 style
 
 ## Recommended long-term source layout
@@ -80,14 +80,9 @@ The active flat foundation files should map approximately as:
 
 ## Transitional correction note
 
-If older runtime seed files still exist with names such as:
-- `ASC_F1_Common.mqh`
-- `ASC_F1_ServerPaths.mqh`
-- `ASC_F1_MarketState.mqh`
+If older archived or scratch runtime seed files use names such as `ASC_F1_Common.mqh` or `ASC_F1_ServerPaths.mqh`, treat them as historical correction debt only.
 
-those should be treated as correction debt or migration artifacts.
-
-They are not the desired active naming model and must not be normalized into future code generation prompts.
+They are not part of the active runtime surface and must not be normalized into future code generation prompts.
 
 ## File ownership rules
 
@@ -120,7 +115,6 @@ Good:
 Bad:
 - `Phase3PacketWorker.mqh`
 - `Step5RefactorTemp.mqh`
-- `ASC_F1_Common.mqh`
 
 ## Struct and DTO discipline
 

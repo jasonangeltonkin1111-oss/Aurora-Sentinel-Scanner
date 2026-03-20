@@ -137,3 +137,28 @@ No silent disappearance.
 
 This blueprint locks the scheduler as item-based.
 The exact data structure may still be tweaked later, but the architecture must stay due-based and narrow-tasked.
+
+## Restore and repair detail
+
+Restore-first does not mean blindly trusting stale files.
+
+On startup the runtime should:
+1. resolve server path truth
+2. read runtime continuity or `.last-good` fallback when needed
+3. read scheduler continuity or `.last-good` fallback when needed
+4. discover the current broker universe
+5. reconcile restored symbols with the current universe
+6. mark missing dossiers dirty for repair
+7. keep valid prior schedule timing where safe
+8. enter warmup only for missing or invalid coverage
+
+## Fairness and degraded detail
+
+A bounded heartbeat needs a fairness cursor so the same leading symbols are not always visited first.
+
+When the budget cap is reached:
+- mark degraded mode honestly
+- preserve continuity saves
+- carry the cursor forward
+- let unfinished work roll into the next heartbeat
+- avoid silent starvation of tail symbols

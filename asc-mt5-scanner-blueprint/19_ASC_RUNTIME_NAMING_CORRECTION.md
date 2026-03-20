@@ -2,16 +2,13 @@
 
 ## Purpose
 
-This file corrects a real drift that appeared in the current runtime seed: phase/dev naming leaked into active MT5 file names.
+This file records a corrected drift: phase/dev naming leaked into an earlier MT5 runtime seed and had to be removed from the active surface.
 
 That is not acceptable as a stable runtime naming model.
 
 ## Broken naming pattern
 
 Examples of broken active-surface naming:
-- `ASC_F1_Common.mqh`
-- `ASC_F1_ServerPaths.mqh`
-- `ASC_F1_MarketState.mqh`
 - `ASC_F1_Dossiers.mqh`
 
 The problem is not that these files exist.

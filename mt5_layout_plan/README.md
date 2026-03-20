@@ -20,3 +20,5 @@ It is not yet the finished EA implementation.
 - do not name product parts after build steps
 - keep internal mechanics separate from human-facing wording
 - keep discovery, runtime, layers, publication, and presentation separated
+- carry a clean menu/input plan early so the future EA properties surface does not become retrofit clutter
+- preserve explicit placeholders for Layers 2 through 5 even while Layer 1 remains the only implemented layer

@@ -96,3 +96,10 @@ Trader/public summary labels should be:
 - direct raw-object reads from writers
 - writer-side ranking math
 - leaking `LAYER_4_TOP_LIST_SELECTION` into the UI
+
+## Summary bridge note
+
+The summary is not the canonical symbol store.
+Aurora should later treat it as a quick publication surface only.
+
+Canonical downstream ingestion should prefer dossiers and continuity files first, with the summary used as a convenience layer for operator review or coarse scanner posture.
