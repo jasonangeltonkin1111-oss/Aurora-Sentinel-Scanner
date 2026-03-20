@@ -87,7 +87,8 @@ The current active target is:
 - restart-safe persistence
 - market-state truth
 - dossier continuity
-- compile-hardening next
+- ASC-to-Aurora bridge clarity
+- compile validation next
 
 ## Small-file rule
 

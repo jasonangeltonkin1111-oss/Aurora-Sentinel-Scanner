@@ -81,10 +81,10 @@ A broken current file name does not become valid just because it exists in the r
 ## Example
 
 Bad reasoning:
-- `ASC_F1_Common.mqh` exists, therefore `F1` is acceptable active naming
+- an archived `ASC_F1_Common.mqh` reference exists, therefore `F1` is acceptable active naming
 
 Correct reasoning:
-- `ASC_F1_Common.mqh` exists as a transitional implementation artifact and should be corrected because phase/dev naming is forbidden in the active runtime surface
+- archived `ASC_F1_Common.mqh` references are lineage evidence only, while the active runtime surface must stay responsibility-named
 
 ## Final rule
 

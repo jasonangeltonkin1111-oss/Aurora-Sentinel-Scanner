@@ -194,3 +194,15 @@ Recommended modern stance:
 
 Do not let a generated writer directly compute analytics while formatting text.
 Writers render prepared state only.
+
+## Bridge continuity note
+
+The dossier is not only an operator artifact.
+It is also the most likely future ASC-to-Aurora scanner interface surface.
+
+For that reason the dossier contract should preserve:
+- stable section names
+- stable timing fields
+- explicit uncertainty wording
+- explicit recovery or degraded markers when present
+- reserved placeholders instead of fake completion

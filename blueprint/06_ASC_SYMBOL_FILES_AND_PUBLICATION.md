@@ -79,3 +79,19 @@ Even before deep analysis exists, base symbol files should still express:
 - market open or closed state
 - next recheck expectation
 - placeholder state for future sections
+
+## Bridge-ready dossier law
+
+Because Aurora may later ingest ASC dossiers, symbol files should remain both operator-readable and machine-parseable.
+
+That means the dossier should preserve stable section names and include enough scanner-owned timing and continuity truth to support downstream ingestion without adding strategy logic.
+
+Minimum bridge-friendly scanner facts include:
+- symbol
+- server
+- current status
+- last tick seen
+- next due / next check
+- session availability
+- runtime mode
+- degraded or recovery markers where relevant
