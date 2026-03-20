@@ -94,7 +94,7 @@ bool ASC_LoadSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
 
       string parts[];
       int part_count=StringSplit(line,'|',parts);
-      if(part_count<7)
+      if(part_count<8)
          continue;
 
       string symbol=ASC_Trim(parts[0]);
@@ -108,6 +108,8 @@ bool ASC_LoadSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
          ASC_TryParseDateTime(parts[4],states[s].last_checked_at);
          states[s].uncertain_burst_count=ASC_IntegerFromText(parts[5]);
          states[s].status_note=parts[6];
+         states[s].next_check_reason=parts[7];
+         states[s].publication_ok=FileIsExist(ASC_JoinPath(paths.universe_folder,states[s].dossier_file),FILE_COMMON);
          states[s].dirty=true;
          restored++;
          break;
@@ -125,6 +127,10 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    string body="";
    body+="Schema Version=ASC Foundation v1\r\n";
    body+="Format Family=Runtime Continuity\r\n";
+   body+="Product=" + ASC_PRODUCT_NAME + "\r\n";
+   body+="Wrapper Version=" + ASC_WRAPPER_VERSION + "\r\n";
+   body+="Active Capability=" + ASC_ACTIVE_CAPABILITY + "\r\n";
+   body+="Next Planned Capability=" + ASC_NEXT_CAPABILITY + "\r\n";
    body+="Generated At=" + now_text + "\r\n";
    body+="Server Raw=" + state.server_raw + "\r\n";
    body+="Server Clean=" + state.server_clean + "\r\n";
@@ -158,7 +164,7 @@ bool ASC_SaveSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
    body+="Generated At=" + ASC_DateTimeText(TimeCurrent()) + "\r\n\r\n";
    for(int i=0;i<count;i++)
      {
-      body+=states[i].symbol + "|" + ASC_MarketStatusText(states[i].market_status) + "|" + ASC_DateTimeText(states[i].next_check_at) + "|" + ASC_DateTimeText(states[i].last_tick_seen_at) + "|" + ASC_DateTimeText(states[i].last_checked_at) + "|" + IntegerToString(states[i].uncertain_burst_count) + "|" + states[i].status_note + "\r\n";
+      body+=states[i].symbol + "|" + ASC_MarketStatusText(states[i].market_status) + "|" + ASC_DateTimeText(states[i].next_check_at) + "|" + ASC_DateTimeText(states[i].last_tick_seen_at) + "|" + ASC_DateTimeText(states[i].last_checked_at) + "|" + IntegerToString(states[i].uncertain_burst_count) + "|" + states[i].status_note + "|" + states[i].next_check_reason + "\r\n";
      }
    bool ok=ASC_AtomicWrite(paths.scheduler_state_file,body,logger);
    if(ok)
@@ -173,8 +179,11 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
    int closed_count=0;
    int uncertain_count=0;
    int unknown_count=0;
+   int due_count=0;
    for(int i=0;i<count;i++)
      {
+      if(states[i].dirty || states[i].next_check_at<=runtime.last_heartbeat_at)
+         due_count++;
       switch(states[i].market_status)
         {
          case ASC_MARKET_OPEN: open_count++; break;
@@ -185,6 +194,8 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
      }
 
    string body="Summary Top 5 per Basket\r\n\r\n";
+   body+="Product: " + ASC_PRODUCT_NAME + "\r\n";
+   body+="Wrapper Version: " + ASC_WRAPPER_VERSION + "\r\n";
    body+="Schema Version: ASC Foundation v1\r\n";
    body+="Generated At: " + ASC_DateTimeText(saved_at) + "\r\n";
    body+="Server: " + runtime.server_clean + "\r\n";
@@ -192,11 +203,12 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
    body+="Degraded: " + ASC_BoolText(runtime.degraded) + "\r\n";
    body+="Last Heartbeat: " + ASC_DateTimeText(runtime.last_heartbeat_at) + "\r\n";
    body+="Universe Size: " + IntegerToString(count) + "\r\n";
+   body+="Due Now: " + IntegerToString(due_count) + "\r\n";
    body+="Open: " + IntegerToString(open_count) + "\r\n";
    body+="Closed: " + IntegerToString(closed_count) + "\r\n";
    body+="Uncertain: " + IntegerToString(uncertain_count) + "\r\n";
    body+="Unknown: " + IntegerToString(unknown_count) + "\r\n\r\n";
-   body+="Ranking and basket selection are Reserved for a later build pass.\r\n";
+   body+="Market State Detection is working. Symbol Identity and Bucketing, selection, summary ranking, and signal surfaces remain Reserved.\r\n";
    bool ok=ASC_AtomicWrite(paths.summary_file,body,logger);
    if(ok)
      {
