@@ -195,6 +195,7 @@ bool ASC_IsDossierPresent(const ASC_SymbolState &state)
 void ASC_SyncUniverse(void)
   {
    int total=SymbolsTotal(false);
+   int missing_repairs=0;
    ArrayResize(g_symbols,total);
    g_symbol_count=total;
 
@@ -213,8 +214,9 @@ void ASC_SyncUniverse(void)
       if(g_settings.repair_missing_dossiers_on_boot && !ASC_IsDossierPresent(g_symbols[i]))
         {
          g_symbols[i].dirty=true;
-         if(g_settings.log_dossier_repairs)
-            g_logger.Info("DossierRepair","queued missing dossier repair for " + symbol);
+         missing_repairs++;
+         if(g_settings.log_dossier_repairs && g_settings.log_verbosity>=ASC_LOG_DEBUG)
+            g_logger.Debug("DossierRepair","queued missing dossier repair for " + symbol);
         }
      }
 
@@ -224,6 +226,8 @@ void ASC_SyncUniverse(void)
    g_runtime.scheduler_dirty=true;
    g_runtime.summary_dirty=true;
    g_logger.Info("Universe","synced " + IntegerToString(total) + " symbols");
+   if(g_settings.repair_missing_dossiers_on_boot && missing_repairs>0)
+      g_logger.Info("DossierRepair","queued " + IntegerToString(missing_repairs) + " missing dossier repairs");
   }
 
 void ASC_RestoreContinuity(void)
@@ -291,7 +295,10 @@ bool ASC_ProcessLayer1Symbol(const int index)
    ASC_AssessSymbol(g_symbols[index].symbol,g_symbols[index],g_settings);
    ASC_LogSchedulerDecision(g_symbols[index]);
    if(!g_settings.write_dossiers_when_due)
-      return(false);
+     {
+      g_symbols[index].dirty=false;
+      return(true);
+     }
    return(ASC_WriteDossier(g_paths,g_runtime,g_symbols[index],g_logger));
   }
 
@@ -334,47 +341,75 @@ void ASC_RunHeartbeat(void)
    if(g_symbol_count==0 || (now-g_runtime.last_universe_sync_at)>=g_settings.universe_sync_seconds)
       ASC_SyncUniverse();
 
+   int touched_this_heartbeat=0;
+   int promoted_this_heartbeat=0;
+   int failed_promotions_this_heartbeat=0;
    int start=(g_symbol_count>0 ? (g_runtime.scheduler_cursor % g_symbol_count) : 0);
-   for(int offset=0; offset<g_symbol_count && g_runtime.processed_this_heartbeat<g_settings.symbol_budget_per_heartbeat; offset++)
+   for(int offset=0; offset<g_symbol_count && touched_this_heartbeat<g_settings.symbol_budget_per_heartbeat; offset++)
      {
       int index=(start + offset) % g_symbol_count;
       if(g_symbols[index].next_check_at>now && !g_symbols[index].dirty)
          continue;
 
-      if(ASC_ProcessLayer1Symbol(index))
-        {
-         g_runtime.processed_this_heartbeat++;
-         g_runtime.scheduler_cursor=index+1;
-         g_runtime.scheduler_dirty=true;
-         g_runtime.summary_dirty=true;
-        }
+      touched_this_heartbeat++;
+      bool success=ASC_ProcessLayer1Symbol(index);
+      g_runtime.scheduler_cursor=index+1;
+      g_runtime.scheduler_dirty=true;
+      g_runtime.summary_dirty=true;
+
+      if(success)
+         promoted_this_heartbeat++;
+      else
+         failed_promotions_this_heartbeat++;
      }
 
-   g_runtime.degraded=(g_runtime.processed_this_heartbeat>=g_settings.symbol_budget_per_heartbeat && g_symbol_count>g_settings.symbol_budget_per_heartbeat);
+   g_runtime.processed_this_heartbeat=touched_this_heartbeat;
+   int remaining_due=0;
+   for(int i=0;i<g_symbol_count;i++)
+     {
+      if(g_symbols[i].next_check_at<=now || g_symbols[i].dirty)
+         remaining_due++;
+     }
+
+   g_runtime.degraded=(remaining_due>0 && touched_this_heartbeat>=g_settings.symbol_budget_per_heartbeat);
    ASC_UpdateRuntimeMode(ASC_CountMissingDossiers());
    g_runtime.runtime_dirty=true;
 
+   g_logger.Info("Heartbeat","processed " + IntegerToString(touched_this_heartbeat) + " due symbols; promoted " + IntegerToString(promoted_this_heartbeat) + " dossiers; failed " + IntegerToString(failed_promotions_this_heartbeat) + "; backlog " + IntegerToString(remaining_due));
    if(g_runtime.degraded)
-      g_logger.Warn("Heartbeat","bounded work cap reached; remaining symbols will roll forward next heartbeat");
+      g_logger.Warn("Heartbeat","bounded work cap reached; " + IntegerToString(remaining_due) + " due symbols remain queued for the next heartbeat");
+
+   bool runtime_saved=true;
+   bool scheduler_saved=true;
+   bool summary_saved=true;
 
    if(ASC_ShouldSaveRuntime(now))
      {
-      g_runtime.last_runtime_save_at=now;
-      ASC_SaveRuntimeState(g_paths,g_runtime,g_logger);
+      runtime_saved=ASC_SaveRuntimeState(g_paths,g_runtime,g_logger);
+      if(!runtime_saved)
+         g_logger.Error("RuntimeState","runtime save failed");
      }
 
    if(ASC_ShouldSaveScheduler(now))
      {
-      g_runtime.last_scheduler_save_at=now;
-      if(ASC_SaveSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger))
+      scheduler_saved=ASC_SaveSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger);
+      if(scheduler_saved)
+        {
+         g_runtime.last_scheduler_save_at=now;
          g_runtime.scheduler_dirty=false;
+        }
+      else
+         g_logger.Error("SchedulerState","scheduler save failed");
      }
 
    if(ASC_ShouldSaveSummary(now))
      {
-      g_runtime.last_summary_save_at=now;
-      ASC_SaveSummary(g_paths,g_runtime,g_symbols,g_symbol_count,g_logger);
+      summary_saved=ASC_SaveSummary(g_paths,g_runtime,g_symbols,g_symbol_count,g_logger);
+      if(!summary_saved)
+         g_logger.Error("Summary","summary save failed");
      }
+
+   g_logger.Info("Persistence","runtime save " + (runtime_saved ? "succeeded" : "failed") + "; scheduler save " + (scheduler_saved ? "succeeded" : "failed") + "; summary save " + (summary_saved ? "succeeded" : "failed"));
 
    g_heartbeat_running=false;
   }
@@ -401,9 +436,6 @@ void OnDeinit(const int reason)
   {
    EventKillTimer();
    g_runtime.last_heartbeat_at=TimeCurrent();
-   g_runtime.last_runtime_save_at=g_runtime.last_heartbeat_at;
-   g_runtime.last_scheduler_save_at=g_runtime.last_heartbeat_at;
-   g_runtime.last_summary_save_at=g_runtime.last_heartbeat_at;
    g_runtime.runtime_dirty=true;
    g_runtime.scheduler_dirty=true;
    g_runtime.summary_dirty=true;

@@ -60,3 +60,19 @@ Read-only evidence was also checked in:
 
 ### Result
 ASC is still bounded to scanner-foundation scope, but it is now more explicit about what it must preserve for Aurora later and more controlled about how runtime continuity and office checkpoints are handled.
+
+---
+## 2026-03-20 — Layer 1 promotion failure stabilization
+
+### Why
+Layer 1 was running but leaving only `.tmp` files behind, which blocked real dossier, runtime, scheduler, and summary publication.
+
+### What changed
+- replaced text-mode temp validation reads with binary-safe whole-file reads so atomic validation compares the actual written payload instead of a line-truncated text read
+- added explicit atomic write error reporting around temp write, validation, promote, and rollback paths
+- changed heartbeat accounting so failed dossier promotions still advance fairness and show up in per-heartbeat summaries instead of starving the queue
+- changed save cadence handling so failed runtime, scheduler, and summary saves retry honestly instead of pretending a save timestamp succeeded
+- reduced repair spam by summarizing queued missing dossier repairs while keeping per-symbol detail for debug verbosity
+
+### Result
+Layer 1 publication is materially easier to verify: real promotion attempts are now diagnosable, bounded work remains fair under failure, and continuity saves no longer hide write failures.
