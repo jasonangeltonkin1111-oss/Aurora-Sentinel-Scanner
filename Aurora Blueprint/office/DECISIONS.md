@@ -14,9 +14,11 @@
 - active Aurora wrapper/machine work must preserve explicit machine-safe versus human-only boundaries
 - Aurora may request richer ASC fields through bridge notes, but it must not fabricate missing ASC truth
 - any meaningful Aurora architectural pass must record a bridge-check outcome using the joint evolution protocol categories
+- `AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md` is the active normalization surface for distinguishing surface availability, deployability, opportunity status, horizon class, geometry validity, card eligibility, and review outcomes
+- `AURORA_WRAPPER_WORKFLOW_PACKET_002.md` supersedes workflow packet v1 for active execution-side use while v1 remains lineage-only
 - operator-created archive mirrors under `archives/` are reference only and must never be treated as permission to remove active knowledge
 
 ## Current bridge-check lock
 
 - current pass outcome: `NO_BRIDGE_CHANGE_NEEDED`
-- reason: this pass strengthens Aurora-side control discipline, classification, and wrapper precision without changing the upstream ASC context contract itself
+- reason: this pass strengthens Aurora-side enum normalization, workflow staging, and packet artifacts without changing the upstream ASC context contract itself
