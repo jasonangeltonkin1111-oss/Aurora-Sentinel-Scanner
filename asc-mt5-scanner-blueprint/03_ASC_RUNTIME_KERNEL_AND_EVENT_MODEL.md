@@ -246,3 +246,9 @@ A weak codegen model often collapses a scanner into:
 That is wrong for ASC.
 
 ASC requires a kernel, due items, bounded work, and restore-first continuity.
+
+## Recovery fallback detail
+
+If a continuity file is unreadable, the runtime may try the matching `.last-good` file before falling back to fresh reconstruction.
+
+This is allowed because the scanner foundation values continuity preservation over unnecessary rebuilds, provided the fallback is clearly logged and any stale areas are repaired honestly.

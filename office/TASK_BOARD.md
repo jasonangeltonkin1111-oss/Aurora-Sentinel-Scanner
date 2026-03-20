@@ -2,31 +2,32 @@
 
 ## Current repo posture
 
-- blueprint exists
-- first flat MT5 foundation exists
-- office normalization is now active
-- compile-hardening and recovery-hardening are next
-- ranking, basket logic, and trading logic remain blocked
+- active blueprint canon exists and now includes an ASC-to-Aurora bridge requirement layer
+- flat MT5 foundation exists and remains the active runtime surface
+- office normalization is active and now needs disciplined checkpoint maintenance
+- restart continuity, bounded scheduler behavior, dossier integrity, and clean menu/test wiring remain the active hardening center
+- ranking, basket logic, strategy logic, and trade logic remain blocked
 
 ## Active streams
 
 | STREAM | STATUS | PURPOSE | NEXT ACTION |
 |---|---|---|---|
-| Office normalization | DONE | replace office sprawl with a small control layer | keep this office updated in place |
-| Blueprint correction | ACTIVE | keep active blueprint aligned with current foundation scope | fold later contradictions into canonical blueprint over time |
-| Foundation runtime | ACTIVE | timer, heartbeat, server storage, dossiers, runtime and scheduler persistence | compile-hardening pass |
-| Market-state truth | ACTIVE | open / closed / uncertain symbol truth | edge-case hardening for stale and sessionless symbols |
-| Persistence and atomic writing | ACTIVE | runtime state, scheduler state, summary scaffold, dossier writes | restart and temp-failure hardening |
+| Office control | ACTIVE | keep repo control compact, current, and checkpointed | refresh board, decisions, work log, and SHA ledger on meaningful passes only |
+| Blueprint clarification | ACTIVE | remove ambiguity around runtime, dossier, publication, and bridge law | keep root blueprint ahead of pack drift |
+| Foundation runtime | ACTIVE | timer, heartbeat, fairness, recovery, persistence, dossiers, summary scaffold | continue compile-hardening and restore validation |
+| Market-state truth | ACTIVE | open / closed / uncertain symbol truth with session-aware pacing | preserve edge-case honesty around stale and missing feed evidence |
+| Persistence and atomic writing | ACTIVE | continuity files, dossier writes, summary writes, last-good protection | expand validation and repair discipline without widening scope |
+| ASC ⇄ Aurora bridge | ACTIVE | define upstream scanner guarantees for later Aurora ingestion | keep bridge contract bounded to sensing and continuity only |
 | Deep intelligence | BLOCKED | later ranking, shortlist, and enrichment work | do not open before foundation is stable |
 | Trade / account logic | BLOCKED | execution and account-driven features | not part of ASC foundation |
 
 ## Immediate next tasks
 
-1. compile-hardening pass for `mt5_runtime_flat/`
-2. recovery-load pass so runtime state and scheduler state are read back, not only written
-3. dossier schema refinement for readability and editability
-4. scheduler pacing review for large universes and long closed sessions
-5. active blueprint cleanup where current scope still conflicts with older broader wording
+1. compile-validate the active MT5 runtime in a real MetaEditor environment
+2. deepen restore validation and fallback handling without adding account or trade contamination
+3. keep dossier and continuity contracts stable enough for future Aurora ingestion
+4. keep the MT5 menu/input surface clean as reserved layer controls are added
+5. refine office checkpoint discipline so SHA snapshots stay useful and compact
 
 ## Blocking rules
 
@@ -38,7 +39,7 @@ Do not open:
 - account logic
 - past-trade logic
 
-until the flat foundation is compile-clean and restart-safe.
+until the flat foundation is compile-clean, restart-safe, and bridge-clear.
 
 ## Office maintenance rule
 
