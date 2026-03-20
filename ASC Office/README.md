@@ -1,21 +1,29 @@
-# ASC Office Pack
+# ASC Office
 
-This folder is the **canonical ASC implementation planning layer**.
+This folder is the canonical ASC planning and control layer.
 
-It defines:
-- how ASC implementation work is staged
-- how contradictions are tracked and retired
-- how handoff and review should operate without office sprawl
-- how blueprint-law work stays distinct from office control work
+Use it for:
+- implementation planning
+- stage order
+- contradiction tracking
+- HQ/operator control guidance
+- handoff and review rules
+- build readiness and acceptance tracking
 
-It does **not** define how the EA behaves at runtime.
-That belongs in `ASC Blueprint/`.
+Do not use it for:
+- MT5 product code
+- temporary worker clutter
+- random run logs
+- Aurora doctrine
+- trader-facing runtime definitions
 
-## Canonical office file set
-1. `01_ASC_IMPLEMENTATION_CONTROL.md`
-2. `02_ASC_STAGE_EXECUTION_PLAN.md`
+## Canonical file set
+1. `ASC_OFFICE_CANON.md`
+2. `ASC_IMPLEMENTATION_MASTER_PLAN.md`
+3. `ASC_STAGE_BOARD.md`
 
-## Office boundary law
+## Folder boundary
 - `ASC Blueprint/` = how ASC works
-- `ASC Office/` = how ASC implementation is planned, sequenced, reviewed, and handed off
-- `archives/Asc Archive/office/` = lineage reference only, not active control canon
+- `office/` = how ASC implementation is planned and controlled
+- `mt5/` = future live ASC product code only (`.mq5` / `.mqh`)
+- `archives/` = lineage and reference only
