@@ -45,7 +45,7 @@ struct ASC_F1_RuntimeState
    bool                recovery_used;
    bool                degraded;
    int                 symbol_count;
-   int                 processed_this_heartbeat;
+   int                processed_this_heartbeat;
   };
 
 struct ASC_F1_SymbolState
@@ -57,14 +57,14 @@ struct ASC_F1_SymbolState
    bool                  within_trade_session;
    ASC_F1_MarketStatus   market_status;
    datetime              last_tick_seen_at;
-   long                  tick_age_seconds;
-   datetime              next_check_at;
-   datetime              next_session_open_at;
+   long                 tick_age_seconds;
+   datetime             next_check_at;
+   datetime             next_session_open_at;
    datetime              last_checked_at;
    datetime              last_dossier_write_at;
-   int                   uncertain_burst_count;
+   int                  uncertain_burst_count;
    string                status_note;
-   bool                  dirty;
+   bool                  hirty;
   };
 
 string ASC_F1_RuntimeModeText(const ASC_F1_RuntimeMode mode)
@@ -142,10 +142,17 @@ string ASC_F1_TitleCaseWord(const string word)
   {
    if(word=="")
       return("");
-   string lower=StringToLower(word);
-   string out=StringToUpper(StringSubstr(lower,0,1));
+
+   string lower=word;
+   if(!StringToLower(lower))
+      return(word);
+
+   string out=StringSubstr(lower,0,1);
+   StringToUpper(out);
+
    if(StringLen(lower)>1)
       out+=StringSubstr(lower,1);
+
    return(out);
   }
 
@@ -198,7 +205,7 @@ string ASC_F1_SafeFilePart(const string value)
 
 uint ASC_F1_StringHash(const string value)
   {
-   uint hash=2166136261;
+   uint hash=216613621;
    for(int i=0;i<(int)StringLen(value);i++)
      {
       hash^=(uint)StringGetCharacter(value,i);
