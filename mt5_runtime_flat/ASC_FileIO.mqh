@@ -4,15 +4,26 @@
 #include "ASC_Common.mqh"
 #include "ASC_Logging.mqh"
 
+string ASC_FileErrorText(const int code)
+  {
+   return("error " + IntegerToString(code));
+  }
+
 bool ASC_WriteTextFile(const string path,const string content)
   {
-   int handle=FileOpen(path,FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+   uchar bytes[];
+   int byte_count=StringToCharArray(content,bytes,0,StringLen(content));
+   if(byte_count<0)
+      return(false);
+
+   int handle=FileOpen(path,FILE_WRITE|FILE_BIN|FILE_COMMON);
    if(handle==INVALID_HANDLE)
       return(false);
-   FileWriteString(handle,content);
+
+   bool ok=(FileWriteArray(handle,bytes,0,byte_count)==byte_count);
    FileFlush(handle);
    FileClose(handle);
-   return(true);
+   return(ok);
   }
 
 bool ASC_ReadTextFile(const string path,string &content)
@@ -21,13 +32,19 @@ bool ASC_ReadTextFile(const string path,string &content)
    if(!FileIsExist(path,FILE_COMMON))
       return(false);
 
-   int handle=FileOpen(path,FILE_READ|FILE_TXT|FILE_ANSI|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE);
+   int handle=FileOpen(path,FILE_READ|FILE_BIN|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE);
    if(handle==INVALID_HANDLE)
       return(false);
 
    int size=(int)FileSize(handle);
    if(size>0)
-      content=FileReadString(handle,size);
+     {
+      uchar bytes[];
+      ArrayResize(bytes,size);
+      int read=FileReadArray(handle,bytes,0,size);
+      if(read>0)
+         content=CharArrayToString(bytes,0,read);
+     }
    FileClose(handle);
    return(true);
   }
@@ -47,16 +64,20 @@ bool ASC_AtomicWrite(const string final_path,const string content,ASC_Logger &lo
    string verify="";
    string expected=ASC_NormalizeTextForValidation(content);
 
+   ResetLastError();
    if(!ASC_WriteTextFile(temp_path,content))
      {
-      logger.Error("AtomicWrite","temp write failed for " + final_path);
+      int error=GetLastError();
+      logger.Error("AtomicWrite","temp write failed for " + final_path + " (" + ASC_FileErrorText(error) + ")");
       return(false);
      }
 
+   ResetLastError();
    if(!ASC_ReadTextFile(temp_path,verify))
      {
+      int error=GetLastError();
       FileDelete(temp_path,FILE_COMMON);
-      logger.Error("AtomicWrite","temp validation read failed for " + final_path);
+      logger.Error("AtomicWrite","temp validation read failed for " + final_path + " (" + ASC_FileErrorText(error) + ")");
       return(false);
      }
 
@@ -64,29 +85,56 @@ bool ASC_AtomicWrite(const string final_path,const string content,ASC_Logger &lo
    if(verify!=expected)
      {
       FileDelete(temp_path,FILE_COMMON);
-      logger.Error("AtomicWrite","temp validation mismatch for " + final_path);
+      logger.Error("AtomicWrite","temp validation mismatch for " + final_path + "; expected bytes=" + IntegerToString(StringLen(expected)) + ", actual bytes=" + IntegerToString(StringLen(verify)));
       return(false);
      }
 
    if(FileIsExist(backup_path,FILE_COMMON))
-      FileDelete(backup_path,FILE_COMMON);
-
-   bool final_existed=FileIsExist(final_path,FILE_COMMON);
-   if(final_existed && !FileMove(final_path,FILE_COMMON,backup_path,FILE_COMMON|FILE_REWRITE))
      {
-      FileDelete(temp_path,FILE_COMMON);
-      logger.Error("AtomicWrite","could not preserve last-good for " + final_path);
-      return(false);
+      ResetLastError();
+      if(!FileDelete(backup_path,FILE_COMMON))
+        {
+         int error=GetLastError();
+         logger.Warn("AtomicWrite","could not clear prior last-good for " + final_path + " (" + ASC_FileErrorText(error) + ")");
+        }
      }
 
-   if(FileMove(temp_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE))
-      return(true);
+   bool final_existed=FileIsExist(final_path,FILE_COMMON);
+   if(final_existed)
+     {
+      ResetLastError();
+      if(!FileMove(final_path,FILE_COMMON,backup_path,FILE_COMMON|FILE_REWRITE))
+        {
+         int error=GetLastError();
+         FileDelete(temp_path,FILE_COMMON);
+         logger.Error("AtomicWrite","could not preserve last-good for " + final_path + " (" + ASC_FileErrorText(error) + ")");
+         return(false);
+        }
+     }
 
+   ResetLastError();
+   if(FileMove(temp_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE))
+     {
+      logger.Debug("AtomicWrite","promoted " + final_path + (final_existed ? " with last-good backup" : ""));
+      return(true);
+     }
+
+   int promote_error=GetLastError();
    if(final_existed && FileIsExist(backup_path,FILE_COMMON))
-      FileMove(backup_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE);
+     {
+      ResetLastError();
+      if(!FileMove(backup_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE))
+        {
+         int restore_error=GetLastError();
+         logger.Error("AtomicWrite","promote failed for " + final_path + " and rollback also failed (promote " + ASC_FileErrorText(promote_error) + ", rollback " + ASC_FileErrorText(restore_error) + ")");
+        }
+      else
+         logger.Warn("AtomicWrite","promote failed for " + final_path + " but last-good was restored (" + ASC_FileErrorText(promote_error) + ")");
+     }
+   else
+      logger.Error("AtomicWrite","promote failed for " + final_path + " (" + ASC_FileErrorText(promote_error) + ")");
 
    FileDelete(temp_path,FILE_COMMON);
-   logger.Error("AtomicWrite","promote failed for " + final_path);
    return(false);
   }
 

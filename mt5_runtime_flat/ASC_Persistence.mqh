@@ -120,7 +120,8 @@ bool ASC_LoadSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
 
 bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,ASC_Logger &logger)
   {
-   string now_text=ASC_DateTimeText(TimeCurrent());
+   datetime saved_at=TimeCurrent();
+   string now_text=ASC_DateTimeText(saved_at);
    string body="";
    body+="Schema Version=ASC Foundation v1\r\n";
    body+="Format Family=Runtime Continuity\r\n";
@@ -131,7 +132,7 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    body+="Boot At=" + ASC_DateTimeText(state.boot_at) + "\r\n";
    body+="Last Heartbeat=" + ASC_DateTimeText(state.last_heartbeat_at) + "\r\n";
    body+="Last Universe Sync=" + ASC_DateTimeText(state.last_universe_sync_at) + "\r\n";
-   body+="Last Runtime Save=" + ASC_DateTimeText(state.last_runtime_save_at) + "\r\n";
+   body+="Last Runtime Save=" + now_text + "\r\n";
    body+="Last Scheduler Save=" + ASC_DateTimeText(state.last_scheduler_save_at) + "\r\n";
    body+="Last Summary Save=" + ASC_DateTimeText(state.last_summary_save_at) + "\r\n";
    body+="Recovery Used=" + ASC_BoolText(state.recovery_used) + "\r\n";
@@ -143,6 +144,7 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    bool ok=ASC_AtomicWrite(paths.runtime_state_file,body,logger);
    if(ok)
      {
+      state.last_runtime_save_at=saved_at;
       state.runtime_dirty=false;
       logger.Info("RuntimeState","saved runtime state");
      }
@@ -166,6 +168,7 @@ bool ASC_SaveSchedulerState(const ASC_ServerPaths &paths,ASC_SymbolState &states
 
 bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
+   datetime saved_at=TimeCurrent();
    int open_count=0;
    int closed_count=0;
    int uncertain_count=0;
@@ -183,7 +186,7 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
 
    string body="Summary Top 5 per Basket\r\n\r\n";
    body+="Schema Version: ASC Foundation v1\r\n";
-   body+="Generated At: " + ASC_DateTimeText(TimeCurrent()) + "\r\n";
+   body+="Generated At: " + ASC_DateTimeText(saved_at) + "\r\n";
    body+="Server: " + runtime.server_clean + "\r\n";
    body+="Runtime Mode: " + ASC_RuntimeModeText(runtime.mode) + "\r\n";
    body+="Degraded: " + ASC_BoolText(runtime.degraded) + "\r\n";
@@ -197,6 +200,7 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
    bool ok=ASC_AtomicWrite(paths.summary_file,body,logger);
    if(ok)
      {
+      runtime.last_summary_save_at=saved_at;
       runtime.summary_dirty=false;
       logger.Info("Summary","saved summary scaffold");
      }

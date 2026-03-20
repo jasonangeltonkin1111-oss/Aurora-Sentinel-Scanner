@@ -84,8 +84,10 @@ bool ASC_WriteDossier(const ASC_ServerPaths &paths,const ASC_RuntimeState &runti
      {
       state.last_dossier_write_at=TimeCurrent();
       state.dirty=false;
-      logger.Info("Dossier","wrote dossier for " + state.symbol);
+      logger.Debug("Dossier","promoted dossier for " + state.symbol + " to " + final_path);
      }
+   else
+      logger.Error("Dossier","failed to promote dossier for " + state.symbol + " to " + final_path);
    return(ok);
   }
 
