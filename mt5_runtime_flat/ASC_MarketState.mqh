@@ -1,9 +1,9 @@
-#ifndef __ASC_F1_MARKET_STATE_MQH__
-#define __ASC_F1_MARKET_STATE_MQH__
+#ifndef __ASC_MARKET_STATE_MQH__
+#define __ASC_MARKET_STATE_MQH__
 
-#include "ASC_F1_Common.mqh"
+#include "ASC_Common.mqh"
 
-bool ASC_F1_IsWithinTradeSession(const string symbol,const datetime now,datetime &next_open_at,bool &has_sessions)
+bool ASC_IsWithinTradeSession(const string symbol,const datetime now,datetime &next_open_at,bool &has_sessions)
   {
    has_sessions=false;
    next_open_at=0;
@@ -11,7 +11,6 @@ bool ASC_F1_IsWithinTradeSession(const string symbol,const datetime now,datetime
    MqlDateTime dt;
    TimeToStruct(now,dt);
    int now_seconds=dt.hour*3600 + dt.min*60 + dt.sec;
-   ENUM_DAY_OF_WEEK today=(ENUM_DAY_OF_WEEK)dt.day_of_week;
 
    for(int day_offset=0; day_offset<7; day_offset++)
      {
@@ -26,27 +25,34 @@ bool ASC_F1_IsWithinTradeSession(const string symbol,const datetime now,datetime
 
          if(day_offset==0)
            {
-            if(now_seconds>=from_value && now_seconds<to_value)
-               return(true);
-            if(now_seconds<from_value)
+            if(to_value<from_value)
               {
-               next_open_at=now + (from_value - now_seconds);
-               return(false);
+               if(now_seconds>=from_value || now_seconds<to_value)
+                  return(true);
               }
+            else
+              {
+               if(now_seconds>=from_value && now_seconds<to_value)
+                  return(true);
+              }
+
+            if(now_seconds<from_value && (next_open_at<=0 || now + (from_value-now_seconds) < next_open_at))
+               next_open_at=now + (from_value-now_seconds);
            }
          else if(next_open_at<=0)
            {
             int remain_today=86400-now_seconds;
             next_open_at=now + remain_today + (day_offset-1)*86400 + from_value;
-            return(false);
            }
         }
+      if(day_offset==0 && next_open_at>0)
+         return(false);
      }
 
    return(false);
   }
 
-void ASC_F1_AssessSymbol(const string symbol,ASC_F1_SymbolState &state)
+void ASC_AssessSymbol(const string symbol,ASC_SymbolState &state)
   {
    datetime now=TimeTradeServer();
    if(now<=0)
@@ -63,23 +69,23 @@ void ASC_F1_AssessSymbol(const string symbol,ASC_F1_SymbolState &state)
 
    datetime next_open_at=0;
    bool has_sessions=false;
-   bool within_session=ASC_F1_IsWithinTradeSession(symbol,now,next_open_at,has_sessions);
+   bool within_session=ASC_IsWithinTradeSession(symbol,now,next_open_at,has_sessions);
    state.has_trade_sessions=has_sessions;
    state.within_trade_session=within_session;
    state.next_session_open_at=next_open_at;
 
    if(state.has_tick && state.tick_age_seconds>=0 && state.tick_age_seconds<=90)
      {
-      state.market_status=ASC_F1_MARKET_OPEN;
+      state.market_status=ASC_MARKET_OPEN;
       state.status_note="Fresh tick observed";
       state.next_check_at=now+10;
       state.uncertain_burst_count=0;
      }
    else if(within_session)
      {
-      state.market_status=ASC_F1_MARKET_UNCERTAIN;
-      state.status_note="Inside trade session without fresh tick";
-      if(state.uncertain_burst_count<12)
+      state.market_status=ASC_MARKET_UNCERTAIN;
+      state.status_note="Inside trade session without a fresh tick";
+      if(state.uncertain_burst_count<6)
         {
          state.next_check_at=now+5;
          state.uncertain_burst_count++;
@@ -91,21 +97,24 @@ void ASC_F1_AssessSymbol(const string symbol,ASC_F1_SymbolState &state)
      }
    else if(has_sessions)
      {
-      state.market_status=ASC_F1_MARKET_CLOSED;
+      state.market_status=ASC_MARKET_CLOSED;
       state.status_note="Outside trade session";
       if(next_open_at>0 && (next_open_at-now)<=60)
-         state.next_check_at=now+1;
+         state.next_check_at=now+5;
+      else if(next_open_at>0 && (next_open_at-now)<=900)
+         state.next_check_at=now+60;
       else if(next_open_at>0)
-         state.next_check_at=(next_open_at>now ? next_open_at : now+300);
-      else
          state.next_check_at=now+300;
+      else
+         state.next_check_at=now+600;
       state.uncertain_burst_count=0;
      }
    else
      {
-      state.market_status=ASC_F1_MARKET_UNKNOWN;
-      state.status_note="No trade session information available";
-      state.next_check_at=now+60;
+      state.market_status=ASC_MARKET_UNKNOWN;
+      state.status_note="Trade session information is not available";
+      state.next_check_at=now+120;
+      state.uncertain_burst_count=0;
      }
 
    state.dirty=true;

@@ -111,7 +111,7 @@ Instead:
 
 ## Runtime and scheduler save cadence
 
-The foundation code saves every heartbeat, but the long-term architecture should move toward:
+The hardened foundation should save on a bounded cadence instead of every heartbeat:
 - immediate save on critical transitions
 - periodic save for continuity
 - bounded save frequency to avoid excessive file churn

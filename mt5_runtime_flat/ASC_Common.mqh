@@ -1,12 +1,13 @@
-#ifndef __ASC_FOUNDATION_COMMON_MQH__
-#define __ASC_FOUNDATION_COMMON_MQH__
+#ifndef __ASC_COMMON_MQH__
+#define __ASC_COMMON_MQH__
 
 enum ASC_RuntimeMode
   {
    ASC_RUNTIME_BOOT=0,
    ASC_RUNTIME_RECOVERING=1,
-   ASC_RUNTIME_STEADY=2,
-   ASC_RUNTIME_DEGRADED=3
+   ASC_RUNTIME_WARMUP=2,
+   ASC_RUNTIME_STEADY=3,
+   ASC_RUNTIME_DEGRADED=4
   };
 
 enum ASC_MarketStatus
@@ -33,6 +34,7 @@ struct ASC_ServerPaths
 
 struct ASC_RuntimeState
   {
+   string          schema_version;
    string          server_raw;
    string          server_clean;
    ASC_RuntimeMode mode;
@@ -44,15 +46,19 @@ struct ASC_RuntimeState
    datetime        last_summary_save_at;
    bool            recovery_used;
    bool            degraded;
+   bool            runtime_dirty;
+   bool            scheduler_dirty;
+   bool            summary_dirty;
    int             symbol_count;
    int             processed_this_heartbeat;
+   int             scheduler_cursor;
+   int             heartbeats_since_boot;
   };
 
 struct ASC_SymbolState
   {
    string            symbol;
    string            dossier_file;
-   bool              available_now;
    bool              has_tick;
    bool              has_trade_sessions;
    bool              within_trade_session;
@@ -68,16 +74,51 @@ struct ASC_SymbolState
    bool              dirty;
   };
 
+string ASC_ToLower(const string value)
+  {
+   string out=value;
+   StringToLower(out);
+   return(out);
+  }
+
+string ASC_ToUpperFirst(const string value)
+  {
+   if(value=="")
+      return("");
+   string first=StringSubstr(value,0,1);
+   StringToUpper(first);
+   if(StringLen(value)==1)
+      return(first);
+   return(first + StringSubstr(value,1));
+  }
+
 string ASC_RuntimeModeText(const ASC_RuntimeMode mode)
   {
    switch(mode)
      {
       case ASC_RUNTIME_BOOT:       return("Boot");
       case ASC_RUNTIME_RECOVERING: return("Recovering");
+      case ASC_RUNTIME_WARMUP:     return("Warmup");
       case ASC_RUNTIME_STEADY:     return("Steady");
       case ASC_RUNTIME_DEGRADED:   return("Degraded");
      }
    return("Unknown");
+  }
+
+ASC_RuntimeMode ASC_RuntimeModeFromText(const string text)
+  {
+   string value=ASC_ToLower(ASC_Trim(text));
+   if(value=="boot")
+      return(ASC_RUNTIME_BOOT);
+   if(value=="recovering")
+      return(ASC_RUNTIME_RECOVERING);
+   if(value=="warmup")
+      return(ASC_RUNTIME_WARMUP);
+   if(value=="steady")
+      return(ASC_RUNTIME_STEADY);
+   if(value=="degraded")
+      return(ASC_RUNTIME_DEGRADED);
+   return(ASC_RUNTIME_BOOT);
   }
 
 string ASC_MarketStatusText(const ASC_MarketStatus status)
@@ -91,20 +132,32 @@ string ASC_MarketStatusText(const ASC_MarketStatus status)
    return("Unknown");
   }
 
+ASC_MarketStatus ASC_MarketStatusFromText(const string text)
+  {
+   string value=ASC_ToLower(ASC_Trim(text));
+   if(value=="open")
+      return(ASC_MARKET_OPEN);
+   if(value=="closed")
+      return(ASC_MARKET_CLOSED);
+   if(value=="uncertain")
+      return(ASC_MARKET_UNCERTAIN);
+   return(ASC_MARKET_UNKNOWN);
+  }
+
 string ASC_Trim(const string value)
   {
    int start=0;
    int finish=(int)StringLen(value)-1;
    while(start<=finish)
      {
-      ushort ch=StringGetCharacter(value,start);
+      ushort ch=(ushort)StringGetCharacter(value,start);
       if(ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n')
          break;
       start++;
      }
    while(finish>=start)
      {
-      ushort ch=StringGetCharacter(value,finish);
+      ushort ch=(ushort)StringGetCharacter(value,finish);
       if(ch!=' ' && ch!='\t' && ch!='\r' && ch!='\n')
          break;
       finish--;
@@ -114,15 +167,15 @@ string ASC_Trim(const string value)
    return(StringSubstr(value,start,finish-start+1));
   }
 
-string ASC_CompressSpaces(const string value)
+string ASC_CompressSeparators(const string value)
   {
    string out="";
    bool last_space=false;
    for(int i=0;i<(int)StringLen(value);i++)
      {
-      ushort ch=StringGetCharacter(value,i);
-      bool is_space=(ch==' ' || ch=='\t' || ch=='_' || ch=='-' || ch=='/' || ch=='\\');
-      if(is_space)
+      ushort ch=(ushort)StringGetCharacter(value,i);
+      bool sep=(ch==' ' || ch=='\t' || ch=='_' || ch=='-' || ch=='/' || ch=='\\' || ch=='|');
+      if(sep)
         {
          if(!last_space)
            {
@@ -141,19 +194,13 @@ string ASC_TitleCaseWord(const string word)
   {
    if(word=="")
       return("");
-   string lower=StringToLower(word);
-   string out="";
-   for(int i=0;i<(int)StringLen(lower);i++)
-     {
-      string ch=StringSubstr(lower,i,1);
-      out+=(i==0 ? StringToUpper(ch) : ch);
-     }
-   return(out);
+   string lower=ASC_ToLower(word);
+   return(ASC_ToUpperFirst(lower));
   }
 
 string ASC_TitleCase(const string value)
   {
-   string prepared=ASC_CompressSpaces(value);
+   string prepared=ASC_CompressSeparators(value);
    if(prepared=="")
       return("Unknown Server");
 
@@ -172,11 +219,9 @@ string ASC_TitleCase(const string value)
    return(out=="" ? "Unknown Server" : out);
   }
 
-string ASC_CleanServerName(const string server_raw)
+string ASC_CleanServerName(const string raw)
   {
-   string cleaned=ASC_TitleCase(server_raw);
-   cleaned=StringReplace(cleaned,"Demo","Demo");
-   return(cleaned);
+   return(ASC_TitleCase(raw));
   }
 
 string ASC_SafeFilePart(const string value)
@@ -184,21 +229,17 @@ string ASC_SafeFilePart(const string value)
    string out="";
    for(int i=0;i<(int)StringLen(value);i++)
      {
-      ushort ch=StringGetCharacter(value,i);
+      ushort ch=(ushort)StringGetCharacter(value,i);
       bool ok=((ch>='0' && ch<='9') || (ch>='A' && ch<='Z') || (ch>='a' && ch<='z'));
       if(ok)
-        {
          out+=ShortToString((short)ch);
-         continue;
-        }
-      if(ch==' ' || ch=='-' || ch=='_' || ch=='.')
+      else if(ch==' ' || ch=='-' || ch=='_' || ch=='.')
          out+="-";
       else
          out+="_";
      }
    while(StringFind(out,"--")>=0)
-      out=StringReplace(out,"--","-");
-   out=ASC_Trim(out);
+      StringReplace(out,"--","-");
    if(out=="")
       out="item";
    return(out);
@@ -220,10 +261,9 @@ string ASC_Hex8(const uint value)
    return(StringFormat("%08X",value));
   }
 
-string ASC_DossierFileNameForSymbol(const string symbol)
+string ASC_DossierFileName(const string symbol)
   {
-   string safe=ASC_SafeFilePart(symbol);
-   return(safe + " [" + ASC_Hex8(ASC_StringHash(symbol)) + "].txt");
+   return(ASC_SafeFilePart(symbol) + " [" + ASC_Hex8(ASC_StringHash(symbol)) + "].txt");
   }
 
 string ASC_JoinPath(const string left,const string right)
@@ -244,16 +284,35 @@ string ASC_DateTimeText(const datetime value)
    return(TimeToString(value,TIME_DATE|TIME_SECONDS));
   }
 
+bool ASC_TryParseDateTime(const string text,datetime &value)
+  {
+   value=0;
+   string trimmed=ASC_Trim(text);
+   if(trimmed=="" || trimmed=="Not Yet Available" || trimmed=="Pending")
+      return(false);
+   value=StringToTime(trimmed);
+   return(value>0);
+  }
+
 string ASC_BoolText(const bool value)
   {
    return(value ? "Yes" : "No");
   }
 
-int ASC_SecondsOfDay(const datetime value)
+bool ASC_BoolFromText(const string text)
   {
-   MqlDateTime dt;
-   TimeToStruct(value,dt);
-   return(dt.hour*3600 + dt.min*60 + dt.sec);
+   string value=ASC_ToLower(ASC_Trim(text));
+   return(value=="yes" || value=="true" || value=="1");
+  }
+
+string ASC_IntegerText(const int value)
+  {
+   return(IntegerToString(value));
+  }
+
+int ASC_IntegerFromText(const string text)
+  {
+   return((int)StringToInteger(ASC_Trim(text)));
   }
 
 #endif
