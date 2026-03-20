@@ -32,11 +32,20 @@ bool ASC_ReadTextFile(const string path,string &content)
    return(true);
   }
 
+string ASC_NormalizeTextForValidation(const string value)
+  {
+   string normalized=value;
+   StringReplace(normalized,"\r\n","\n");
+   StringReplace(normalized,"\r","\n");
+   return(normalized);
+  }
+
 bool ASC_AtomicWrite(const string final_path,const string content,ASC_Logger &logger)
   {
    string temp_path=final_path + ".tmp";
    string backup_path=final_path + ".last-good";
    string verify="";
+   string expected=ASC_NormalizeTextForValidation(content);
 
    if(!ASC_WriteTextFile(temp_path,content))
      {
@@ -44,10 +53,18 @@ bool ASC_AtomicWrite(const string final_path,const string content,ASC_Logger &lo
       return(false);
      }
 
-   if(!ASC_ReadTextFile(temp_path,verify) || verify!=content)
+   if(!ASC_ReadTextFile(temp_path,verify))
      {
       FileDelete(temp_path,FILE_COMMON);
-      logger.Error("AtomicWrite","temp validation failed for " + final_path);
+      logger.Error("AtomicWrite","temp validation read failed for " + final_path);
+      return(false);
+     }
+
+   verify=ASC_NormalizeTextForValidation(verify);
+   if(verify!=expected)
+     {
+      FileDelete(temp_path,FILE_COMMON);
+      logger.Error("AtomicWrite","temp validation mismatch for " + final_path);
       return(false);
      }
 
