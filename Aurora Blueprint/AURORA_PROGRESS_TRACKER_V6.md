@@ -20,6 +20,7 @@ From this point onward:
 - `AURORA_PROGRESS_TRACKER_V6.md` is the primary progress tracker
 - `AURORA_PROGRESS_TRACKER_V5.md` is stale for post-Run-025 work
 - older tracker generations remain historical continuity only
+- the Aurora office layer now controls task/decision/work/ledger separation for the active side
 - append-only run logs remain the fallback continuity layer
 
 ---
@@ -27,9 +28,9 @@ From this point onward:
 # 2. MASTER PROJECT STATUS
 
 ## Overall project state
-- Status: MULTI-WAVE FOUNDATION BUILT / CONSOLIDATION ACTIVE / DEEPENING PROTOCOL ACTIVE
-- Project mode: long-horizon layered blueprint build entering deeper doctrine sharpening
-- Current governing approach: preserve lineage, consolidate before sprawl, deepen by sharpening boundaries and translation value rather than by bloating prose
+- Status: MULTI-WAVE FOUNDATION BUILT / CONSOLIDATION ACTIVE / DEEPENING PROTOCOL ACTIVE / OFFICE CONTROL HARDENED
+- Project mode: long-horizon layered blueprint build with doctrine sharpening, wrapper hardening, and tighter active control discipline
+- Current governing approach: preserve lineage, consolidate before sprawl, harden active control, and deepen by sharpening boundaries and translation value rather than by bloating prose
 
 ## Overall completion estimate
 - Wave 1 market/execution foundation: 92%
@@ -40,40 +41,69 @@ From this point onward:
 - strategy-layer structural completeness: 88%
 - book-to-blueprint extraction overall: 48%
 - doctrine consolidation overall: 41%
+- active control-layer discipline: 79%
 
 ## Current bottleneck
 - Wave 2 remains the richest and highest-risk unconsolidated lane
 - deeper-pass sharpening is not yet propagated into all consolidated doctrine surfaces
-- control files still need explicit refresh to point at all new canonical consolidated outputs and ledger V2
+- active ledger deltas still live partly in supplements pending a future lossless merge
+- wrapper/machine surfaces are stronger, but future passes can still drift unless office discipline is maintained
 
 ## Current project risk
 - future passes could become verbose but not sharper unless the deepening protocol is enforced
 - Wave 2 could be flattened too early if consolidation starts without stricter anti-confusion and translation rules
+- future workers could still misuse historical generations unless active/historical classification remains explicit
 
 ---
 
 # 3. CURRENT CANONICAL FILE STATE
 
-## Active control / continuity files
-- `Aurora Blueprint/AURORA_CONTROL_INDEX_V4.md`
-- `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md` (general law useful, but some exact references remain stale)
-- `Aurora Blueprint/AURORA_RECOVERY_ORDER_V4.md`
+## Active office / control files
+- `Aurora Blueprint/office/README.md`
+- `Aurora Blueprint/office/AURORA_OFFICE_CANON.md`
+- `Aurora Blueprint/office/TASK_BOARD.md`
+- `Aurora Blueprint/office/DECISIONS.md`
+- `Aurora Blueprint/office/WORK_LOG.md`
+- `Aurora Blueprint/office/SHA_LEDGER.md`
+- `Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md`
+- `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md`
 - `Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md`
 - latest file in `Aurora Blueprint/runs/`
+
+## Active extraction and architecture surfaces
 - `Aurora Blueprint/AURORA_DEEPENING_PASS_PROTOCOL_001.md`
+- `Aurora Blueprint/AURORA_BOOK_EXTRACTION_COMPLETION_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md`
+- latest ledger supplement not yet merged
+- `Aurora Blueprint/AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
+- `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
+
+## Active wrapper / bridge / machine surfaces
+- `Aurora Blueprint/ASC_TO_AURORA_CONTEXT_CONTRACT.md`
+- `Aurora Blueprint/ASC_AURORA_JOINT_EVOLUTION_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_WRAPPER_OBJECT_MODEL.md`
+- `Aurora Blueprint/AURORA_DEPLOYABILITY_ENGINE_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_INTRADAY_GEOMETRY_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_OPPORTUNITY_INVENTORY_AND_RANKING_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_EA_SAFE_OUTPUT_BOUNDARY_SPEC.md`
+- active wrapper prompt templates
+- active operator scaffolds
 
 ## Active consolidated doctrine surfaces
+- `Aurora Blueprint/doctrine/WAVE1/AURORA_MARKET_STATE_CANON_WAVE1_CONSOLIDATED.md`
+- `Aurora Blueprint/doctrine/WAVE1/AURORA_EXECUTION_CONTEXT_SURFACE_WAVE1_CONSOLIDATED.md`
 - `Aurora Blueprint/doctrine/WAVE3/AURORA_RESEARCH_METHOD_WAVE3_CONSOLIDATED.md`
 - `Aurora Blueprint/doctrine/WAVE4/AURORA_HOSTILE_ENVIRONMENT_WAVE4_CONSOLIDATED.md`
 - `Aurora Blueprint/doctrine/WAVE5/AURORA_REVIEW_ADAPTATION_BEHAVIORAL_CONSOLIDATED.md`
 
-## Active strengthening stacks still relevant as lineage and residue layers
-- Wave 2 strengthening files
-- Wave 3 strengthening files
-- Wave 4 strengthening files
-- Wave 5 strengthening files
-- supportive Source Sets 008–010 lineage files
+## Historical but important lineage surfaces
+- older control index generations
+- older recovery-order generations
+- older tracker generations
+- strengthening files across Waves 1–5
+- supportive Source Sets 008–020 and associated pass lineage
 
 ---
 
@@ -119,18 +149,21 @@ Judgment:
 
 # 5. CURRENT NEXT TASK
 
-The next highest-leverage task is:
-- refresh control files so they point to ledger V2, tracker V6, and the new consolidated Wave 3–5 surfaces
+The next highest-leverage active task is:
+- keep the new office layer and active control files synchronized while continuing Wave 2 consolidation planning under the deepening-pass protocol
 
 If doctrine work is preferred immediately after that, the next doctrine task is:
-- open Wave 2 consolidation planning under the deepening-pass protocol
+- open Wave 2 consolidation planning under the deepening-pass protocol with explicit anti-flattening and active/historical cross-linking discipline
 
 ---
 
 # 6. CURRENT JUDGMENT
 
 Aurora is no longer primarily an extraction project.
-It is now a consolidation-and-deepening project.
+It is now a consolidation-and-deepening project with an explicit office control layer.
 
-The main question is no longer “what else do we have?”
-It is now “how much sharper and more translatable can the doctrine become without flattening truth?”
+The main question is no longer only “what else do we have?”
+It is also:
+- “which surfaces are active now?”
+- “what changed materially?”
+- “how do we deepen without drift or flattening?”

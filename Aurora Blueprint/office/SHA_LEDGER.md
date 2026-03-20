@@ -1,0 +1,56 @@
+# Aurora Office SHA Ledger
+
+## Purpose
+
+This file is the compact checkpoint ledger for materially important active Aurora surfaces.
+It deliberately hashes active control, bridge, wrapper, ledger, and canonical doctrine/protocol surfaces rather than every historical artifact in the tree.
+
+## Current checkpoint
+
+- checkpoint date: 2026-03-20
+- checkpoint scope: Aurora office-layer hardening, control refresh, and wrapper-object precision pass
+- hash type: SHA-256
+- note: this ledger does not hash itself to avoid self-reference churn
+- rule: refresh this file when active control truth or other active canonical Aurora surfaces change materially
+
+## Coverage rule
+
+This ledger should prefer:
+- active office files
+- active control files
+- active bridge and wrapper protocols
+- active extraction-tracking surfaces
+- active operator scaffolds and wrapper templates when they are part of current operating truth
+
+It should avoid turning into a full-repo noise dump.
+
+## Entries
+
+```text
+0a944ae296937bdf754caf207661374e8c8331e850412078e2485006bace0b10  Aurora Blueprint/office/README.md
+7142512df0c6827e590852e0f2c75f29972b79bce3fea67ac6c7f7f1c5cd3106  Aurora Blueprint/office/AURORA_OFFICE_CANON.md
+1983d4fcc82a98e5ba132892b3f133c740716626a994a088fe7f90ba1beb154c  Aurora Blueprint/office/TASK_BOARD.md
+480971fc22c05581e6f62fe4622bd204a5089f98055ab11049058e0135985f3a  Aurora Blueprint/office/DECISIONS.md
+0380987f330caac87bc962239e75e9edb3e40c571b7ec221ce9e92b9a8386a9e  Aurora Blueprint/office/WORK_LOG.md
+58258b787f6fdfb89c57c4cdcb1ca694beb8cdb764eab1638da6bb1c22f93a45  Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md
+236ef137c36fcec25d43bb71df139e26e7f40a09284686fa95d9052ad45b0bb0  Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md
+c3f190a06ba898919a0bedd93039ce2fcc36e7bdd331c2d89b90d8732504c2c1  Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md
+bd8f8840bc53a41fac07454f9426e34c2d5d8c7b766ccf072b422f8df4148dc0  Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md
+9b3ed1019c58bba32a871f343155ff62d7e87b2bbd9af4ad51368a0dbaa3953d  Aurora Blueprint/AURORA_BOOK_EXTRACTION_COMPLETION_PROTOCOL.md
+e69ec78aca2f45275c4e13f3f4e5f009c0c0185623715f31a471a4ca974edfe3  Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md
+f797f82dd99a328bb0fa8dc0bf041db924f451ca2b63447bbd01eabd06b6a95a  Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_SUPPLEMENT_014.md
+131e2bdfa661a62c66a2ca9e27260332b74801f996582ad254fe91fc7fee2ec5  Aurora Blueprint/ASC_TO_AURORA_CONTEXT_CONTRACT.md
+d8e77b05d8af40ba0cb1483322213770625f8c9a3312c3d10c199dac277ef51b  Aurora Blueprint/ASC_AURORA_JOINT_EVOLUTION_PROTOCOL.md
+ac898b589e883325691ce32fa09ee5e9e39c72a09dab74e27830dc4b07383bd3  Aurora Blueprint/AURORA_WRAPPER_OBJECT_MODEL.md
+8dd860c8c1144524f897710719428aa8e3b51763f2b8930a016ce621381ae50c  Aurora Blueprint/AURORA_DEPLOYABILITY_ENGINE_PROTOCOL.md
+d6591fe39318c171455fd59a87f8c3223fe17e7807a8db1b5ad9d512ddbe21a8  Aurora Blueprint/AURORA_INTRADAY_GEOMETRY_PROTOCOL.md
+d63189ce25aa3987ed270eb27c3df5bfa2df9ccd6b1aef319324a97c83e5a055  Aurora Blueprint/AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md
+5902d29b7b2027f0ea2e06d6cf95f526c2346e0ca1a3a59c8ac2a8452478a138  Aurora Blueprint/AURORA_OPPORTUNITY_INVENTORY_AND_RANKING_PROTOCOL.md
+be8df87b97ad66a97d1aeeca381bb30b68f5d699c80b2e4c874d933b3c185c3c  Aurora Blueprint/AURORA_EA_SAFE_OUTPUT_BOUNDARY_SPEC.md
+fbced7c8b8242df86353e0a58c695bc8262dc22b8084431618334e4512d6654e  Aurora Blueprint/AURORA_PERSONAL_BUILD_SCAFFOLD.md
+46045d336da3ef66e932d64bba800fc96e188e523c45831775eae26846403a18  Aurora Blueprint/AURORA_BEGINNER_OPERATOR_BUILD_MAP.md
+abf9baad26aab4a96769d599689437020b08e647a9a3808dea85c0e6b69b03da  Aurora Blueprint/wrapper_prompts/AURORA_WRAPPER_PROMPT_TEMPLATE_001_CONTEXT_INTERPRETATION.md
+22d5b4ea64abe6012c2b7b77497b00af5399ac4938d33c7ee6baa5b140dad8d5  Aurora Blueprint/wrapper_prompts/AURORA_WRAPPER_PROMPT_TEMPLATE_002_FAMILY_PATTERN_COMPETITION.md
+22523ed832534cc8528a544a1fb8890ef988194c025b9034dd5480c9c5271e31  Aurora Blueprint/wrapper_prompts/AURORA_WRAPPER_PROMPT_TEMPLATE_003_GENERATED_STRATEGY_CARD.md
+bb4d91f8de7e74533996d64b9d76ee1b7abbbb1f2c581f081bc1e109ae736851  Aurora Blueprint/wrapper_prompts/AURORA_WRAPPER_PROMPT_TEMPLATE_004_REVIEW_AND_DIAGNOSIS.md
+```

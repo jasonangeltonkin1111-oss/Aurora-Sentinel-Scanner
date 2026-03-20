@@ -18,7 +18,7 @@ It exists so Aurora can evolve from doctrine surfaces into a coherent wrapper ar
 
 Aurora should not operate as one giant hidden reasoning blob.
 
-It should operate through explicit objects whose ownership and transformation order are clear.
+It should operate through explicit objects whose ownership, required fields, state classes, and transformation order are clear.
 
 This object model exists to preserve:
 - auditability
@@ -47,9 +47,46 @@ Aurora must not jump straight from ASC context to an execution plan.
 
 ---
 
-# 3. OBJECT DEFINITIONS
+# 3. GLOBAL OBJECT RULES
 
-## 3.1 `ASC_CONTEXT_OBJECT`
+## 3.1 Required object state classes
+Any object field used by downstream logic should preserve one of these conditions when relevant:
+- `present`
+- `pending`
+- `reserved`
+- `unavailable`
+- `unsupported`
+- `stale`
+- `degraded`
+- `invalid`
+
+Aurora must not hide missingness by replacing these states with empty language that looks normal.
+
+## 3.2 Required metadata fields
+Every downstream Aurora-owned object should preserve at least:
+- `object_type`
+- `object_version`
+- `generated_at`
+- `lineage_refs`
+- `source_inputs`
+- `missing_surfaces`
+
+If an object is symbol-specific, it should also preserve:
+- `symbol`
+- `asset_class`
+- `asc_context_ref`
+
+## 3.3 Human-only versus machine-safe rule
+Each object that may later feed automation should make it clear which fields are:
+- machine-safe now
+- human-only now
+- blocked until stronger evidence or protocol support exists
+
+---
+
+# 4. OBJECT DEFINITIONS
+
+## 4.1 `ASC_CONTEXT_OBJECT`
 Owned by ASC.
 
 Contains measured world truth such as:
@@ -62,120 +99,147 @@ Contains measured world truth such as:
 - freshness / continuity truth
 - publication health
 
-Aurora consumes this object and must not fabricate it.
+Required state behavior:
+- any missing or degraded field must preserve its real state class
+- Aurora consumes this object and must not fabricate it
 
-## 3.2 `AURORA_MARKET_STATE_OBJECT`
+## 4.2 `AURORA_MARKET_STATE_OBJECT`
 Owned by Aurora.
 
 Contains:
-- market state label
-- state evidence markers
-- state competitors considered
-- why primary state won
+- `market_state_label`
+- `state_evidence_markers`
+- `state_competitors_considered`
+- `why_primary_state_won`
+- `state_confidence_posture`
+- `missing_surfaces`
 
 This object expresses structural interpretation only.
+It must not smuggle in execution geometry.
 
-## 3.3 `AURORA_EXECUTION_SURFACE_OBJECT`
+## 4.3 `AURORA_EXECUTION_SURFACE_OBJECT`
 Owned by Aurora.
 
 Contains:
-- execution surface label
-- surface trust flags
-- visible opportunity vs practical opportunity distinction
-- surface weaknesses
+- `execution_surface_label`
+- `surface_trust_flags`
+- `visible_vs_practical_opportunity`
+- `surface_weaknesses`
+- `friction_summary`
+- `continuity_risks`
+- `missing_surfaces`
 
 This object interprets whether the current environment is friendly or distorted from an execution standpoint.
 
-## 3.4 `AURORA_DEPLOYABILITY_OBJECT`
+## 4.4 `AURORA_DEPLOYABILITY_OBJECT`
 Owned by Aurora using ASC truth plus structural interpretation.
 
 Contains:
-- deployability class
-- horizon class
-- burden model summary
-- path potential summary
-- hostility contribution
-- missing surfaces
-- why not fully eligible
+- `deployability_class`
+- `horizon_class`
+- `usable_path_potential`
+- `execution_burden_class`
+- `spread_state_class`
+- `execution_continuity_state`
+- `hostility_contribution`
+- `missing_surfaces`
+- `why_not_fully_eligible`
 
-## 3.5 `AURORA_FAMILY_COMPETITION_OBJECT`
+This object must keep structure validity separate from execution validity.
+
+## 4.5 `AURORA_FAMILY_COMPETITION_OBJECT`
 Owned by Aurora.
 
 Contains:
-- ranked family candidates
-- excluded families
-- why primary family won
-- why competitors lost
-- missing surfaces that would change the ranking
+- `ranked_family_candidates`
+- `excluded_families`
+- `why_primary_family_won`
+- `why_competitors_lost`
+- `family_dependencies`
+- `missing_surfaces_that_would_change_ranking`
 
-## 3.6 `AURORA_PATTERN_CANDIDATE_OBJECT`
+This object exists so Aurora preserves competition truth instead of pretending one family appeared automatically.
+
+## 4.6 `AURORA_PATTERN_CANDIDATE_OBJECT`
 Owned by Aurora.
 
 Contains:
-- pattern candidate id
-- pattern confirmation conditions
-- pattern rejection conditions
-- pattern dependencies
-- pattern quality notes
+- `pattern_candidate_id`
+- `pattern_confirmation_conditions`
+- `pattern_rejection_conditions`
+- `pattern_dependencies`
+- `pattern_quality_notes`
+- `pattern_machine_safe_fields` if any
+- `missing_surfaces`
 
-## 3.7 `AURORA_OPPORTUNITY_OBJECT`
+Pattern commitment must remain downstream of family competition.
+
+## 4.7 `AURORA_OPPORTUNITY_OBJECT`
 Owned by Aurora.
 
 Contains:
-- symbol
-- primary family / pattern candidate
-- deployability class
-- opportunity status
-- revisit trigger
-- expiry
-- why not top-ranked
+- `symbol`
+- `primary_family_candidate`
+- `pattern_candidate`
+- `deployability_class`
+- `opportunity_status`
+- `revisit_trigger`
+- `expiry_at`
+- `why_not_top_ranked`
+- `missing_surfaces`
+- `hostility_objects`
 
 This object may exist even when no strategy card is emitted.
+It is the anti-starvation preservation layer.
 
-## 3.8 `AURORA_GENERATED_STRATEGY_CARD`
+## 4.8 `AURORA_GENERATED_STRATEGY_CARD`
 Owned by Aurora.
 
 Contains:
-- lineage refs
+- identity block
 - interpretation summary
 - geometry block
 - timebox block
 - machine-safe fields
 - human-only fields
+- explicit blockers if no card should be emitted
 
 This is the first object where explicit geometry is allowed.
 
-## 3.9 `AURORA_EA_SAFE_OUTPUT_OBJECT`
+## 4.9 `AURORA_EA_SAFE_OUTPUT_OBJECT`
 Owned by Aurora only after bounded filtering.
 
 Contains only deterministic, machine-checkable, automatable fields.
-It must exclude narrative interpretation and soft overrides.
+It must exclude narrative interpretation, soft overrides, and unbounded uncertainty language.
 
 ---
 
-# 4. TRANSFORMATION RULES
+# 5. TRANSFORMATION RULES
 
-## 4.1 Context before interpretation
+## 5.1 Context before interpretation
 Aurora must not interpret what ASC has not measured.
 
-## 4.2 State before deployability
+## 5.2 State before deployability
 Aurora must classify structural state before deciding deployability.
 
-## 4.3 Deployability before geometry
+## 5.3 Deployability before geometry
 Aurora must know whether a setup is actually usable before generating a trade geometry.
 
-## 4.4 Family competition before pattern commitment
+## 5.4 Family competition before pattern commitment
 Aurora must preserve family competition truth instead of acting like one family appeared automatically.
 
-## 4.5 Opportunity object before strategy card
+## 5.5 Opportunity object before strategy card
 A symbol may have a preserved opportunity without having a live strategy card.
 
-## 4.6 Strategy card before EA-safe object
+## 5.6 Strategy card before EA-safe object
 No field may become automatable unless it first exists in the generated strategy-card layer and is explicitly marked machine-safe.
+
+## 5.7 Missing-surface propagation
+If an upstream object marks a required field as stale, degraded, unavailable, unsupported, or invalid, downstream objects must propagate that limitation honestly rather than overwrite it with confident language.
 
 ---
 
-# 5. WHY THIS MODEL PREVENTS GENERICITY
+# 6. WHY THIS MODEL PREVENTS GENERICITY
 
 Generic wrappers collapse everything into:
 - chart read
@@ -195,7 +259,7 @@ That is the correct anti-generic order.
 
 ---
 
-# 6. WHY THIS MODEL PREVENTS STARVATION
+# 7. WHY THIS MODEL PREVENTS STARVATION
 
 Because the opportunity object exists before the strategy card, Aurora can preserve:
 - observe-only candidates
@@ -206,7 +270,7 @@ without pretending every preserved opportunity is tradable now.
 
 ---
 
-# 7. RELATIONSHIP TO EXISTING FILES
+# 8. RELATIONSHIP TO EXISTING FILES
 
 This object model depends on and links together:
 - `ASC_TO_AURORA_CONTEXT_CONTRACT.md`
@@ -215,18 +279,19 @@ This object model depends on and links together:
 - `AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md`
 - `AURORA_EA_SAFE_OUTPUT_BOUNDARY_SPEC.md`
 - `AURORA_INTRADAY_GEOMETRY_PROTOCOL.md`
+- `Aurora Blueprint/office/AURORA_OFFICE_CANON.md`
 
 This file is the chain map that binds them into one wrapper architecture.
 
 ---
 
-# 8. CURRENT JUDGMENT
+# 9. CURRENT JUDGMENT
 
-Aurora now has an explicit wrapper object model.
+Aurora now has an explicit wrapper object model with stronger field and state discipline.
 
 It is no longer only:
 - doctrine files
 - family files
 - pattern files
 
-It now has a machine-usable object chain from ASC truth to bounded future automation.
+It now has a machine-usable object chain from ASC truth to bounded future automation, with clearer missing-surface handling and clearer machine-safe boundaries.
