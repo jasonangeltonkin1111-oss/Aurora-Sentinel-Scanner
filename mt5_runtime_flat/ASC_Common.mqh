@@ -48,6 +48,7 @@ struct ASC_RuntimeSettings
    int               scheduler_save_seconds;
    int               summary_save_seconds;
    int               fresh_tick_seconds;
+   int               open_recheck_seconds;
    int               uncertain_burst_limit;
    int               uncertain_fast_recheck_seconds;
    int               uncertain_slow_recheck_seconds;
@@ -68,6 +69,7 @@ struct ASC_RuntimeSettings
    bool              layer3_filter_reserved;
    bool              layer4_selection_reserved;
    bool              layer5_deep_analysis_reserved;
+   int               reserved_atr_refresh_seconds;
    bool              snapshot_controls_reserved;
    bool              timeframe_history_reserved;
    bool              deep_analysis_controls_reserved;

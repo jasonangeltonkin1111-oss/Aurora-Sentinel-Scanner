@@ -2,108 +2,143 @@
 
 ## PURPOSE
 
-This file is the simplest correct control entry point for future Aurora Blueprint chats after the first consolidation trio and the deepening-pass protocol.
-
-It exists because older control files point to thinner repo states, older tracker generations, fragmented ledgers, or pre-consolidation doctrine surfaces.
+This file is the active Aurora control entry point.
+It now works together with the compact Aurora office layer so future chats can recover current truth without rebuilding the repo state from stale generations.
 
 Future chats should use this file as the active control map until a later generation supersedes it.
 
 ---
 
-# 1. CANONICAL CONTROL FILES
+# 1. ACTIVE CONTROL STACK
 
-A fresh Aurora Blueprint chat should treat these as the active control set:
+A fresh Aurora Blueprint chat should recover control truth in this order:
 
-1. `Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md`
-2. `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
-3. `Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md`
-4. `Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md`
-5. latest file in `Aurora Blueprint/runs/`
-6. `Aurora Blueprint/AURORA_DEEPENING_PASS_PROTOCOL_001.md`
-7. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_COMPLETION_PROTOCOL.md`
-8. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md`
-9. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
-10. `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
-11. `Aurora Blueprint/AURORA_EXTRACTION_QUEUE.md`
-12. active consolidated doctrine files relevant to the current task
-13. relevant strengthening files only after the consolidated target surface is understood
+1. `Aurora Blueprint/office/README.md`
+2. `Aurora Blueprint/office/AURORA_OFFICE_CANON.md`
+3. `Aurora Blueprint/office/TASK_BOARD.md`
+4. `Aurora Blueprint/office/DECISIONS.md`
+5. `Aurora Blueprint/office/WORK_LOG.md`
+6. `Aurora Blueprint/office/SHA_LEDGER.md`
+7. `Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md`
+8. `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
+9. `Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md`
+10. `Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md`
+11. latest file in `Aurora Blueprint/runs/`
 
----
-
-# 2. CANONICAL TRACKER RULE
-
-The active canonical tracker is:
-- `Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md`
-
-Older trackers must be treated as historical continuity artifacts unless explicitly rebuilt later.
+The office layer controls active classification, update law, task state, decisions, work logging, and checkpoints.
+The control index remains the compact map of the active Aurora stack.
 
 ---
 
-# 3. CURRENT ACTIVE STACK BY WAVE
+# 2. ACTIVE CANONICAL SURFACES
+
+After the control stack, the primary active surfaces are:
+
+1. `Aurora Blueprint/AURORA_DEEPENING_PASS_PROTOCOL_001.md`
+2. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_COMPLETION_PROTOCOL.md`
+3. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md`
+4. latest ledger supplement not yet merged into Ledger V2
+5. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
+6. `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
+7. `Aurora Blueprint/AURORA_EXTRACTION_QUEUE.md`
+8. active consolidated doctrine files relevant to the current task
+9. relevant strengthening files only after the consolidated target surface is understood
+10. active bridge / wrapper / machine-boundary files relevant to the task
+
+---
+
+# 3. ACTIVE VS HISTORICAL RULE
+
+## Active control truth
+- the Aurora office files
+- this control index generation
+- `AURORA_OPERATOR_PROTOCOL.md`
+- `AURORA_RECOVERY_ORDER_V5.md`
+- `AURORA_PROGRESS_TRACKER_V6.md`
+
+## Active doctrine / protocol truth
+- current ledger base plus latest supplements not yet merged
+- current module map and book master index
+- current bridge, wrapper, deployability, geometry, generated-card, opportunity, and EA-boundary protocol files
+- current consolidated doctrine surfaces by wave
+
+## Historical truth
+Older tracker, recovery-order, control-index, and ledger generations remain continuity artifacts unless explicitly rebuilt.
+They are not dead knowledge.
+They are not first-read canonical control surfaces anymore.
+
+---
+
+# 4. CURRENT ACTIVE STACK BY WAVE
 
 ## Wave 1
 Use for:
-- market-state doctrine
-- execution-context doctrine
-- consolidated Wave 1 foundation
+- `doctrine/WAVE1/AURORA_MARKET_STATE_CANON_WAVE1_CONSOLIDATED.md`
+- `doctrine/WAVE1/AURORA_EXECUTION_CONTEXT_SURFACE_WAVE1_CONSOLIDATED.md`
+- Wave 1 foundation interpretation
 
 ## Wave 2
 Use for:
-- strategy families
-- family cards
-- pattern atlas
-- pattern cards
-- strategy testing/evidence layer
-- quant/machine strengthening artifacts
-- future high-risk consolidation lane
+- `AURORA_STRATEGY_FAMILY_REGISTRY.md`
+- `AURORA_SETUP_PATTERN_ATLAS.md`
+- `strategy_families/`
+- `patterns/`
+- active Wave 2 strengthening and consolidation-planning surfaces
 
 ## Wave 3
 Use for:
-- `AURORA_RESEARCH_METHOD_WAVE3_CONSOLIDATED.md`
-- deeper sharpening passes after the consolidated surface is understood
+- `doctrine/WAVE3/AURORA_RESEARCH_METHOD_WAVE3_CONSOLIDATED.md`
+- relevant strengthening files only when deeper sharpening is required
 
 ## Wave 4
 Use for:
-- `AURORA_HOSTILE_ENVIRONMENT_WAVE4_CONSOLIDATED.md`
-- deeper sharpening passes after the consolidated surface is understood
+- `doctrine/WAVE4/AURORA_HOSTILE_ENVIRONMENT_WAVE4_CONSOLIDATED.md`
+- relevant strengthening files only when deeper sharpening is required
 
 ## Wave 5
 Use for:
-- `AURORA_REVIEW_ADAPTATION_BEHAVIORAL_CONSOLIDATED.md`
-- deeper sharpening passes after the consolidated surface is understood
+- `doctrine/WAVE5/AURORA_REVIEW_ADAPTATION_BEHAVIORAL_CONSOLIDATED.md`
+- relevant strengthening files only when deeper sharpening is required
 
 ---
 
-# 4. CURRENT NEXT TASK
+# 5. CURRENT NEXT TASKS
 
-The next highest-leverage doctrine task is:
-- Wave 2 consolidation planning under the deepening-pass protocol
+Control-layer next task:
+- keep the new office layer and canonical control files synchronized whenever a meaningful Aurora pass lands
 
-Reason:
-- Waves 3–5 now have first-pass consolidated operator-facing doctrine surfaces
+Doctrine next task:
+- continue Wave 2 consolidation planning under the deepening-pass protocol
+
+Why:
+- Waves 1 and 3–5 have canonical consolidated surfaces
 - Wave 2 remains the richest unconsolidated lane
-- Wave 2 carries the greatest flattening risk, so it should be entered only after control truth and deepening law are active
+- wrapper/machine surfaces are now active enough that control drift is more dangerous than file count alone
 
 ---
 
-# 5. CONTINUITY RULE
+# 6. CONTINUITY RULE
 
 At the end of every meaningful run:
-1. check repo truth before choosing new source-set or run IDs
-2. update the active tracker generation if the canonical progress picture changed materially
-3. create a new append-only run file using the next safe repo-truth ID
-4. keep this control index generation true if the canonical file set changes
-5. ensure deeper passes add sharper utility, not only more prose
+1. check repo truth before choosing new run or source-set IDs
+2. update the active deliverable(s)
+3. update Aurora office files if control truth changed materially
+4. update `AURORA_PROGRESS_TRACKER_V6.md` if the canonical progress picture changed materially
+5. create the next append-only run file
+6. refresh the office SHA ledger when active canonical surfaces changed materially
+7. keep active versus historical classification true
 
 ---
 
-# 6. CURRENT JUDGMENT
+# 7. CURRENT JUDGMENT
 
-Aurora Blueprint is now a multi-wave system with:
-- a consolidated Wave 1 foundation
-- a consolidated Wave 3–5 doctrine trio
-- a merged ledger truth layer
-- a deepening-pass protocol
-- Wave 2 as the main remaining rich consolidation frontier
+Aurora Blueprint is now controlled by a compact office layer plus a richer doctrine/bridge/wrapper stack.
 
-This file exists so future chats land on the actual repo state immediately instead of reconstructing it from stale continuity files.
+Aurora remains Aurora:
+- doctrine-rich
+- lineage-preserving
+- run-preserving
+- bridge-aware
+- wrapper-ready
+
+But its active side is now more explicit about what is canonical, what is historical, and what must be updated to avoid drift.

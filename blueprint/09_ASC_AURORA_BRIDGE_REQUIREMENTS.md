@@ -127,6 +127,7 @@ Bridge-friendly scanner outputs should include, directly or indirectly:
 - recovery marker when relevant
 - symbol freshness fields
 - clearly reserved future sections instead of fake completion
+- execution-context friction or deployability surfaces as Reserved future scanner pressure
 
 ## Final rule
 

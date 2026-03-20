@@ -106,3 +106,19 @@ Future MT5 product code should be arranged around:
 - `Presentation`
 
 That structure is described in `07_ASC_MT5_STRUCTURE_MAP.md`.
+
+
+## Current active implementation boundary
+
+Right now the active implementation is Layer 1 only.
+
+That means the tested foundation owns:
+- market status truth
+- session usage
+- tick freshness
+- next recheck timing
+- dossier creation and repair
+- runtime and scheduler continuity
+
+Layers 2 through 5 remain architecturally present but behaviorally pending.
+They must stay visible in layout, menu planning, and dossier placeholders without pretending they are already implemented.

@@ -4,10 +4,9 @@
 
 This file defines how Aurora Blueprint work must be operated so a new chat can continue safely without relying on bloated conversation memory.
 
-This protocol is adapted from the ASC office/HQ control style, but translated for the Aurora Blueprint research-architecture project.
-
+This protocol now works with the compact Aurora office layer.
 Aurora Blueprint work is not MT5 implementation work.
-It is blueprint extraction, doctrine shaping, archive mapping, and continuity preservation.
+It is blueprint extraction, doctrine shaping, archive mapping, bridge maintenance, wrapper hardening, and continuity preservation.
 
 ---
 
@@ -15,17 +14,23 @@ It is blueprint extraction, doctrine shaping, archive mapping, and continuity pr
 
 Every future Aurora Blueprint run must obey authority in this order:
 
-1. `README.md`
-2. `INDEX.md`
-3. `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
-4. `Aurora Blueprint/AURORA_RECOVERY_ORDER.md`
-5. `Aurora Blueprint/AURORA_COMPLETION_TRACKER.md`
-6. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
-7. `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
-8. active Aurora Blueprint target modules
-9. `archives/Aurora/` as source library only
+1. `Aurora Blueprint/office/README.md`
+2. `Aurora Blueprint/office/AURORA_OFFICE_CANON.md`
+3. `Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md`
+4. `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
+5. `Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md`
+6. `Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md`
+7. latest file in `Aurora Blueprint/runs/`
+8. `Aurora Blueprint/AURORA_DEEPENING_PASS_PROTOCOL_001.md`
+9. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_COMPLETION_PROTOCOL.md`
+10. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md`
+11. latest ledger supplement not yet merged
+12. `Aurora Blueprint/AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
+13. `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
+14. active doctrine / bridge / wrapper surfaces relevant to the current task
+15. archive or backup mirrors only as reference material
 
-If conflicts exist, the active Aurora Blueprint files override archive interpretation.
+If conflicts exist, the active office and current canonical Aurora files override older generations and archive interpretation.
 Archives are source material, not active doctrine.
 
 ---
@@ -37,17 +42,16 @@ Do not restart architecture design from scratch unless a contradiction is proven
 
 ## Law 2 — Preserve layer order
 Aurora Blueprint must continue in layers:
-1. module map / continuity law
-2. source inventory
-3. market-state canon
-4. execution-context surface
-5. extraction queue
-6. strategy-family registry
-7. pattern atlas
-8. research / volatility / review layers
+1. control truth and continuity truth
+2. source inventory and extraction tracking
+3. market-state and execution-context foundation
+4. strategy-family and pattern layers
+5. research / hostile-environment / review layers
+6. wrapper object, deployability, geometry, opportunity, and generated-card layers
+7. bounded EA-safe subset only after explicit machine-safe separation
 
 ## Law 3 — Archives are translated, not transplanted
-Books and legacy files are source material only.
+Books, legacy files, and backup mirrors are source material only.
 Nothing is imported as active doctrine without explicit Aurora mapping.
 
 ## Law 4 — No fake extraction claims
@@ -56,10 +60,14 @@ Do not describe it as source-grounded extraction until actual source-grounded ex
 
 ## Law 5 — Tracker continuity is mandatory
 Every meaningful run must update continuity artifacts before ending.
-If the main tracker cannot be overwritten safely, an append-only run log must still be created.
+If one control file cannot be updated safely, another continuity artifact must still record the pass honestly.
 
-## Law 6 — New files are safer than silent drift
-If direct overwrite of a control file fails, create the required append-only run artifact rather than pretending the repo is updated.
+## Law 6 — New files are safer than silent drift, but not safer than office sprawl
+If direct overwrite of a control artifact fails, create the required append-only run artifact rather than pretending the repo is updated.
+Do not create narrow control files when the office layer can absorb the truth cleanly.
+
+## Law 7 — Active versus historical classification must stay explicit
+Do not leave future workers guessing whether a file is active canon, historical continuity, run history, lineage, or reference only.
 
 ---
 
@@ -67,17 +75,19 @@ If direct overwrite of a control file fails, create the required append-only run
 
 Before changing anything, every new Aurora Blueprint run must:
 
-1. read `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
-2. read `Aurora Blueprint/AURORA_RECOVERY_ORDER.md`
-3. read `Aurora Blueprint/AURORA_COMPLETION_TRACKER.md`
-4. read `Aurora Blueprint/AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
-5. read `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
-6. read the most recent append-only run file in `Aurora Blueprint/runs/` if one exists
-7. read the target module(s) relevant to the next step
+1. read `Aurora Blueprint/office/README.md`
+2. read `Aurora Blueprint/office/AURORA_OFFICE_CANON.md`
+3. read `Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md`
+4. read `Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md`
+5. read `Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md`
+6. read `Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md`
+7. read the most recent append-only run file in `Aurora Blueprint/runs/` if one exists
+8. read the target module(s) relevant to the next step
+9. if wrapper or machine-facing work is involved, read the relevant bridge/object/deployability/geometry/generated-card/EA-boundary files before editing
 
 ---
 
-# 4. REQUIRED ARCHIVE CLASSIFICATION
+# 4. REQUIRED SOURCE AND ARCHIVE CLASSIFICATION
 
 Before using a source, classify it explicitly as one of:
 
@@ -85,12 +95,19 @@ Before using a source, classify it explicitly as one of:
 - `REFERENCE ONLY`
 - `DO NOT USE`
 
+Before using an Aurora repo file, classify it explicitly as one of:
+- `ACTIVE CANON`
+- `HISTORICAL CONTINUITY`
+- `RUN HISTORY`
+- `LINEAGE / SOURCE TRUTH`
+- `REFERENCE ONLY`
+
 For Aurora Blueprint book work, most archive books will begin as:
 - `TRANSLATE` for concept extraction, state extraction, strategy-family extraction, or risk extraction
 - `REFERENCE ONLY` when useful only for worldview or comparison
 - `DO NOT USE` when out of scope, non-trading, or structurally incompatible
 
-Every meaningful run should state which source class applied.
+Every meaningful run should state which source class and repo-file class applied.
 
 ---
 
@@ -105,41 +122,54 @@ Exact files created or modified.
 What this run was trying to advance.
 
 ## 3. SOURCE USE NOTE
-Which books, indexes, or archive files were used.
+Which books, indexes, bridge files, or archive/reference files were used.
 Classification for each:
-- TRANSLATE
-- REFERENCE ONLY
-- DO NOT USE
+- `TRANSLATE`
+- `REFERENCE ONLY`
+- `DO NOT USE`
+- and, where relevant, active versus historical repo classification
 
 ## 4. COMPLETION CHANGE
 What actual project progress changed.
 
-## 5. OPEN RISKS
+## 5. BRIDGE-CHECK OUTCOME
+One of:
+- `NO_BRIDGE_CHANGE_NEEDED`
+- `ASC_NEEDS_UPDATE`
+- `AURORA_NEEDS_UPDATE`
+- `BOTH_NEED_UPDATE`
+
+## 6. OPEN RISKS
 What remains unresolved.
 
-## 6. NEXT RECOMMENDED ACTION
+## 7. NEXT RECOMMENDED ACTION
 What the next chat should do next.
 
 ---
 
 # 6. CONTINUITY SYSTEM
 
-Aurora Blueprint continuity uses two layers:
+Aurora Blueprint continuity uses four layers:
 
-## Layer A — Stable control files
+## Layer A — Office control files
+These are the compact active control files in `Aurora Blueprint/office/`.
+
+## Layer B — Canonical control files
 These are the durable operating files:
+- `AURORA_CONTROL_INDEX_V5.md`
 - `AURORA_OPERATOR_PROTOCOL.md`
-- `AURORA_RECOVERY_ORDER.md`
-- `AURORA_COMPLETION_TRACKER.md`
-- `AURORA_BOOK_EXTRACTION_MODULE_MAP.md`
-- `AURORA_BOOK_MASTER_INDEX.md`
+- `AURORA_RECOVERY_ORDER_V5.md`
+- `AURORA_PROGRESS_TRACKER_V6.md`
 
-## Layer B — Append-only run files
+## Layer C — Canonical ledger and module surfaces
+These preserve extraction and architecture continuity.
+
+## Layer D — Append-only run files
 These are immutable run records created inside:
 - `Aurora Blueprint/runs/`
 
-Append-only run files exist to reduce dependence on fragile overwrite flows.
-They are not a replacement for the main tracker, but they preserve continuity if the main tracker update lags.
+Append-only run files do not replace the office or tracker layers.
+They preserve continuity when the project evolves across many passes.
 
 ---
 
@@ -153,10 +183,11 @@ The run file should include:
 - date / run number
 - files changed
 - source use note
+- bridge-check outcome
 - completion delta
 - next action
 
-This creates a fallback continuity trail even when a direct overwrite of the main tracker is difficult.
+This creates a fallback continuity trail even when direct overwrite of another control file is difficult.
 
 ---
 
@@ -164,23 +195,25 @@ This creates a fallback continuity trail even when a direct overwrite of the mai
 
 At the end of a meaningful run, update in this order:
 
-1. create or update the actual blueprint deliverable(s)
-2. update `AURORA_COMPLETION_TRACKER.md` if possible
-3. always create or update the append-only run file for that run if tracker overwrite is uncertain
+1. update the actual blueprint deliverable(s)
+2. update the Aurora office files if active control truth changed
+3. update `AURORA_PROGRESS_TRACKER_V6.md` if the progress picture changed materially
+4. always create or update the append-only run file for that run
+5. refresh the office SHA ledger when active canonical surfaces changed materially
 
-A run is not continuity-safe unless at least one continuity artifact reflects it.
+A run is not continuity-safe unless at least one continuity artifact reflects it and active control drift is not silently introduced.
 
 ---
 
 # 9. CURRENT JUDGMENT
 
-Aurora Blueprint is now large enough that fixed operating law is required.
+Aurora Blueprint is now large enough that fixed operating law is mandatory.
 
-The ASC office/HQ method is valuable here because it preserves:
+The useful ASC office strengths are:
+- compact control
 - fixed reading order
-- active-truth hierarchy
-- bounded work
-- archive classification
-- explicit handoff law
+- explicit active-versus-historical separation
+- bounded updates
+- SHA checkpoint discipline
 
-Aurora Blueprint should copy those strengths without importing unrelated ASC implementation rules.
+Aurora should keep those strengths while preserving Aurora-specific doctrine richness, source lineage, run lineage, and wrapper architecture.

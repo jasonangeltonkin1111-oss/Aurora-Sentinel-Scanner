@@ -102,3 +102,9 @@ Therefore:
 - visible dossier sections should prefer functional readable names
 
 That is the final policy.
+
+## Layer-progress placeholder rule
+
+Because the active system is Layer 1 only, the dossier should still show later layers as Pending rather than omitting them.
+
+That preserves structural completeness for operators and future Aurora-side consumers without pretending later logic already exists.
