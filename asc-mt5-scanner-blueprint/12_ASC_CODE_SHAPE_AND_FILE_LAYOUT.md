@@ -6,9 +6,10 @@ This file tells GPT/Codex how the MT5 codebase should physically look so archite
 
 ## Current repo reality
 
-The archive contains:
+The repo currently contains:
 - active blueprint docs
-- a flat `mt5_runtime_flat/` foundation implementation
+- a flat `mt5_runtime_flat/` implementation surface
+- newer correction files that prohibit phase/dev naming in active runtime modules
 - older archive code in flat MT5 style
 
 ## Recommended long-term source layout
@@ -66,16 +67,27 @@ mt5/
 
 ## Current foundation mapping
 
-The flat foundation files map approximately as:
+The active flat foundation files should map approximately as:
 
-- `ASC_F1_Common.mqh` -> common enums/types/helpers
-- `ASC_F1_ServerPaths.mqh` -> publication paths
-- `ASC_F1_Logging.mqh` -> diagnostics
-- `ASC_F1_FileIO.mqh` -> atomic write helpers
-- `ASC_F1_MarketState.mqh` -> Layer 1 market state logic
-- `ASC_F1_Persistence.mqh` -> runtime/scheduler/summary persistence
-- `ASC_F1_Dossiers.mqh` -> dossier text builder
+- `ASC_Common.mqh` -> common enums/types/helpers
+- `ASC_ServerPaths.mqh` -> publication paths
+- `ASC_Logging.mqh` -> diagnostics
+- `ASC_FileIO.mqh` -> atomic write helpers
+- `ASC_MarketState.mqh` -> Layer 1 market state logic
+- `ASC_Persistence.mqh` -> runtime/scheduler/summary persistence
+- `ASC_Dossiers.mqh` -> dossier text builder
 - `AuroraSentinel_Foundation.mq5` -> root EA kernel shell
+
+## Transitional correction note
+
+If older runtime seed files still exist with names such as:
+- `ASC_F1_Common.mqh`
+- `ASC_F1_ServerPaths.mqh`
+- `ASC_F1_MarketState.mqh`
+
+those should be treated as correction debt or migration artifacts.
+
+They are not the desired active naming model and must not be normalized into future code generation prompts.
 
 ## File ownership rules
 
@@ -103,10 +115,12 @@ Use names that reflect meaning, not office/build workflow chatter.
 Good:
 - `ASC_Layer1_MarketState.mqh`
 - `ASC_DossierWriter.mqh`
+- `ASC_MarketState.mqh`
 
 Bad:
 - `Phase3PacketWorker.mqh`
 - `Step5RefactorTemp.mqh`
+- `ASC_F1_Common.mqh`
 
 ## Struct and DTO discipline
 

@@ -130,31 +130,42 @@ Used for:
 
 ## Current foundation code
 
-### `mt5_runtime_flat/ASC_F1_Common.mqh`
+### `mt5_runtime_flat/ASC_Common.mqh`
 Used for:
-- current enums/types/path/runtime state skeleton
+- active enums/types/path/runtime state skeleton
+- responsibility-based naming target
 
-### `mt5_runtime_flat/ASC_F1_ServerPaths.mqh`
+### `mt5_runtime_flat/ASC_ServerPaths.mqh`
 Used for:
-- current server-root file layout
+- active server-root file layout
 
-### `mt5_runtime_flat/ASC_F1_MarketState.mqh`
+### `mt5_runtime_flat/ASC_MarketState.mqh`
 Used for:
-- current Layer 1 implementation shape
+- active Layer 1 implementation shape
 - `SymbolInfoTick` + session usage
 - next-check scheduling style
 
-### `mt5_runtime_flat/ASC_F1_FileIO.mqh`
+### `mt5_runtime_flat/ASC_FileIO.mqh`
 Used for:
-- current temp/final/last-good style
+- active temp/final/last-good style
 
-### `mt5_runtime_flat/ASC_F1_Dossiers.mqh`
+### `mt5_runtime_flat/ASC_Dossiers.mqh`
 Used for:
-- current human-readable dossier top shape
+- active human-readable dossier top shape
 
 ### `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`
 Used for:
-- current `OnInit`/`OnTimer` foundation heartbeat loop
+- active `OnInit`/`OnTimer` foundation heartbeat loop
+
+## Transitional implementation debt
+
+Older flat runtime files with names like `ASC_F1_*` may still exist in the repo during migration windows.
+Those files should be treated as:
+- correction debt
+- transitional artifacts
+- not desired naming authority
+
+They are not the active naming model for code generation.
 
 ## Legacy lineage
 
@@ -175,6 +186,6 @@ Used for:
 If these sources disagree:
 1. active `blueprint/`
 2. `Asc Archive 2` runtime depth canon
-3. current `mt5_runtime_flat/` as implementation seed
+3. active `mt5_runtime_flat/` responsibility-based runtime surface
 4. older archive contracts as translation guardrails
 5. legacy systems as lineage only
