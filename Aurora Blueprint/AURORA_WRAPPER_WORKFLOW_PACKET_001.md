@@ -1,5 +1,8 @@
 # AURORA WRAPPER WORKFLOW PACKET 001
 
+> Historical note: this packet is superseded for active wrapper execution by `AURORA_WRAPPER_WORKFLOW_PACKET_002.md`.
+> Keep this file for lineage only.
+
 ## PURPOSE
 
 This file turns Aurora’s new prompt chain into one practical end-to-end wrapper workflow the operator can actually run.

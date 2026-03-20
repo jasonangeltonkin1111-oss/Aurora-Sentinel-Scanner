@@ -27,6 +27,7 @@
 2. refresh active control files whenever a new tracker, ledger merge, or canonical doctrine shift lands
 3. continue Wave 2 consolidation planning under the deepening-pass protocol rather than flattening prematurely
 4. preserve run and source lineage while improving wrapper-ready precision on active objects and protocols
+5. propagate the new status/enum alignment and first concrete packet artifacts without widening ASC scope
 
 ## Blocking rules
 

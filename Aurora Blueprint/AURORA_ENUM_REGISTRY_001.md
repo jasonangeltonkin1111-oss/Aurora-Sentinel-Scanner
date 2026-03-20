@@ -15,6 +15,8 @@ It is the first machine-precision lock for shared vocabulary.
 
 Where Aurora requires a repeated status/class/gate vocabulary, it should prefer enums from this registry.
 
+For ownership distinctions and historical-wording reconciliation, use `AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md` alongside this registry.
+
 Do not invent near-synonyms in later files when a registry value already exists.
 
 If a new enum is needed:
@@ -29,8 +31,11 @@ If a new enum is needed:
 Allowed values:
 - `PRESENT`
 - `PENDING`
+- `RESERVED`
 - `UNAVAILABLE`
+- `UNSUPPORTED`
 - `STALE`
+- `DEGRADED`
 - `INVALID`
 
 Use for:
@@ -131,14 +136,17 @@ Allowed values:
 
 ## 5.1 Horizon class
 Allowed values:
-- `SCALP`
-- `SHORT_INTRADAY`
-- `FULL_INTRADAY`
-- `UNSUITABLE`
-- `UNKNOWN`
+- `H1_FAST_INTRADAY`
+- `H2_STANDARD_INTRADAY`
+- `H3_WIDE_INTRADAY`
+- `HORIZON_UNSUITABLE`
+- `HORIZON_UNKNOWN`
 
 Aurora law still applies:
 - intraday is the maximum allowed holding horizon
+
+Cross-reference:
+- `AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md` is the canonical distinction and historical-wording map for horizon usage
 
 ---
 

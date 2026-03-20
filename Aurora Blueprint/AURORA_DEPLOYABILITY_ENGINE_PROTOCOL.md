@@ -73,11 +73,12 @@ Aurora should not produce a confident deployability judgment unless it has, at m
 - hostility effect class
 - hostility persistence / stage
 
-If these are missing, deployability must degrade to:
-- pending
-- unknown
-or
-- observe-only
+If these are missing, deployability must degrade to an Aurora-normalized downstream posture such as:
+- `UNKNOWN_DEPLOYABILITY`
+- `WATCH_ONLY`
+- `OBSERVE_ONLY` opportunity preservation
+
+Do not treat those as interchangeable labels.
 
 ---
 
@@ -140,23 +141,27 @@ The key question is:
 
 ---
 
-# 6. DECISION CLASSES
+# 6. DEPLOYABILITY CLASS AND DOWNSTREAM OPPORTUNITY POSTURE
 
-## 6.1 `STRUCTURE_INVALID`
-The setup is not structurally coherent.
+Canonical enum ownership is defined in `AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md`.
 
-## 6.2 `EXECUTION_INVALID`
-The structure may be coherent, but execution burden or continuity is too poor for intraday deployment.
+## 6.1 Canonical deployability classes
+- `DEPLOYABLE`
+- `DEPLOYABLE_DEGRADED`
+- `WATCH_ONLY`
+- `NOT_DEPLOYABLE`
+- `UNKNOWN_DEPLOYABILITY`
 
-## 6.3 `OBSERVE_ONLY`
-The setup may be interesting, but current evidence or surface completeness is insufficient for deployment.
-The opportunity should be preserved.
+These answer the deployability question only.
 
-## 6.4 `ELIGIBLE_DEGRADED`
-The setup is deployable only under adapted geometry or a wider intraday horizon.
+## 6.2 Typical downstream opportunity-status outcomes
+Deployability often feeds one of these downstream opportunity postures:
+- `ELIGIBLE`
+- `ELIGIBLE_DEGRADED`
+- `OBSERVE_ONLY`
+- `EXECUTION_INVALID`
 
-## 6.5 `ELIGIBLE`
-The setup is deployable under standard intraday geometry for its family / pattern.
+`STRUCTURE_INVALID` remains a structure-layer or opportunity-layer outcome, not a deployability-class value.
 
 ---
 
@@ -208,6 +213,7 @@ Aurora must not:
 
 A deployability object should later include at least:
 - `deployability_class`
+- `opportunity_status` when a downstream posture has already been assigned
 - `horizon_class`
 - `usable_path_potential`
 - `execution_burden_class`

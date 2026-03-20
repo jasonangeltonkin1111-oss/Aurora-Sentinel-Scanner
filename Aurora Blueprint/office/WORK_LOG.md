@@ -46,3 +46,29 @@ Active Aurora surfaces were reviewed across:
 
 ### Result
 Aurora now has a compact active control layer modeled on ASC office discipline while preserving Aurora-specific doctrine, run lineage, bridge surfaces, and wrapper architecture.
+
+
+## 2026-03-20 — Aurora execution-side enum/workflow/artifact hardening pass
+
+### Why
+The active Aurora execution-side stack had specific known drift risks: incomplete surface-availability registry coverage, horizon-class mismatch, deployability versus opportunity-status overlap, a workflow packet lagging the newer group-context/review layers, and schema-only gaps that still lacked concrete artifacts.
+
+### What changed
+- created `AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md` as the explicit normalization surface for status/class ownership and historical-wording mapping
+- patched `AURORA_ENUM_REGISTRY_001.md` to restore the full surface-availability set and align horizon classes to the H1/H2/H3 intraday vocabulary already used by geometry and deployability
+- patched `AURORA_DEPLOYABILITY_ENGINE_PROTOCOL.md` so deployability-class language is separated from downstream opportunity-status outcomes
+- created `AURORA_WRAPPER_WORKFLOW_PACKET_002.md` and marked workflow packet v1 as superseded for active use
+- created the first concrete group-context example, review-packet artifact, and filled worked-example artifact for the C-04 / G4 lane
+- created `AURORA_RUN_059.md` and refreshed active control tracking to preserve continuity
+
+### What was intentionally not done
+- no ASC runtime, scheduler, or MT5 logic was touched
+- no bridge file was changed because the hardening was Aurora-internal
+- no family-expansion or theory-expansion wave was started
+- no historical file was deleted
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+Aurora now has an explicit normalization spec, an active workflow packet that matches current routing/review law more closely, and the first concrete packet artifacts needed to turn the current schema-only layers into usable continuation surfaces.
