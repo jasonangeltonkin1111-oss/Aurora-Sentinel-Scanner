@@ -260,7 +260,7 @@ bool ASC_SaveSummary(const ASC_ServerPaths &paths,ASC_RuntimeState &runtime,ASC_
    body+="Closed: " + IntegerToString(closed_count) + "\r\n";
    body+="Uncertain: " + IntegerToString(uncertain_count) + "\r\n";
    body+="Unknown: " + IntegerToString(unknown_count) + "\r\n\r\n";
-   body+="Market State Detection is working. Symbol Identity and Bucketing, selection, summary ranking, and signal surfaces remain Reserved.\r\n";
+   body+="Market State Detection is working. Symbol Identity and Bucketing is active but provisional, prepared bucket truth exists for Explorer Layer 1 use, explorer consumes that prepared truth, and later snapshot, selection, summary ranking, and signal surfaces remain Reserved.\r\n";
    bool ok=ASC_AtomicWrite(paths.summary_file,body,logger);
    if(ok)
      {

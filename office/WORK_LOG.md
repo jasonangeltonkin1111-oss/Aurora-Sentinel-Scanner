@@ -2,6 +2,20 @@
 
 This file is append-only.
 
+## 2026-03-21 — Operator wording alignment for provisional bucket truth
+
+### Why
+Operator-facing runtime, blueprint, and office wording still contained stale reserved-language in places where classification/bucketing and prepared Layer 1 bucket truth are already active in provisional form.
+
+### What changed
+- bumped the wrapper to 1.122 and the explorer subsystem to 0.442 for this runtime-facing wording pass
+- updated dossier, summary, and explorer HUD wording so Market State Detection remains the only fully working capability, identity/bucketing is described as active but provisional, prepared bucket truth is stated as runtime-prepared and explorer-consumed, and later capabilities remain reserved
+- aligned blueprint and office control files to the same ownership and maturity wording so active docs no longer describe current Layer 1 prepared bucket behavior as simply reserved
+
+### Result
+Operator-facing surfaces now describe the current ASC truth more honestly: Market State Detection is still the only fully working capability, provisional classification/bucketing is active for Layer 1 explorer use, and the explorer is explicitly a consumer of prepared truth rather than the owner of deeper compute.
+
+---
 ## 2026-03-21 — Rolling prepared batch promotion pass
 
 ### Why
