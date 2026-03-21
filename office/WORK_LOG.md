@@ -288,3 +288,20 @@ Explorer bucket truth still depended on a rebuild-everything path. The next safe
 
 ### Result
 Prepared bucket truth is now rolling-state capable in a first safe form: the explorer reads a promoted last-good snapshot, batch work is measurable, and incomplete deeper persistence remains explicitly out of scope for this pass.
+
+---
+## 2026-03-21 — Layer 1 diagnostics observability pass
+
+### Why
+Prepared-bucket hydration, heartbeat dispatch, and HUD render timing had become important to runtime honesty, but the repo did not yet preserve a compact observability surface for last-value diagnostics, warmup/readiness transitions, bounded-work pressure shifts, or action-to-render latency.
+
+### What changed
+- bumped the wrapper to 1.111 and the explorer subsystem to 0.431 for this runtime observability hardening pass
+- added compact Layer 1 diagnostics fields for bucket preparation, classification, sorting, reorder, promotion, heartbeat dispatch, HUD render, page-switch latency, warmup/readiness, bounded-work pressure, last promoted batch, and active hydration priority set
+- timed prepared-batch work, heartbeat dispatch, and HUD render/page-switch paths with low-cost last-value plus cheap rolling max/avg tracking
+- constrained diagnostics logging to summary lines triggered by material change, threshold breach, warmup movement, and bounded-work pressure shifts
+- extended runtime continuity so the compact diagnostics state survives restart without creating a new persistence artifact
+- updated office control truth to record diagnostics continuity as part of the current runtime-owned Layer 1 surface
+
+### Result
+Layer 1 observability is now explicit, compact, and continuity-safe: operators can see prep/dispatch/render pressure in the HUD and runtime state without per-symbol or per-frame log spam.

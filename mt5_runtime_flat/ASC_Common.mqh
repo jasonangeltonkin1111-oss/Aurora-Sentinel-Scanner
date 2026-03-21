@@ -2,12 +2,12 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.092"
+#define ASC_WRAPPER_VERSION "1.111"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
 #define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
-#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.392"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.431"
 
 enum ASC_RuntimeMode
   {
@@ -117,6 +117,9 @@ struct ASC_PreparedStateDiagnostics
    long   bucket_sort_ms;
    long   prepared_symbol_reorder_ms;
    long   final_promotion_ms;
+   long   heartbeat_dispatch_ms;
+   long   hud_render_ms;
+   long   page_switch_action_to_render_ms;
    int    last_prepared_batch_id;
    int    promoted_batch_count;
    int    pending_batch_count;
@@ -124,6 +127,24 @@ struct ASC_PreparedStateDiagnostics
    int    warmup_total_count;
    int    readiness_percent;
    string bounded_work_pressure_summary;
+   string active_hydration_priority_set;
+  };
+
+struct ASC_RuntimeDiagnosticsState
+  {
+   long     last_bucket_prep_total_ms;
+   long     last_classification_loop_ms;
+   long     last_bucket_sort_ms;
+   long     last_prepared_symbol_reorder_ms;
+   long     last_final_promotion_ms;
+   long     last_heartbeat_dispatch_ms;
+   long     last_hud_render_ms;
+   long     last_page_switch_action_to_render_ms;
+   int      warmup_progress_percent;
+   string   bounded_work_pressure_summary;
+   int      last_promoted_prepared_batch_id;
+   string   active_hydration_priority_set;
+   datetime last_hud_render_at;
   };
 
 struct ASC_RuntimeState
@@ -153,10 +174,11 @@ struct ASC_RuntimeState
    bool            warmup_minimum_met;
    int             warmup_progress_percent;
    bool            background_hydration_active;
-   int             prepared_last_batch_id;
-   int             prepared_promoted_batch_count;
-   int             prepared_pending_batch_count;
-   string          prepared_bounded_work_summary;
+   int                         prepared_last_batch_id;
+   int                         prepared_promoted_batch_count;
+   int                         prepared_pending_batch_count;
+   string                      prepared_bounded_work_summary;
+   ASC_RuntimeDiagnosticsState diagnostics;
   };
 
 struct ASC_SymbolState

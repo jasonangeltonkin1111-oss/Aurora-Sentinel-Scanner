@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.110
+// Wrapper Version: 1.111
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.410
+// Explorer Subsystem Version: 0.431
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -110,6 +110,10 @@ int g_symbol_count=0;
 bool g_heartbeat_running=false;
 bool g_last_degraded_state=false;
 int g_backlog_attention_threshold=10;
+int g_last_logged_warmup_progress=-1;
+string g_last_logged_bounded_work_summary="";
+string g_last_logged_hydration_priority_set="";
+int g_last_logged_prepared_batch_id=-1;
 
 ASC_LogVerbosity ASC_InputVerbosity(const int value)
   {
@@ -205,6 +209,68 @@ bool ASC_HydrationShouldAdvance(const ASC_PreparedBucketState &prepared)
    return(g_runtime.background_hydration_active || prepared.batch_ready[ASC_PREPARED_BATCH_STOCK_METADATA-1]==0);
   }
 
+void ASC_LogPreparedDiagnosticsSummary(const string reason)
+  {
+   bool warmup_changed=(g_last_logged_warmup_progress!=g_runtime.warmup_progress_percent);
+   bool pressure_changed=ASC_LogMaterialStringChange(g_last_logged_bounded_work_summary,g_prepared_buckets.diagnostics.bounded_work_pressure_summary);
+   bool priority_changed=ASC_LogMaterialStringChange(g_last_logged_hydration_priority_set,g_prepared_buckets.diagnostics.active_hydration_priority_set);
+   bool batch_changed=(g_last_logged_prepared_batch_id!=g_prepared_buckets.diagnostics.last_prepared_batch_id);
+   bool threshold_hit=(g_prepared_buckets.diagnostics.bucket_prep_total_ms>=25
+                       || g_prepared_buckets.diagnostics.classification_loop_ms>=15
+                       || g_prepared_buckets.diagnostics.bucket_sort_ms>=10
+                       || g_prepared_buckets.diagnostics.prepared_symbol_reorder_ms>=10
+                       || g_prepared_buckets.diagnostics.final_promotion_ms>=5);
+   if(warmup_changed || pressure_changed || priority_changed || batch_changed || threshold_hit)
+     {
+      string message="reason=" + reason
+         + " | prep=" + IntegerToString((int)g_prepared_buckets.diagnostics.bucket_prep_total_ms) + "ms"
+         + " | classify=" + IntegerToString((int)g_prepared_buckets.diagnostics.classification_loop_ms) + "ms"
+         + " | sort=" + IntegerToString((int)g_prepared_buckets.diagnostics.bucket_sort_ms) + "ms"
+         + " | reorder=" + IntegerToString((int)g_prepared_buckets.diagnostics.prepared_symbol_reorder_ms) + "ms"
+         + " | promote=" + IntegerToString((int)g_prepared_buckets.diagnostics.final_promotion_ms) + "ms"
+         + " | warmup=" + IntegerToString(g_runtime.warmup_progress_percent) + "%"
+         + " (" + ASC_LogChangedText(warmup_changed) + ")"
+         + " | pressure=" + g_prepared_buckets.diagnostics.bounded_work_pressure_summary
+         + " (" + ASC_LogChangedText(pressure_changed) + ")"
+         + " | batch=" + IntegerToString(g_prepared_buckets.diagnostics.last_prepared_batch_id)
+         + " (" + ASC_LogChangedText(batch_changed) + ")"
+         + " | hydration=" + g_prepared_buckets.diagnostics.active_hydration_priority_set
+         + " (" + ASC_LogChangedText(priority_changed) + ")";
+      if(threshold_hit)
+         g_logger.Warn("Diagnostics",message);
+      else
+         g_logger.Info("Diagnostics",message);
+     }
+   g_last_logged_warmup_progress=g_runtime.warmup_progress_percent;
+   g_last_logged_bounded_work_summary=g_prepared_buckets.diagnostics.bounded_work_pressure_summary;
+   g_last_logged_hydration_priority_set=g_prepared_buckets.diagnostics.active_hydration_priority_set;
+   g_last_logged_prepared_batch_id=g_prepared_buckets.diagnostics.last_prepared_batch_id;
+  }
+
+void ASC_LogHeartbeatDiagnosticsSummary(const int initial_due,const int remaining_due)
+  {
+   bool pressure_changed=ASC_LogMaterialStringChange(g_last_logged_bounded_work_summary,g_runtime.diagnostics.bounded_work_pressure_summary);
+   bool warmup_changed=(g_last_logged_warmup_progress!=g_runtime.diagnostics.warmup_progress_percent);
+   bool threshold_hit=(g_runtime.diagnostics.last_heartbeat_dispatch_ms>=g_settings.heartbeat_seconds*1000
+                       || remaining_due>=g_backlog_attention_threshold);
+   if(pressure_changed || warmup_changed || threshold_hit)
+     {
+      string message="dispatch=" + IntegerToString((int)g_runtime.diagnostics.last_heartbeat_dispatch_ms) + "ms"
+         + " | due=" + IntegerToString(initial_due)
+         + " -> " + IntegerToString(remaining_due)
+         + " | warmup=" + IntegerToString(g_runtime.diagnostics.warmup_progress_percent) + "%"
+         + " (" + ASC_LogChangedText(warmup_changed) + ")"
+         + " | pressure=" + g_runtime.diagnostics.bounded_work_pressure_summary
+         + " (" + ASC_LogChangedText(pressure_changed) + ")";
+      if(threshold_hit)
+         g_logger.Warn("HeartbeatDiag",message);
+      else
+         g_logger.Info("HeartbeatDiag",message);
+     }
+   g_last_logged_warmup_progress=g_runtime.diagnostics.warmup_progress_percent;
+   g_last_logged_bounded_work_summary=g_runtime.diagnostics.bounded_work_pressure_summary;
+  }
+
 void ASC_RunPreparedHydrationController(const string reason)
   {
    if(!ASC_HydrationShouldAdvance(g_prepared_buckets))
@@ -212,6 +278,7 @@ void ASC_RunPreparedHydrationController(const string reason)
 
    int batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
    int due_now=ASC_CountDueSymbols(TimeCurrent());
+   long prep_started_ms=GetTickCount();
    ASC_PrepareBucketState(g_runtime.server_clean,
                           g_symbols,
                           g_symbol_count,
@@ -223,12 +290,16 @@ void ASC_RunPreparedHydrationController(const string reason)
                           g_settings.symbol_budget_per_heartbeat,
                           g_prepared_last_good_buckets,
                           g_prepared_working_buckets);
+   long promotion_started_ms=GetTickCount();
    ASC_PromotePreparedBucketState(g_prepared_working_buckets,g_prepared_last_good_buckets,g_prepared_buckets);
+   g_prepared_buckets.diagnostics.final_promotion_ms=GetTickCount()-promotion_started_ms;
+   g_prepared_buckets.diagnostics.bucket_prep_total_ms=GetTickCount()-prep_started_ms;
    ASC_SyncPreparedRuntimeMetadata();
    g_prepared_next_batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
    g_runtime.summary_dirty=true;
    g_runtime.runtime_dirty=true;
    g_logger.Debug("Hydration","reason=" + reason + ", promoted batch=" + ASC_PreparedBatchName(batch_id));
+   ASC_LogPreparedDiagnosticsSummary(reason);
   }
 
 void ASC_SyncPreparedRuntimeMetadata(void)
@@ -237,6 +308,18 @@ void ASC_SyncPreparedRuntimeMetadata(void)
    g_runtime.prepared_promoted_batch_count=g_prepared_buckets.diagnostics.promoted_batch_count;
    g_runtime.prepared_pending_batch_count=g_prepared_buckets.diagnostics.pending_batch_count;
    g_runtime.prepared_bounded_work_summary=g_prepared_buckets.diagnostics.bounded_work_pressure_summary;
+   g_runtime.diagnostics.last_bucket_prep_total_ms=g_prepared_buckets.diagnostics.bucket_prep_total_ms;
+   g_runtime.diagnostics.last_classification_loop_ms=g_prepared_buckets.diagnostics.classification_loop_ms;
+   g_runtime.diagnostics.last_bucket_sort_ms=g_prepared_buckets.diagnostics.bucket_sort_ms;
+   g_runtime.diagnostics.last_prepared_symbol_reorder_ms=g_prepared_buckets.diagnostics.prepared_symbol_reorder_ms;
+   g_runtime.diagnostics.last_final_promotion_ms=g_prepared_buckets.diagnostics.final_promotion_ms;
+   g_runtime.diagnostics.last_hud_render_ms=g_prepared_buckets.diagnostics.hud_render_ms;
+   g_runtime.diagnostics.last_page_switch_action_to_render_ms=g_prepared_buckets.diagnostics.page_switch_action_to_render_ms;
+   g_runtime.diagnostics.warmup_progress_percent=g_prepared_buckets.diagnostics.readiness_percent;
+   g_runtime.diagnostics.bounded_work_pressure_summary=g_prepared_buckets.diagnostics.bounded_work_pressure_summary;
+   g_runtime.diagnostics.last_promoted_prepared_batch_id=g_prepared_buckets.diagnostics.last_prepared_batch_id;
+   g_runtime.diagnostics.active_hydration_priority_set=g_prepared_buckets.diagnostics.active_hydration_priority_set;
+   g_runtime.diagnostics.last_hud_render_at=g_explorer.nav.last_render_at;
   }
 
 void ASC_RefreshPreparedBucketState(void)
@@ -275,6 +358,19 @@ void ASC_ResetRuntimeState(void)
    g_runtime.prepared_promoted_batch_count=0;
    g_runtime.prepared_pending_batch_count=ASC_PREPARED_BATCH_COUNT;
    g_runtime.prepared_bounded_work_summary="Not sampled.";
+   g_runtime.diagnostics.last_bucket_prep_total_ms=0;
+   g_runtime.diagnostics.last_classification_loop_ms=0;
+   g_runtime.diagnostics.last_bucket_sort_ms=0;
+   g_runtime.diagnostics.last_prepared_symbol_reorder_ms=0;
+   g_runtime.diagnostics.last_final_promotion_ms=0;
+   g_runtime.diagnostics.last_heartbeat_dispatch_ms=0;
+   g_runtime.diagnostics.last_hud_render_ms=0;
+   g_runtime.diagnostics.last_page_switch_action_to_render_ms=0;
+   g_runtime.diagnostics.warmup_progress_percent=0;
+   g_runtime.diagnostics.bounded_work_pressure_summary="Not sampled.";
+   g_runtime.diagnostics.last_promoted_prepared_batch_id=0;
+   g_runtime.diagnostics.active_hydration_priority_set="next=" + ASC_PreparedBatchName(ASC_PREPARED_BATCH_PRIORITY_SET);
+   g_runtime.diagnostics.last_hud_render_at=0;
    ASC_PreparedBucketStateReset(g_prepared_buckets);
    ASC_PreparedBucketStateReset(g_prepared_working_buckets);
    ASC_PreparedBucketStateReset(g_prepared_last_good_buckets);
@@ -459,6 +555,7 @@ void ASC_UpdateLayer1Readiness(void)
       progress=universe_progress;
    g_runtime.warmup_progress_percent=ASC_PercentClamp(progress);
    g_runtime.background_hydration_active=(g_runtime.warmup_minimum_met && assessed<g_symbol_count);
+   g_runtime.diagnostics.warmup_progress_percent=g_runtime.warmup_progress_percent;
   }
 
 void ASC_UpdateRuntimeMode(void)
@@ -502,6 +599,7 @@ void ASC_DeepSelectiveAnalysisPlaceholder(void) { }
 
 void ASC_RunHeartbeat(void)
   {
+   long heartbeat_started_ms=GetTickCount();
    if(g_heartbeat_running)
      {
       g_logger.Warn("Heartbeat","skipped re-entry while prior heartbeat was still running");
@@ -550,9 +648,14 @@ void ASC_RunHeartbeat(void)
    g_runtime.processed_this_heartbeat=touched_this_heartbeat;
    int remaining_due=ASC_CountDueSymbols(now);
    g_runtime.degraded=(remaining_due>0 && touched_this_heartbeat>=g_settings.symbol_budget_per_heartbeat);
+   g_runtime.diagnostics.bounded_work_pressure_summary="due=" + IntegerToString(remaining_due)
+      + " | budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat)
+      + " | backlog=" + IntegerToString((remaining_due>g_settings.symbol_budget_per_heartbeat) ? (remaining_due-g_settings.symbol_budget_per_heartbeat) : 0);
    ASC_UpdateLayer1Readiness();
    ASC_UpdateRuntimeMode();
    ASC_RefreshPreparedBucketState();
+   g_runtime.diagnostics.last_heartbeat_dispatch_ms=GetTickCount()-heartbeat_started_ms;
+   g_prepared_buckets.diagnostics.heartbeat_dispatch_ms=g_runtime.diagnostics.last_heartbeat_dispatch_ms;
    g_runtime.runtime_dirty=true;
 
    g_logger.Info("Heartbeat","processed " + IntegerToString(touched_this_heartbeat) + " due symbols from " + IntegerToString(initial_due) + "; promoted " + IntegerToString(promoted_this_heartbeat) + " dossiers; failed " + IntegerToString(failed_promotions_this_heartbeat) + "; backlog " + IntegerToString(remaining_due));
@@ -563,6 +666,7 @@ void ASC_RunHeartbeat(void)
    else if(remaining_due>=g_backlog_attention_threshold && g_settings.log_verbosity>=ASC_LOG_DEBUG)
       g_logger.Debug("Heartbeat","backlog remains visible at " + IntegerToString(remaining_due) + " due symbols");
    g_last_degraded_state=g_runtime.degraded;
+   ASC_LogHeartbeatDiagnosticsSummary(initial_due,remaining_due);
 
    bool attempted_save=false;
    bool runtime_saved=true;
@@ -602,6 +706,7 @@ void ASC_RunHeartbeat(void)
       g_logger.Info("Persistence","runtime save " + (runtime_saved ? "succeeded" : "failed") + "; scheduler save " + (scheduler_saved ? "succeeded" : "failed") + "; summary save " + (summary_saved ? "succeeded" : "failed"));
 
    ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
+   ASC_SyncPreparedRuntimeMetadata();
    g_heartbeat_running=false;
   }
 
@@ -624,6 +729,7 @@ int OnInit()
    ASC_ExplorerInit(g_explorer,ChartID());
    g_logger.Info("Explorer","init chart=" + IntegerToString((int)ChartID()) + ", server=" + g_runtime.server_clean);
    ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
+   ASC_SyncPreparedRuntimeMetadata();
    EventSetTimer(g_settings.heartbeat_seconds);
    return(INIT_SUCCEEDED);
   }
@@ -656,6 +762,7 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
      {
       g_explorer.nav.dirty=true;
       ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
+      ASC_SyncPreparedRuntimeMetadata();
       return;
      }
 
@@ -666,4 +773,5 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
 
    ASC_ExplorerHandleAction(g_explorer,g_settings,g_runtime,g_prepared_buckets,sparam,g_symbols,g_symbol_count,g_logger);
    ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
+   ASC_SyncPreparedRuntimeMetadata();
   }

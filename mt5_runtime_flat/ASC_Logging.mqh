@@ -3,6 +3,17 @@
 
 #include "ASC_Common.mqh"
 
+
+string ASC_LogChangedText(const bool changed)
+  {
+   return(changed ? "changed" : "steady");
+  }
+
+bool ASC_LogMaterialStringChange(const string previous_value,const string current_value)
+  {
+   return(previous_value!=current_value);
+  }
+
 class ASC_Logger
   {
 private:

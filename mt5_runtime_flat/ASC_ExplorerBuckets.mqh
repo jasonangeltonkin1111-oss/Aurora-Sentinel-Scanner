@@ -314,6 +314,9 @@ void ASC_PreparedStateDiagnosticsReset(ASC_PreparedStateDiagnostics &diagnostics
    diagnostics.bucket_sort_ms=0;
    diagnostics.prepared_symbol_reorder_ms=0;
    diagnostics.final_promotion_ms=0;
+   diagnostics.heartbeat_dispatch_ms=0;
+   diagnostics.hud_render_ms=0;
+   diagnostics.page_switch_action_to_render_ms=0;
    diagnostics.last_prepared_batch_id=0;
    diagnostics.promoted_batch_count=0;
    diagnostics.pending_batch_count=ASC_PREPARED_BATCH_COUNT;
@@ -321,6 +324,7 @@ void ASC_PreparedStateDiagnosticsReset(ASC_PreparedStateDiagnostics &diagnostics
    diagnostics.warmup_total_count=0;
    diagnostics.readiness_percent=0;
    diagnostics.bounded_work_pressure_summary="Not sampled.";
+   diagnostics.active_hydration_priority_set="next=" + ASC_PreparedBatchName(ASC_PREPARED_BATCH_PRIORITY_SET);
   }
 
 string ASC_PreparedBatchName(const int batch_id)
@@ -404,6 +408,18 @@ int ASC_PreparedPromotedBatchCount(const ASC_PreparedBucketState &prepared)
    return(ready_count);
   }
 
+int ASC_PreparedNextPendingBatchId(const ASC_PreparedBucketState &prepared)
+  {
+   if(ArraySize(prepared.batch_ready)<ASC_PREPARED_BATCH_COUNT)
+      return(ASC_PREPARED_BATCH_PRIORITY_SET);
+   for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
+     {
+      if(prepared.batch_ready[i]==0)
+         return(i+1);
+     }
+   return(ASC_PREPARED_BATCH_STOCK_METADATA);
+  }
+
 void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int warmup_assessed,const int warmup_total,const int readiness_percent,const int due_now,const int budget)
   {
    prepared.diagnostics.last_prepared_batch_id=prepared.active_batch_id;
@@ -415,6 +431,10 @@ void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int 
    prepared.diagnostics.bounded_work_pressure_summary="due=" + IntegerToString(due_now)
       + " | budget=" + IntegerToString(budget)
       + " | backlog=" + IntegerToString((due_now>budget) ? (due_now-budget) : 0);
+   int next_batch=ASC_PreparedNextPendingBatchId(prepared);
+   prepared.diagnostics.active_hydration_priority_set="next=" + ASC_PreparedBatchName(next_batch)
+      + " | promoted=" + IntegerToString(prepared.diagnostics.promoted_batch_count)
+      + "/" + IntegerToString(ASC_PREPARED_BATCH_COUNT);
   }
 
 void ASC_PreparedRefreshBucketProgressStates(ASC_PreparedBucketState &prepared)

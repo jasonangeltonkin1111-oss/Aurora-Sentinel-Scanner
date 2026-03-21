@@ -58,6 +58,19 @@ void ASC_AssignRuntimeField(ASC_RuntimeState &state,const string key,const strin
    else if(key=="Prepared Promoted Batch Count") state.prepared_promoted_batch_count=ASC_IntegerFromText(value);
    else if(key=="Prepared Pending Batch Count") state.prepared_pending_batch_count=ASC_IntegerFromText(value);
    else if(key=="Prepared Bounded Work Summary") state.prepared_bounded_work_summary=value;
+   else if(key=="Diagnostics Bucket Prep Ms") state.diagnostics.last_bucket_prep_total_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Classification Loop Ms") state.diagnostics.last_classification_loop_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Bucket Sort Ms") state.diagnostics.last_bucket_sort_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Prepared Symbol Reorder Ms") state.diagnostics.last_prepared_symbol_reorder_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Final Promotion Ms") state.diagnostics.last_final_promotion_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Heartbeat Dispatch Ms") state.diagnostics.last_heartbeat_dispatch_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics HUD Render Ms") state.diagnostics.last_hud_render_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Page Switch Render Ms") state.diagnostics.last_page_switch_action_to_render_ms=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Warmup Progress Percent") state.diagnostics.warmup_progress_percent=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Bounded Work Summary") state.diagnostics.bounded_work_pressure_summary=value;
+   else if(key=="Diagnostics Last Promoted Batch Id") state.diagnostics.last_promoted_prepared_batch_id=ASC_IntegerFromText(value);
+   else if(key=="Diagnostics Active Hydration Priority Set") state.diagnostics.active_hydration_priority_set=value;
+   else if(key=="Diagnostics Last HUD Render At") ASC_TryParseDateTime(value,state.diagnostics.last_hud_render_at);
   }
 
 bool ASC_LoadRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,ASC_Logger &logger)
@@ -167,6 +180,19 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    body+="Prepared Promoted Batch Count=" + IntegerToString(state.prepared_promoted_batch_count) + "\r\n";
    body+="Prepared Pending Batch Count=" + IntegerToString(state.prepared_pending_batch_count) + "\r\n";
    body+="Prepared Bounded Work Summary=" + state.prepared_bounded_work_summary + "\r\n";
+   body+="Diagnostics Bucket Prep Ms=" + IntegerToString((int)state.diagnostics.last_bucket_prep_total_ms) + "\r\n";
+   body+="Diagnostics Classification Loop Ms=" + IntegerToString((int)state.diagnostics.last_classification_loop_ms) + "\r\n";
+   body+="Diagnostics Bucket Sort Ms=" + IntegerToString((int)state.diagnostics.last_bucket_sort_ms) + "\r\n";
+   body+="Diagnostics Prepared Symbol Reorder Ms=" + IntegerToString((int)state.diagnostics.last_prepared_symbol_reorder_ms) + "\r\n";
+   body+="Diagnostics Final Promotion Ms=" + IntegerToString((int)state.diagnostics.last_final_promotion_ms) + "\r\n";
+   body+="Diagnostics Heartbeat Dispatch Ms=" + IntegerToString((int)state.diagnostics.last_heartbeat_dispatch_ms) + "\r\n";
+   body+="Diagnostics HUD Render Ms=" + IntegerToString((int)state.diagnostics.last_hud_render_ms) + "\r\n";
+   body+="Diagnostics Page Switch Render Ms=" + IntegerToString((int)state.diagnostics.last_page_switch_action_to_render_ms) + "\r\n";
+   body+="Diagnostics Warmup Progress Percent=" + IntegerToString(state.diagnostics.warmup_progress_percent) + "\r\n";
+   body+="Diagnostics Bounded Work Summary=" + state.diagnostics.bounded_work_pressure_summary + "\r\n";
+   body+="Diagnostics Last Promoted Batch Id=" + IntegerToString(state.diagnostics.last_promoted_prepared_batch_id) + "\r\n";
+   body+="Diagnostics Active Hydration Priority Set=" + state.diagnostics.active_hydration_priority_set + "\r\n";
+   body+="Diagnostics Last HUD Render At=" + ASC_DateTimeText(state.diagnostics.last_hud_render_at) + "\r\n";
    bool ok=ASC_AtomicWrite(paths.runtime_state_file,body,logger);
    if(ok)
      {
