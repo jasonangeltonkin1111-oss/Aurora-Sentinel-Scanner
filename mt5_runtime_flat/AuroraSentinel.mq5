@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.090
+// Wrapper Version: 1.092
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.390
+// Explorer Subsystem Version: 0.392
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -103,6 +103,9 @@ ASC_Logger g_logger;
 ASC_SymbolState g_symbols[];
 ASC_ExplorerContext g_explorer;
 ASC_PreparedBucketState g_prepared_buckets;
+ASC_PreparedBucketState g_prepared_working_buckets;
+ASC_PreparedBucketState g_prepared_last_good_buckets;
+int g_prepared_next_batch_id=ASC_PREPARED_BATCH_PRIORITY_SET;
 int g_symbol_count=0;
 bool g_heartbeat_running=false;
 bool g_last_degraded_state=false;
@@ -175,10 +178,40 @@ void ASC_LogSettingsSummary(void)
    g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + " with timeframe placeholders, filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + " with timeframe placeholders, combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
   }
 
+int ASC_PreparedNextBatchId(const int previous_batch_id)
+  {
+   if(previous_batch_id<ASC_PREPARED_BATCH_PRIORITY_SET || previous_batch_id>=ASC_PREPARED_BATCH_COUNT)
+      return(ASC_PREPARED_BATCH_PRIORITY_SET);
+   return(previous_batch_id+1);
+  }
+
+void ASC_SyncPreparedRuntimeMetadata(void)
+  {
+   g_runtime.prepared_last_batch_id=g_prepared_buckets.diagnostics.last_prepared_batch_id;
+   g_runtime.prepared_promoted_batch_count=g_prepared_buckets.diagnostics.promoted_batch_count;
+   g_runtime.prepared_pending_batch_count=g_prepared_buckets.diagnostics.pending_batch_count;
+   g_runtime.prepared_bounded_work_summary=g_prepared_buckets.diagnostics.bounded_work_pressure_summary;
+  }
+
 void ASC_RefreshPreparedBucketState(void)
   {
-   ASC_PrepareBucketState(g_runtime.server_clean,g_symbols,g_symbol_count,g_prepared_buckets);
+   int due_now=ASC_CountDueSymbols(TimeCurrent());
+   ASC_PrepareBucketState(g_runtime.server_clean,
+                          g_symbols,
+                          g_symbol_count,
+                          g_prepared_next_batch_id,
+                          g_runtime.initial_symbols_assessed,
+                          g_runtime.symbol_count,
+                          g_runtime.warmup_progress_percent,
+                          due_now,
+                          g_settings.symbol_budget_per_heartbeat,
+                          g_prepared_last_good_buckets,
+                          g_prepared_working_buckets);
+   ASC_PromotePreparedBucketState(g_prepared_working_buckets,g_prepared_last_good_buckets,g_prepared_buckets);
+   ASC_SyncPreparedRuntimeMetadata();
+   g_prepared_next_batch_id=ASC_PreparedNextBatchId(g_prepared_next_batch_id);
    g_runtime.summary_dirty=true;
+   g_runtime.runtime_dirty=true;
   }
 
 void ASC_ResetRuntimeState(void)
@@ -208,7 +241,14 @@ void ASC_ResetRuntimeState(void)
    g_runtime.warmup_minimum_met=false;
    g_runtime.warmup_progress_percent=0;
    g_runtime.background_hydration_active=false;
+   g_runtime.prepared_last_batch_id=0;
+   g_runtime.prepared_promoted_batch_count=0;
+   g_runtime.prepared_pending_batch_count=ASC_PREPARED_BATCH_COUNT;
+   g_runtime.prepared_bounded_work_summary="Not sampled.";
    ASC_PreparedBucketStateReset(g_prepared_buckets);
+   ASC_PreparedBucketStateReset(g_prepared_working_buckets);
+   ASC_PreparedBucketStateReset(g_prepared_last_good_buckets);
+   g_prepared_next_batch_id=ASC_PREPARED_BATCH_PRIORITY_SET;
    g_last_degraded_state=false;
   }
 

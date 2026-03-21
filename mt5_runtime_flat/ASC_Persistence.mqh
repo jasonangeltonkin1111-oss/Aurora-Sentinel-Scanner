@@ -54,6 +54,10 @@ void ASC_AssignRuntimeField(ASC_RuntimeState &state,const string key,const strin
    else if(key=="Warmup Minimum Met") state.warmup_minimum_met=ASC_BoolFromText(value);
    else if(key=="Warmup Progress Percent") state.warmup_progress_percent=ASC_IntegerFromText(value);
    else if(key=="Background Hydration Active") state.background_hydration_active=ASC_BoolFromText(value);
+   else if(key=="Prepared Last Batch Id") state.prepared_last_batch_id=ASC_IntegerFromText(value);
+   else if(key=="Prepared Promoted Batch Count") state.prepared_promoted_batch_count=ASC_IntegerFromText(value);
+   else if(key=="Prepared Pending Batch Count") state.prepared_pending_batch_count=ASC_IntegerFromText(value);
+   else if(key=="Prepared Bounded Work Summary") state.prepared_bounded_work_summary=value;
   }
 
 bool ASC_LoadRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,ASC_Logger &logger)
@@ -159,6 +163,10 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    body+="Warmup Minimum Met=" + ASC_BoolText(state.warmup_minimum_met) + "\r\n";
    body+="Warmup Progress Percent=" + IntegerToString(state.warmup_progress_percent) + "\r\n";
    body+="Background Hydration Active=" + ASC_BoolText(state.background_hydration_active) + "\r\n";
+   body+="Prepared Last Batch Id=" + IntegerToString(state.prepared_last_batch_id) + "\r\n";
+   body+="Prepared Promoted Batch Count=" + IntegerToString(state.prepared_promoted_batch_count) + "\r\n";
+   body+="Prepared Pending Batch Count=" + IntegerToString(state.prepared_pending_batch_count) + "\r\n";
+   body+="Prepared Bounded Work Summary=" + state.prepared_bounded_work_summary + "\r\n";
    bool ok=ASC_AtomicWrite(paths.runtime_state_file,body,logger);
    if(ok)
      {

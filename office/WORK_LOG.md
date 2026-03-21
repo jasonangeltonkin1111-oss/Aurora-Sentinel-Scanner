@@ -265,3 +265,26 @@ The active classification taxonomy was rich enough for future drilldown, but the
 
 ### Result
 The first operator surface is now simpler and truer to Layer 1 intent: main navigation stays compressed, while deeper classification truth remains preserved for later stock-region and sector drilldown work.
+
+---
+## 2026-03-21 — Rolling prepared-state scaffold pass
+
+### Why
+Explorer bucket truth still depended on a rebuild-everything path. The next safe step was to move to rolling, batch-scoped prepared-state promotion without pretending the later persistence or deep stock taxonomy phases are complete.
+
+### What changed
+- bumped the wrapper to 1.092 and the explorer subsystem to 0.392 for this runtime-owned prepared-state scaffold pass
+- added lightweight prepared-state diagnostics for batch timings, warmup/readiness counters, batch promotion counts, and bounded-work pressure summary
+- split bucket preparation into named phases for classification, bucket sort, prepared-symbol reorder, and final promotion timing capture
+- introduced a first rolling-state scaffold with working-batch output, last-good prepared state, atomic promotion of completed batch output, and unchanged-batch reuse markers
+- switched bucket preparation from whole-universe rebuild semantics to the first three compressed batches: priority-set mains, stock main/regional grouping, and finer stock taxonomy metadata
+- wired the EA so explorer navigation always consumes the last-good promoted prepared state instead of requiring a full rebuild at navigation time
+- persisted only minimal rolling-prepared continuity metadata in runtime state: last batch id, promoted batch count, pending batch count, and bounded-work summary
+
+### Incomplete on purpose
+- stock batch reuse is scaffold-grade and still recomputes the targeted batch from current classifier truth rather than diffing individual symbol deltas
+- finer stock taxonomy metadata currently enriches the stock bucket in-place and does not yet persist a separate prepared snapshot artifact
+- MT5 / MetaEditor compile verification still needs to be run in the target toolchain before claiming the scaffold compile-clean
+
+### Result
+Prepared bucket truth is now rolling-state capable in a first safe form: the explorer reads a promoted last-good snapshot, batch work is measurable, and incomplete deeper persistence remains explicitly out of scope for this pass.

@@ -2,12 +2,12 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.091"
+#define ASC_WRAPPER_VERSION "1.092"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
 #define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
-#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.391"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.392"
 
 enum ASC_RuntimeMode
   {
@@ -110,6 +110,22 @@ struct ASC_RuntimeSettings
    int               reserved_selected_symbol_limit;
   };
 
+struct ASC_PreparedStateDiagnostics
+  {
+   long   bucket_prep_total_ms;
+   long   classification_loop_ms;
+   long   bucket_sort_ms;
+   long   prepared_symbol_reorder_ms;
+   long   final_promotion_ms;
+   int    last_prepared_batch_id;
+   int    promoted_batch_count;
+   int    pending_batch_count;
+   int    warmup_assessed_count;
+   int    warmup_total_count;
+   int    readiness_percent;
+   string bounded_work_pressure_summary;
+  };
+
 struct ASC_RuntimeState
   {
    string          schema_version;
@@ -137,6 +153,10 @@ struct ASC_RuntimeState
    bool            warmup_minimum_met;
    int             warmup_progress_percent;
    bool            background_hydration_active;
+   int             prepared_last_batch_id;
+   int             prepared_promoted_batch_count;
+   int             prepared_pending_batch_count;
+   string          prepared_bounded_work_summary;
   };
 
 struct ASC_SymbolState

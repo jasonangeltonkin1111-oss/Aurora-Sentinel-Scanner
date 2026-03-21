@@ -50,7 +50,7 @@ Do not continue building on unresolved contradiction.
 | Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong | keep stable while ownership and explorer issues are corrected |
 | Market State Detection | WORKING | 88% | still the only fully working capability with real runtime truth | compile/test re-verify after any structural runtime change |
 | Classification catalog | ACTIVE-PROVISIONAL | 55% | standalone classification exists and drives buckets, but catalog quality is mixed and some mappings are too broad or wrong | audit classification truth before treating bucket output as trusted |
-| Dynamic buckets | ACTIVE-PROVISIONAL | 58% | membership is live/classification-driven, with the first operator surface now compressed into six Layer 1 main buckets while deeper stock grouping remains metadata, but preparation currently happens in explorer-side flows | keep compressed Layer 1 bucket preparation runtime-owned while preserving richer classification metadata for later drilldown surfaces |
+| Dynamic buckets | ACTIVE-PROVISIONAL | 64% | membership is live/classification-driven, with the first operator surface compressed into six Layer 1 main buckets and now promoted through rolling prepared-state batches; deeper stock taxonomy still remains metadata-grade and incomplete | harden batch reuse, verify compile/runtime behavior in MT5, and keep richer stock metadata out of fake first-class bucket claims |
 | Explorer HUD | ACTIVE-FRAGILE | 52% | advanced navigation and layout exist, but render/delete churn and bucket recompute-in-render are still architectural faults | fix ownership boundary first, then performance, then behavior/layout polish |
 | Dossiers and summary | ACTIVE | 76% | atomic publication and scaffold output exist, but wording still understates active provisional identity work | update wording to reflect current truth honestly |
 | ASC ⇄ Aurora bridge | ACTIVE | 80% | separation is still good and future insertion points remain preserved | preserve boundary while tightening upstream truth discipline |
@@ -126,11 +126,11 @@ Still needed:
 ## What is wrong or fragile now
 
 ### Structural faults
-1. explorer/HUD still performs runtime-grade bucket preparation work
+1. rolling prepared-state ownership is now runtime-side, but unchanged-batch reuse is still scaffold-grade rather than diff-driven
 2. render path still deletes and recreates all owned chart objects
-3. click flows still rebuild bucket models
-4. bucket truth can look more mature than it really is because classification quality is mixed
-5. blueprint/runtime/publication wording is out of sync
+3. bucket truth can still look more mature than it really is because classification quality is mixed
+4. stock taxonomy enrichment is still metadata-only and not yet a deeper snapshot surface
+5. blueprint/runtime/publication wording can still drift if office files are not kept aligned
 
 ### Behavior faults to verify and fix
 1. Home vs Overview redundancy
@@ -189,11 +189,11 @@ Before closing any future pass, explicitly check:
 
 ### Immediate task group C — runtime / explorer architecture
 1. preserve runtime-owned Layer 1 warmup threshold and background hydration truth
-2. design runtime-owned bucket snapshot / adapter structure
-3. remove full bucket model generation from explorer render paths
-4. remove full bucket model generation from click handlers
-5. reduce full chart-object delete/recreate churn where feasible
-6. keep explorer presentation-only after the refactor
+2. harden the new runtime-owned rolling prepared-state scaffold and batch reuse markers
+3. verify explorer render/click paths stay consumer-only against promoted last-good state
+4. reduce full chart-object delete/recreate churn where feasible
+5. keep explorer presentation-only after the refactor
+6. decide later whether prepared-state persistence needs its own artifact beyond minimal runtime continuity metadata
 
 ### Immediate task group D — classification truth
 1. compare active ASC classification to researched AFS source
