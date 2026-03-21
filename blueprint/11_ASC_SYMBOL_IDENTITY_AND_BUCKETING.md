@@ -57,7 +57,7 @@ and helper logic for:
 - broker alias normalization
 - canonical symbol lookup
 
-That legacy source is evidence, not active authority. ASC must preserve the contract quality without inheriting the legacy file shape blindly. fileciteturn28file0
+That legacy source is evidence, not active authority. ASC must preserve the contract quality without inheriting the legacy file shape blindly. 
 
 ## Capability status
 
@@ -87,6 +87,8 @@ This capability should become active before or alongside later shortlist and exp
 - alias-kind assignment
 - confidence and review-status metadata
 - notes and manual-review carryforward
+- prepared dynamic bucket membership truth once this capability is active
+- bucket summary source data for later explorer adapters
 
 ### Does not own
 - market-state classification
@@ -98,6 +100,7 @@ This capability should become active before or alongside later shortlist and exp
 - deep selective analysis
 - execution decisions
 - trade placement
+- HUD-side classification or render-path bucket rebuilding
 
 ## Classification record contract
 
@@ -168,6 +171,18 @@ It should support:
 Primary bucket is the main grouping surface.
 Sector, industry, theme, and subtype remain secondary but should be preserved for future drilldown and Aurora context.
 
+## Dynamic bucket preparation law
+
+Dynamic bucket membership shown in the HUD is runtime-prepared truth.
+When identity becomes active, the runtime must prepare and cache:
+- classified symbol membership by bucket
+- membership counts and summary rollups
+- identity-backed symbol cards or references for bucket detail views
+- invalidation markers when identity truth changes
+
+The HUD must consume prepared bucket membership and summaries through adapters.
+It must not classify symbols, rebuild active membership, or walk raw identity catalogs during render.
+
 ## Data-source law
 
 Preferred future source order:
@@ -193,7 +208,7 @@ The explorer HUD should consume this capability for:
 - future combined-summary grouping
 
 The HUD must not itself perform heavy classification logic.
-It should consume already prepared identity records.
+It should consume already prepared identity records and prepared bucket snapshots.
 
 ## Publication implications
 
@@ -211,6 +226,15 @@ Future dossiers should be able to expose a reserved or active identity section c
 - review status
 
 This should be machine-parseable and human-readable.
+
+## Refresh and stale law
+
+Identity and bucketing truth are not render-time derivations.
+When active, they must obey the same runtime laws as other HUD-visible surfaces:
+- bucket or identity fields refresh on owned cadence, not on redraw
+- focused bucket or symbol views may request bounded refresh only for stale, identity-owned fields
+- expensive reclassification or catalog rebuilds remain cold/background work unless the owning capability explicitly schedules them
+- cached prepared membership may stay visible until invalidated or expired by owned rules
 
 ## Future build shape
 
@@ -251,6 +275,7 @@ The bucket render contract should carry at least:
 - resolved symbol count
 - dynamic symbol references
 - current display mode
+- snapshot freshness / invalidation metadata
 
 Placeholder symbol references must remain honest:
 - canonical references are allowed

@@ -26,6 +26,7 @@ Interpretation:
 - identity and bucketing now clarify how ASC will answer what a symbol is
 - the explorer HUD now clarifies how prepared truth will be navigated and viewed
 - the menu expansion now clarifies how operator configuration will remain stable as the system grows
+- runtime-owned focus elevation, stale-bound refresh, and atomic rolling persistence are now system laws rather than loose explorer hints
 
 ### Existing canon file: `04_ASC_FIVE_LAYER_MODEL.md`
 Read together with:
@@ -38,6 +39,7 @@ Interpretation:
 - the explorer HUD is not a sixth compute layer and must not be treated as one
 - the explorer is a presentation and navigation subsystem that consumes prepared state
 - focused-symbol expansion remains runtime-owned and later combined-summary lanes remain separate from the bucket-preserving shortlist
+- focus requests are capability-stage-bound and cannot unlock inactive downstream work
 
 ### Existing canon file: `07_ASC_MT5_STRUCTURE_MAP.md`
 Read together with:
@@ -58,6 +60,7 @@ Interpretation:
 - the original file remains the foundation-stage menu and staged testing contract
 - the menu expansion defines the future group growth path so the menu can mature without naming churn or retrofit pain
 - the explorer HUD document clarifies which interactions belong in the live explorer rather than in the EA properties menu
+- testability now explicitly includes focus elevation, snapshot reuse, and no-heavy-compute-in-HUD proofs
 
 ## Authority note
 
@@ -75,6 +78,19 @@ For upcoming implementation work, the system should now be read as having:
 - one future identity and bucketing surface reserved for activation before deeper shortlist work
 - one future explorer HUD subsystem reserved as the interactive presentation surface
 - one expanded menu/operator design reserved to prevent future structural breakage
+- one general law that all HUD-visible fields must flow through prepared runtime truth, owned cadence, stale boundaries, and adapter snapshots
+
+## Runtime/HUD operating bridge
+
+The system must now be implemented with the following binding rules:
+- focus requests travel from explorer to runtime as bounded attention requests, not as compute commands
+- runtime decides whether the current capability stage permits elevation for the focused object
+- field refresh tier and stale boundary decide whether any actual recomputation occurs
+- changed truth persists atomically by owned section or prepared snapshot surface
+- explorer redraws reuse prepared snapshots until invalidated
+- focus change or exit removes elevated work promptly while preserving honest last-good display state
+
+These rules apply generally across overview, bucket, symbol, stat, shortlist, deep-analysis, and Aurora-reserved surfaces.
 
 ## Future build order implied by this expansion
 
@@ -89,23 +105,29 @@ Build the explorer shell:
 - stable button routing
 - layout engine
 - breadcrumb and back stack
+- adapter-fed overview and bucket list snapshots
 
 ### Wave C
 Activate bucket-aware explorer views once identity and bucketing records are available.
+Do so through prepared bucket membership and bucket detail snapshots rather than render-path classification.
 
 ### Wave D
 Later activate bucket-preserving shortlist views, then combined cross-bucket summary views, while preserving the distinction between them.
+These later surfaces must inherit the same stale-bound refresh, focus decay, and adapter laws rather than introducing HUD-side compute shortcuts.
 
 ### Wave E
 Only after Aurora integration is mature, activate the later signal surface and semi-automatic path.
+Aurora-reserved surfaces must still consume prepared runtime truth and bounded refresh rights.
 
 ## Non-negotiable boundaries
 
 - explorer is not a scanner engine
 - menu is not a navigation substitute
 - focused symbol compute is runtime-owned, not HUD-owned
+- dynamic bucket membership is runtime-prepared truth, not render-path reconstruction
 - combined cross-bucket summary does not replace bucket-preserving shortlist truth
 - open-trade exclusion applies to the later combined lane, not to bucket truth itself
+- no explorer interaction may justify full-universe recomputation by itself
 
 ## Final rule
 
@@ -118,7 +140,6 @@ Implementation work should follow this bridge rather than improvising its own in
 Version bumps are mandatory for meaningful wrapper, explorer, menu, and dossier-contract edits.
 Implementation work that changes these operator-facing surfaces must update the wrapper/header version and keep the blueprint wording aligned in the same pass.
 
-
 ## Dynamic bucket architecture bridge
 
 The explorer bucket flow must now be read as dynamic-ready even before live identity activation:
@@ -126,5 +147,6 @@ The explorer bucket flow must now be read as dynamic-ready even before live iden
 - per-bucket symbol count is not fixed at 3
 - bucket detail mode is part of navigation state
 - all-mode scrolling is owned by the symbol lane rather than by one rigid placeholder list
+- bucket list and bucket detail must consume prepared bucket snapshots rather than raw identity catalogs
 
 Placeholder taxonomy remains allowed as a temporary source, but only through an honest view-model layer that does not imply live broker membership.

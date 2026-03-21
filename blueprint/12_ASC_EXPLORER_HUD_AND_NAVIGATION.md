@@ -96,6 +96,33 @@ It is a stateful navigation system with:
 - view modes
 - safe widget rendering
 
+## Explorer boundary law
+
+The explorer consumes prepared snapshot/view-model surfaces.
+Its canonical read surfaces include:
+- overview snapshot
+- bucket list snapshot
+- bucket detail snapshot
+- symbol detail snapshot
+- stat detail snapshot
+- later combined-summary and Aurora-reserved snapshots
+
+The explorer may:
+- request navigation changes
+- request refresh attention for the currently focused surface
+- render cached or last-good truth honestly
+- show freshness, stale, pending, degraded, or unavailable state
+
+The explorer must not:
+- classify symbols
+- rank symbols
+- rebuild buckets
+- pull history
+- recalculate ATR or other deep indicators
+- crawl raw files during click handling
+- rebuild all summaries because a view opened
+- become a raw-runtime access blob with ad hoc compute hooks
+
 ## Required view hierarchy
 
 ### View 0 — Overview
@@ -161,6 +188,98 @@ Examples:
 - Future Signal Surface
 
 Should show deeper subfields without collapsing the rest of the explorer model.
+
+## Focus-scoped runtime elevation law
+
+Entering a deeper view may request bounded runtime elevation for the focused object.
+This applies not only to symbol detail now, but also to future focused bucket, symbol, stat, shortlist, deep-analysis, and Aurora-reserved surfaces.
+
+That request must be interpreted as:
+- runtime-owned
+- bounded
+- reversible
+- atomic
+- cheap
+- scope-limited
+
+The explorer does not compute the focused fields itself.
+It only identifies the focused surface and asks runtime whether owned refresh elevation is permitted.
+
+## Field-tier refresh model
+
+HUD-visible fields must be assigned to one of four refresh tiers:
+
+### 1. Focus-fast
+Cheap, high-value fields whose stale window is short and whose refresh remains safe while a specific focused surface is active.
+Examples may include live market-state-adjacent or low-cost market-watch facts when the owning capability is active.
+
+### 2. Focus-semi-live
+Moderate-cost fields that may refresh while focused, but not on every heartbeat and not merely because the screen is open.
+These fields require both relevance to the focused surface and stale expiry.
+
+### 3. Heartbeat/background
+Broad-universe or non-focused fields that continue on their normal scheduler cadence regardless of what page is open.
+Focus does not accelerate them automatically.
+
+### 4. Cold/on-demand
+Expensive, history-based, classification-heavy, or rarely needed fields.
+These refresh only when the owning capability explicitly allows them and the stale/cost budget says they are due.
+Opening a page does not convert them into live data.
+
+The tier is chosen by cost, stale tolerance, and capability ownership.
+It is not a promise that every field in a view updates at the same speed.
+
+## Stale-bound recomputation law
+
+No field may recompute because:
+- the HUD redrew
+- a panel switched
+- a breadcrumb changed
+- a button was clicked
+- a list scrolled
+
+A field may refresh only when:
+1. the field belongs to the active surface or broad background schedule
+2. the owning capability is active and permits that work
+3. the field or snapshot is stale enough to justify recomputation
+4. the runtime can admit the work without violating bounded continuity
+
+Expensive fields require both relevance and stale expiry.
+This law applies to market-watch values, timeframe-derived fields, bucket summaries, shortlist views, deep-analysis views, and Aurora-reserved surfaces.
+
+## Atomic rolling snapshot law
+
+Explorer surfaces are backed by rolling snapshots or view-model adapters built from persisted runtime truth.
+The explorer should render:
+- current truth when fresh
+- last-good truth when valid but not yet refreshed
+- pending/degraded markers when the owning surface cannot refresh yet
+
+A redraw must reuse the existing prepared snapshot until invalidation, expiry, or owned state change requires replacement.
+The explorer must never rebuild the whole symbol dossier or the whole bucket universe just to repaint.
+
+## Focus decay and downgrade law
+
+When focus ends or changes:
+- elevated refresh permission must decay promptly
+- focused-only work must stop
+- cached last-good values may remain visible until they expire or are replaced
+- runtime may downgrade the focused surface back to its normal tier without discarding valid cached truth
+- unrelated elevated work must not linger after the operator moves on
+
+This law applies equally to future bucket, shortlist, stat-detail, deep-analysis, and Aurora-reserved surfaces.
+
+## Capability-stage-bound refresh law
+
+Focus never overrides capability ownership.
+Examples:
+- Market State Detection may permit bounded fast refresh of fields it already owns now
+- Open Symbol Snapshot may later permit bounded snapshot refresh for focused symbols
+- Deep Selective Analysis may later permit richer stat-detail refresh for selected symbols only
+- Aurora-reserved surfaces may later add bounded fields once they exist
+
+Focus does not magically authorize downstream work early.
+Inactive capabilities remain inactive even if the operator opens the related page.
 
 ## Breadcrumb law
 
@@ -314,36 +433,23 @@ The future explorer should have a theme surface for:
 
 This allows the explorer to look polished without hardcoding style values everywhere.
 
+## Testability and failure-mode law
+
+Future implementation must make the explorer boundary observable.
+Tests or diagnostics must be able to prove:
+- a focused surface does not trigger full-universe recomputation
+- focus exit lowers work again
+- unchanged snapshots are reused until invalidated
+- expensive fields do not churn on every redraw or scroll action
+- buttons do not hide heavy compute
+- stale, pending, degraded, and unavailable states remain visible instead of being silently fabricated away
+
 ## Live-data law
 
 Some symbol-detail fields may update live when it is safe and cheap.
+Live update permission is still governed by capability ownership, refresh tier, stale boundary, and focus scope.
+The explorer being open is never sufficient authorization on its own.
 
-### Good live candidates
-- Bid
-- Ask
-- Spread
-- High
-- Low
-- Open
-- tick age
-- market-watch update time
-- session-in/out state
-- market-state classification
-
-### Semi-live or heartbeat-fed fields
-- pending-reason counts
-- bucket totals
-- completion percentages
-- last write event
-- publication state
-- current warning summary
-
-### Not allowed for live HUD recompute
-- heavy history pulls
-- full broker spec rescans every render
-- filesystem crawling
-- bucket rebuilds in HUD code
-- classification recomputation in HUD code
 
 ## Empty-state law
 
@@ -390,20 +496,6 @@ Future action bar may later show:
 This path is reserved for Aurora integration and later semi-automatic workflow.
 It must not be faked early.
 
-## Focused symbol expansion law
-
-The explorer may later request deeper attention for a selected symbol.
-That does not mean the HUD computes that symbol itself.
-
-Instead, the runtime may elevate a selected shortlisted symbol into a focused analysis surface where:
-- higher refresh cadence becomes allowed
-- richer tick maintenance becomes allowed
-- ATR and timeframe refresh become allowed
-- deeper layer-owned fields become allowed
-
-This elevation must remain bounded and runtime-owned.
-The HUD is only the navigation and visibility surface for it.
-
 ## Combined summary law
 
 The explorer must later support more than one shortlist lane.
@@ -423,18 +515,6 @@ The later combined cross-bucket lane may exclude symbols that are already presen
 
 That rule should not erase bucket-truth surfaces.
 It only applies to the later combined lane where duplication and opportunity-slot replacement matter.
-
-## Explorer data adapter law
-
-The explorer should not reach directly into raw runtime internals everywhere.
-It should consume adapted structures such as:
-- global HUD state
-- bucket summary rows
-- symbol summary rows
-- stat-detail cards
-- warning and pending summaries
-
-That adapter layer is the safety boundary between runtime truth and explorer rendering.
 
 ## Recommended future code shape
 
@@ -513,7 +593,6 @@ The scaffold should now favor a stronger console hierarchy with:
 - bottom status strip
 
 This remains presentation-only and must not activate future compute capabilities prematurely.
-
 
 ## Bucket detail mode law
 

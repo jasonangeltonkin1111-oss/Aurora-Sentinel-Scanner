@@ -30,6 +30,7 @@ Determine whether each symbol is open, closed, uncertain, or unknown and decide 
 - next open/closed recheck scheduling
 - base symbol-file creation
 - reserved capability-section scaffolding
+- any currently permitted focus-safe refresh of Market State Detection-owned fields
 
 ### Does not own
 - open-symbol snapshots
@@ -37,6 +38,7 @@ Determine whether each symbol is open, closed, uncertain, or unknown and decide 
 - shortlist ranking
 - deep selective analysis
 - final ranked summary creation
+- focus-triggered activation of later capability work
 
 ### Runtime law
 - live tick reality first
@@ -44,6 +46,7 @@ Determine whether each symbol is open, closed, uncertain, or unknown and decide 
 - restored persisted state as support
 - closed symbols do not get pointless every-second checks forever
 - near expected open, aggressive 1-second rechecks may run for up to 1 minute
+- focused symbol viewing may only elevate fields already owned by Market State Detection and only within stale-bound limits
 
 ## Capability 2 — Open Symbol Snapshot
 
@@ -58,11 +61,13 @@ Capture a controlled snapshot of open symbols only.
 - static specs merge for open symbols
 - changing Market Watch snapshot writes on controlled cadence
 - atomic writes for snapshot-owned sections
+- later focus-safe elevation only for snapshot-owned fields that are both relevant and stale
 
 ### Does not own
 - candidate filtering
 - shortlist ranking
 - deep selective analysis
+- blanket fast refresh of all open-symbol fields merely because the HUD is open
 
 ## Capability 3 — Candidate Filtering
 
@@ -77,11 +82,13 @@ Reduce the open universe to symbols worth further attention using cheap checks o
 - cheap tradability gate
 - cheap characterization
 - bucket assignment for survivors
+- prepared bucket summaries when this capability becomes active
 
 ### Does not own
 - deep indicator engines
 - heavy history work
 - final shortlist authority
+- HUD-side bucket rebuilding
 
 ## Capability 4 — Shortlist Selection
 
@@ -97,10 +104,12 @@ Rank filtered symbols inside each bucket and choose the bounded active set.
 - shortlist cut
 - anti-churn and stability controls
 - final selected-set authority for deep-analysis entry
+- later shortlist-focused refresh rights within stale and budget bounds
 
 ### Does not own
 - full deep analysis
 - raw discovery
+- blanket focus permission to recompute every candidate on redraw
 
 ## Capability 5 — Deep Selective Analysis
 
@@ -117,13 +126,28 @@ Maintain high-detail rolling analytics only for the final selected set from Shor
 - ATR by timeframe
 - selective indicator refreshes by timeframe
 - deep-analysis publication blocks
+- future stat-detail focus elevation for deep-analysis-owned fields only
 
 ### Does not own
 - broad-universe scanning
 - cheap first-pass filtering
+- permission for HUD redraws to trigger history pulls or indicator recalculation directly
 
 ## Cross-capability law
 
 The five capabilities are ordered.
 They must not collapse into one giant function.
-Each capability owns its meaning, its publication blocks, and its insertion point in the runtime sequence.
+Each capability owns its meaning, its publication blocks, its refresh tiers, and its insertion point in the runtime sequence.
+
+## Capability-stage refresh law
+
+Focused exploration is not a separate capability.
+It is a bounded runtime request that each capability may honor only for fields it already owns.
+That means:
+- Market State Detection may only elevate market-state-owned fields
+- Open Symbol Snapshot may later elevate snapshot-owned fields
+- Candidate Filtering may later elevate prepared bucket/filter views
+- Shortlist Selection may later elevate shortlist views
+- Deep Selective Analysis may later elevate deep stats for already selected symbols
+
+Focus does not authorize inactive downstream work early.
