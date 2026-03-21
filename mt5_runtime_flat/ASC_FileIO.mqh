@@ -36,14 +36,15 @@ bool ASC_ReadTextFile(const string path,string &content)
    if(handle==INVALID_HANDLE)
       return(false);
 
-   int size=(int)FileSize(handle);
-   if(size>0)
+   long size_long=FileSize(handle);
+   if(size_long>0 && size_long<=2147483647)
      {
+      int size=(int)size_long;
       uchar bytes[];
       ArrayResize(bytes,size);
-      int read=FileReadArray(handle,bytes,0,size);
-      if(read>0)
-         content=CharArrayToString(bytes,0,read);
+      uint read_count=FileReadArray(handle,bytes,0,size);
+      if(read_count>0 && read_count<=2147483647)
+         content=CharArrayToString(bytes,0,(int)read_count);
      }
    FileClose(handle);
    return(true);
@@ -62,7 +63,15 @@ bool ASC_AtomicWrite(const string final_path,const string content,ASC_Logger &lo
    string temp_path=final_path + ".tmp";
    string backup_path=final_path + ".last-good";
    string verify="";
+   string promoted_verify="";
    string expected=ASC_NormalizeTextForValidation(content);
+
+   if(FileIsExist(temp_path,FILE_COMMON))
+     {
+      ResetLastError();
+      if(!FileDelete(temp_path,FILE_COMMON))
+         logger.Warn("AtomicWrite","stale temp file could not be cleared before write for " + final_path + " (" + ASC_FileErrorText(GetLastError()) + ")");
+     }
 
    ResetLastError();
    if(!ASC_WriteTextFile(temp_path,content))
@@ -115,6 +124,31 @@ bool ASC_AtomicWrite(const string final_path,const string content,ASC_Logger &lo
    ResetLastError();
    if(FileMove(temp_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE))
      {
+      if(!ASC_ReadTextFile(final_path,promoted_verify))
+        {
+         logger.Error("AtomicWrite","final validation read failed after promote for " + final_path + " (" + ASC_FileErrorText(GetLastError()) + ")");
+         if(final_existed && FileIsExist(backup_path,FILE_COMMON))
+           {
+            FileDelete(final_path,FILE_COMMON);
+            if(FileMove(backup_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE))
+               logger.Warn("AtomicWrite","restored last-good after final validation read failure for " + final_path);
+           }
+         return(false);
+        }
+
+      promoted_verify=ASC_NormalizeTextForValidation(promoted_verify);
+      if(promoted_verify!=expected)
+        {
+         logger.Error("AtomicWrite","final validation mismatch after promote for " + final_path);
+         if(final_existed && FileIsExist(backup_path,FILE_COMMON))
+           {
+            FileDelete(final_path,FILE_COMMON);
+            if(FileMove(backup_path,FILE_COMMON,final_path,FILE_COMMON|FILE_REWRITE))
+               logger.Warn("AtomicWrite","restored last-good after final validation mismatch for " + final_path);
+           }
+         return(false);
+        }
+
       logger.Debug("AtomicWrite","promoted " + final_path + (final_existed ? " with last-good backup" : ""));
       return(true);
      }

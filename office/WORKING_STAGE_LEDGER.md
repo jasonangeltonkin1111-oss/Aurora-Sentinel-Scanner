@@ -95,7 +95,7 @@ The sequence above remains active canon for debugging and future implementation 
 - **Future extension:** Shortlist Selection may enrich the summary later, but dossier-first publication remains the gate.
 
 ### Degraded / backlog observability
-- **Status:** partially proven
+- **Status:** working
 - **Pass:** degraded mode, skipped re-entry, repair queueing, failed promotions, and bounded-heartbeat behavior are visible through logs and summary/runtime state.
 - **Break symptoms:** backlog pressure is invisible, degraded mode never surfaces, or repair/promotion failures leave no operator clue.
 - **Owners:** `mt5_runtime_flat/ASC_Logging.mqh`, `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Persistence.mqh`
@@ -109,3 +109,11 @@ The sequence above remains active canon for debugging and future implementation 
 - **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Dossiers.mqh`, `blueprint/04_ASC_FIVE_LAYER_MODEL.md`, `blueprint/10_ASC_MENU_AND_TESTABILITY.md`
 - **Regression warning:** do not over-clean placeholders until future insertion points become unclear.
 - **Future extension:** each later capability should promote from Reserved to Working only when it has owned runtime behavior, owned persistence/publication, and ledger coverage added here.
+
+### Explorer HUD shell
+- **Status:** working
+- **Pass:** the explorer owns only its prefixed chart objects, shows overview plus bucket list, bucket detail, symbol detail, and stat-detail shell views, supports Home/Back/scroll navigation with bucket-aware flow, and renders prepared Layer 1 truth without triggering heavy compute on click.
+- **Break symptoms:** chart clutter overlaps unrelated objects, buttons dead-end, symbol detail shows fabricated future capability state, or redraw logic churns every event without cadence control.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
+- **Regression warning:** do not move scanner computation into button handlers or collapse the explorer into one rigid monolith.
+- **Future extension:** bucket detail, stat detail, identity cards, and later Aurora-facing reserved panels should plug into the existing controller/layout/action split rather than replacing it.

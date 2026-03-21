@@ -38,9 +38,13 @@ The EA wrapper and the explorer subsystem must use explicit version discipline.
 Initial wrapper version:
 - `1.001`
 
+Current explorer scaffold milestone after HUD v2 shell expansion:
+- `1.020` wrapper
+- `0.300` explorer subsystem
+
 Suggested version law:
 - patch bump: `1.001 -> 1.002` for non-breaking polish and fixes
-- minor capability bump: `1.001 -> 1.010` for meaningful explorer or capability expansion
+- minor capability bump: `1.001 -> 1.020` for meaningful explorer or capability expansion
 - major architecture bump: `1.x -> 2.000` only for major structural redesign
 
 The EA wrapper header should eventually preserve:
@@ -53,6 +57,7 @@ The EA wrapper header should eventually preserve:
 - update discipline notes
 
 This should be part of the future code header standard, but the design law belongs here now.
+Every meaningful wrapper or explorer edit must bump version.
 
 ## Core split
 
@@ -497,3 +502,14 @@ First make it:
 - runtime-safe
 
 Then make it richer over time.
+
+## HUD v2 scaffold direction
+
+The scaffold should now favor a stronger console hierarchy with:
+- top identity/header strip
+- navigation strip
+- main content body with grouped cards and section panels
+- right-side control rail
+- bottom status strip
+
+This remains presentation-only and must not activate future compute capabilities prematurely.

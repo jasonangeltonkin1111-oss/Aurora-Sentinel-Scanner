@@ -112,3 +112,8 @@ Only after Aurora integration is mature, activate the later signal surface and s
 Until the older canon files are rewritten in place, this file is the official bridge that binds the recent expansion pack back into the existing ASC blueprint canon.
 
 Implementation work should follow this bridge rather than improvising its own interpretation.
+
+## Version discipline bridge
+
+Version bumps are mandatory for meaningful wrapper, explorer, menu, and dossier-contract edits.
+Implementation work that changes these operator-facing surfaces must update the wrapper/header version and keep the blueprint wording aligned in the same pass.

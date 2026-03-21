@@ -95,3 +95,9 @@ Minimum bridge-friendly scanner facts include:
 - session availability
 - runtime mode
 - degraded or recovery markers where relevant
+
+
+## Version discipline law
+
+Meaningful edits to the wrapper, dossier contract, or explorer subsystem must bump version.
+The version shown in dossier metadata must stay aligned with the active EA wrapper so downstream readers never have to guess which contract generated a file.
