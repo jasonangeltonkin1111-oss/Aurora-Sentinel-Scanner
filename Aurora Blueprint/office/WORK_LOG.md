@@ -252,3 +252,35 @@ It was explicit law for truthful opportunity abundance, a canonical stage taxono
 
 ### Result
 Aurora is now more explicit about how to find more truthful opportunity without quality collapse: preserve family-first competition, add real stage awareness, legitimize mid-progress and late-join cases when structure still supports them, and grow bucket-targeted family breadth over time rather than by loosening standards.
+
+
+## 2026-03-21 — Aurora Wrapper completion and consolidation pass
+### Why
+- complete the wrapper-owning-pack consolidation phase instead of leaving useful doctrine split across pack/manual pairs
+- deepen wrapper standalone capability from verified Blueprint truth without cloning the Blueprint blindly
+- bring wrapper file count back down into the preferred operating range while preserving family/pattern/card/bridge/packet richness
+
+### What was reviewed
+- office control files plus wrapper consolidation-planning files
+- all active wrapper packs and all transitional wrapper manuals
+- active control/build/scope/object/workflow/enum/deployability/geometry/card/packet/review/opportunity/EA-boundary sources
+- active family competition, pattern competition, family registry/system, current core family files/cards, active pattern atlas/cards, and example anchors
+- bridge contract, joint evolution protocol, and real ASC intake anchor
+
+### What changed
+- merged the control, execution, family, pattern, bridge, and packet/review manual content back into their owning wrapper packs
+- removed the six transitional wrapper manual files after lossless consolidation into the owners
+- updated wrapper settings, file map, maintenance guide, standalone requirements, package architecture, and standalone audit to reflect the stable 13-file package
+- refreshed office continuity surfaces and created `AURORA_RUN_067.md` for the consolidation checkpoint
+
+### What was intentionally not done
+- did not widen the ASC contract
+- did not move source truth out of `Aurora Blueprint/`
+- did not recreate wrapper file sprawl with new companion files
+- did not claim wrapper completeness beyond what the compiled packs now actually carry
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+- Aurora Wrapper now carries materially more of the Blueprint’s usable doctrine inside its owning packs, depends less on hidden side-reading, and sits at a cleaner 13-file standalone-capable package shape

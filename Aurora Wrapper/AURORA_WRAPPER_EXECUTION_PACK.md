@@ -2,32 +2,33 @@
 
 ## What this pack compiles
 
-This pack compiles the active execution-side chain from the workflow packet, wrapper object model, status/enum normalization, opportunity, deployability, geometry, generated-card, packet, review, and EA-boundary files.
-It is the wrapper-facing execution canon, not the source-truth owner of those protocols.
+This pack compiles the active execution-side chain from the workflow packet, wrapper object model, status/enum normalization, deployability, intraday geometry, generated-card protocol, strategy-card field schema, packet schema, group-context schema, review schema, opportunity inventory/ranking protocol, abundance and stage-aware opportunity law, and EA-safe boundary spec.
+It is the wrapper-facing execution canon, not the source-truth owner of those surfaces.
 
 ## What this pack excludes
 
 - office/run/SHA continuity surfaces
-- family and pattern doctrine details that belong in their dedicated vaults
-- full example payloads beyond the minimum anchors summarized here
+- full family and pattern doctrine detail that belongs in their vaults
+- raw packet payloads beyond the minimum shapes and anchors summarized here
 
 ## Root execution law
 
 Aurora must not jump from ASC context to a trade plan.
-It must carry truth through a fixed staged chain and preserve uncertainty, missingness, invalidity, downgrade logic, and no-card-valid outcomes at every step.
+It must carry truth through a staged chain, preserve missingness honestly, and allow downgraded, blocked, observe-only, unresolved, and no-card-valid endings without treating them as failure.
 
-## Required stage chain
+## Canonical stage chain
 
-1. **ASC context intake and normalization** — consume ASC-owned truth and preserve field-state classes.
-2. **Group-context construction** — build group, bucket, regime, routing, and boundary posture.
-3. **Context interpretation** — derive market-state and execution-surface interpretation without inventing missing truth.
-4. **Family competition** — compare plausible families; allow contested, deferred, or no-valid outcomes.
-5. **Pattern competition** — compare patterns only inside surviving family posture.
-6. **Opportunity inventory and ranking** — preserve multiple opportunities and their downgrade reasons without collapsing to trade/no-trade.
-7. **Deployability judgment** — assess structure versus execution burden, hostility, continuity, and horizon fit.
-8. **Intraday geometry construction** — only build explicit geometry when deployability and context permit it.
-9. **Generated strategy card** — emit a bounded symbol/time/context-specific card only when the card gate is satisfied.
-10. **EA-safe boundary** — expose only deterministic/routing-safe fields suitable for later bounded automation.
+1. **ASC context intake and normalization**
+2. **Group-context construction**
+3. **Context interpretation**
+4. **Family competition**
+5. **Pattern competition**
+6. **Opportunity inventory and ranking**
+7. **Deployability judgment**
+8. **Intraday geometry construction**
+9. **Generated strategy card decision/output**
+10. **EA-safe boundary packaging**
+11. **Save/log/review continuity when applicable**
 
 ## Canonical object chain
 
@@ -48,94 +49,55 @@ It must carry truth through a fixed staged chain and preserve uncertainty, missi
 - context before interpretation
 - interpretation before family competition
 - family competition before pattern competition
-- pattern competition before opportunity preservation and ranking
+- pattern competition before opportunity preservation
 - opportunity preservation before deployability narrowing
-- stage-aware opportunity classification before forcing card timing assumptions
+- stage-aware opportunity posture before timing assumptions
 - deployability before geometry
-- geometry before generated card
-- generated card before EA-safe export
-- unresolved ambiguity must survive rather than being hidden in later objects
+- geometry before card emission
+- card decision before EA-safe export
+- unresolved ambiguity and missing-surface state must survive into later objects rather than being hidden
 
-## Stage-by-stage stop and refusal law
+## Stage outputs and stop law
 
-### Stop before family competition when
-- identity truth is too broken for routing
-- minimum ASC context contract surfaces are absent
-- no structural basis exists for any honest family candidate
+### Stage 0 — ASC intake and normalization
+Preserve identity, runtime/publication freshness, market status, session/schedule truth, execution/friction truth, and optional high-value context.
+Stop early when core identity truth is too broken to route anything honestly.
 
-### Stop before pattern competition when
-- family competition returned `INVALID_COMPETITION_INPUT`
-- family competition returned `NO_VALID_FAMILY`
-- family posture is real but still requires `DEFERRED_CLASSIFICATION`
+### Stage 1 — Group context
+Build group, membership, regime, routing, and boundary posture so Aurora does not reason from one ticker shell or one local chart anecdote.
+If group routing is too broken to support family logic, stop before interpretation inflation.
 
-### Stop before card generation when
-- opportunity posture is `STRUCTURE_INVALID` or `EXECUTION_INVALID`
-- deployability is `NOT_DEPLOYABLE` or still effectively unknown for card use
-- geometry is `GEOMETRY_INVALID` or `GEOMETRY_UNRESOLVED`
-- timebox/session truth makes intraday packaging dishonest
-- missing surfaces would force invented geometry or fake certainty
+### Stage 2 — Context interpretation
+Create market-state and execution-surface interpretation without inventing missing upstream truth.
+Interpretation may remain partial, degraded, or boundary-heavy.
+It does not entitle geometry or card output by itself.
 
-## Status and enum preservation
+### Stage 3 — Family competition
+Compare plausible organizing engines using habitat fit, anti-habitat conflict, regime compatibility, contradiction load, missing-surface dependence, evidence not yet present, deployability compatibility modifier, and competitor pressure.
+Allowed outputs include `CLEAR_PRIMARY`, `CONTESTED_PRIMARY`, `MULTIPLE_LIVE_CANDIDATES`, `DEFERRED_CLASSIFICATION`, `NO_VALID_FAMILY`, and `INVALID_COMPETITION_INPUT`.
+Stop before pattern competition if family posture is invalid, empty, or honestly deferred.
 
-### ASC-owned field-state truth
-Preserve statuses such as `PRESENT`, `PENDING`, `RESERVED`, `UNAVAILABLE`, `UNSUPPORTED`, `STALE`, `DEGRADED`, and `INVALID` as surface-truth classes.
-These say whether a surface exists and how trustworthy it is; they are not deployability or opportunity verdicts.
+### Stage 4 — Pattern competition
+Route only inside surviving family posture.
+Use structural role fit, anti-confusion pressure, state alignment, regime compatibility, contradiction load, missing-surface dependence, and evidence not yet present.
+Allowed outputs include `CLEAR_PATTERN_PRIMARY`, `CONTESTED_PATTERN_PRIMARY`, `MULTIPLE_LIVE_PATTERNS`, `DEFERRED_PATTERN_COMPETITION`, `NO_VALID_PATTERN`, and `INVALID_PATTERN_COMPETITION_INPUT`.
 
-### Family/pattern competition statuses
-Preserve explicit competition outcomes, including:
-- `CLEAR_PRIMARY`
-- `CONTESTED_PRIMARY`
-- `MULTIPLE_LIVE_CANDIDATES`
-- `DEFERRED_CLASSIFICATION` / `DEFERRED_PATTERN_COMPETITION`
-- `NO_VALID_FAMILY` / `NO_VALID_PATTERN`
-- `INVALID_INPUT`
-
-### Opportunity statuses
-Preserve opportunity inventory classes rather than binary trade/no-trade collapse:
+### Stage 5 — Opportunity inventory and ranking
+Preserve multiple opportunities instead of collapsing directly to trade/no-trade.
+Canonical statuses:
 - `ELIGIBLE`
 - `ELIGIBLE_DEGRADED`
 - `OBSERVE_ONLY`
 - `EXECUTION_INVALID`
 - `STRUCTURE_INVALID`
 
-### Other required alignment classes
-- deployability class
-- horizon class
-- geometry validity
-- card eligibility gate
-- review outcome class
-- machine-safe versus human-only output class
+Opportunity law also preserves:
+- soft suppression rather than silent deletion
+- revisit triggers
+- multi-opportunity ecology
+- late-join, continuation, re-entry, salvage, and exhausted stage logic
 
-## Separation law: opportunity vs deployability vs geometry vs card
-
-- **Opportunity** answers whether the case should stay preserved downstream now.
-- **Deployability** answers whether the case is practically usable inside project intraday limits after burden is absorbed.
-- **Geometry** answers whether entry/invalidation/target/timebox/execution fields are explicit and usable.
-- **Card gate** answers whether Aurora should emit a generated strategy card now.
-
-A case may therefore remain structurally interesting while being:
-- `OBSERVE_ONLY` at opportunity level,
-- `WATCH_ONLY` or `UNKNOWN_DEPLOYABILITY` at deployability level,
-- `GEOMETRY_INVALID` or `GEOMETRY_UNRESOLVED` at geometry level,
-- and blocked from card emission.
-
-## Opportunity and ranking law
-
-Opportunity inventory exists because Aurora must preserve structurally interesting cases even when they are not currently deployable.
-Rank using separable judgments such as structural coherence, competition outcome, deployability quality, hostility burden, surface completeness, and horizon compatibility.
-Do not compress those judgments into one hidden master score.
-
-Typical revisit triggers include:
-- spread normalization
-- session improvement
-- pattern confirmation
-- missing-surface arrival
-- hostility decay
-- path expansion large enough to change deployability
-- stage transition from emergent/developing into confirmed, continuation, re-entry, or salvage legitimacy
-
-## Deployability law
-
+### Stage 6 — Deployability judgment
 Deployability is not field presence and not generic conviction.
 It consumes:
 - ASC market truth
@@ -145,89 +107,155 @@ It consumes:
 - horizon suitability
 - execution continuity quality
 
-Deployability may keep a case watch-only, degraded, unknown, or blocked even when family/pattern logic is structurally coherent.
-Do not veto or bless a case by bucket alone, spread alone, or a single family-agnostic rule.
+Canonical deployability classes:
+- `DEPLOYABLE`
+- `DEPLOYABLE_DEGRADED`
+- `WATCHLIST_ONLY`
+- `NOT_DEPLOYABLE`
+- `UNKNOWN_DEPLOYABILITY`
 
-## Intraday geometry law
+A case may stay structurally interesting while still being watch-only, degraded, unknown, or blocked.
 
+### Stage 7 — Intraday geometry
 Geometry is not generic RR/SL/TP templating.
 It must preserve:
-- entry law and confirmation requirements
+- entry law and required confirmation
 - invalidation law
 - target logic
 - timebox logic
 - execution constraints
-- reasons geometry can be invalid even when the underlying idea remains structurally interesting
+- reasons geometry may be invalid even when the structural idea remains alive
 
-Family-specific geometry examples the wrapper must remember at high level:
-- reclaim ideas require reclaim confirmation rather than mere local wobble
-- continuation ideas require continuation acceptance rather than generic breakout wording
-- balance fade ideas require rejection evidence rather than directional chase logic
-- breakout ideas require evidence the move is more than a print through a boundary
+Canonical horizon classes:
+- `H1_FAST_INTRADAY`
+- `H2_STANDARD_INTRADAY`
+- `H3_WIDE_INTRADAY`
 
-## Generated strategy-card law
+Canonical geometry validity classes:
+- `GEOMETRY_VALID`
+- `GEOMETRY_DEGRADED`
+- `GEOMETRY_UNRESOLVED`
+- `GEOMETRY_INVALID`
 
-A generated strategy card is not a family file and not a pattern file.
-It is a time-bounded, symbol-specific, context-specific output object created from staged Aurora truth.
-
-### Card gate
-A card should only be generated when Aurora has, at minimum:
-- a valid case identity and lineage block
+### Stage 8 — Generated strategy card decision
+A strategy card is a bounded symbol/time/context output object, not a family file and not a pattern file.
+Card gate requires, at minimum:
+- valid identity and lineage fields
 - explicit market-state and execution-surface interpretation
-- preserved family and pattern competition truth
-- an opportunity status that is not structurally invalid
-- a deployability judgment coherent enough to support bounded geometry
-- geometry fields and timebox logic that are honest about missingness and invalidation
+- preserved family/pattern competition truth
+- opportunity posture not structurally invalid
+- deployability coherent enough for bounded geometry
+- honest geometry/timebox/invalidation fields
 
-### Blocking classes the wrapper must preserve
+Canonical card gate classes:
+- `CARD_ALLOWED`
 - `CARD_BLOCKED_STRUCTURE`
 - `CARD_BLOCKED_DEPLOYABILITY`
 - `CARD_BLOCKED_GEOMETRY`
 - `CARD_BLOCKED_MISSING_SURFACES`
 - `CARD_BLOCKED_TIMEBOX`
 
-### Card field groups the wrapper must preserve
+### Stage 9 — EA-safe boundary
+Only deterministic/routing-safe fields belong here first: identity, routing, opportunity status, deterministic geometry elements, hard safety blocks, and audit references.
+Human-only commentary, discretionary judgment, and nuance remain outside machine-safe export.
+
+### Stage 10 — Save/log/review continuity
+Packets and reviews preserve auditable continuity.
+They are not optional decorative artifacts when a meaningful example, lane, or review object is being created.
+
+## Status and enum preservation
+
+### ASC-owned surface availability classes
+Preserve field-state truth such as:
+- `PRESENT`
+- `PENDING`
+- `RESERVED`
+- `UNAVAILABLE`
+- `UNSUPPORTED`
+- `STALE`
+- `DEGRADED`
+- `INVALID`
+
+These classes say whether a surface exists and how trustworthy it is.
+They are not opportunity or deployability verdicts.
+
+### Opportunity stage classes
+Preserve stage-aware posture rather than forcing early-entry bias.
+At minimum remember:
+- emergent / early
+- developing
+- confirmed
+- continuation / mature continuation
+- re-entry
+- salvage
+- late
+- exhausted
+
+Late-join and mid-progress opportunities remain legitimate when remaining structure, deployability, and geometry honesty still support them.
+
+### Review outcome classes
+Preserve review outcomes as diagnosis classes rather than hindsight mythology.
+Do not use later outcome to rewrite earlier packet truth retroactively.
+
+## Separation law: opportunity vs deployability vs geometry vs card
+
+- **Opportunity** = should the case stay preserved downstream now?
+- **Deployability** = is the case practically usable within project intraday constraints?
+- **Geometry** = are explicit entry/invalidation/target/timebox/execution fields honestly available?
+- **Card gate** = should Aurora emit the bounded card object now?
+
+One case can therefore be structurally alive, deployability-degraded, geometry-unresolved, and card-blocked at the same time.
+
+## Strategy-card field groups to preserve
+
 - identity fields
 - lineage fields
 - context interpretation fields
 - family/pattern fields
 - deployability and opportunity fields
-- geometry/timebox/invalidation fields
+- geometry fields
+- timebox and execution-constraint fields
+- risk/invalidation meta fields
 - machine-safe export fields
-- human-only commentary/assumption fields
+- human-only commentary fields
 
-A symbol may retain an opportunity without earning a live generated strategy card.
+## Family-sensitive geometry reminders
 
-## Abundance and stage-aware execution law
+The wrapper must remember that geometry inherits from family/pattern logic:
+- reclaim ideas require reclaim confirmation, not random local wobble
+- continuation ideas require continuation acceptance, not generic breakout phrasing
+- balance fade ideas require rejection evidence, not directional chase logic
+- breakout ideas require real acceptance/release, not a bare print outside structure
+- pullback-continuation ideas require constructive restoration, not deterioration disguised as retracement
 
-Aurora should prefer truthful opportunity abundance over artificial scarcity.
-That means the wrapper must remember:
-- more opportunity should come from broader valid family/pattern/stage coverage, not from looser filters
-- early entry is not the only legitimate opportunity timing
-- mature, late, continuation, re-entry, and salvage cases may stay valid when remaining path and family structure still support them
-- `OBSERVE_ONLY` and watch-only states are part of the opportunity ecology, not failures
-- stage exhaustion can block a card even when the family diagnosis is still correct
+## Packet and review law inside execution
 
-## Packet and review law
+Packets are continuity structures, not filler.
+They protect against:
+- abstract doctrine with no reusable shape
+- example imitation drift
+- retroactive doctrine rewriting
+- hidden stage collapse into “card or nothing” thinking
+- symbol-shell reasoning with no group-context discipline
 
-Aurora's active packet family includes:
-- workflow packet
-- family-lane packet
-- worked-example packet
-- review packet
+Reviews diagnose structure, stage, deployability, geometry, and upstream sufficiency without mutating the original packet retroactively.
 
-Review packets are diagnosis artifacts, not casual notes.
-They must preserve target reference, original state summary, actual outcome summary, review classification, learned changes, and stability notes without mutating historical packet meaning retroactively.
-Review is used to diagnose whether the issue was structural, deployability, geometry, timebox, or upstream-truth insufficiency.
-Do not use review as a backdoor to rewrite doctrine from one illustrative outcome.
+## Wrapper-only refusal and downgrade guide
 
-## EA-safe boundary
+Stop or refuse progression when:
+- identity truth is broken
+- family routing would require invention
+- deployability would require invented execution telemetry
+- geometry would require invented timebox or execution surfaces
+- card issuance would hide missingness under polished output
 
-Only bounded deterministic or routing-safe fields may approach EA-safe export first.
-Narrative interpretation, unresolved competition commentary, and doctrine reasoning remain human-only or wrapper-only.
-Aurora must not expose fake automation certainty merely because a generated card exists.
+Fallbacks include:
+- preserve as degraded
+- preserve as observe-only or watch-only
+- keep multiple candidates live
+- block card emission
+- request missing upstream surfaces
 
-## Replace/update note
+## Update note
 
-Replace this pack when execution-side protocols, schema layers, generated-card law, or machine-boundary law change materially.
-For full shapes or worked case anchors, refresh the packet/example vault instead of bloating this pack.
+Replace this pack when workflow/object/enum/opportunity/deployability/geometry/card/packet/review/EA-boundary truth changes materially.

@@ -2,88 +2,169 @@
 
 ## What this pack compiles
 
-This pack compiles the active ASC→Aurora context contract, joint evolution protocol, and real ASC intake anchor for wrapper use.
-It records ownership boundaries, minimum context expectations, missingness behavior, and the current bridge-check outcome.
+This pack compiles the ASC→Aurora context contract, the joint evolution protocol, real ASC intake anchoring, and wrapper-facing missingness/refusal law.
+It protects ownership boundaries during wrapper-only use.
 
 ## What this pack excludes
 
-- any widening of the ASC contract not already ratified in Blueprint
-- execution-side doctrine that belongs in the execution pack
+- family, pattern, and execution doctrine detail beyond the bridge consequences summarized here
 - office/run/SHA continuity surfaces
+- speculative future ASC fields not already justified by source truth
 
-## Bridge law
+## Root bridge law
 
-ASC and Aurora have separate ownership.
-ASC measures world/context truth.
-Aurora interprets that truth into market state, family/pattern posture, opportunity posture, deployability, geometry, and wrapper-safe outputs.
-This wrapper compilation does not widen that contract.
+The bridge is not a convenience layer.
+It is the ownership boundary that prevents Aurora from becoming fiction.
+Wrapper-only use must treat bridge law as ownership discipline, missingness discipline, downgrade discipline, refusal discipline, and continuation-boundary discipline.
 
-## ASC owns
+## Ownership boundary
 
-- symbol and venue identity truth
+### ASC owns measured truth
+Including:
+- identity and venue truth
 - asset-class and bucket identity truth
+- runtime/publication freshness
 - market-open / market-closed truth
-- tick freshness and publication freshness truth
-- schedule/session/next-check truth
-- execution/friction/quote-health telemetry that can be measured
-- runtime degradation, unavailable, stale, and invalid states
+- schedule and session truth
+- execution/friction/quote-health telemetry that can actually be measured
+- explicit degraded, stale, invalid, unavailable, unsupported, and pending states
 
-## Aurora owns
-
-- market-state and execution-surface interpretation
-- hostility interpretation
-- family competition and rejection
-- pattern competition and rejection
-- opportunity inventory posture
-- deployability judgment
+### Aurora owns downstream interpretation
+Including:
+- group-context construction from provided context
+- market-state interpretation
+- family and pattern competition
+- opportunity preservation
+- deployability interpretation
 - geometry generation
-- generated strategy cards and bounded EA-safe output preparation
+- generated-card gating
+- EA-safe output discipline
 
-## Minimum ASC context block expected by Aurora
+### Wrapper owns compiled carry only
+It may preserve the law.
+It may not rewrite ownership.
 
-Aurora should not attempt full downstream interpretation without, at minimum:
+## Minimum upstream context block Aurora expects
+
+At minimum, wrapper-only operation should remember these ASC contract blocks:
 - identity block
 - runtime/publication block
 - market-status block
-- session/schedule block
+- schedule/session block
 - execution/friction block
-- any clearly available supporting context, while still preserving missingness explicitly
+- optional but high-value block for richer routing and burden quality
 
-## Missingness and stop laws
+If the identity block is load-bearingly broken, Aurora should usually stop before trustworthy family/pattern reasoning.
 
-- if identity truth is missing, Aurora should stop before family/pattern/card generation
-- if market-status truth is stale or degraded, Aurora may preserve structural interpretation but must downgrade opportunity/deployability honestly
-- if execution/friction truth is missing, deployability should remain unknown, pending, watch-only, or blocked rather than invented
-- if session truth is missing, time-sensitive geometry confidence must be downgraded
-- if asset-class or bucket identity is absent, group-context and family routing should remain constrained rather than improvised
-- the real ASC intake anchor confirms the correct behavior: preserve missingness and stop before invention
+## Missingness classes that matter most
 
-## Wrapper refusal rule
+- identity missingness
+- freshness missingness
+- session/timebox missingness
+- execution/friction missingness
+- support-surface missingness
 
-If a task asks Aurora to invent telemetry, overwrite ASC truth, or treat degraded upstream context as fully trustworthy, the wrapper must refuse and restate the contract boundary.
-The correct fallback is to request the missing ASC surface explicitly or preserve the case as degraded/blocked.
+These are not interchangeable.
+Broken identity threatens routing itself.
+Thin support surfaces may allow degraded continuation.
 
-## Richer future ASC inputs would unlock
+## Upstream sufficiency classes
 
-Without changing bridge ownership, richer ASC truth would improve:
-- cleaner asset-class and bucket routing
-- better session-aware horizon and timebox handling
-- stronger deployability judgments from spread/continuity evidence
-- more honest geometry gating from execution/friction truth
-- cleaner opportunity revisit triggers and later machine-safe export discipline
+### Class A — sufficient for normal continuation
+Enough upstream truth exists for ordinary staged reasoning with normal downgrade discipline.
+
+### Class B — sufficient only for degraded continuation
+Some interpretation may still be honest, but opportunity, deployability, geometry, or card posture must downgrade.
+
+### Class C — insufficient for honest continuation
+Stop before family/pattern/card progression or preserve the case as explicitly blocked.
+
+## Bridge-to-downstream consequence map
+
+- **Identity broken:** stop before trustworthy family/pattern/card reasoning.
+- **Freshness stale/degraded:** opportunity may survive, but deployability and time-sensitive geometry usually degrade.
+- **Execution/friction telemetry weak:** deployability becomes unknown/degraded/blocked; card gate tightens.
+- **Session/timebox truth weak:** horizon and timing honesty degrade; time-sensitive cards become harder to justify.
+- **Support surfaces thin but core identity intact:** preserve ambiguity longer; keep competitors live.
+
+## When Aurora may continue in degraded mode
+
+Aurora may continue when:
+- core identity is intact enough
+- the structural case is still interpretable
+- missingness affects burden/timing more than core routing identity
+- later outputs can remain observe-only, degraded, unknown, or blocked honestly
+
+Degraded continuation may still allow:
+- market-state interpretation
+- family competition
+- sometimes pattern competition
+- opportunity preservation
+
+It does not automatically justify:
+- deployability confidence
+- explicit geometry
+- live card emission
+
+## When Aurora must stop
+
+Stop or refuse progression when:
+- identity truth is too broken
+- continuation would require invented family-routing preconditions
+- deployability would require invented execution telemetry
+- geometry would require invented timing or execution surfaces
+- card issuance would hide broken bridge truth under a polished shell
+
+Stopping is bridge correctness, not weakness.
+
+## Wrapper refusal guide
+
+Refuse or restate the boundary when asked to:
+- invent missing ASC telemetry
+- overwrite degraded/stale inputs with clean assumptions
+- treat unsupported or unavailable fields as present
+- imply Aurora owns upstream sensing/scanning
+- emit downstream certainty that depends on missing bridge truth
+
+Preferred fallbacks:
+- request the missing upstream surface
+- preserve as degraded
+- preserve as blocked
+- preserve as observe-only/watch-only
+- stop before card emission
+
+## Richer upstream context without ownership drift
+
+Richer ASC inputs help Aurora with:
+- better bucket and regime routing
+- better session-aware timing discipline
+- better deployability quality
+- better geometry gating honesty
+- better revisit triggers
+- better machine-safe export quality
+
+But richer input does not move downstream interpretation into ASC.
+ASC remains the measurer.
+Aurora remains the interpreter.
 
 ## Joint evolution rule
 
-Meaningful update waves require a bridge check against the shared protocol.
-Current bridge outcome:
+Meaningful Aurora-side architectural passes must still land one of:
 - `NO_BRIDGE_CHANGE_NEEDED`
+- `ASC_NEEDS_UPDATE`
+- `AURORA_NEEDS_UPDATE`
+- `BOTH_NEED_UPDATE`
 
-Reason:
-- this pass strengthens Aurora-internal wrapper fidelity
-- no new ASC-owned fields were required
-- ownership boundaries did not move
+Current wrapper posture remains `NO_BRIDGE_CHANGE_NEEDED`.
+This consolidation deepens carry and packaging only; it does not widen the contract.
 
-## Replace/update note
+## Real-intake anchor law
 
-Replace this pack only when the ASC contract, joint-evolution law, or real-intake anchor changes materially.
-Wrapper convenience alone is not enough reason to widen bridge scope.
+Use the real ASC intake example as a truth anchor for:
+- how missingness is preserved
+- how real measured context differs from illustrative packet examples
+- how bridge weakness should stop invention rather than be polished away
+
+## Update note
+
+Replace this pack only when ASC⇄Aurora ownership, minimum context requirements, or joint evolution posture changes materially.

@@ -2,175 +2,106 @@
 
 ## PURPOSE
 
-This file formalizes the next wrapper-hardening requirement:
-
-`Aurora Wrapper/` must become standalone enough for GPT-facing use when the full `Aurora Blueprint/` source workspace cannot be uploaded or read in the same session.
-
-This does not make the wrapper source truth.
-It makes the wrapper more self-sufficient as compiled canon.
-
----
+This file states the minimum bar for calling the wrapper standalone-capable.
+Standalone here means a GPT can operate faithfully from `Aurora Wrapper/` alone for normal Aurora work without needing hidden Blueprint side-reading in the same session.
+It does not mean the wrapper becomes source truth.
 
 ## ROOT LAW
 
-The wrapper must be able to operate as a standalone compiled canon for normal GPT-wrapper usage.
-
-That means a GPT using only `Aurora Wrapper/` should still be able to recover:
-- system identity and ownership boundaries
-- the active staged reasoning chain
-- family-first and pattern-second law
-- bridge missingness law
-- opportunity / deployability / geometry / card separation
-- current active family and pattern doctrine
-- packet/review expectations
-- refusal behavior when truth is missing
-- maintenance / replacement guidance for future refreshes
-
-The wrapper must not require hidden Blueprint hot-path dependence for routine use.
-
----
+A standalone wrapper must be operationally sufficient while remaining source-truth-faithful, low-count, and explicit about missingness.
+If a capability depends on Blueprint-only side-reading for normal use, the wrapper is not yet standalone enough.
 
 ## WHAT STANDALONE DOES NOT MEAN
 
 Standalone does not mean:
-- the wrapper becomes source-truth owner
-- Blueprint can be deleted or ignored
-- every historical lineage artifact gets copied into the wrapper
-- the wrapper becomes a giant monolithic mega-file
-- wrapper packs can invent missing doctrine because Blueprint is absent
-
-Blueprint remains source truth.
-Wrapper remains compiled canon.
-But the compiled canon must be usable on its own.
-
----
-
-## CURRENT GAP JUDGMENT
-
-The wrapper is already strong as a compiled layer, but it still has a known risk:
-- some reasoning still depends on the user also having Blueprint access
-- some exact doctrine nuance still lives only in source files and is summarized too lightly in wrapper packs
-- some future workers may treat the wrapper as standalone even when it is not yet standalone enough
-
-This gap becomes critical when:
-- only wrapper files can be uploaded to a GPT
-- the Blueprint is too large for the current context window
-- a future GPT session relies on wrapper packs alone
-
----
+- cloning the entire Blueprint into the wrapper
+- replacing office/run/SHA continuity
+- erasing authority order
+- claiming production maturity beyond the active locks
+- hiding what still remains intentionally outside the wrapper
 
 ## REQUIRED STANDALONE CAPABILITIES
 
-The wrapper should be strong enough to answer, using wrapper files alone:
-
 ### 1. Identity and authority
-- what Aurora is
-- what Aurora is not
-- what ASC owns
-- what Aurora owns
-- what Blueprint owns
-- what Wrapper owns
+The wrapper must carry:
+- Aurora identity
+- wrapper identity
+- authority order
+- build-phase honesty
+- execution-side scope lock
+- refusal and non-goal law
 
 ### 2. Active reasoning chain
-- context intake
-- group context use
-- family competition
-- pattern competition
-- opportunity preservation
-- deployability interpretation
-- geometry validity
-- generated-card gate
-- EA-safe boundary
+The wrapper must carry:
+- stage chain
+- object chain
+- stop conditions
+- enum/status alignment
+- opportunity/deployability/geometry/card separation
+- machine-safe vs human-only boundary
 
 ### 3. Family-first and pattern-second doctrine
-- why family routing comes before pattern routing
-- why pattern labels do not reopen family selection
-- why no direct context-to-pattern jump is allowed
+The wrapper must carry:
+- family competition law
+- current core family ecology
+- pattern competition law
+- current core pattern ecology
+- anti-confusions, competitors, and stage-sensitive routing
 
-### 4. Missingness and degraded truth behavior
-- stale / degraded / unavailable / unknown handling
-- refusal rules when ASC truth is missing
-- observe-only and no-card-valid behavior
+### 4. Missingness and degraded-truth behavior
+The wrapper must carry:
+- bridge ownership law
+- sufficiency classes
+- refusal triggers
+- degraded continuation rules
+- blocked-card logic
 
-### 5. Current family and pattern canon
-- current core family set
-- current active pattern set
-- current stage-aware family and pattern posture
-- anti-confusion logic strong enough for wrapper-only operation
+### 5. Current family/pattern/card richness
+The wrapper must carry enough of the current family cards, pattern atlas logic, stage profiles, and geometry implications that a wrapper-only GPT does not revert to generic trading talk.
 
 ### 6. Packet / review / worked-example law
-- packet expectations
-- review expectations
-- example limitations
-- difference between illustrative and real-case use
+The wrapper must carry:
+- packet families and their purpose
+- group-context and review shape anchors
+- illustrative vs real-intake vs review example discipline
+- no-card-valid honesty
 
 ### 7. Maintenance and replacement path
-- how to refresh wrapper packs from source truth later
-- how to prevent wrapper drift
-- how to replace packs without changing wrapper ownership law
+The wrapper must still expose:
+- how to refresh packs
+- what Blueprint roots each pack compiles
+- package target count and architecture
+- audit expectations
 
----
+## CURRENT GAP JUDGMENT
 
-## NEXT STANDALONE HARDENING TASKS
+Before this consolidation pass, the main standalone gaps were:
+- parallel pack/manual structures that split owning doctrine across files
+- thin or summary-like carry for control, bridge, packet/review, and family/pattern routing nuance
+- too much dependence on side-reading the companion manuals for refusal, stage, and anti-confusion detail
 
-### S1. Standalone sufficiency audit per wrapper file
-For each wrapper file, ask:
-- if this were the only Aurora file cluster available to GPT, what doctrine would still be missing?
-- what critical law still depends on Blueprint-only wording?
-- what exact fields/statuses/naming are still too compressed?
+## CURRENT POST-CONSOLIDATION JUDGMENT
 
-### S2. Standalone kernel/control strengthening
-Ensure the kernel, settings, control pack, and file map together are enough to recover:
-- identity
-- ownership
-- active read order
-- wrapper-only limits
-- when to refuse overclaiming
-
-### S3. Standalone execution-pack strengthening
-The execution pack must be strong enough to carry the full active chain without requiring Blueprint side-reading for normal usage.
-This is the most likely wrapper pressure point.
-
-### S4. Standalone family and pattern vault strengthening
-The vaults must carry enough doctrine that a wrapper-only GPT can:
-- route families correctly
-- keep family-before-pattern discipline
-- preserve stage meaning
-- avoid generic trend/range collapse
-
-### S5. Standalone packet/review vault strengthening
-The vault must be strong enough that a wrapper-only GPT understands:
-- packet structure
-- review logic
-- stage-aware diagnosis
-- why illustrative anchors do not equal real-case certainty
-
-### S6. Wrapper-only operator test
-Future pass should explicitly test:
-- can a GPT using only `Aurora Wrapper/` answer well enough without Blueprint upload?
-- where does it over-summarize?
-- where does it still rely on hidden source knowledge?
-
----
+After consolidation, the wrapper is materially closer to true standalone operation because:
+- owning packs now absorb the useful manual content
+- the wrapper package is back down to the preferred 13-file target
+- family/pattern/card/packet/bridge law is carried inside the main packs rather than parallel companions
 
 ## GUARDRAILS
 
-1. Do not solve standalone weakness by copying the entire Blueprint into the wrapper.
-2. Do not increase wrapper file count casually.
-3. Prefer deepening current packs before adding new packs.
-4. Preserve routing clarity and hot-path discipline.
-5. If one pack becomes too heavy, split only when the split improves standalone usability more than it harms routing simplicity.
+- prefer enriching owning packs over adding new wrapper files
+- keep the kernel small and routing-first
+- do not widen the ASC contract for convenience
+- do not call the wrapper complete if normal operation still depends on Blueprint-only side-reading
+- if something remains intentionally outside wrapper scope, say so explicitly
 
----
+## NEXT STANDALONE HARDENING TASKS
+
+1. keep the 13-file package stable unless a new file clearly earns permanent residency
+2. deepen family/pattern/card richness only where the owning vaults still under-carry live doctrine
+3. expand example coverage only through compact support anchors, not file sprawl
+4. continue auditing wrapper phrasing against Blueprint enum/status/object truth
 
 ## CURRENT JUDGMENT
 
-Aurora Wrapper should now be developed not only as a compiled canon, but as a standalone compiled canon.
-
-The correct next wrapper question is no longer only:
-- is the wrapper neat?
-
-It is also:
-- can the wrapper stand on its own when Blueprint is unavailable in the session?
-
-That is now an active hardening requirement.
+The wrapper now meets the intended standalone-capable direction much more credibly than the prior split-manual state, while still leaving Blueprint as source truth and office continuity outside the normal wrapper hot path.
