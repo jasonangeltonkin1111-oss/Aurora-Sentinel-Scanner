@@ -92,6 +92,11 @@ struct ASC_ExplorerNavState
    string selected_seed_symbol;
    bool dirty;
    datetime last_render_at;
+   long last_render_duration_ms;
+   long last_page_switch_action_to_render_ms;
+   long pending_page_switch_started_ms;
+   bool pending_page_switch_timing;
+   string pending_page_switch_action;
   };
 
 struct ASC_ExplorerContext
@@ -110,7 +115,7 @@ void ASC_ExplorerThemeDefaults(ASC_ExplorerTheme &theme,const int density_mode)
    theme.margin=10;
    theme.gap=(density_mode<=0 ? 6 : 8);
    theme.padding=(density_mode<=0 ? 7 : (density_mode>=2 ? 10 : 8));
-   theme.header_height=(density_mode>=2 ? 82 : 76);
+   theme.header_height=(density_mode>=2 ? 118 : 108);
    theme.nav_height=(density_mode>=2 ? 34 : 30);
    theme.status_height=(density_mode>=2 ? 32 : 28);
    theme.rail_width=(density_mode>=2 ? 154 : 146);
@@ -751,9 +756,6 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
    mode_x+=68;
    ASC_ExplorerButton(ctx,"action.bucket_mode.all","All",mode_x,controls_y+8,54,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL));
    mode_x+=62;
-   ASC_ExplorerButton(ctx,"action.market_filter.all","All Symbols",mode_x,controls_y+8,82,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS));
-   mode_x+=88;
-   ASC_ExplorerButton(ctx,"action.market_filter.open","Open Only",mode_x,controls_y+8,78,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY));
    string page_mode_text="Visible Classified Symbols " + IntegerToString(capped_total) + " | Page " + IntegerToString(ctx.nav.bucket_symbol_page+1) + " of " + IntegerToString(symbol_pages);
    ASC_ExplorerLabel(ctx,"bucket.detail.page",ASC_ExplorerFitText(page_mode_text,220),x+w-224,controls_y+7,(symbol_pages>1 ? ctx.theme.good : ctx.theme.dim));
    ASC_ExplorerLabel(ctx,"bucket.detail.visibility",ASC_ExplorerFitText("Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode) + " | Physical rows " + IntegerToString(rows_per_page),220),x+w-224,controls_y+22,ctx.theme.muted);
@@ -1006,14 +1008,77 @@ string ASC_ExplorerWarmupBannerText(const ASC_RuntimeState &runtime)
    return("Layer 1 readiness complete: all discovered symbols assessed at least once | readiness " + progress + ".");
   }
 
-void ASC_ExplorerRenderHeader(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const int chart_w)
+string ASC_ExplorerWarmupModeText(const ASC_RuntimeState &runtime)
   {
-   ASC_ExplorerRect(ctx,"header.strip",ctx.theme.margin,ctx.theme.margin,chart_w-(ctx.theme.margin*2),ctx.theme.header_height,ctx.theme.header_fill,ctx.theme.border);
-   ASC_ExplorerLabel(ctx,"header.main",ASC_PRODUCT_NAME + " — Explorer Console",ctx.theme.margin+ctx.theme.padding,ctx.theme.margin+6,ctx.theme.text,12);
-   ASC_ExplorerLabel(ctx,"header.sub",ASC_ExplorerFitText("Wrapper " + ASC_WRAPPER_VERSION + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION + " | Active " + ASC_ACTIVE_CAPABILITY + " | Next " + ASC_NEXT_CAPABILITY,chart_w-440),ctx.theme.margin+ctx.theme.padding,ctx.theme.margin+24,ctx.theme.muted);
-   ASC_ExplorerLabel(ctx,"header.time",ASC_ExplorerFitText("Server " + runtime.server_clean + " | Time " + ASC_DateTimeText(TimeTradeServer()) + " | Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),320),chart_w-330,ctx.theme.margin+16,ctx.theme.dim);
+   if(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met)
+      return("Warmup active/full mode");
+   if(runtime.background_hydration_active)
+      return("Warmup minimum met; steady mode with background completion");
+   return("Warmup complete; full Layer 1 steady mode");
+  }
+
+string ASC_ExplorerPrimaryBucketLoadingText(const ASC_RuntimeState &runtime)
+  {
+   return("Primary buckets loading first: " + IntegerToString(runtime.primary_bucket_symbols_assessed)
+          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " assessed.");
+  }
+
+string ASC_ExplorerBackgroundCompletionText(const ASC_RuntimeState &runtime)
+  {
+   if(runtime.background_hydration_active)
+      return("Background completion continues for lower-priority symbols after Layer 1 readiness.");
+   return("Background completion is caught up right now.");
+  }
+
+string ASC_ExplorerTimingMsText(const long value)
+  {
+   if(value<=0)
+      return("Pending");
+   return(IntegerToString((int)value) + " ms");
+  }
+
+void ASC_ExplorerMarkPageSwitchTiming(ASC_ExplorerContext &ctx,const string action_name)
+  {
+   ctx.nav.pending_page_switch_started_ms=GetTickCount();
+   ctx.nav.pending_page_switch_timing=true;
+   ctx.nav.pending_page_switch_action=action_name;
+  }
+
+void ASC_ExplorerMaybeStartPageSwitchTiming(ASC_ExplorerContext &ctx,const string action_name,const ASC_ExplorerView before_view,const int before_bucket,const int before_symbol,const ASC_ExplorerStatView before_stat)
+  {
+   if(ctx.nav.current_view!=before_view
+      || ctx.nav.selected_bucket_index!=before_bucket
+      || ctx.nav.selected_symbol_index!=before_symbol
+      || ctx.nav.selected_stat_view!=before_stat)
+      ASC_ExplorerMarkPageSwitchTiming(ctx,action_name);
+  }
+
+void ASC_ExplorerRenderHeader(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,const int chart_w)
+  {
+   int x=ctx.theme.margin;
+   int y=ctx.theme.margin;
+   int w=chart_w-(ctx.theme.margin*2);
+   ASC_ExplorerRect(ctx,"header.strip",x,y,w,ctx.theme.header_height,ctx.theme.header_fill,ctx.theme.border);
+   ASC_ExplorerLabel(ctx,"header.main",ASC_PRODUCT_NAME + " — Explorer Console",x+ctx.theme.padding,y+6,ctx.theme.text,12);
+   ASC_ExplorerLabel(ctx,"header.sub",ASC_ExplorerFitText("Wrapper " + ASC_WRAPPER_VERSION + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION + " | Active " + ASC_ACTIVE_CAPABILITY + " | Next " + ASC_NEXT_CAPABILITY,w-320),x+ctx.theme.padding,y+24,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"header.time",ASC_ExplorerFitText("Server " + runtime.server_clean + " | Time " + ASC_DateTimeText(TimeTradeServer()) + " | Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),300),x+w-310,y+16,ctx.theme.dim);
    color warmup_color=(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met ? ctx.theme.warning : (runtime.background_hydration_active ? ctx.theme.accent : ctx.theme.good));
-   ASC_ExplorerLabel(ctx,"header.warmup",ASC_ExplorerFitText(ASC_ExplorerWarmupBannerText(runtime),chart_w-40),ctx.theme.margin+ctx.theme.padding,ctx.theme.margin+44,warmup_color);
+   int panel_x=x+ctx.theme.padding;
+   int panel_y=y+42;
+   int panel_w=w-(ctx.theme.padding*2);
+   int panel_h=ctx.theme.header_height-50;
+   ASC_ExplorerRect(ctx,"header.status.panel",panel_x,panel_y,panel_w,panel_h,ctx.theme.panel_soft_fill,ctx.theme.border);
+   ASC_ExplorerRect(ctx,"header.status.bar",panel_x,panel_y,5,panel_h,warmup_color,warmup_color);
+   ASC_ExplorerLabel(ctx,"header.warmup.mode",ASC_ExplorerFitText(ASC_ExplorerWarmupModeText(runtime),panel_w-18),panel_x+12,panel_y+6,warmup_color,10);
+   ASC_ExplorerLabel(ctx,"header.warmup.primary",ASC_ExplorerFitText(ASC_ExplorerPrimaryBucketLoadingText(runtime),panel_w-18),panel_x+12,panel_y+22,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"header.warmup.background",ASC_ExplorerFitText(ASC_ExplorerBackgroundCompletionText(runtime),panel_w-18),panel_x+12,panel_y+38,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"header.warmup.pressure",ASC_ExplorerFitText("Bounded-work pressure: " + prepared.diagnostics.bounded_work_pressure_summary,panel_w-18),panel_x+12,panel_y+54,(!runtime.degraded ? ctx.theme.dim : ctx.theme.warning));
+   string page_switch_label=(ctx.nav.pending_page_switch_action!="" ? ctx.nav.pending_page_switch_action : "none");
+   string timing_line="Last prep " + ASC_ExplorerTimingMsText(prepared.diagnostics.bucket_prep_total_ms)
+      + " | HUD render " + ASC_ExplorerTimingMsText(ctx.nav.last_render_duration_ms)
+      + " | Page switch " + ASC_ExplorerTimingMsText(ctx.nav.last_page_switch_action_to_render_ms)
+      + " (" + page_switch_label + ")";
+   ASC_ExplorerLabel(ctx,"header.warmup.timing",ASC_ExplorerFitText(timing_line,panel_w-18),panel_x+12,panel_y+70,ctx.theme.dim);
   }
 
 void ASC_ExplorerRenderNavStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const int chart_w)
@@ -1046,9 +1111,10 @@ void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSet
    button_y+=ctx.theme.button_height+button_gap;
    ASC_ExplorerButton(ctx,"action.density","Density",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    button_y+=ctx.theme.button_height+(button_gap*2);
-   ASC_ExplorerButton(ctx,"action.scroll_up","Scroll Up",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
+   bool filter_surface=(ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKETS || ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKET_DETAIL);
+   ASC_ExplorerButton(ctx,"action.market_filter.all","All Symbols",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(filter_surface && ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS));
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.scroll_down","Scroll Down",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
+   ASC_ExplorerButton(ctx,"action.market_filter.open","Open Only",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(filter_surface && ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY));
    button_y+=ctx.theme.button_height+button_gap;
    ASC_ExplorerButton(ctx,"action.refresh","Refresh",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    button_y+=ctx.theme.button_height+(button_gap*2);
@@ -1071,6 +1137,7 @@ void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSta
 
 void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
+   long render_started_ms=GetTickCount();
    if(!settings.explorer_enabled)
      {
       logger.Info("Explorer","render skipped because explorer is disabled");
@@ -1099,13 +1166,19 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
       ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : ASC_RuntimeModeText(runtime.mode)) + " | Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
       ASC_ExplorerEndFrame(ctx);
       ChartRedraw(ctx.chart_id);
+      ctx.nav.last_render_duration_ms=GetTickCount()-render_started_ms;
+      if(ctx.nav.pending_page_switch_timing)
+        {
+         ctx.nav.last_page_switch_action_to_render_ms=GetTickCount()-ctx.nav.pending_page_switch_started_ms;
+         ctx.nav.pending_page_switch_timing=false;
+        }
       ctx.nav.last_render_at=TimeCurrent();
       ctx.nav.dirty=false;
       return;
      }
    logger.Debug("Explorer","render entry server=" + runtime.server_clean + ", view=" + ASC_ExplorerViewText(ctx.nav.current_view) + ", filter=" + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + ", mode=" + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode) + ", chart=" + IntegerToString(chart_w) + "x" + IntegerToString(chart_h));
    ASC_ExplorerRect(ctx,"root",ctx.theme.margin,ctx.theme.margin,root_w,root_h,ctx.theme.background,ctx.theme.border);
-   ASC_ExplorerRenderHeader(ctx,settings,runtime,chart_w);
+   ASC_ExplorerRenderHeader(ctx,settings,runtime,prepared,chart_w);
    ASC_ExplorerRenderNavStrip(ctx,settings,runtime,prepared,states,count,chart_w);
 
    int main_x=ctx.theme.margin+ctx.theme.padding;
@@ -1140,6 +1213,12 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
    ASC_ExplorerRenderStatusStrip(ctx,runtime,main_x,main_y+main_h+ctx.theme.gap,chart_w-(ctx.theme.margin*2)-(ctx.theme.padding*2),chart_w,chart_h);
    ASC_ExplorerEndFrame(ctx);
    ChartRedraw(ctx.chart_id);
+   ctx.nav.last_render_duration_ms=GetTickCount()-render_started_ms;
+   if(ctx.nav.pending_page_switch_timing)
+     {
+      ctx.nav.last_page_switch_action_to_render_ms=GetTickCount()-ctx.nav.pending_page_switch_started_ms;
+      ctx.nav.pending_page_switch_timing=false;
+     }
    ctx.nav.last_render_at=TimeCurrent();
    ctx.nav.dirty=false;
   }
@@ -1166,6 +1245,11 @@ void ASC_ExplorerInit(ASC_ExplorerContext &ctx,const long chart_id)
    ctx.nav.selected_seed_symbol="";
    ctx.nav.dirty=true;
    ctx.nav.last_render_at=0;
+   ctx.nav.last_render_duration_ms=0;
+   ctx.nav.last_page_switch_action_to_render_ms=0;
+   ctx.nav.pending_page_switch_started_ms=0;
+   ctx.nav.pending_page_switch_timing=false;
+   ctx.nav.pending_page_switch_action="";
    ArrayResize(ctx.frame_objects,0);
    ArrayResize(ctx.previous_frame_objects,0);
    ctx.initialized=true;
@@ -1216,6 +1300,10 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
   {
    string action=object_name;
    StringReplace(action,ctx.prefix,"");
+   ASC_ExplorerView before_view=ctx.nav.current_view;
+   int before_bucket=ctx.nav.selected_bucket_index;
+   int before_symbol=ctx.nav.selected_symbol_index;
+   ASC_ExplorerStatView before_stat=ctx.nav.selected_stat_view;
 
    if(action=="action.home")
       ASC_ExplorerGoHome(ctx);
@@ -1383,6 +1471,7 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
    else
       return;
 
+   ASC_ExplorerMaybeStartPageSwitchTiming(ctx,action,before_view,before_bucket,before_symbol,before_stat);
    logger.Debug("Explorer","action " + action + " dispatched");
   }
 
