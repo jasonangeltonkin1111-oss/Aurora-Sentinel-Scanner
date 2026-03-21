@@ -1,10 +1,10 @@
 # AURORA WRAPPER SETTINGS
 
-- wrapper_status: `ACTIVE_COMPILATION_V2`
+- wrapper_status: `ACTIVE_COMPILATION_V3`
 - compiled_on: `2026-03-21`
 - source_truth_root: `Aurora Blueprint/`
 - wrapper_root: `Aurora Wrapper/`
-- active_run_ref: `Aurora Blueprint/runs/AURORA_RUN_064.md`
+- active_run_ref: `Aurora Blueprint/runs/AURORA_RUN_065.md`
 - default_mode: `WRAPPER_OPERATOR_MODE`
 - alternate_mode: `WRAPPER_MAINTENANCE_MODE`
 - bridge_status: `NO_BRIDGE_CHANGE_NEEDED`
@@ -26,8 +26,15 @@
 
 ## Conditional support files
 
-- `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when object shapes, review behavior, or example anchoring is required.
-- `AURORA_WRAPPER_MAINTENANCE_GUIDE.md` when auditing, recompiling, or replacing packs.
+- `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when object shapes, review behavior, example anchoring, or packet-field recall is required.
+- `AURORA_WRAPPER_MAINTENANCE_GUIDE.md` when auditing, recompiling, replacing packs, or checking control/SHA/run continuity.
+
+## Prompt-versus-pack separation
+
+- keep the kernel and any future system prompt small, routing-first, and boundary-first
+- keep doctrine, examples, and schema detail in replaceable wrapper packs rather than the kernel
+- prefer loading one or two relevant packs over pasting the whole wrapper canon into one monolithic prompt
+- preserve long-lived doctrine in files and reserve prompt text for task framing, read order, and refusal/boundary behavior
 
 ## Pack replacement model
 
@@ -38,6 +45,13 @@
 - replace `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when packet schemas, worked examples, review doctrine, or canonical intake anchors change materially
 - replace `AURORA_WRAPPER_BRIDGE_PACK.md` only when ASC⇄Aurora ownership or minimum context requirements change materially
 - refresh `AURORA_WRAPPER_KERNEL.md`, `AURORA_WRAPPER_FILE_MAP.md`, and this file only when routing, file roles, or package structure changes materially
+
+## Document-structure law
+
+- prefer stable section boundaries, compact headings, and explicit law/exclusion/replacement sections
+- prefer fewer medium-sized packs over many tiny fragments
+- avoid giant blended summaries that mix identity, doctrine, examples, and maintenance into one file
+- keep hot-path packs readable top-to-bottom without requiring Blueprint traversal for every answer
 
 ## Cold-path surfaces intentionally excluded from default reads
 

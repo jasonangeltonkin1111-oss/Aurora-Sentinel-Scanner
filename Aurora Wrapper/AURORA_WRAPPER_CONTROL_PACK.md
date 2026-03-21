@@ -55,6 +55,10 @@ Wrapper outputs may include both, but they must not be conflated or exported as 
 ### 6. Control surfaces are not wrapper clutter
 The wrapper should not ingest office logs, SHA entries, or run history during normal reasoning, but those surfaces remain mandatory for maintenance, audit, and future recovery.
 
+### 7. Kernel and pack separation
+The kernel must stay routing-first.
+This control pack may compile control doctrine, but it must not become a substitute office log, run ledger, or mega-prompt.
+
 ## Hot path vs support path vs maintenance path
 
 ### Hot path
@@ -65,6 +69,19 @@ Packet/example vault when a concrete schema, example, or review anchor is requir
 
 ### Maintenance path
 Office files, latest run, SHA ledger, and the maintenance guide.
+
+## Wrapper read permissions
+
+The wrapper is allowed to rely directly on compiled canon in `Aurora Wrapper/` for normal operation.
+The wrapper is not allowed to silently promote maintenance-only or historical files into default reasoning context.
+If wrapper canon and Blueprint disagree, Blueprint wins and the affected wrapper pack must be refreshed.
+
+## Internal audit judgment for Wave 3
+
+- already strong enough: kernel/router posture, bridge boundary posture, 10-file package shape
+- needed more depth: execution-side stage law, family/pattern anti-confusion detail, packet/review usage law, pack replacement clarity
+- hot-path doctrine belongs in compiled packs, not in office logs or the kernel
+- run/SHA/control continuity still belongs outside hot-path doctrine even when this pack summarizes the current operating law
 
 ## Explicit non-goals
 

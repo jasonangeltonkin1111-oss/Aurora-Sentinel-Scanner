@@ -14,7 +14,7 @@ It is the wrapper-facing execution canon, not the source-truth owner of those pr
 ## Root execution law
 
 Aurora must not jump from ASC context to a trade plan.
-It must carry truth through a fixed staged chain and preserve uncertainty, missingness, invalidity, and downgrade logic at every step.
+It must carry truth through a fixed staged chain and preserve uncertainty, missingness, invalidity, downgrade logic, and no-card-valid outcomes at every step.
 
 ## Required stage chain
 
@@ -48,11 +48,31 @@ It must carry truth through a fixed staged chain and preserve uncertainty, missi
 - context before interpretation
 - interpretation before family competition
 - family competition before pattern competition
+- pattern competition before opportunity preservation and ranking
 - opportunity preservation before deployability narrowing
 - deployability before geometry
 - geometry before generated card
 - generated card before EA-safe export
 - unresolved ambiguity must survive rather than being hidden in later objects
+
+## Stage-by-stage stop and refusal law
+
+### Stop before family competition when
+- identity truth is too broken for routing
+- minimum ASC context contract surfaces are absent
+- no structural basis exists for any honest family candidate
+
+### Stop before pattern competition when
+- family competition returned `INVALID_COMPETITION_INPUT`
+- family competition returned `NO_VALID_FAMILY`
+- family posture is real but still requires `DEFERRED_CLASSIFICATION`
+
+### Stop before card generation when
+- opportunity posture is `STRUCTURE_INVALID` or `EXECUTION_INVALID`
+- deployability is `NOT_DEPLOYABLE` or still effectively unknown for card use
+- geometry is `GEOMETRY_INVALID` or `GEOMETRY_UNRESOLVED`
+- timebox/session truth makes intraday packaging dishonest
+- missing surfaces would force invented geometry or fake certainty
 
 ## Status and enum preservation
 
@@ -78,17 +98,39 @@ Preserve opportunity inventory classes rather than binary trade/no-trade collaps
 - `STRUCTURE_INVALID`
 
 ### Other required alignment classes
+- deployability class
 - horizon class
 - geometry validity
 - card eligibility gate
 - review outcome class
 - machine-safe versus human-only output class
 
+## Separation law: opportunity vs deployability vs geometry vs card
+
+- **Opportunity** answers whether the case should stay preserved downstream now.
+- **Deployability** answers whether the case is practically usable inside project intraday limits after burden is absorbed.
+- **Geometry** answers whether entry/invalidation/target/timebox/execution fields are explicit and usable.
+- **Card gate** answers whether Aurora should emit a generated strategy card now.
+
+A case may therefore remain structurally interesting while being:
+- `OBSERVE_ONLY` at opportunity level,
+- `WATCH_ONLY` or `UNKNOWN_DEPLOYABILITY` at deployability level,
+- `GEOMETRY_INVALID` or `GEOMETRY_UNRESOLVED` at geometry level,
+- and blocked from card emission.
+
 ## Opportunity and ranking law
 
 Opportunity inventory exists because Aurora must preserve structurally interesting cases even when they are not currently deployable.
 Rank using separable judgments such as structural coherence, competition outcome, deployability quality, hostility burden, surface completeness, and horizon compatibility.
 Do not compress those judgments into one hidden master score.
+
+Typical revisit triggers include:
+- spread normalization
+- session improvement
+- pattern confirmation
+- missing-surface arrival
+- hostility decay
+- path expansion large enough to change deployability
 
 ## Deployability law
 
@@ -102,6 +144,7 @@ It consumes:
 - execution continuity quality
 
 Deployability may keep a case watch-only, degraded, unknown, or blocked even when family/pattern logic is structurally coherent.
+Do not veto or bless a case by bucket alone, spread alone, or a single family-agnostic rule.
 
 ## Intraday geometry law
 
@@ -113,6 +156,12 @@ It must preserve:
 - timebox logic
 - execution constraints
 - reasons geometry can be invalid even when the underlying idea remains structurally interesting
+
+Family-specific geometry examples the wrapper must remember at high level:
+- reclaim ideas require reclaim confirmation rather than mere local wobble
+- continuation ideas require continuation acceptance rather than generic breakout wording
+- balance fade ideas require rejection evidence rather than directional chase logic
+- breakout ideas require evidence the move is more than a print through a boundary
 
 ## Generated strategy-card law
 
@@ -127,6 +176,13 @@ A card should only be generated when Aurora has, at minimum:
 - an opportunity status that is not structurally invalid
 - a deployability judgment coherent enough to support bounded geometry
 - geometry fields and timebox logic that are honest about missingness and invalidation
+
+### Blocking classes the wrapper must preserve
+- `CARD_BLOCKED_STRUCTURE`
+- `CARD_BLOCKED_DEPLOYABILITY`
+- `CARD_BLOCKED_GEOMETRY`
+- `CARD_BLOCKED_MISSING_SURFACES`
+- `CARD_BLOCKED_TIMEBOX`
 
 ### Card field groups the wrapper must preserve
 - identity fields
@@ -150,6 +206,8 @@ Aurora's active packet family includes:
 
 Review packets are diagnosis artifacts, not casual notes.
 They must preserve target reference, original state summary, actual outcome summary, review classification, learned changes, and stability notes without mutating historical packet meaning retroactively.
+Review is used to diagnose whether the issue was structural, deployability, geometry, timebox, or upstream-truth insufficiency.
+Do not use review as a backdoor to rewrite doctrine from one illustrative outcome.
 
 ## EA-safe boundary
 

@@ -34,6 +34,7 @@ It exists to diagnose the correct layer of success/failure rather than to backfi
 
 ### Group-context object schema
 Preserves identity, membership, regime, routing, and boundary fields so Aurora is not reasoning from a vague symbol narrative alone.
+It separates family logic from symbol-specific constraints and keeps related-symbol context explicit.
 
 ### Strategy-card field schema
 Preserves identity, lineage, interpretation, family/pattern, opportunity/deployability, geometry, invalidation, timebox, machine-safe export, and human-only commentary groups.
@@ -44,9 +45,9 @@ It should answer what layer was right, what layer failed, and what changed versu
 
 ## Concrete example anchors
 
-- **Group context example 001** — C-04 / G4 object specimen showing clean field grouping.
+- **Group context example 001** — C-04 / G4 object specimen showing clean field grouping and symbol-shell discipline.
 - **Family lane packet 002** — current reusable route for failed-break / reclaim logic.
-- **Worked example packet 002 filled** — full staged case showing honest ambiguity preservation.
+- **Worked example packet 002 filled** — full staged case showing honest ambiguity preservation and an honest no-live-card outcome.
 - **Review packet 001** — review specimen showing outcome classification and learned-change discipline.
 - **Real ASC intake example 001** — proof that Aurora can consume real ASC excerpt truth while preserving missingness and stopping before invention.
 
@@ -55,6 +56,20 @@ It should answer what layer was right, what layer failed, and what changed versu
 - Read this vault when you need shape certainty, schema recall, or example anchoring.
 - Use it after the execution/family/pattern/bridge packs, not instead of them.
 - Do not turn examples into universal doctrine; they are anchors, not substitutes for the canonical protocols.
+
+## Example-usage law
+
+- illustrative examples prove routing, object shape, and honesty posture; they do not prove live deployability
+- real-intake examples prove bridge behavior and missingness handling; they do not authorize downstream invention from partial ASC excerpts
+- review examples prove diagnosis discipline; they do not authorize retroactive certainty inflation
+- family-lane examples prove reusable route structure; they do not replace the wider family registry or pattern atlas
+
+## Concrete expectations the wrapper should remember
+
+- packets must keep stage sequence, entry/exit conditions, stop conditions, object references, output expectations, and operator notes explicit
+- worked examples may correctly end in observe-only, watch-only, geometry-invalid, or no-card-valid outcomes
+- review packets should isolate whether the issue was structure, deployability, geometry, timebox, or missing truth
+- group-context examples should keep family logic broader than one symbol shell so the wrapper does not become symbol-bound
 
 ## Replace/update note
 

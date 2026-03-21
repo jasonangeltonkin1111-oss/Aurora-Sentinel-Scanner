@@ -17,6 +17,14 @@ It must stay separate from Blueprint, which remains the source-truth workspace.
 7. refresh office truth (`WORK_LOG.md`, `TASK_BOARD.md`, `SHA_LEDGER.md`, control/progress files) only when active canonical surfaces changed materially
 8. record the bridge-check outcome every meaningful pass, even if it remains `NO_BRIDGE_CHANGE_NEEDED`
 
+## Research-guided wrapper design rules
+
+- keep the kernel/prompt layer tiny and let doctrine live in external replaceable packs
+- prefer a few stable, well-bounded packs over many tiny fragments or one giant monolith
+- maintain explicit section boundaries so retrieval/loading can target the correct pack quickly
+- keep hot-path packs doctrine-rich enough that normal wrapper operation rarely needs Blueprint traversal
+- keep maintenance and lineage surfaces off hot path even when they must remain meticulously updated
+
 ## Replace-vs-edit law
 
 Prefer replacing an entire wrapper pack when its source area changed materially.
@@ -98,6 +106,16 @@ Edit in place only for:
 - archive mirrors and superseded generations
 - unconsolidated doctrine residue not needed for current wrapper fidelity
 
+## Replacement checklist for future Codex/GPT passes
+
+1. confirm online best-practice guidance if the pass changes wrapper packaging or prompt boundaries materially
+2. recover current Blueprint truth before editing wrapper text
+3. answer the internal audit questions explicitly: what is strong enough, what is too summary-like, what belongs on hot path, what must remain off hot path
+4. deepen existing packs before adding files
+5. add a new wrapper file only if expanding existing packs would worsen routing clarity or replacement safety
+6. keep the kernel tiny and verify its size after edits
+7. refresh run/control/SHA continuity when wrapper canon changed materially
+
 ## Audit checklist for future passes
 
 - Is the kernel still a router rather than a doctrine vault?
@@ -109,9 +127,10 @@ Edit in place only for:
 - Has the bridge check been recorded?
 - Have SHA/control/run surfaces been refreshed when active canonical files changed?
 
-## Current package posture after Wave 2 audit
+## Current package posture after Wave 3 audit
 
 - wrapper file count target preserved: `10`
-- kernel posture: still tiny router, tightened rather than expanded into doctrine storage
+- kernel posture: still tiny router, left intentionally small
 - bridge posture: `NO_BRIDGE_CHANGE_NEEDED`
-- next likely wrapper-focused pass: deepen optional wrapper-tooling/prompt support only if it can remain off the default hot path
+- practical result: hot-path packs now carry more execution-stage law, family/pattern anti-confusion depth, and packet/review usage clarity
+- next likely wrapper-focused pass: only consider an optional tooling/template support pack if it stays off the default hot path and clearly improves real wrapper execution quality

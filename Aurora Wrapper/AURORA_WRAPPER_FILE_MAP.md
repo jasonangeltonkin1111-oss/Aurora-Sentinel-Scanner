@@ -3,6 +3,14 @@
 ## Purpose
 
 This file routes wrapper tasks to the smallest correct pack, names the Blueprint roots compiled into each pack, and keeps hot-path versus maintenance-path boundaries explicit.
+It also keeps the read order retrieval-friendly: small router first, then only the lowest-cost doctrine pack that actually answers the question.
+
+## Router law
+
+- start with kernel/settings/file-map, then branch by task
+- do not default to loading every wrapper pack for every task
+- prefer one hot-path doctrine pack plus one support pack when needed
+- use maintenance surfaces only for refresh/audit/control continuity work
 
 ## Task router
 
@@ -38,6 +46,17 @@ This file routes wrapper tasks to the smallest correct pack, names the Blueprint
 - `Aurora Blueprint/office/WORK_LOG.md`
 - `Aurora Blueprint/office/SHA_LEDGER.md`
 - `Aurora Blueprint/runs/`
+
+## Reading patterns by job type
+
+### Fast operator read
+`KERNEL → SETTINGS → FILE_MAP → one primary doctrine pack`
+
+### Higher-certainty reasoning read
+`KERNEL → SETTINGS → FILE_MAP → primary doctrine pack → secondary doctrine/support pack`
+
+### Refresh / replacement read
+`KERNEL → SETTINGS → FILE_MAP → MAINTENANCE_GUIDE → Blueprint source roots → latest run / SHA surfaces`
 
 ## Source-truth-only classes
 
