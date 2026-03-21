@@ -1,7 +1,7 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.121
+// Wrapper Version: 1.122
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
@@ -424,6 +424,13 @@ void ASC_ResetRuntimeState(void)
    g_runtime.prepared_promoted_batch_count=0;
    g_runtime.prepared_pending_batch_count=ASC_PREPARED_BATCH_COUNT;
    g_runtime.prepared_bounded_work_summary="Not sampled.";
+   g_runtime.open_symbol_snapshot.readiness=(g_settings.open_symbol_snapshot_reserved ? ASC_SNAPSHOT_RESERVED_READY : ASC_SNAPSHOT_NOT_READY);
+   g_runtime.open_symbol_snapshot.last_built_at=0;
+   g_runtime.open_symbol_snapshot.pending_reason=(g_settings.open_symbol_snapshot_reserved ? "Layer 2 reserved scaffolding only; activation still blocked." : "Open Symbol Snapshot controls not reserved.");
+   g_runtime.open_symbol_snapshot.cadence.controls_reserved=g_settings.snapshot_controls_reserved;
+   g_runtime.open_symbol_snapshot.cadence.reserved_m1_bars=g_settings.reserved_m1_bars;
+   g_runtime.open_symbol_snapshot.cadence.reserved_m5_bars=g_settings.reserved_m5_bars;
+   g_runtime.open_symbol_snapshot.cadence.reserved_m15_bars=g_settings.reserved_m15_bars;
    g_runtime.diagnostics.last_bucket_prep_total_ms=0;
    g_runtime.diagnostics.last_classification_loop_ms=0;
    g_runtime.diagnostics.last_bucket_sort_ms=0;
@@ -462,6 +469,9 @@ void ASC_ResetSymbolState(ASC_SymbolState &state,const string symbol)
    state.last_checked_at=0;
    state.last_dossier_write_at=0;
    state.uncertain_burst_count=0;
+   state.snapshot_readiness=(g_settings.open_symbol_snapshot_reserved ? ASC_SNAPSHOT_RESERVED_READY : ASC_SNAPSHOT_NOT_READY);
+   state.snapshot_last_built_at=0;
+   state.snapshot_pending_reason=(g_settings.open_symbol_snapshot_reserved ? "Layer 2 reserved scaffolding only; no snapshot built yet." : "Open Symbol Snapshot controls not reserved.");
    state.status_note="Pending initial assessment";
    state.dirty=true;
   }
@@ -472,6 +482,14 @@ void ASC_ApplyRestoredRuntimeDefaults(void)
       g_runtime.schema_version="ASC Foundation v1";
    g_runtime.server_raw=g_paths.server_raw;
    g_runtime.server_clean=g_paths.server_clean;
+   if(g_runtime.open_symbol_snapshot.readiness==ASC_SNAPSHOT_NOT_READY && g_settings.open_symbol_snapshot_reserved)
+      g_runtime.open_symbol_snapshot.readiness=ASC_SNAPSHOT_RESERVED_READY;
+   if(g_runtime.open_symbol_snapshot.pending_reason=="")
+      g_runtime.open_symbol_snapshot.pending_reason=(g_settings.open_symbol_snapshot_reserved ? "Layer 2 reserved scaffolding only; activation still blocked." : "Open Symbol Snapshot controls not reserved.");
+   g_runtime.open_symbol_snapshot.cadence.controls_reserved=g_settings.snapshot_controls_reserved;
+   g_runtime.open_symbol_snapshot.cadence.reserved_m1_bars=g_settings.reserved_m1_bars;
+   g_runtime.open_symbol_snapshot.cadence.reserved_m5_bars=g_settings.reserved_m5_bars;
+   g_runtime.open_symbol_snapshot.cadence.reserved_m15_bars=g_settings.reserved_m15_bars;
    g_runtime.runtime_dirty=true;
    g_runtime.scheduler_dirty=true;
    g_runtime.summary_dirty=true;

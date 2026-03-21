@@ -61,6 +61,13 @@ void ASC_AssignRuntimeField(ASC_RuntimeState &state,const string key,const strin
    else if(key=="Prepared Promoted Batch Count") state.prepared_promoted_batch_count=ASC_IntegerFromText(value);
    else if(key=="Prepared Pending Batch Count") state.prepared_pending_batch_count=ASC_IntegerFromText(value);
    else if(key=="Prepared Bounded Work Summary") state.prepared_bounded_work_summary=value;
+   else if(key=="Open Symbol Snapshot Readiness") state.open_symbol_snapshot.readiness=ASC_SnapshotReadinessFromText(value);
+   else if(key=="Open Symbol Snapshot Last Built") ASC_TryParseDateTime(value,state.open_symbol_snapshot.last_built_at);
+   else if(key=="Open Symbol Snapshot Pending Reason") state.open_symbol_snapshot.pending_reason=value;
+   else if(key=="Open Symbol Snapshot Controls Reserved") state.open_symbol_snapshot.cadence.controls_reserved=ASC_BoolFromText(value);
+   else if(key=="Open Symbol Snapshot Reserved M1 Bars") state.open_symbol_snapshot.cadence.reserved_m1_bars=ASC_IntegerFromText(value);
+   else if(key=="Open Symbol Snapshot Reserved M5 Bars") state.open_symbol_snapshot.cadence.reserved_m5_bars=ASC_IntegerFromText(value);
+   else if(key=="Open Symbol Snapshot Reserved M15 Bars") state.open_symbol_snapshot.cadence.reserved_m15_bars=ASC_IntegerFromText(value);
    else if(key=="Diagnostics Bucket Prep Ms") state.diagnostics.last_bucket_prep_total_ms=ASC_IntegerFromText(value);
    else if(key=="Diagnostics Classification Loop Ms") state.diagnostics.last_classification_loop_ms=ASC_IntegerFromText(value);
    else if(key=="Diagnostics Bucket Sort Ms") state.diagnostics.last_bucket_sort_ms=ASC_IntegerFromText(value);
@@ -186,6 +193,13 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    body+="Prepared Promoted Batch Count=" + IntegerToString(state.prepared_promoted_batch_count) + "\r\n";
    body+="Prepared Pending Batch Count=" + IntegerToString(state.prepared_pending_batch_count) + "\r\n";
    body+="Prepared Bounded Work Summary=" + state.prepared_bounded_work_summary + "\r\n";
+   body+="Open Symbol Snapshot Readiness=" + ASC_SnapshotReadinessText(state.open_symbol_snapshot.readiness) + "\r\n";
+   body+="Open Symbol Snapshot Last Built=" + ASC_DateTimeText(state.open_symbol_snapshot.last_built_at) + "\r\n";
+   body+="Open Symbol Snapshot Pending Reason=" + state.open_symbol_snapshot.pending_reason + "\r\n";
+   body+="Open Symbol Snapshot Controls Reserved=" + ASC_BoolText(state.open_symbol_snapshot.cadence.controls_reserved) + "\r\n";
+   body+="Open Symbol Snapshot Reserved M1 Bars=" + IntegerToString(state.open_symbol_snapshot.cadence.reserved_m1_bars) + "\r\n";
+   body+="Open Symbol Snapshot Reserved M5 Bars=" + IntegerToString(state.open_symbol_snapshot.cadence.reserved_m5_bars) + "\r\n";
+   body+="Open Symbol Snapshot Reserved M15 Bars=" + IntegerToString(state.open_symbol_snapshot.cadence.reserved_m15_bars) + "\r\n";
    body+="Diagnostics Bucket Prep Ms=" + IntegerToString((int)state.diagnostics.last_bucket_prep_total_ms) + "\r\n";
    body+="Diagnostics Classification Loop Ms=" + IntegerToString((int)state.diagnostics.last_classification_loop_ms) + "\r\n";
    body+="Diagnostics Bucket Sort Ms=" + IntegerToString((int)state.diagnostics.last_bucket_sort_ms) + "\r\n";

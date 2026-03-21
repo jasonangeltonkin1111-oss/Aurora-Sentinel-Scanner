@@ -2,7 +2,7 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.121"
+#define ASC_WRAPPER_VERSION "1.122"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
@@ -37,6 +37,13 @@ enum ASC_LogVerbosity
    ASC_LOG_ERRORS_ONLY=0,
    ASC_LOG_NORMAL=1,
    ASC_LOG_DEBUG=2
+  };
+
+enum ASC_SnapshotReadinessStatus
+  {
+   ASC_SNAPSHOT_NOT_READY=0,
+   ASC_SNAPSHOT_RESERVED_READY=1,
+   ASC_SNAPSHOT_PENDING=2
   };
 
 enum ASC_ExplorerBucketDisplayMode
@@ -116,6 +123,22 @@ struct ASC_RuntimeSettings
    int               reserved_selected_symbol_limit;
   };
 
+struct ASC_OpenSymbolSnapshotCadenceSettings
+  {
+   bool controls_reserved;
+   int  reserved_m1_bars;
+   int  reserved_m5_bars;
+   int  reserved_m15_bars;
+  };
+
+struct ASC_OpenSymbolSnapshotRuntimeState
+  {
+   ASC_SnapshotReadinessStatus readiness;
+   datetime                    last_built_at;
+   string                      pending_reason;
+   ASC_OpenSymbolSnapshotCadenceSettings cadence;
+  };
+
 struct ASC_PreparedStateDiagnostics
   {
    long   bucket_prep_total_ms;
@@ -187,6 +210,7 @@ struct ASC_RuntimeState
    int                         prepared_promoted_batch_count;
    int                         prepared_pending_batch_count;
    string                      prepared_bounded_work_summary;
+   ASC_OpenSymbolSnapshotRuntimeState open_symbol_snapshot;
    ASC_RuntimeDiagnosticsState diagnostics;
   };
 
@@ -205,12 +229,35 @@ struct ASC_SymbolState
    long              tick_age_seconds;
    datetime          next_check_at;
    datetime          next_session_open_at;
-   datetime          last_checked_at;
-   datetime          last_dossier_write_at;
-   int               uncertain_burst_count;
-   string            status_note;
-   bool              dirty;
+   datetime                    last_checked_at;
+   datetime                    last_dossier_write_at;
+   int                         uncertain_burst_count;
+   ASC_SnapshotReadinessStatus snapshot_readiness;
+   datetime                    snapshot_last_built_at;
+   string                      snapshot_pending_reason;
+   string                      status_note;
+   bool                        dirty;
   };
+
+string ASC_SnapshotReadinessText(const ASC_SnapshotReadinessStatus status)
+  {
+   switch(status)
+     {
+      case ASC_SNAPSHOT_RESERVED_READY: return("Reserved / Prepared");
+      case ASC_SNAPSHOT_PENDING:        return("Pending");
+      default:                          return("Not Ready");
+     }
+  }
+
+ASC_SnapshotReadinessStatus ASC_SnapshotReadinessFromText(const string value)
+  {
+   string normalized=ASC_ToLower(ASC_Trim(value));
+   if(normalized=="reserved / prepared" || normalized=="reserved-prepared" || normalized=="reserved_prepared")
+      return(ASC_SNAPSHOT_RESERVED_READY);
+   if(normalized=="pending")
+      return(ASC_SNAPSHOT_PENDING);
+   return(ASC_SNAPSHOT_NOT_READY);
+  }
 
 string ASC_Trim(const string value)
   {

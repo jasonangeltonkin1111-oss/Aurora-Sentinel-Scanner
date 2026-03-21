@@ -63,7 +63,7 @@ string ASC_BuildDossierText(const ASC_ServerPaths &paths,const ASC_RuntimeState 
    body+="----------------------------------------\r\n";
    body+="Market State Detection: Working\r\n";
    body+="Symbol Identity and Bucketing: Reserved\r\n";
-   body+="Open Symbol Snapshot: Reserved\r\n";
+   body+="Open Symbol Snapshot: Reserved scaffolding only\r\n";
    body+="Candidate Filtering: Reserved\r\n";
    body+="Shortlist Selection: Reserved\r\n";
    body+="Deep Selective Analysis: Reserved\r\n";
@@ -75,10 +75,19 @@ string ASC_BuildDossierText(const ASC_ServerPaths &paths,const ASC_RuntimeState 
    body+="Tick Present: " + ASC_BoolText(state.has_tick) + "\r\n";
    body+="Tick Age Seconds: " + (state.tick_age_seconds>=0 ? IntegerToString((int)state.tick_age_seconds) : "Not Yet Available") + "\r\n\r\n";
 
+   body+="Layer 2 Open Symbol Snapshot\r\n";
+   body+="----------------------------------------\r\n";
+   body+="Readiness: " + ASC_SnapshotReadinessText(state.snapshot_readiness) + "\r\n";
+   body+="Last Built: " + ASC_DateTimeText(state.snapshot_last_built_at) + "\r\n";
+   body+="Pending Reason: " + (state.snapshot_pending_reason=="" ? runtime.open_symbol_snapshot.pending_reason : state.snapshot_pending_reason) + "\r\n";
+   body+="Reserved Controls Enabled: " + ASC_BoolText(runtime.open_symbol_snapshot.cadence.controls_reserved) + "\r\n";
+   body+="Reserved Cadence Bars: M1=" + IntegerToString(runtime.open_symbol_snapshot.cadence.reserved_m1_bars) + ", M5=" + IntegerToString(runtime.open_symbol_snapshot.cadence.reserved_m5_bars) + ", M15=" + IntegerToString(runtime.open_symbol_snapshot.cadence.reserved_m15_bars) + "\r\n";
+   body+="Activation State: Prepared for later Layer 2 insertion only; no live snapshot compute in this build\r\n\r\n";
+
    body+="Future Sections\r\n";
    body+="----------------------------------------\r\n";
    body+="Bucket Identity: Reserved\r\n";
-   body+="Open Symbol Snapshot: Reserved\r\n";
+   body+="Open Symbol Snapshot: Reserved publication scaffold present\r\n";
    body+="Selection Status: Reserved\r\n";
    body+="Deep Analysis: Reserved\r\n";
    body+="Combined Opportunity Summary: Reserved\r\n";
