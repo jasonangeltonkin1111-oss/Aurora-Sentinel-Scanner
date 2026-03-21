@@ -82,8 +82,10 @@ At minimum it should preserve:
 - `generated_at`
 - `market_state`
 - `execution_surface`
-- `family_candidates_ranked`
-- `primary_family_candidate`
+- `family_competition_ref`
+- `competition_status`
+- `surviving_families`
+- `primary_family_candidate` if any
 - `pattern_candidate` if any
 - `deployability_class`
 - `opportunity_status`
@@ -103,8 +105,9 @@ Aurora should not collapse opportunity ranking into one hidden score.
 
 Instead ranking should preserve separable judgments such as:
 - structural coherence
+- family competition outcome
 - family fit
-- pattern clarity
+- pattern clarity when pattern competition has actually run
 - deployability quality
 - hostility burden
 - surface completeness

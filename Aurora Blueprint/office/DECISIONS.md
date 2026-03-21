@@ -12,6 +12,7 @@
 - active consolidated doctrine surfaces should be read before strengthening residue when a consolidated file already exists for the task lane
 - lossless cross-linking is preferred over risky consolidation
 - active Aurora wrapper/machine work must preserve explicit machine-safe versus human-only boundaries
+- family competition is a dedicated Aurora stage that sits after context interpretation and before pattern competition, opportunity classification, and generated-card decisions
 - Aurora may request richer ASC fields through bridge notes, but it must not fabricate missing ASC truth
 - any meaningful Aurora architectural pass must record a bridge-check outcome using the joint evolution protocol categories
 - `AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md` is the active normalization surface for distinguishing surface availability, deployability, opportunity status, horizon class, geometry validity, card eligibility, and review outcomes
@@ -21,4 +22,4 @@
 ## Current bridge-check lock
 
 - current pass outcome: `NO_BRIDGE_CHANGE_NEEDED`
-- reason: this pass strengthens Aurora-side enum normalization, workflow staging, and packet artifacts without changing the upstream ASC context contract itself
+- reason: the family competition engine, object schema, workflow split, and prompt/object alignment are Aurora-internal and do not require ASC contract changes

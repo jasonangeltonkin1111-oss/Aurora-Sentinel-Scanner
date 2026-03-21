@@ -151,12 +151,20 @@ This object must keep structure validity separate from execution validity.
 Owned by Aurora.
 
 Contains:
-- `ranked_family_candidates`
-- `excluded_families`
-- `why_primary_family_won`
-- `why_competitors_lost`
-- `family_dependencies`
-- `missing_surfaces_that_would_change_ranking`
+- `competition_status`
+- `confidence_posture`
+- `candidate_families`
+- `rejected_families`
+- `surviving_families`
+- `primary_family_candidate` if any
+- `primary_family_reason`
+- `ambiguity_notes`
+- `what_would_reduce_ambiguity`
+- `missing_surfaces_that_would_change_result`
+
+Canonical schema and protocol:
+- `AURORA_FAMILY_COMPETITION_OBJECT_SCHEMA.md`
+- `AURORA_FAMILY_COMPETITION_ENGINE_PROTOCOL.md`
 
 This object exists so Aurora preserves competition truth instead of pretending one family appeared automatically.
 
@@ -227,6 +235,8 @@ Aurora must know whether a setup is actually usable before generating a trade ge
 
 ## 5.4 Family competition before pattern commitment
 Aurora must preserve family competition truth instead of acting like one family appeared automatically.
+Family competition may end with a clear primary, contested primary, multiple live families, deferred classification, no valid family, or invalid competition input.
+Pattern commitment must remain downstream of that result.
 
 ## 5.5 Opportunity object before strategy card
 A symbol may have a preserved opportunity without having a live strategy card.

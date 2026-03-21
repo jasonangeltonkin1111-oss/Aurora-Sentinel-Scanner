@@ -27,11 +27,12 @@ The active stage order is:
 1. ASC context intake and surface-state preservation
 2. group-context construction
 3. context interpretation
-4. family and pattern competition
-5. opportunity classification
-6. generated-card decision and geometry if justified
-7. save/log packaging
-8. later review packet creation
+4. family competition
+5. pattern competition
+6. opportunity classification
+7. generated-card decision and geometry if justified
+8. save/log packaging
+9. later review packet creation
 
 ---
 
@@ -45,6 +46,8 @@ Before using this workflow, the operator should have at minimum:
 Required protocol references:
 - `ASC_TO_AURORA_CONTEXT_CONTRACT.md`
 - `AURORA_WRAPPER_OBJECT_MODEL.md`
+- `AURORA_FAMILY_COMPETITION_ENGINE_PROTOCOL.md`
+- `AURORA_FAMILY_COMPETITION_OBJECT_SCHEMA.md`
 - `AURORA_DEPLOYABILITY_ENGINE_PROTOCOL.md`
 - `AURORA_INTRADAY_GEOMETRY_PROTOCOL.md`
 - `AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md`
@@ -128,28 +131,45 @@ If missing or degraded surfaces prevent honest interpretation, preserve opportun
 
 ---
 
-# 6. STAGE 3 — FAMILY AND PATTERN COMPETITION
+# 6. STAGE 3 — FAMILY COMPETITION
 
 ## Goal
-Determine the primary family lane and any viable pattern candidate while preserving competition truth.
+Determine which family hypotheses are alive, rejected, or unresolved while preserving competition truth.
 
 ## Required outputs
 - `AURORA_FAMILY_COMPETITION_OBJECT`
-- `AURORA_PATTERN_CANDIDATE_OBJECT` if a candidate exists
-- named competitors and rejection reasons
+- named competitors and explicit rejection reasons when rejection is justified
+- one canonical family competition status
 
 ## Pass condition
-- one primary family candidate is justified
-- competing families remain explicit
-- pattern candidate is confirmed, candidate-level, or rejected honestly
+- candidate families are explicit
+- rejected families carry explicit reasons
+- unresolvedness is preserved honestly
 
 ## Stop condition
-If no family or pattern is settled enough, preserve an opportunity object only.
-No card is forced.
+If competition input is invalid or too thin, stop with a valid family competition status rather than forcing family or pattern commitment.
 
 ---
 
-# 7. STAGE 4 — OPPORTUNITY CLASSIFICATION
+# 7. STAGE 4 — PATTERN COMPETITION
+
+## Goal
+Run pattern competition only after the family competition result is explicit enough to shape the parent family set.
+
+## Required outputs
+- `AURORA_PATTERN_CANDIDATE_OBJECT` if a candidate exists
+- explicit relation to the upstream family competition output
+
+## Pass condition
+- a pattern candidate is confirmed, candidate-level, rejected, or left unresolved honestly
+- pattern logic does not replace the family result
+
+## Stop condition
+If family competition ended in unresolved or deferred posture that does not justify pattern narrowing, preserve that and continue only as appropriate.
+
+---
+
+# 8. STAGE 5 — OPPORTUNITY CLASSIFICATION
 
 ## Goal
 Create the `AURORA_OPPORTUNITY_OBJECT` before deciding whether a strategy card should exist.
@@ -175,7 +195,7 @@ If the honest result is `OBSERVE_ONLY`, `EXECUTION_INVALID`, or `STRUCTURE_INVAL
 
 ---
 
-# 8. STAGE 5 — GENERATED-CARD DECISION AND GEOMETRY
+# 9. STAGE 6 — GENERATED-CARD DECISION AND GEOMETRY
 
 ## Goal
 Emit `AURORA_GENERATED_STRATEGY_CARD` only when card gating is satisfied.
@@ -208,7 +228,7 @@ Do not manufacture geometry to avoid a no-card-valid outcome.
 
 ---
 
-# 9. STAGE 6 — SAVE / LOG PACKAGING
+# 10. STAGE 7 — SAVE / LOG PACKAGING
 
 Save/log packaging is a continuity step.
 It means manual preservation into Aurora packets, run notes, or related evidence objects.
@@ -233,7 +253,7 @@ It does not imply automatic persistence, automation, or ASC-side logging changes
 
 ---
 
-# 10. STAGE 7 — LATER REVIEW PACKET CREATION
+# 11. STAGE 8 — LATER REVIEW PACKET CREATION
 
 ## Goal
 If later evidence exists, create a `REVIEW_PACKET` diagnosing the correct layer.
@@ -251,7 +271,7 @@ Review should emit `review_outcome_class` from the canonical review enum set.
 
 ---
 
-# 11. OBJECT CHAIN CREATED OR UPDATED
+# 12. OBJECT CHAIN CREATED OR UPDATED
 
 This workflow should read or produce the following objects in order:
 - `ASC_CONTEXT_OBJECT`
@@ -267,7 +287,7 @@ This workflow should read or produce the following objects in order:
 
 ---
 
-# 12. WHAT NOT TO DO
+# 13. WHAT NOT TO DO
 
 Do not:
 - skip the group-context stage
@@ -279,7 +299,7 @@ Do not:
 
 ---
 
-# 13. CURRENT JUDGMENT
+# 14. CURRENT JUDGMENT
 
 Aurora now has an active wrapper workflow packet that matches the current object, routing, review, and opportunity-preservation stack more closely than v1.
 
