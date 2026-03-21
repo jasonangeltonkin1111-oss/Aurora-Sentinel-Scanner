@@ -62,7 +62,8 @@ string ASC_BuildDossierText(const ASC_ServerPaths &paths,const ASC_RuntimeState 
    body+="Capability Progress\r\n";
    body+="----------------------------------------\r\n";
    body+="Market State Detection: Working\r\n";
-   body+="Symbol Identity and Bucketing: Reserved\r\n";
+   body+="Symbol Identity and Bucketing: Active but Provisional\r\n";
+   body+="Prepared Bucket Truth for Explorer Layer 1: Active (Runtime-Prepared, Explorer-Consumed)\r\n";
    body+="Open Symbol Snapshot: Reserved\r\n";
    body+="Candidate Filtering: Reserved\r\n";
    body+="Shortlist Selection: Reserved\r\n";
@@ -77,7 +78,7 @@ string ASC_BuildDossierText(const ASC_ServerPaths &paths,const ASC_RuntimeState 
 
    body+="Future Sections\r\n";
    body+="----------------------------------------\r\n";
-   body+="Bucket Identity: Reserved\r\n";
+   body+="Bucket Identity: Active but Provisional (Runtime-Prepared for Explorer Layer 1)\r\n";
    body+="Open Symbol Snapshot: Reserved\r\n";
    body+="Selection Status: Reserved\r\n";
    body+="Deep Analysis: Reserved\r\n";

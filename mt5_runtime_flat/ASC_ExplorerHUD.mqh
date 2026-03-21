@@ -927,7 +927,7 @@ void ASC_ExplorerRenderSymbolDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeSt
       ASC_ExplorerInfoRow(ctx,"symbol.seed.row1","Identity",(ctx.nav.selected_seed_symbol=="" ? "Reference pending" : ctx.nav.selected_seed_symbol),x+ctx.theme.padding,y+62,w-(ctx.theme.padding*2),ctx.theme.reserved);
       ASC_ExplorerInfoRow(ctx,"symbol.seed.row2","Layer 1 Truth","Live Market State Detection appears only when the selected reference resolves to a tracked symbol.",x+ctx.theme.padding,y+92,w-(ctx.theme.padding*2),ctx.theme.warning);
       ASC_ExplorerInfoRow(ctx,"symbol.seed.row3","Publication","This shell keeps publication structure visible without fabricating broker truth.",x+ctx.theme.padding,y+122,w-(ctx.theme.padding*2),ctx.theme.accent_alt);
-      ASC_ExplorerInfoRow(ctx,"symbol.seed.row4","Future Surface","Aurora and advanced trade detail remain reserved insertion points.",x+ctx.theme.padding,y+152,w-(ctx.theme.padding*2),ctx.theme.reserved);
+      ASC_ExplorerInfoRow(ctx,"symbol.seed.row4","Future Surface","Prepared Layer 1 bucket truth is runtime-prepared and explorer-consumed; Aurora and advanced trade detail remain reserved insertion points.",x+ctx.theme.padding,y+152,w-(ctx.theme.padding*2),ctx.theme.reserved);
       return;
      }
 
@@ -955,11 +955,11 @@ void ASC_ExplorerRenderSymbolDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeSt
       ctx.nav.symbol_scroll=1;
    int base_y=y-(ctx.nav.symbol_scroll*(section_h/2));
 
-   ASC_ExplorerSectionPanel(ctx,"symbol.identity","Identity","Symbol " + state.symbol,"Server " + runtime.server_clean,"Aurora insertion remains reserved",x,base_y,section_w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_IDENTITY),ctx.theme.accent);
+   ASC_ExplorerSectionPanel(ctx,"symbol.identity","Identity","Symbol " + state.symbol,"Server " + runtime.server_clean,"Identity/bucket truth is active but provisional; Aurora insertion remains reserved",x,base_y,section_w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_IDENTITY),ctx.theme.accent);
    ASC_ExplorerSectionPanel(ctx,"symbol.market","Market State","State " + ASC_MarketStatusText(state.market_status),"Session " + (state.within_trade_session ? "Inside broker session" : (state.has_trade_sessions ? "Outside broker session" : "Session data unavailable")),"Next Check " + ASC_DateTimeText(state.next_check_at),x+section_w+gap,base_y,section_w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_MARKET_STATE),ASC_ExplorerStatusAccent(ctx,state.market_status,true));
    ASC_ExplorerSectionPanel(ctx,"symbol.quote","Tick and Quote","Bid " + DoubleToString(bid,digits),"Ask " + DoubleToString(ask,digits),"Spread " + spread_text,x,base_y+section_h+gap,section_w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_TICK_QUOTE),ctx.theme.accent_alt);
    ASC_ExplorerSectionPanel(ctx,"symbol.runtime","Runtime and Publication","Heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),"Last Write " + ASC_DateTimeText(state.last_dossier_write_at),"Publication " + (state.publication_ok ? "Promoted" : "Pending"),x+section_w+gap,base_y+section_h+gap,section_w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_RUNTIME_PUBLICATION),ctx.theme.good);
-   ASC_ExplorerSectionPanel(ctx,"symbol.future","Future Surface","Open Symbol Snapshot: reserved","Advanced trade detail: reserved","Aurora scan action: reserved",x,base_y+(section_h+gap)*2,w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_FUTURE_SURFACES),ctx.theme.reserved);
+   ASC_ExplorerSectionPanel(ctx,"symbol.future","Future Surface","Open Symbol Snapshot: reserved","Prepared bucket truth: runtime-prepared and explorer-consumed","Aurora scan action: reserved",x,base_y+(section_h+gap)*2,w,section_h,(ctx.nav.selected_stat_view==ASC_EXPLORER_STAT_FUTURE_SURFACES),ctx.theme.reserved);
 
    ASC_ExplorerButton(ctx,"action.stat.identity","Identity",x+section_w-84,base_y+section_h-30,74,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    ASC_ExplorerButton(ctx,"action.stat.market","State",x+w-84,base_y+section_h-30,74,ctx.theme.button_height,ctx.theme.panel_alt_fill);
@@ -988,7 +988,7 @@ void ASC_ExplorerRenderStatDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeStat
      {
       ASC_ExplorerLabel(ctx,"stat.empty",ASC_ExplorerFitText("Live stat detail is not available for the selected reference symbol yet.",w-24),x+ctx.theme.padding,y+48,ctx.theme.warning);
       ASC_ExplorerInfoRow(ctx,"stat.seed.row1","Reference Symbol",(ctx.nav.selected_seed_symbol=="" ? "Reference pending" : ctx.nav.selected_seed_symbol),x+ctx.theme.padding,y+78,w-(ctx.theme.padding*2),ctx.theme.reserved);
-      ASC_ExplorerInfoRow(ctx,"stat.seed.row2","Current Scope","Stat Detail shell is active; deeper resolution remains reserved.",x+ctx.theme.padding,y+108,w-(ctx.theme.padding*2),ctx.theme.warning);
+      ASC_ExplorerInfoRow(ctx,"stat.seed.row2","Current Scope","Stat Detail shell is active; prepared bucket/identity truth is provisional and deeper later-capability resolution remains reserved.",x+ctx.theme.padding,y+108,w-(ctx.theme.padding*2),ctx.theme.warning);
       return;
      }
 
@@ -1051,7 +1051,7 @@ void ASC_ExplorerRenderStatDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeStat
          label4="Aurora";
          line1="Open Symbol Snapshot remains placeholder-only.";
          line2="Candidate Filtering and Shortlist Selection are not active.";
-         line3="Deep Selective and Combined Opportunity lanes remain reserved.";
+         line3="Prepared bucket truth is active but provisional; Deep Selective and Combined Opportunity lanes remain reserved.";
          line4="Aurora downstream surface remains reserved.";
          break;
      }

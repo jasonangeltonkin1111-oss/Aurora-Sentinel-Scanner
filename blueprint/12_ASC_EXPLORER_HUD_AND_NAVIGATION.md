@@ -98,7 +98,7 @@ It is a stateful navigation system with:
 
 ## Explorer boundary law
 
-The explorer consumes prepared snapshot/view-model surfaces.
+The explorer consumes prepared snapshot/view-model surfaces. Market State Detection remains the only fully working capability; the prepared identity/bucket surfaces used here are active but provisional.
 Its canonical read surfaces include:
 - overview snapshot
 - bucket list snapshot
@@ -106,6 +106,8 @@ Its canonical read surfaces include:
 - symbol detail snapshot
 - stat detail snapshot
 - later combined-summary and Aurora-reserved snapshots
+
+Prepared bucket truth for the first explorer surface already exists for Layer 1 use. That truth is runtime-prepared, last-good aware, and explorer-consumed; it does not grant the explorer ownership of deeper compute.
 
 The explorer may:
 - request navigation changes
