@@ -219,3 +219,17 @@ Repo-state and runtime truth from the current audit were also used to re-evaluat
 
 ### Result
 The repo now has a much clearer HQ execution map for moving quickly without getting sloppy: every meaningful pass must carry version discipline, SHA-ledger maintenance, and a fault-finding sweep, while the next implementation order is kept anchored to runtime truth rather than convenience.
+
+---
+## 2026-03-21 — Final bounded truth-alignment and logging hardening pass
+
+### Why
+Shared version constants, blueprint 11 doctrine, and file-log failure visibility had drifted away from current live runtime truth.
+
+### What changed
+- aligned `ASC_Common.mqh` wrapper and explorer subsystem constants to the live runtime header state at 1.080 / 0.380
+- corrected blueprint 11 so symbol identity and bucketing are described as blueprint-active and runtime-active but provisional, with runtime-owned prepared buckets consumed by the explorer
+- added one-time terminal visibility when file logging cannot open or append, while preserving normal terminal printing and existing append behavior when the file path works
+
+### Result
+Current repo truth is tighter: shared version constants now match the live runtime header, blueprint doctrine no longer understates active prepared-bucket behavior, and file-log failure is no longer silent.

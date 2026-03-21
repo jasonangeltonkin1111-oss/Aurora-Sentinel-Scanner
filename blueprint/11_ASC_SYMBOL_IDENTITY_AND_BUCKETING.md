@@ -63,10 +63,12 @@ That legacy source is evidence, not active authority. ASC must preserve the cont
 
 Current status:
 - blueprint-active
-- runtime-reserved
-- not yet implemented in active ASC runtime
+- runtime-active but provisional
+- classification-driven bucket preparation is active for current Layer 1 explorer use
+- prepared bucket truth is runtime-owned and explorer-consumed
+- not yet trusted as fully mature downstream identity truth
 
-This capability should become active before or alongside later shortlist and explorer expansion work.
+This capability is active enough to support the current Explorer bucket flow, but taxonomy depth, confidence posture, and publication wording still need hardening before later downstream systems should treat it as fully trusted identity truth.
 
 ## Capability ownership
 
@@ -87,8 +89,8 @@ This capability should become active before or alongside later shortlist and exp
 - alias-kind assignment
 - confidence and review-status metadata
 - notes and manual-review carryforward
-- prepared dynamic bucket membership truth once this capability is active
-- bucket summary source data for later explorer adapters
+- prepared dynamic bucket membership truth for the active runtime bucket surface
+- bucket summary source data for explorer adapters and later downstream consumers
 
 ### Does not own
 - market-state classification
@@ -174,11 +176,13 @@ Sector, industry, theme, and subtype remain secondary but should be preserved fo
 ## Dynamic bucket preparation law
 
 Dynamic bucket membership shown in the HUD is runtime-prepared truth.
-When identity becomes active, the runtime must prepare and cache:
+The current runtime already prepares and caches:
 - classified symbol membership by bucket
 - membership counts and summary rollups
 - identity-backed symbol cards or references for bucket detail views
-- invalidation markers when identity truth changes
+- invalidation markers when runtime-owned bucket truth is refreshed
+
+That active preparation is still provisional. Taxonomy depth, confidence posture, and publication wording remain subject to further hardening before this should be treated as fully trusted downstream identity truth.
 
 The HUD must consume prepared bucket membership and summaries through adapters.
 It must not classify symbols, rebuild active membership, or walk raw identity catalogs during render.
@@ -263,8 +267,8 @@ It must stay separate from market-state logic and separate from strategy logic.
 
 ## Dynamic bucket view-model bridge
 
-Until live identity is active, the explorer may still consume a placeholder taxonomy.
-That taxonomy must now flow through a dynamic bucket view-model rather than fixed bucket slots.
+The explorer currently consumes a runtime-prepared dynamic bucket view-model rather than fixed bucket slots.
+That view-model is classification-driven and active for current Layer 1 use, but it should still be treated as provisional runtime truth rather than final downstream identity canon.
 
 The bucket render contract should carry at least:
 - bucket id
@@ -277,9 +281,10 @@ The bucket render contract should carry at least:
 - current display mode
 - snapshot freshness / invalidation metadata
 
-Placeholder symbol references must remain honest:
+Prepared symbol references must remain honest:
 - canonical references are allowed
-- broker tradability must not be implied
-- live membership must not be implied before real identity resolution exists
+- broker tradability must not be implied beyond current runtime evidence
+- unresolved symbols must stay outside prepared bucket membership until safely classified
+- filtering, shortlist, Aurora interpretation, and execution logic must not be implied by this active Layer 1 surface
 
 The HUD should be able to consume any bucket count and any per-bucket symbol count without structural rewrite.
