@@ -3,209 +3,174 @@
 
 #include "ASC_Common.mqh"
 
-struct ASC_BucketPlaceholder
+struct ASC_BucketSeedReference
   {
+   string symbol_ref;
+   string note;
+  };
+
+struct ASC_BucketDefinition
+  {
+   string bucket_id;
    string name;
    string family;
    string posture;
    string note;
+   ASC_BucketSeedReference symbol_refs[];
   };
 
-int ASC_GetBucketPlaceholders(ASC_BucketPlaceholder &buckets[])
+struct ASC_BucketViewModel
   {
-   ArrayResize(buckets,15);
+   string bucket_id;
+   string name;
+   string family;
+   string posture;
+   string note;
+   int resolved_symbol_count;
+   string symbol_refs[];
+   string symbol_notes[];
+   ASC_ExplorerBucketDisplayMode display_mode;
+  };
 
-   buckets[0].name="FX Major";
-   buckets[0].family="FX";
-   buckets[0].posture="Reserved Seed";
-   buckets[0].note="Seeded from legacy classification vocabulary for major currency pairs.";
-
-   buckets[1].name="FX Cross";
-   buckets[1].family="FX";
-   buckets[1].posture="Reserved Seed";
-   buckets[1].note="Reserved for cross-currency bucket activation.";
-
-   buckets[2].name="FX Exotic";
-   buckets[2].family="FX";
-   buckets[2].posture="Reserved Seed";
-   buckets[2].note="Reserved for regional and exotic currency coverage.";
-
-   buckets[3].name="Index US";
-   buckets[3].family="Index";
-   buckets[3].posture="Reserved Seed";
-   buckets[3].note="Reserved for US cash index instruments.";
-
-   buckets[4].name="Index Europe";
-   buckets[4].family="Index";
-   buckets[4].posture="Reserved Seed";
-   buckets[4].note="Reserved for European index instruments.";
-
-   buckets[5].name="Index Asia";
-   buckets[5].family="Index";
-   buckets[5].posture="Reserved Seed";
-   buckets[5].note="Reserved for Asian index instruments.";
-
-   buckets[6].name="Metals Precious";
-   buckets[6].family="Metals";
-   buckets[6].posture="Reserved Seed";
-   buckets[6].note="Reserved for precious-metal instruments.";
-
-   buckets[7].name="Metals Base";
-   buckets[7].family="Metals";
-   buckets[7].posture="Reserved Seed";
-   buckets[7].note="Reserved for base-metal instruments.";
-
-   buckets[8].name="Energy";
-   buckets[8].family="Commodities";
-   buckets[8].posture="Reserved Seed";
-   buckets[8].note="Reserved for energy-linked instruments.";
-
-   buckets[9].name="Crypto Large Cap";
-   buckets[9].family="Crypto";
-   buckets[9].posture="Reserved Seed";
-   buckets[9].note="Reserved for large-cap crypto coverage.";
-
-   buckets[10].name="Crypto Alt L1";
-   buckets[10].family="Crypto";
-   buckets[10].posture="Reserved Seed";
-   buckets[10].note="Reserved for alternative layer-1 crypto instruments.";
-
-   buckets[11].name="Crypto DeFi";
-   buckets[11].family="Crypto";
-   buckets[11].posture="Reserved Seed";
-   buckets[11].note="Reserved for DeFi-linked instruments.";
-
-   buckets[12].name="Crypto Payments";
-   buckets[12].family="Crypto";
-   buckets[12].posture="Reserved Seed";
-   buckets[12].note="Reserved for payment-network crypto instruments.";
-
-   buckets[13].name="US Equity Technology";
-   buckets[13].family="Stocks";
-   buckets[13].posture="Reserved Seed";
-   buckets[13].note="Reserved for US technology equities once identity is active.";
-
-   buckets[14].name="US Equity Financial";
-   buckets[14].family="Stocks";
-   buckets[14].posture="Reserved Seed";
-   buckets[14].note="Reserved for US financial equities once identity is active.";
-
-   return(ArraySize(buckets));
+void ASC_BucketSetSeedRef(ASC_BucketSeedReference &ref,const string symbol_ref,const string note)
+  {
+   ref.symbol_ref=symbol_ref;
+   ref.note=note;
   }
 
-int ASC_GetBucketSeedSymbolCount(const int bucket_index)
+void ASC_BucketDefine(ASC_BucketDefinition &bucket,const string bucket_id,const string name,const string family,const string posture,const string note)
   {
-   switch(bucket_index)
+   bucket.bucket_id=bucket_id;
+   bucket.name=name;
+   bucket.family=family;
+   bucket.posture=posture;
+   bucket.note=note;
+   ArrayResize(bucket.symbol_refs,0);
+  }
+
+void ASC_BucketAppendSeedRef(ASC_BucketDefinition &bucket,const string symbol_ref,const string note)
+  {
+   int slot=ArraySize(bucket.symbol_refs);
+   ArrayResize(bucket.symbol_refs,slot+1);
+   ASC_BucketSetSeedRef(bucket.symbol_refs[slot],symbol_ref,note);
+  }
+
+void ASC_BucketPlaceholderCatalog(ASC_BucketDefinition &buckets[])
+  {
+   ArrayResize(buckets,12);
+
+   ASC_BucketDefine(buckets[0],"fx-major","FX Major","FX","Reference Taxonomy","Canonical major-FX bucket placeholder until Symbol Identity and Bucketing can resolve live broker membership.");
+   ASC_BucketAppendSeedRef(buckets[0],"EURUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[0],"GBPUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[0],"USDJPY","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[0],"AUDUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[0],"USDCHF","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[1],"fx-cross","FX Cross","FX","Reference Taxonomy","Cross-currency placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[1],"EURGBP","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[1],"AUDNZD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[1],"CADJPY","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[1],"CHFJPY","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[2],"fx-regional","FX Regional and Exotic","FX","Reference Taxonomy","Regional and exotic FX placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDMXN","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDZAR","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[2],"EURTRY","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[3],"index-us","Index US","Index","Reference Taxonomy","US index placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[3],"US30","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[3],"US500","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[3],"NAS100","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[4],"index-europe","Index Europe","Index","Reference Taxonomy","European index placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[4],"GER40","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[4],"UK100","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[4],"EU50","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[5],"index-asia","Index Asia","Index","Reference Taxonomy","Asian index placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[5],"JPN225","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[5],"HK50","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[5],"AUS200","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[6],"metals-precious","Metals Precious","Metals","Reference Taxonomy","Precious-metals placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[6],"XAUUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[6],"XAGUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[6],"XPTUSD","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[7],"energy","Energy","Commodities","Reference Taxonomy","Energy placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[7],"BRENT","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[7],"WTI","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[7],"NATGAS","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[8],"crypto-core","Crypto Core","Crypto","Reference Taxonomy","Core crypto placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[8],"BTCUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[8],"ETHUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[8],"BNBUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[8],"SOLUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[8],"ADAUSD","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[9],"crypto-network-themes","Crypto Network Themes","Crypto","Reference Taxonomy","Crypto thematic placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[9],"XRPUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[9],"LTCUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[9],"UNIUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[9],"LINKUSD","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[10],"equity-us-tech","US Equity Technology","Stocks","Reference Taxonomy","US technology equity placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[10],"AAPL","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[10],"MSFT","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[10],"NVDA","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[10],"META","Canonical reference symbol only; not a claim of broker availability.");
+
+   ASC_BucketDefine(buckets[11],"equity-us-financial","US Equity Financial","Stocks","Reference Taxonomy","US financial equity placeholder bucket with canonical references only.");
+   ASC_BucketAppendSeedRef(buckets[11],"JPM","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[11],"BAC","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketAppendSeedRef(buckets[11],"GS","Canonical reference symbol only; not a claim of broker availability.");
+  }
+
+int ASC_GetBucketViewModels(ASC_BucketViewModel &views[],const ASC_ExplorerBucketDisplayMode display_mode)
+  {
+   ASC_BucketDefinition buckets[];
+   ASC_BucketPlaceholderCatalog(buckets);
+   int total=ArraySize(buckets);
+   ArrayResize(views,total);
+
+   for(int i=0;i<total;i++)
      {
-      case 0: return(3);
-      case 1: return(3);
-      case 2: return(3);
-      case 3: return(3);
-      case 4: return(3);
-      case 5: return(3);
-      case 6: return(3);
-      case 7: return(3);
-      case 8: return(3);
-      case 9: return(3);
-      case 10: return(3);
-      case 11: return(3);
-      case 12: return(3);
-      case 13: return(3);
-      case 14: return(3);
+      views[i].bucket_id=buckets[i].bucket_id;
+      views[i].name=buckets[i].name;
+      views[i].family=buckets[i].family;
+      views[i].posture=buckets[i].posture;
+      views[i].note=buckets[i].note;
+      views[i].resolved_symbol_count=ArraySize(buckets[i].symbol_refs);
+      views[i].display_mode=display_mode;
+      ArrayResize(views[i].symbol_refs,views[i].resolved_symbol_count);
+      ArrayResize(views[i].symbol_notes,views[i].resolved_symbol_count);
+      for(int j=0;j<views[i].resolved_symbol_count;j++)
+        {
+         views[i].symbol_refs[j]=buckets[i].symbol_refs[j].symbol_ref;
+         views[i].symbol_notes[j]=buckets[i].symbol_refs[j].note;
+        }
      }
-   return(0);
+   return(total);
   }
 
-string ASC_GetBucketSeedSymbol(const int bucket_index,const int row)
+int ASC_BucketDisplayLimit(const ASC_BucketViewModel &bucket)
   {
-   switch(bucket_index)
+   if(bucket.display_mode==ASC_BUCKET_DISPLAY_TOP_3)
+      return((bucket.resolved_symbol_count<3) ? bucket.resolved_symbol_count : 3);
+   if(bucket.display_mode==ASC_BUCKET_DISPLAY_TOP_5)
+      return((bucket.resolved_symbol_count<5) ? bucket.resolved_symbol_count : 5);
+   return(bucket.resolved_symbol_count);
+  }
+
+string ASC_BucketDisplayModeText(const ASC_ExplorerBucketDisplayMode mode)
+  {
+   switch(mode)
      {
-      case 0:
-         if(row==0) return("EURUSD");
-         if(row==1) return("GBPUSD");
-         if(row==2) return("USDJPY");
-         break;
-      case 1:
-         if(row==0) return("EURGBP");
-         if(row==1) return("AUDCAD");
-         if(row==2) return("NZDJPY");
-         break;
-      case 2:
-         if(row==0) return("USDMXN");
-         if(row==1) return("USDZAR");
-         if(row==2) return("EURTRY");
-         break;
-      case 3:
-         if(row==0) return("US30");
-         if(row==1) return("US500");
-         if(row==2) return("NAS100");
-         break;
-      case 4:
-         if(row==0) return("GER40");
-         if(row==1) return("UK100");
-         if(row==2) return("EU50");
-         break;
-      case 5:
-         if(row==0) return("JPN225");
-         if(row==1) return("HK50");
-         if(row==2) return("AUS200");
-         break;
-      case 6:
-         if(row==0) return("XAUUSD");
-         if(row==1) return("XAGUSD");
-         if(row==2) return("XPTUSD");
-         break;
-      case 7:
-         if(row==0) return("COPPER");
-         if(row==1) return("ALUMINIUM");
-         if(row==2) return("ZINC");
-         break;
-      case 8:
-         if(row==0) return("BRENT");
-         if(row==1) return("XTIUSD");
-         if(row==2) return("NGAS");
-         break;
-      case 9:
-         if(row==0) return("BTCUSD");
-         if(row==1) return("ETHUSD");
-         if(row==2) return("BNBUSD");
-         break;
-      case 10:
-         if(row==0) return("SOLUSD");
-         if(row==1) return("ADAUSD");
-         if(row==2) return("DOTUSD");
-         break;
-      case 11:
-         if(row==0) return("UNIUSD");
-         if(row==1) return("AVEUSD");
-         if(row==2) return("LNKUSD");
-         break;
-      case 12:
-         if(row==0) return("XRPUSD");
-         if(row==1) return("LTCUSD");
-         if(row==2) return("XLMUSD");
-         break;
-      case 13:
-         if(row==0) return("AAPL.US");
-         if(row==1) return("AMZN.US");
-         if(row==2) return("META.US");
-         break;
-      case 14:
-         if(row==0) return("JPM.US");
-         if(row==1) return("BAC.US");
-         if(row==2) return("GS.US");
-         break;
+      case ASC_BUCKET_DISPLAY_TOP_5: return("Top 5");
+      case ASC_BUCKET_DISPLAY_ALL:   return("All");
+      default:                       return("Top 3");
      }
-   return("Seed Pending");
-  }
-
-string ASC_GetBucketSeedNote(const int bucket_index)
-  {
-   ASC_BucketPlaceholder buckets[];
-   int total=ASC_GetBucketPlaceholders(buckets);
-   if(bucket_index<0 || bucket_index>=total)
-      return("Reserved bucket detail is not available yet.");
-   return(buckets[bucket_index].note);
   }
 
 #endif

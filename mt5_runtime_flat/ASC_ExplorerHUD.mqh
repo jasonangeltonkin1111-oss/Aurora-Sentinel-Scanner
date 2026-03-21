@@ -61,18 +61,22 @@ struct ASC_ExplorerNavState
    int history_bucket[24];
    int history_symbol[24];
    int history_stat[24];
+   string history_bucket_mode[24];
    string history_seed_symbol[24];
    int history_bucket_scroll[24];
    int history_detail_scroll[24];
    int history_symbol_scroll[24];
    int history_stat_scroll[24];
+   int history_bucket_mode_scroll[24];
    int history_count;
    int bucket_scroll;
    int bucket_detail_scroll;
    int symbol_scroll;
    int stat_scroll;
+   int bucket_mode_scroll;
    int selected_bucket_index;
    int selected_symbol_index;
+   ASC_ExplorerBucketDisplayMode bucket_display_mode;
    ASC_ExplorerStatView selected_stat_view;
    string selected_seed_symbol;
    bool dirty;
@@ -220,11 +224,13 @@ void ASC_ExplorerPushHistory(ASC_ExplorerContext &ctx)
          ctx.nav.history_bucket[i-1]=ctx.nav.history_bucket[i];
          ctx.nav.history_symbol[i-1]=ctx.nav.history_symbol[i];
          ctx.nav.history_stat[i-1]=ctx.nav.history_stat[i];
+         ctx.nav.history_bucket_mode[i-1]=ctx.nav.history_bucket_mode[i];
          ctx.nav.history_seed_symbol[i-1]=ctx.nav.history_seed_symbol[i];
          ctx.nav.history_bucket_scroll[i-1]=ctx.nav.history_bucket_scroll[i];
          ctx.nav.history_detail_scroll[i-1]=ctx.nav.history_detail_scroll[i];
          ctx.nav.history_symbol_scroll[i-1]=ctx.nav.history_symbol_scroll[i];
          ctx.nav.history_stat_scroll[i-1]=ctx.nav.history_stat_scroll[i];
+         ctx.nav.history_bucket_mode_scroll[i-1]=ctx.nav.history_bucket_mode_scroll[i];
         }
       ctx.nav.history_count--;
      }
@@ -234,11 +240,13 @@ void ASC_ExplorerPushHistory(ASC_ExplorerContext &ctx)
    ctx.nav.history_bucket[slot]=ctx.nav.selected_bucket_index;
    ctx.nav.history_symbol[slot]=ctx.nav.selected_symbol_index;
    ctx.nav.history_stat[slot]=(int)ctx.nav.selected_stat_view;
+   ctx.nav.history_bucket_mode[slot]=IntegerToString((int)ctx.nav.bucket_display_mode);
    ctx.nav.history_seed_symbol[slot]=ctx.nav.selected_seed_symbol;
    ctx.nav.history_bucket_scroll[slot]=ctx.nav.bucket_scroll;
    ctx.nav.history_detail_scroll[slot]=ctx.nav.bucket_detail_scroll;
    ctx.nav.history_symbol_scroll[slot]=ctx.nav.symbol_scroll;
    ctx.nav.history_stat_scroll[slot]=ctx.nav.stat_scroll;
+   ctx.nav.history_bucket_mode_scroll[slot]=ctx.nav.bucket_mode_scroll;
    ctx.nav.history_count++;
   }
 
@@ -257,6 +265,7 @@ void ASC_ExplorerGoHome(ASC_ExplorerContext &ctx)
    ctx.nav.selected_stat_view=ASC_EXPLORER_STAT_NONE;
    ctx.nav.selected_seed_symbol="";
    ctx.nav.selected_symbol_index=-1;
+   ctx.nav.bucket_display_mode=ASC_BUCKET_DISPLAY_TOP_3;
    ctx.nav.dirty=true;
   }
 
@@ -274,11 +283,13 @@ void ASC_ExplorerGoBack(ASC_ExplorerContext &ctx)
    ctx.nav.selected_bucket_index=ctx.nav.history_bucket[slot];
    ctx.nav.selected_symbol_index=ctx.nav.history_symbol[slot];
    ctx.nav.selected_stat_view=(ASC_ExplorerStatView)ctx.nav.history_stat[slot];
+   ctx.nav.bucket_display_mode=(ASC_ExplorerBucketDisplayMode)StringToInteger(ctx.nav.history_bucket_mode[slot]);
    ctx.nav.selected_seed_symbol=ctx.nav.history_seed_symbol[slot];
    ctx.nav.bucket_scroll=ctx.nav.history_bucket_scroll[slot];
    ctx.nav.bucket_detail_scroll=ctx.nav.history_detail_scroll[slot];
    ctx.nav.symbol_scroll=ctx.nav.history_symbol_scroll[slot];
    ctx.nav.stat_scroll=ctx.nav.history_stat_scroll[slot];
+   ctx.nav.bucket_mode_scroll=ctx.nav.history_bucket_mode_scroll[slot];
    ctx.nav.dirty=true;
   }
 
@@ -323,8 +334,8 @@ string ASC_ExplorerStatText(const ASC_ExplorerStatView view)
 
 string ASC_ExplorerSelectedBucketName(ASC_ExplorerContext &ctx)
   {
-   ASC_BucketPlaceholder buckets[];
-   int total=ASC_GetBucketPlaceholders(buckets);
+   ASC_BucketViewModel buckets[];
+   int total=ASC_GetBucketViewModels(buckets,ctx.nav.bucket_display_mode);
    if(ctx.nav.selected_bucket_index<0 || ctx.nav.selected_bucket_index>=total)
       return("Bucket Detail");
    return(buckets[ctx.nav.selected_bucket_index].name);
@@ -402,16 +413,16 @@ void ASC_ExplorerRenderOverview(ASC_ExplorerContext &ctx,const ASC_RuntimeSettin
 
 void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const int x,const int y,const int w,const int h)
   {
-   ASC_BucketPlaceholder buckets[];
-   int total=ASC_GetBucketPlaceholders(buckets);
-   int row_h=54;
+   ASC_BucketViewModel buckets[];
+   int total=ASC_GetBucketViewModels(buckets,ctx.nav.bucket_display_mode);
+   int row_h=58;
    int visible=ASC_ExplorerVisibleRows(ctx,h-ctx.theme.title_height-ctx.theme.gap);
    int max_scroll=(total>visible ? total-visible : 0);
    if(ctx.nav.bucket_scroll<0) ctx.nav.bucket_scroll=0;
    if(ctx.nav.bucket_scroll>max_scroll) ctx.nav.bucket_scroll=max_scroll;
 
    ASC_ExplorerPanelTitle(ctx,"buckets.panel","Bucket List",x,y,w);
-   ASC_ExplorerLabel(ctx,"buckets.note","Bucket vocabulary is seeded now; live identity linking remains reserved until Symbol Identity and Bucketing activates.",x+ctx.theme.padding,y+ctx.theme.title_height+4,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"buckets.note","Bucket cards now consume a dynamic view-model. Placeholder taxonomy remains honest until Symbol Identity and Bucketing activates.",x+ctx.theme.padding,y+ctx.theme.title_height+4,ctx.theme.muted);
 
    int start_y=y+ctx.theme.title_height+ctx.theme.row_height+ctx.theme.gap;
    for(int i=0;i<visible && (ctx.nav.bucket_scroll+i)<total;i++)
@@ -419,57 +430,88 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const int x,const int
       int idx=ctx.nav.bucket_scroll+i;
       int row_y=start_y+i*(row_h+ctx.theme.gap);
       color fill=(idx==ctx.nav.selected_bucket_index ? ctx.theme.selected_fill : ctx.theme.panel_fill);
+      string count_text=IntegerToString(buckets[idx].resolved_symbol_count) + " refs | Mode " + ASC_BucketDisplayModeText(buckets[idx].display_mode);
       ASC_ExplorerRect(ctx,"buckets.row." + IntegerToString(idx),x,row_y,w,row_h,fill,ctx.theme.border);
       ASC_ExplorerLabel(ctx,"buckets.name." + IntegerToString(idx),buckets[idx].name,x+ctx.theme.padding,row_y+6,ctx.theme.text,10);
       ASC_ExplorerLabel(ctx,"buckets.family." + IntegerToString(idx),buckets[idx].family + " | " + buckets[idx].posture,x+ctx.theme.padding,row_y+24,ctx.theme.muted);
-      ASC_ExplorerLabel(ctx,"buckets.desc." + IntegerToString(idx),buckets[idx].note,x+ctx.theme.padding,row_y+24+ctx.theme.row_height,ctx.theme.reserved);
-      ASC_ExplorerButton(ctx,"action.bucket." + IntegerToString(idx),"Open",x+w-82,row_y+14,70,ctx.theme.button_height,ctx.theme.accent,false);
+      ASC_ExplorerLabel(ctx,"buckets.count." + IntegerToString(idx),count_text,x+ctx.theme.padding,row_y+24+ctx.theme.row_height,ctx.theme.accent_alt);
+      ASC_ExplorerButton(ctx,"action.bucket." + IntegerToString(idx),"Open",x+w-82,row_y+16,70,ctx.theme.button_height,ctx.theme.accent,false);
      }
   }
 
 void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const int x,const int y,const int w,const int h)
   {
-   ASC_BucketPlaceholder buckets[];
-   int total=ASC_GetBucketPlaceholders(buckets);
+   ASC_BucketViewModel buckets[];
+   int total=ASC_GetBucketViewModels(buckets,ctx.nav.bucket_display_mode);
+   if(total<=0)
+     {
+      ASC_ExplorerRect(ctx,"bucket.detail.empty",x,y,w,h,ctx.theme.panel_fill,ctx.theme.border);
+      ASC_ExplorerLabel(ctx,"bucket.detail.empty.title","Bucket Detail",x+ctx.theme.padding,y+8,ctx.theme.text,11);
+      ASC_ExplorerLabel(ctx,"bucket.detail.empty.note","No bucket definitions are available yet.",x+ctx.theme.padding,y+32,ctx.theme.warning);
+      return;
+     }
    if(ctx.nav.selected_bucket_index<0 || ctx.nav.selected_bucket_index>=total)
       ctx.nav.selected_bucket_index=0;
 
-   ASC_BucketPlaceholder bucket=buckets[ctx.nav.selected_bucket_index];
-   int header_h=94;
+   ASC_BucketViewModel bucket=buckets[ctx.nav.selected_bucket_index];
+   int header_h=86;
+   int toggle_h=42;
+   int summary_h=138;
+   int future_h=108;
    int symbol_area_y=y+header_h+ctx.theme.gap;
-   int symbol_area_h=h-header_h-ctx.theme.gap;
-   int list_w=(w*60)/100;
-   int info_w=w-list_w-ctx.theme.gap;
+   int toggle_y=symbol_area_y;
+   int lane_y=toggle_y+toggle_h+ctx.theme.gap;
+   int summary_y=h+y-summary_h-future_h-ctx.theme.gap;
+   int future_y=h+y-future_h;
+   int lane_h=summary_y-lane_y-ctx.theme.gap;
 
    ASC_ExplorerRect(ctx,"bucket.detail.header",x,y,w,header_h,ctx.theme.panel_fill,ctx.theme.border);
    ASC_ExplorerLabel(ctx,"bucket.detail.title",bucket.name,x+ctx.theme.padding,y+8,ctx.theme.text,11);
-   ASC_ExplorerLabel(ctx,"bucket.detail.family",bucket.family + " | " + bucket.posture,x+ctx.theme.padding,y+28,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"bucket.detail.family",bucket.family + " | " + bucket.posture + " | ID " + bucket.bucket_id,x+ctx.theme.padding,y+28,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"bucket.detail.note",bucket.note,x+ctx.theme.padding,y+46,ctx.theme.reserved);
-   ASC_ExplorerLabel(ctx,"bucket.detail.honesty","Bucket Detail is scaffolded now. Live bucket filtering and shortlist logic remain reserved.",x+ctx.theme.padding,y+64,ctx.theme.warning);
+   ASC_ExplorerLabel(ctx,"bucket.detail.honesty","Bucket Detail is dynamic-ready only. Market State Detection remains the only active capability.",x+ctx.theme.padding,y+64,ctx.theme.warning);
 
-   ASC_ExplorerPanelTitle(ctx,"bucket.detail.symbols","Seed Symbol Lane",x,symbol_area_y,list_w);
-   int seed_count=ASC_GetBucketSeedSymbolCount(ctx.nav.selected_bucket_index);
-   int visible=ASC_ExplorerVisibleRows(ctx,symbol_area_h-ctx.theme.title_height-ctx.theme.gap);
-   int max_scroll=(seed_count>visible ? seed_count-visible : 0);
-   if(ctx.nav.bucket_detail_scroll<0) ctx.nav.bucket_detail_scroll=0;
-   if(ctx.nav.bucket_detail_scroll>max_scroll) ctx.nav.bucket_detail_scroll=max_scroll;
-   int list_y=symbol_area_y+ctx.theme.title_height+ctx.theme.gap;
-   for(int i=0;i<visible && (ctx.nav.bucket_detail_scroll+i)<seed_count;i++)
+   ASC_ExplorerRect(ctx,"bucket.detail.mode.strip",x,toggle_y,w,toggle_h,ctx.theme.section_fill,ctx.theme.border);
+   ASC_ExplorerLabel(ctx,"bucket.detail.mode.label","Display Mode",x+ctx.theme.padding,toggle_y+12,ctx.theme.text,10);
+   int mode_button_w=74;
+   int mode_gap=ctx.theme.gap;
+   int mode_x=x+120;
+   ASC_ExplorerButton(ctx,"action.bucket_mode.top3","Top 3",mode_x,toggle_y+8,mode_button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_TOP_3));
+   ASC_ExplorerButton(ctx,"action.bucket_mode.top5","Top 5",mode_x+mode_button_w+mode_gap,toggle_y+8,mode_button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_TOP_5));
+   ASC_ExplorerButton(ctx,"action.bucket_mode.all","All",mode_x+((mode_button_w+mode_gap)*2),toggle_y+8,mode_button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL));
+   ASC_ExplorerLabel(ctx,"bucket.detail.mode.state","Visible now: " + IntegerToString(ASC_BucketDisplayLimit(bucket)) + " of " + IntegerToString(bucket.resolved_symbol_count) + " refs",x+w-220,toggle_y+12,ctx.theme.muted);
+
+   ASC_ExplorerPanelTitle(ctx,"bucket.detail.symbols","Symbol Lane",x,lane_y,w);
+   int visible=ASC_ExplorerVisibleRows(ctx,lane_h-ctx.theme.title_height-ctx.theme.gap);
+   int display_count=ASC_BucketDisplayLimit(bucket);
+   int lane_scrollable_count=(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL ? display_count : 0);
+   int max_scroll=(lane_scrollable_count>visible ? lane_scrollable_count-visible : 0);
+   if(ctx.nav.bucket_mode_scroll<0) ctx.nav.bucket_mode_scroll=0;
+   if(ctx.nav.bucket_mode_scroll>max_scroll) ctx.nav.bucket_mode_scroll=max_scroll;
+   if(ctx.nav.bucket_display_mode!=ASC_BUCKET_DISPLAY_ALL)
+      ctx.nav.bucket_mode_scroll=0;
+   int list_y=lane_y+ctx.theme.title_height+ctx.theme.gap;
+   for(int i=0;i<visible && (ctx.nav.bucket_mode_scroll+i)<display_count;i++)
      {
-      int row=ctx.nav.bucket_detail_scroll+i;
+      int row=ctx.nav.bucket_mode_scroll+i;
       int row_y=list_y+i*(46+ctx.theme.gap);
-      ASC_ExplorerRect(ctx,"bucket.detail.seed." + IntegerToString(row),x,row_y,list_w,46,ctx.theme.panel_alt_fill,ctx.theme.border);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(row),ASC_GetBucketSeedSymbol(ctx.nav.selected_bucket_index,row),x+ctx.theme.padding,row_y+8,ctx.theme.text,10);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(row),"Seed preview only until live identity activation.",x+ctx.theme.padding,row_y+24,ctx.theme.muted);
-      ASC_ExplorerButton(ctx,"action.seed_symbol." + IntegerToString(row),"Inspect",x+list_w-82,row_y+11,70,ctx.theme.button_height,ctx.theme.accent,false);
+      ASC_ExplorerRect(ctx,"bucket.detail.seed." + IntegerToString(row),x,row_y,w,46,ctx.theme.panel_alt_fill,ctx.theme.border);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(row),bucket.symbol_refs[row],x+ctx.theme.padding,row_y+8,ctx.theme.text,10);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(row),bucket.symbol_notes[row],x+ctx.theme.padding,row_y+24,ctx.theme.muted);
+      ASC_ExplorerButton(ctx,"action.seed_symbol." + IntegerToString(row),"Inspect",x+w-82,row_y+11,70,ctx.theme.button_height,ctx.theme.accent,false);
      }
 
-   ASC_ExplorerPanelTitle(ctx,"bucket.detail.summary","Bucket Summary",x+list_w+ctx.theme.gap,symbol_area_y,info_w);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary1","Family",bucket.family,x+list_w+ctx.theme.gap,symbol_area_y+ctx.theme.title_height+ctx.theme.gap,info_w);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary2","Posture",bucket.posture,x+list_w+ctx.theme.gap,symbol_area_y+ctx.theme.title_height+ctx.theme.gap+26,info_w);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary3","Seed Symbols",IntegerToString(seed_count),x+list_w+ctx.theme.gap,symbol_area_y+ctx.theme.title_height+ctx.theme.gap+52,info_w);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary4","Capability State","Bucket structure ready; live identity still reserved",x+list_w+ctx.theme.gap,symbol_area_y+ctx.theme.title_height+ctx.theme.gap+78,info_w);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary5","Future Path","Bucket-preserving views can activate here later",x+list_w+ctx.theme.gap,symbol_area_y+ctx.theme.title_height+ctx.theme.gap+104,info_w);
+   ASC_ExplorerPanelTitle(ctx,"bucket.detail.summary","Bucket Summary",x,summary_y,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary1","Family",bucket.family, x,summary_y+ctx.theme.title_height+ctx.theme.gap,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary2","Resolved References",IntegerToString(bucket.resolved_symbol_count),x,summary_y+ctx.theme.title_height+ctx.theme.gap+26,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary3","Visible Window",IntegerToString(display_count) + " in " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),x,summary_y+ctx.theme.title_height+ctx.theme.gap+52,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary4","Membership Truth","Canonical references only until live identity resolution is active",x,summary_y+ctx.theme.title_height+ctx.theme.gap+78,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary5","Scroll State",(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL ? ("All-mode scroll row " + IntegerToString(ctx.nav.bucket_mode_scroll)) : "Top modes pin the lane without scroll"),x,summary_y+ctx.theme.title_height+ctx.theme.gap+104,w);
+
+   ASC_ExplorerPanelTitle(ctx,"bucket.detail.future","Reserved Future Layer Strip",x,future_y,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.future1","Open Symbol Snapshot","Reserved insertion point only",x,future_y+ctx.theme.title_height+ctx.theme.gap,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.future2","Candidate Filtering / Shortlist","Reserved insertion point only",x,future_y+ctx.theme.title_height+ctx.theme.gap+26,w);
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.future3","Deep / Combined / Aurora","Reserved insertion point only",x,future_y+ctx.theme.title_height+ctx.theme.gap+52,w);
   }
 
 void ASC_ExplorerSectionPanel(const ASC_ExplorerContext &ctx,const string id,const string title,const string l1,const string l2,const string l3,const int x,const int y,const int w,const int h,const bool selected,const color accent)
@@ -663,6 +705,7 @@ void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSet
    ASC_ExplorerLabel(ctx,"rail.state","Path",x+ctx.theme.padding,button_y,ctx.theme.text,10);
    ASC_ExplorerLabel(ctx,"rail.state.value",ASC_ExplorerBreadcrumbText(ctx,states,count),x+ctx.theme.padding,button_y+18,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"rail.density","Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),x+ctx.theme.padding,button_y+42,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"rail.bucketmode","Bucket Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),x+ctx.theme.padding,button_y+60,ctx.theme.muted);
   }
 
 void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const int x,const int y,const int w)
@@ -734,8 +777,10 @@ void ASC_ExplorerInit(ASC_ExplorerContext &ctx,const long chart_id)
    ctx.nav.bucket_detail_scroll=0;
    ctx.nav.symbol_scroll=0;
    ctx.nav.stat_scroll=0;
+   ctx.nav.bucket_mode_scroll=0;
    ctx.nav.selected_bucket_index=0;
    ctx.nav.selected_symbol_index=-1;
+   ctx.nav.bucket_display_mode=ASC_BUCKET_DISPLAY_TOP_3;
    ctx.nav.selected_stat_view=ASC_EXPLORER_STAT_NONE;
    ctx.nav.selected_seed_symbol="";
    ctx.nav.dirty=true;
@@ -770,7 +815,10 @@ void ASC_ExplorerAdjustScroll(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings
          ctx.nav.bucket_scroll+=direction*step;
          break;
       case ASC_EXPLORER_VIEW_BUCKET_DETAIL:
-         ctx.nav.bucket_detail_scroll+=direction*step;
+         if(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL)
+            ctx.nav.bucket_mode_scroll+=direction*step;
+         else
+            ctx.nav.bucket_detail_scroll+=direction*step;
          break;
       case ASC_EXPLORER_VIEW_SYMBOL_DETAIL:
          ctx.nav.symbol_scroll+=direction*step;
@@ -831,10 +879,32 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
       settings.explorer_density_mode=(settings.explorer_density_mode>=2 ? 0 : settings.explorer_density_mode+1);
       ctx.nav.dirty=true;
      }
+   else if(action=="action.bucket_mode.top3")
+     {
+      ctx.nav.bucket_display_mode=ASC_BUCKET_DISPLAY_TOP_3;
+      ctx.nav.bucket_mode_scroll=0;
+      ctx.nav.bucket_detail_scroll=0;
+      ctx.nav.dirty=true;
+     }
+   else if(action=="action.bucket_mode.top5")
+     {
+      ctx.nav.bucket_display_mode=ASC_BUCKET_DISPLAY_TOP_5;
+      ctx.nav.bucket_mode_scroll=0;
+      ctx.nav.bucket_detail_scroll=0;
+      ctx.nav.dirty=true;
+     }
+   else if(action=="action.bucket_mode.all")
+     {
+      ctx.nav.bucket_display_mode=ASC_BUCKET_DISPLAY_ALL;
+      ctx.nav.bucket_mode_scroll=0;
+      ctx.nav.bucket_detail_scroll=0;
+      ctx.nav.dirty=true;
+     }
    else if(StringFind(action,"action.bucket.")==0)
      {
       ctx.nav.selected_bucket_index=(int)StringToInteger(StringSubstr(action,StringLen("action.bucket.")));
       ctx.nav.bucket_detail_scroll=0;
+      ctx.nav.bucket_mode_scroll=0;
       ctx.nav.selected_seed_symbol="";
       ctx.nav.selected_symbol_index=-1;
       ctx.nav.selected_stat_view=ASC_EXPLORER_STAT_NONE;
@@ -843,7 +913,14 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
    else if(StringFind(action,"action.seed_symbol.")==0)
      {
       int seed_index=(int)StringToInteger(StringSubstr(action,StringLen("action.seed_symbol.")));
-      string desired=ASC_GetBucketSeedSymbol(ctx.nav.selected_bucket_index,seed_index);
+      ASC_BucketViewModel bucket_views[];
+      int bucket_total=ASC_GetBucketViewModels(bucket_views,ctx.nav.bucket_display_mode);
+      if(ctx.nav.selected_bucket_index<0 || ctx.nav.selected_bucket_index>=bucket_total)
+         return;
+      int display_count=ASC_BucketDisplayLimit(bucket_views[ctx.nav.selected_bucket_index]);
+      if(seed_index<0 || seed_index>=display_count)
+         return;
+      string desired=bucket_views[ctx.nav.selected_bucket_index].symbol_refs[seed_index];
       int match=-1;
       for(int i=0;i<count;i++)
         {

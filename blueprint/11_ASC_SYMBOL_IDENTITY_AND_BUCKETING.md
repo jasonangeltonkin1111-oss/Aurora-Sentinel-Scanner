@@ -236,3 +236,25 @@ Symbol Identity and Bucketing is the canonical ASC answer to:
 - what bucket and taxonomy should later capabilities consume?
 
 It must stay separate from market-state logic and separate from strategy logic.
+
+## Dynamic bucket view-model bridge
+
+Until live identity is active, the explorer may still consume a placeholder taxonomy.
+That taxonomy must now flow through a dynamic bucket view-model rather than fixed bucket slots.
+
+The bucket render contract should carry at least:
+- bucket id
+- bucket name
+- family
+- posture
+- note
+- resolved symbol count
+- dynamic symbol references
+- current display mode
+
+Placeholder symbol references must remain honest:
+- canonical references are allowed
+- broker tradability must not be implied
+- live membership must not be implied before real identity resolution exists
+
+The HUD should be able to consume any bucket count and any per-bucket symbol count without structural rewrite.

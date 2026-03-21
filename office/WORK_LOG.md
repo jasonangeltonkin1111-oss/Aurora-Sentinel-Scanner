@@ -139,3 +139,19 @@ The Explorer shell was structurally correct, but it still felt too flat, bucket 
 
 ### Result
 The active Layer 1 console is now visually stronger, navigation-safe, future-safe, and explicitly version-disciplined without widening beyond the current capability boundary.
+
+---
+## 2026-03-21 — Dynamic bucket architecture pass
+
+### Why
+The HUD bucket flow was still locked to a fixed placeholder list and fixed seed counts, which would make future identity activation and later bucket-aware layers harder to thread in cleanly.
+
+### What changed
+- replaced fixed bucket placeholder helpers with a dynamic bucket definition and render view-model layer
+- added bucket detail display modes for Top 3, Top 5, and All with navigation-state persistence and all-mode scroll handling
+- reshaped bucket detail into header, mode strip, symbol lane, summary, and reserved future strip regions
+- removed fake broker-specific equity suffix claims from placeholder references and kept canonical references explicit
+- bumped wrapper and explorer subsystem versions for the structural HUD expansion
+
+### Result
+Bucket List and Bucket Detail are now dynamic-ready for future identity activation while Market State Detection remains the only active truth surface.
