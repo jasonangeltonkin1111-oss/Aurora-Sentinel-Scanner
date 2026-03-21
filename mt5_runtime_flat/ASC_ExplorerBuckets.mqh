@@ -41,6 +41,8 @@ struct ASC_BucketPreparedSymbol
    string            industry;
    string            theme_bucket;
    string            subtype;
+   string            secondary_group_id;
+   string            secondary_group_name;
    string            match_kind;
    string            review_status;
    string            note;
@@ -229,6 +231,48 @@ void ASC_BucketSortViews(ASC_BucketViewModel &views[])
      }
   }
 
+string ASC_CL_StockSecondaryGroupId(const ASC_SymbolClassification &classification)
+  {
+   string asset_class=ASC_Trim(classification.asset_class);
+   StringToUpper(asset_class);
+   if(asset_class!="STOCK")
+      return("");
+
+   string primary_upper=ASC_Trim(classification.primary_bucket);
+   StringToUpper(primary_upper);
+   string theme_upper=ASC_Trim(classification.theme_bucket);
+   StringToUpper(theme_upper);
+   string canonical_upper=ASC_Trim(classification.canonical_symbol);
+   StringToUpper(canonical_upper);
+
+   if(StringFind(primary_upper,"HK_")==0 || StringFind(primary_upper,"HONG_KONG")>=0
+      || theme_upper=="HK" || theme_upper=="HONG_KONG"
+      || StringFind(canonical_upper,".HK")>0)
+      return("hk_stocks");
+   if(StringFind(primary_upper,"EU_")==0 || StringFind(primary_upper,"EUR_")==0
+      || theme_upper=="EU" || theme_upper=="EUROPE"
+      || StringFind(canonical_upper,".DE")>0 || StringFind(canonical_upper,".PA")>0)
+      return("eu_stocks");
+   if(StringFind(primary_upper,"US_")==0 || theme_upper=="US" || theme_upper=="UNITED_STATES"
+      || StringFind(canonical_upper,".US")>0)
+      return("us_stocks");
+   return("global_stocks");
+  }
+
+string ASC_CL_StockSecondaryGroupName(const ASC_SymbolClassification &classification)
+  {
+   string group_id=ASC_CL_StockSecondaryGroupId(classification);
+   if(group_id=="us_stocks")
+      return("US Stocks");
+   if(group_id=="eu_stocks")
+      return("EU Stocks");
+   if(group_id=="hk_stocks")
+      return("HK Stocks");
+   if(group_id=="global_stocks")
+      return("Global Stocks");
+   return("");
+  }
+
 string ASC_CL_MainBucketId(const ASC_SymbolClassification &classification)
   {
    string asset_class=classification.asset_class;
@@ -284,6 +328,9 @@ string ASC_CL_MainBucketNote(const ASC_SymbolClassification &classification)
       note+=" Primary " + classification.primary_bucket + ".";
    if(classification.asset_class=="STOCK")
      {
+      string secondary_group=ASC_CL_StockSecondaryGroupName(classification);
+      if(secondary_group!="")
+         note+=" Secondary group " + secondary_group + ".";
       if(classification.theme_bucket!="")
          note+=" Region/Theme seed " + classification.theme_bucket + ".";
       if(classification.sector!="")
@@ -544,10 +591,13 @@ void ASC_PreparedPhaseClassificationPass(const string server_key,ASC_SymbolState
          working.symbols[i].industry=classification.industry;
          working.symbols[i].theme_bucket=classification.theme_bucket;
          working.symbols[i].subtype=classification.subtype;
+         working.symbols[i].secondary_group_id=ASC_CL_StockSecondaryGroupId(classification);
+         working.symbols[i].secondary_group_name=ASC_CL_StockSecondaryGroupName(classification);
          working.symbols[i].match_kind=classification.match_kind;
          working.symbols[i].review_status=classification.review_status;
          working.symbols[i].note="Canonical " + classification.canonical_symbol
                               + " | Primary " + classification.primary_bucket
+                              + " | Group " + (working.symbols[i].secondary_group_name=="" ? "N/A" : working.symbols[i].secondary_group_name)
                               + " | Theme " + (classification.theme_bucket=="" ? "N/A" : classification.theme_bucket)
                               + " | Sector " + (classification.sector=="" ? "N/A" : classification.sector)
                               + " | Industry " + (classification.industry=="" ? "N/A" : classification.industry)
@@ -580,10 +630,13 @@ void ASC_PreparedPhaseClassificationPass(const string server_key,ASC_SymbolState
       prepared_symbol.industry=(batch_id==ASC_PREPARED_BATCH_STOCK_MAIN ? "" : classification.industry);
       prepared_symbol.theme_bucket=classification.theme_bucket;
       prepared_symbol.subtype=(batch_id==ASC_PREPARED_BATCH_STOCK_MAIN ? "" : classification.subtype);
+      prepared_symbol.secondary_group_id=ASC_CL_StockSecondaryGroupId(classification);
+      prepared_symbol.secondary_group_name=ASC_CL_StockSecondaryGroupName(classification);
       prepared_symbol.match_kind=classification.match_kind;
       prepared_symbol.review_status=classification.review_status;
       prepared_symbol.note="Canonical " + classification.canonical_symbol
                          + " | Primary " + classification.primary_bucket
+                         + " | Group " + (prepared_symbol.secondary_group_name=="" ? "N/A" : prepared_symbol.secondary_group_name)
                          + " | Theme " + (classification.theme_bucket=="" ? "N/A" : classification.theme_bucket)
                          + " | Review " + classification.review_status;
       prepared_symbol.market_status=states[i].market_status;
