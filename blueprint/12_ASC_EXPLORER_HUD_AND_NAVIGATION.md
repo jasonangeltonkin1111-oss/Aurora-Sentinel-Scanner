@@ -161,8 +161,13 @@ Should include per bucket:
 - dominant pending reason
 - last update when available
 
-The right rail owns the active Layer 1 surface filter for this page.
+The right rail owns the canonical active Layer 1 market filter state for this page.
+The right rail must expose only:
+- `All Symbols`
+- `Open Only`
+
 `All Symbols` and `Open Only` must change compressed bucket-list visibility globally for the Layer 1 bucket surfaces.
+Bucket cards must report counts and any operator-facing percentages from the currently active right-rail filter state rather than from an unfiltered rollup.
 
 ### View 2 — Bucket Detail
 Triggered by clicking a compressed Layer 1 bucket.
@@ -176,8 +181,14 @@ Should show:
 - visible-window scrolling when the list exceeds the screen
 - safe pagination or row-based scroll controls
 - right-rail operator filter ownership for the active Layer 1 surface using `All Symbols` and `Open Only`
+- detail-page wording that reflects the current right-rail filter state without creating local competing filter controls
 
-The same right-rail filter selection must stay global across Layer 1 bucket surfaces so it also controls bucket-detail symbol visibility and suppresses zero-open buckets in `Open Only` mode.
+The same right-rail filter selection must stay global across Layer 1 bucket surfaces so it also controls:
+- bucket-detail symbol visibility
+- zero-open bucket suppression in `Open Only` mode
+- any bucket summary percentages shown to operators
+
+The detail page may restate the active filter, but the right rail remains the only canonical owner of that state.
 
 
 ### Progressive-fill contract for Layer 1
