@@ -44,6 +44,7 @@ Owns:
 - scheduler save cadence
 - summary save cadence
 - dossier repair on boot
+- last-good preservation policy
 
 ### Logging & Attention
 Owns:
@@ -58,6 +59,7 @@ Owns:
 - due-based dossier writing toggle
 - inclusion of pending layer placeholders
 - publication metadata stability
+- snapshot adapter invalidation policy later
 
 ### Explorer HUD
 Owns:
@@ -66,6 +68,7 @@ Owns:
 - explorer density
 - breadcrumb visibility
 - safe scroll step size
+- focus downgrade timeout later
 
 ## Reserved menu groups for later capabilities
 
@@ -76,6 +79,7 @@ Reserved for Open Symbol Snapshot behavior and early snapshot/timeframe scaffold
 - Reserved: Snapshot M1 Bars
 - Reserved: Snapshot M5 Bars
 - Reserved: Snapshot M15 Bars
+- Reserved: Snapshot Focus Refresh Seconds
 
 ### Deep Selective Analysis (Reserved)
 Reserved for Deep Selective Analysis controls and deeper ATR/history cadence scaffolding such as:
@@ -83,6 +87,7 @@ Reserved for Deep Selective Analysis controls and deeper ATR/history cadence sca
 - Reserved: Deep H1 Bars
 - Reserved: Deep H4 Bars
 - Reserved: Deep D1 Bars
+- Reserved: Deep Focus Refresh Ceiling Seconds
 
 ### Future Selection / Ranking (Pending)
 Reserved for Candidate Filtering and Shortlist Selection controls such as later selected-set limits.
@@ -118,6 +123,18 @@ In the active flat runtime surface, the menu should map approximately as:
 - `ASC_Dossiers.mqh` -> dossier placeholder policy
 - `ASC_Logging.mqh` -> verbosity and domain logging behavior
 
+## Testability law
+
+Future implementation must be able to prove the refresh and explorer boundaries, not merely claim them.
+The minimum observable proofs are:
+- focused symbol or stat views do not trigger full-universe recomputation
+- focus exit lowers work back to the non-focused cadence
+- unchanged fields and sections do not rewrite unnecessarily
+- expensive fields do not churn on every redraw
+- HUD buttons do not perform hidden heavy compute
+- adapter snapshots are reused until invalidated by owned state change or stale expiry
+- downgrade events preserve last-good truth instead of blanking valid surfaces casually
+
 ## Staged build and verification order
 
 ### Stage 1 — Paths and logger
@@ -143,12 +160,22 @@ Pass means:
 - open / closed / uncertain / unknown states advance under bounded work
 - fairness cursor prevents head-of-list starvation
 - degraded mode is logged when the budget cap binds
+- opening the explorer does not change the whole-universe heartbeat cost
 
 ### Stage 5 — Canonical publication
 Pass means:
 - dossiers write atomically
 - runtime, scheduler, and summary continuity files carry schema and generated-at metadata
 - future-capability sections remain Reserved or Pending rather than missing
+- unchanged publication sections are not rewritten without cause
+
+### Stage 6 — Explorer boundary verification
+Pass means:
+- button clicks route through one action surface
+- explorer redraw reuses prepared snapshots unless they are invalidated
+- focus entry elevates only the authorized focused surface
+- focus exit or focus change removes elevated work promptly
+- no explorer action triggers history pulls, bucket rebuilds, or heavy recomputation unless a later active capability explicitly owns and schedules that work
 
 ## Foundation test matrix summary
 
@@ -162,12 +189,14 @@ The minimum foundation pass should verify:
 7. stale tick versus trade-session ambiguity
 8. folder/path failure visibility
 9. atomic write failure visibility
+10. focus entry/exit does not change unrelated symbol cadence
+11. explorer redraw does not churn expensive fields
+12. snapshot reuse until invalidation
 
 ## Final rule
 
 The menu and staged test order are part of the foundation design, not optional polish.
 A runtime that cannot be configured cleanly or verified in sequence is not hardened enough for future layer expansion.
-
 
 ## Logging verification signals
 
@@ -178,7 +207,8 @@ A healthy Market State Detection test run should make it easy to find:
 - scheduler decision lines only when debug logging is enabled
 - bounded-work warnings only when the heartbeat cap binds
 - save and restore events for runtime, scheduler, summary, and dossiers
-
+- explicit focus elevation / downgrade signals once focus-scoped refresh exists
+- snapshot reuse or invalidation traces when explorer boundary diagnostics are enabled
 
 ## Version bump discipline
 
