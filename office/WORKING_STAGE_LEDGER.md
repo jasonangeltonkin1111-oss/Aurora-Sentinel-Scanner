@@ -10,7 +10,7 @@ Compact regression ledger for the current ASC foundation. This file is operation
 4. Shortlist Selection — **reserved**
 5. Deep Selective Analysis — **reserved**
 
-The sequence above remains active canon for debugging and future implementation order. Only Market State Detection currently owns live behavior.
+The sequence above remains active canon for debugging and future implementation order. Only Market State Detection currently owns fully working live behavior.
 
 ## Working items
 
@@ -102,6 +102,38 @@ The sequence above remains active canon for debugging and future implementation 
 - **Regression warning:** do not reduce failure logging to cosmetic noise or hide bounded-work skips.
 - **Future extension:** later capabilities may add richer backlog metrics, but the current honesty signals must stay intact.
 
+### Classification foundation
+- **Status:** active but provisional
+- **Pass:** classification remains standalone, does not contaminate market-state ownership, and only promotes bucket/identity truth that is justified by active mapping quality.
+- **Break symptoms:** weak stock mappings are treated as trusted truth, broad placeholder families are read as precise live classification, or classification drift outruns researched source rationale.
+- **Owners:** `mt5_runtime_flat/ASC_Classification.mqh`, `archives/LEGACY_SYSTEMS/AFS/AFS_Classification.mqh`
+- **Regression warning:** do not let classification scope grow faster than evidence quality.
+- **Future extension:** classification confidence grading may be added later, but unresolved or weak mappings must stay visibly provisional.
+
+### Dynamic bucket truth
+- **Status:** active but provisional
+- **Pass:** bucket membership shown to the operator is based on classified live broker symbols and does not reintroduce fake canonical membership as active truth.
+- **Break symptoms:** unresolved placeholders count as live members, misclassified symbols pollute visible bucket truth, or bucket detail implies more runtime authority than the system actually has.
+- **Owners:** `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`, `mt5_runtime_flat/ASC_Classification.mqh`
+- **Regression warning:** current bucket truth is not complete enough to justify downstream selection logic.
+- **Future extension:** bucket preparation must migrate into runtime-owned prepared state / snapshot ownership before deeper capability expansion continues.
+
+### Explorer HUD shell
+- **Status:** working but structurally fragile
+- **Pass:** the explorer owns only its prefixed chart objects, resolves symbols safely, keeps Open Only tied strictly to resolved live `Open` symbols, and falls back compactly on tight viewports.
+- **Break symptoms:** chart clutter overlaps unrelated objects, page buttons overrun the viewport, Open Only shows buckets with no resolved live open symbols, canonical placeholders are counted as live membership, or small/odd chart sizes produce silent blank renders.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Common.mqh`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
+- **Regression warning:** do not describe the explorer as presentation-only unless render and click paths stop preparing bucket truth. Do not move scanner computation into button handlers. Do not widen normalization beyond evidenced patterns.
+- **Future extension:** bucket detail, stat detail, identity cards, operator filters, and later Aurora-facing reserved panels should plug into the existing controller/layout/action split rather than replacing it.
+
+### Explorer / runtime ownership boundary
+- **Status:** failing / must be corrected
+- **Pass:** runtime computes and prepares bucket truth; explorer consumes prepared truth only.
+- **Break symptoms:** full bucket view models are generated in render paths, full bucket view models are generated again in click handlers, or explorer-side actions become data-preparation engines.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
+- **Regression warning:** do not continue deeper HUD work on top of this contradiction.
+- **Future extension:** focus-scoped runtime elevation and stale-bound refresh should later flow through runtime-owned adapters/snapshots, not through explorer recomputation.
+
 ### Reserved future capability scaffolding
 - **Status:** reserved
 - **Pass:** Open Symbol Snapshot, Candidate Filtering, Shortlist Selection, and Deep Selective Analysis remain explicitly named, clearly reserved, and visibly insertable in runtime inputs, placeholder hooks, dossier progression, and blueprint order.
@@ -109,11 +141,3 @@ The sequence above remains active canon for debugging and future implementation 
 - **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Dossiers.mqh`, `blueprint/04_ASC_FIVE_LAYER_MODEL.md`, `blueprint/10_ASC_MENU_AND_TESTABILITY.md`
 - **Regression warning:** do not over-clean placeholders until future insertion points become unclear.
 - **Future extension:** each later capability should promote from Reserved to Working only when it has owned runtime behavior, owned persistence/publication, and ledger coverage added here.
-
-### Explorer HUD shell
-- **Status:** working
-- **Pass:** the explorer owns only its prefixed chart objects, consumes a runtime-prepared bucket snapshot instead of rebuilding bucket truth in render/click handlers, keeps Open Only tied strictly to prepared live `Open` symbols, preserves placeholder honesty under All Symbols, and falls back to a compact surface instead of going blank when a terminal viewport cannot fit the full HUD.
-- **Break symptoms:** chart clutter overlaps unrelated objects, render or click paths rebuild full bucket classification ad hoc, page buttons overrun the viewport, Open Only shows buckets with no prepared live open symbols, or small/odd chart sizes produce silent blank renders.
-- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Common.mqh`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
-- **Regression warning:** do not move scanner computation into button handlers, do not let HUD render begin by wiping all owned objects, do not widen normalization beyond evidenced patterns, and do not let placeholder references read as confirmed broker truth.
-- **Future extension:** bucket detail, stat detail, identity cards, operator filters, and later Aurora-facing reserved panels should plug into the existing controller/layout/action split rather than replacing it.

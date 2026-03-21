@@ -8,7 +8,7 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ## Current checkpoint
 
 - checkpoint date: 2026-03-21
-- checkpoint scope: Runtime-prepared bucket snapshot and HUD churn reduction pass
+- checkpoint scope: HQ continuity office-control and task-map hardening pass
 - hash type: SHA-256
 - note: this ledger does not hash itself to avoid self-reference churn
 - rule: refresh this file when a pass materially changes active control or scanner-foundation truth
@@ -18,10 +18,10 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ```text
 3c4ad6ec1b628e7e35c9673610aa3ee92377ed510c88c4096343fbfa90046f7f  office/README.md
 a1a0fcf8200512cec5eee0e91bc68c5bc08f4816b4faf7c600b8a9d9814c8d1b  office/OFFICE_CANON.md
-133f18810bdad95a48c90b1fe6b1d817a923e0b8be5479d34f309746d0428c56  office/TASK_BOARD.md
+4ec5c634d832cd257b5f160d910da525b204beb9bf6bc7752e39788eca77db40  office/TASK_BOARD.md
 80d8e561d42afeb17bc5aeb50bc9fb2dba1ee887f25be6cd11aa6f67df184314  office/DECISIONS.md
-a3cbd2bfd073e3d65e49170d016b930d1ef707e9dae1c9d4adf8e6a5ab2bccaf  office/WORK_LOG.md
-3022bc4d1671845b08744123ec1684c69378ed989b896410c799504b65912d63  office/WORKING_STAGE_LEDGER.md
+f13f43bf09f57e262315c8e3dfd54c886cadedcc86cf91a10e8f4aca4b8f0cdf  office/WORK_LOG.md
+8ae48843f63d735bb937bc11ff8da2b82d285073b35781e0d861580c0478082d  office/WORKING_STAGE_LEDGER.md
 5cb93527acefb1593d6e7f9b3899490f2e1a75029206b90393fdfa2d7697c22b  blueprint/README.md
 1e93ea5e17b39437f6411c9bf4de394a235b69818a85748be2af78a01e4cc088  blueprint/01_ASC_SYSTEM_OVERVIEW.md
 f91f2d675139dd3e95379b494dc205feada19e557523eaf1e943d83d7b1f0419  blueprint/02_ASC_RUNTIME_AND_SCHEDULER.md
@@ -47,8 +47,8 @@ fe3a4a7723cd7e4966ccbcb18d9e4baaa2834e51a3f4dd0d0c9a3677f77ce132  asc-mt5-scanne
 6a9430f3a8a2d329aa76a07b840e585c87fe70d431d55a20fd47f6445460c9c0  asc-mt5-scanner-blueprint/21_ASC_PACK_AUTHORITY_AND_ANTI_DRIFT.md
 0796928097bf3a9ccdb182cf7b4ce5acf16d2974d2e1711fd0b7690e8c63bf41  asc-mt5-scanner-blueprint/22_ASC_AURORA_BRIDGE_CONTRACT.md
 c3cd1fe9b687bad416e9c721465188b62e8f7520eaef03f1afee3caf7a06d72e  mt5_layout_plan/Include/ASC/README.md
-2ef244f0b613ec139d5991feb886b732102790990e7702b3520f89a3aa5268e3  mt5_runtime_flat/AuroraSentinel_Foundation.mq5
-67997ae56e596eeedd4a91d24272adf1f20aa5fa091a5593f8aea6248ef6f821  mt5_runtime_flat/ASC_Common.mqh
+a234f334205460b5505a14435c953bc3bbd91865ea02c6fb177c86da971ca105  mt5_runtime_flat/AuroraSentinel_Foundation.mq5
+a7eb72ed574bde35171f861054005c5377f6821f9dada18faf0329d746e7d272  mt5_runtime_flat/ASC_Common.mqh
 476e89a01ac1f2a74f3163cf8701ce5af63f1d59fdbc3782b49b48477ddaa267  mt5_runtime_flat/ASC_Dossiers.mqh
 1ee0224286934b77d7ab29cb65a0f9953c6749e12a78df7dde25914e4a730149  mt5_runtime_flat/ASC_MarketState.mqh
 2a50fab29fded3ac73a63b531b979006a6e71caf024d07a0b235bab67ed0768a  mt5_runtime_flat/ASC_FileIO.mqh
