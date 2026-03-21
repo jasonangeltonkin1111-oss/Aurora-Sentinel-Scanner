@@ -39,8 +39,8 @@ Initial wrapper version:
 - `1.001`
 
 Current explorer scaffold milestone after HUD v2 shell expansion:
-- `1.030` wrapper
-- `0.310` explorer subsystem
+- `1.040` wrapper
+- `0.320` explorer subsystem
 
 Suggested version law:
 - patch bump: `1.001 -> 1.002` for non-breaking polish and fixes

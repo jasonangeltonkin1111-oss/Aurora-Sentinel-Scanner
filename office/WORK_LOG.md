@@ -155,3 +155,21 @@ The HUD bucket flow was still locked to a fixed placeholder list and fixed seed 
 
 ### Result
 Bucket List and Bucket Detail are now dynamic-ready for future identity activation while Market State Detection remains the only active truth surface.
+
+---
+## 2026-03-21 — Consolidated HUD fix and hardening pass
+
+### Why
+The Explorer HUD still depended on brittle bucket scrolling, bucket detail was collapsing vertically, placeholder bucket content risked implying too much maturity, and File I/O still reported a remaining type-conversion warning.
+
+### What changed
+- bumped the wrapper to 1.040 and the explorer subsystem to 0.320 for a meaningful HUD/navigation/filtering expansion
+- replaced bucket-list scrolling with dynamic page calculation and per-page button rendering tied to the visible viewport
+- replaced all-mode bucket symbol scrolling with dynamic pagination and persistent page state
+- added an operator-visible Market Filter with All Symbols and Open Only modes that stays presentation-only and does not invent live identity truth
+- rebuilt bucket detail into a fixed header, control strip, split symbol-lane and summary region, and muted reserved future strip
+- added safer text fitting, stronger semantic row labels, and richer scanner-console hierarchy across bucket, symbol, stat, and status surfaces
+- cleared the remaining File I/O size-read conversion warning without weakening atomic validation or rollback behavior
+
+### Result
+The Explorer surface is more navigable, more honest, and better prepared for future layer insertion while preserving Market State Detection as the only active capability.
