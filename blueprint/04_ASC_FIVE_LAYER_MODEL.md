@@ -48,6 +48,15 @@ Determine whether each symbol is open, closed, uncertain, or unknown and decide 
 - near expected open, aggressive 1-second rechecks may run for up to 1 minute
 - focused symbol viewing may only elevate fields already owned by Market State Detection and only within stale-bound limits
 
+### Layer 1 readiness and warmup law
+- boot and recovery enter `ASC_RUNTIME_WARMUP` until a minimum Layer 1 readiness threshold is met
+- warmup readiness is not defined by missing dossiers alone
+- readiness must be computed from current Layer 1 truth only: initial assessments completed across a configurable minimum portion of the live universe plus all currently discovered compressed priority-set-1 buckets
+- compressed priority-set-1 buckets currently mean `FX_MAJOR`, `INDEX_US`, `INDEX_EUROPE`, `METALS_PRECIOUS`, `ENERGY`, and `CRYPTO_LARGE_CAP`
+- once that threshold is met, runtime promotes to `ASC_RUNTIME_STEADY` even if lower-priority symbols still need their first pass
+- lower-priority hydration may continue in the background and must be surfaced honestly as background preparation rather than keeping warmup active forever
+- runtime continuity and HUD surfaces must carry explicit warmup fields: initial symbols assessed, primary-bucket symbols assessed, warmup minimum met, warmup progress percent, and background hydration active
+
 ## Capability 2 — Open Symbol Snapshot
 
 ### Internal mapping

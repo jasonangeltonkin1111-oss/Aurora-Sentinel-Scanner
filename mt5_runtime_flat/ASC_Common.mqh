@@ -2,12 +2,12 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.080"
+#define ASC_WRAPPER_VERSION "1.090"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
 #define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
-#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.380"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.390"
 
 enum ASC_RuntimeMode
   {
@@ -73,6 +73,7 @@ struct ASC_RuntimeSettings
    int               runtime_save_seconds;
    int               scheduler_save_seconds;
    int               summary_save_seconds;
+   int               warmup_minimum_universe_percent;
    int               fresh_tick_seconds;
    int               open_recheck_seconds;
    int               uncertain_burst_limit;
@@ -130,6 +131,12 @@ struct ASC_RuntimeState
    int             processed_this_heartbeat;
    int             scheduler_cursor;
    int             heartbeats_since_boot;
+   int             initial_symbols_assessed;
+   int             primary_bucket_symbols_assessed;
+   int             primary_bucket_symbol_count;
+   bool            warmup_minimum_met;
+   int             warmup_progress_percent;
+   bool            background_hydration_active;
   };
 
 struct ASC_SymbolState
@@ -315,6 +322,25 @@ string ASC_CleanServerName(const string raw)
   }
 
 
+
+int ASC_PercentClamp(const int value)
+  {
+   if(value<0)
+      return(0);
+   if(value>100)
+      return(100);
+   return(value);
+  }
+
+int ASC_PercentOfCountCeil(const int count,const int percent)
+  {
+   if(count<=0)
+      return(0);
+   int safe_percent=ASC_PercentClamp(percent);
+   if(safe_percent<=0)
+      return(1);
+   return((count*safe_percent + 99)/100);
+  }
 
 bool ASC_IsAlphaNumChar(const ushort ch)
   {

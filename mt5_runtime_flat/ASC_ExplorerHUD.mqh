@@ -110,7 +110,7 @@ void ASC_ExplorerThemeDefaults(ASC_ExplorerTheme &theme,const int density_mode)
    theme.margin=10;
    theme.gap=(density_mode<=0 ? 6 : 8);
    theme.padding=(density_mode<=0 ? 7 : (density_mode>=2 ? 10 : 8));
-   theme.header_height=(density_mode>=2 ? 58 : 52);
+   theme.header_height=(density_mode>=2 ? 82 : 76);
    theme.nav_height=(density_mode>=2 ? 34 : 30);
    theme.status_height=(density_mode>=2 ? 32 : 28);
    theme.rail_width=(density_mode>=2 ? 154 : 146);
@@ -562,11 +562,11 @@ void ASC_ExplorerRenderOverview(ASC_ExplorerContext &ctx,const ASC_RuntimeSettin
    ASC_ExplorerCounts(states,count,open_count,closed_count,uncertain_count,unknown_count,due_count);
 
    ASC_ExplorerSummaryCard(ctx,"overview.identity","System Identity",ASC_PRODUCT_NAME,"Wrapper " + ASC_WRAPPER_VERSION + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION,"Market Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter),x,y,card_w,card_h,ctx.theme.accent);
-   ASC_ExplorerSummaryCard(ctx,"overview.runtime","Runtime","Mode " + ASC_RuntimeModeText(runtime.mode),"Heartbeat " + IntegerToString(runtime.heartbeats_since_boot),"Server " + runtime.server_clean,x+card_w+gap,y,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
+   ASC_ExplorerSummaryCard(ctx,"overview.runtime","Runtime","Mode " + ASC_RuntimeModeText(runtime.mode),"Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Beat " + IntegerToString(runtime.heartbeats_since_boot),"Server " + runtime.server_clean,x+card_w+gap,y,card_w,card_h,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
    ASC_ExplorerSummaryCard(ctx,"overview.universe","Universe","Tracked symbols " + IntegerToString(count),"Open " + IntegerToString(open_count) + " | Closed " + IntegerToString(closed_count),"Uncertain " + IntegerToString(uncertain_count) + " | Unknown " + IntegerToString(unknown_count),x,y+card_h+gap,card_w,card_h,ctx.theme.accent_alt);
    ASC_ExplorerSummaryCard(ctx,"overview.scheduler","Scheduler","Cursor " + IntegerToString(runtime.scheduler_cursor),"Due now " + IntegerToString(due_count),"Budget per beat " + IntegerToString(settings.symbol_budget_per_heartbeat),x+card_w+gap,y+card_h+gap,card_w,card_h,ctx.theme.accent);
-   ASC_ExplorerSummaryCard(ctx,"overview.health","Health and Attention","Recovery " + (runtime.recovery_used ? "Used" : "Fresh Start"),"Degraded " + ASC_BoolText(runtime.degraded),"Last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),x,y+(card_h+gap)*2,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
-   ASC_ExplorerSummaryCard(ctx,"overview.capability","Capability Progress","Market State Detection: Working","Identity, filtering, shortlist, and Aurora: Reserved","Runtime-prepared bucket snapshot active; later layers still reserved",x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,ctx.theme.reserved);
+   ASC_ExplorerSummaryCard(ctx,"overview.health","Health and Attention","Recovery " + (runtime.recovery_used ? "Used" : "Fresh Start"),"Degraded " + ASC_BoolText(runtime.degraded) + " | Warmup Min " + ASC_BoolText(runtime.warmup_minimum_met),"Last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),x,y+(card_h+gap)*2,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
+   ASC_ExplorerSummaryCard(ctx,"overview.capability","Layer 1 Readiness","Initial assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count),"Primary buckets " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count),"Background hydration " + ASC_BoolText(runtime.background_hydration_active),x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,(runtime.background_hydration_active ? ctx.theme.accent : ctx.theme.reserved));
   }
 
 void ASC_ExplorerRenderPageButtons(ASC_ExplorerContext &ctx,const string id_prefix,const int page_index,const int page_count,const int x,const int y,const int max_width)
@@ -986,12 +986,27 @@ void ASC_ExplorerRenderStatDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeStat
      }
   }
 
+string ASC_ExplorerWarmupBannerText(const ASC_RuntimeState &runtime)
+  {
+   string progress=IntegerToString(runtime.warmup_progress_percent) + "%";
+   string primary_scope=IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count);
+   if(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met)
+      return("Warmup active: assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count)
+             + " discovered symbols | primary buckets " + primary_scope + " | readiness " + progress + ".");
+   if(runtime.background_hydration_active)
+      return("Layer 1 minimum met: steady mode active while background hydration continues for "
+             + IntegerToString(runtime.symbol_count-runtime.initial_symbols_assessed) + " lower-priority symbols | readiness " + progress + ".");
+   return("Layer 1 readiness complete: all discovered symbols assessed at least once | readiness " + progress + ".");
+  }
+
 void ASC_ExplorerRenderHeader(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const int chart_w)
   {
    ASC_ExplorerRect(ctx,"header.strip",ctx.theme.margin,ctx.theme.margin,chart_w-(ctx.theme.margin*2),ctx.theme.header_height,ctx.theme.header_fill,ctx.theme.border);
    ASC_ExplorerLabel(ctx,"header.main",ASC_PRODUCT_NAME + " — Explorer Console",ctx.theme.margin+ctx.theme.padding,ctx.theme.margin+6,ctx.theme.text,12);
    ASC_ExplorerLabel(ctx,"header.sub",ASC_ExplorerFitText("Wrapper " + ASC_WRAPPER_VERSION + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION + " | Active " + ASC_ACTIVE_CAPABILITY + " | Next " + ASC_NEXT_CAPABILITY,chart_w-440),ctx.theme.margin+ctx.theme.padding,ctx.theme.margin+24,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"header.time",ASC_ExplorerFitText("Server " + runtime.server_clean + " | Time " + ASC_DateTimeText(TimeTradeServer()) + " | Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),320),chart_w-330,ctx.theme.margin+16,ctx.theme.dim);
+   color warmup_color=(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met ? ctx.theme.warning : (runtime.background_hydration_active ? ctx.theme.accent : ctx.theme.good));
+   ASC_ExplorerLabel(ctx,"header.warmup",ASC_ExplorerFitText(ASC_ExplorerWarmupBannerText(runtime),chart_w-40),ctx.theme.margin+ctx.theme.padding,ctx.theme.margin+44,warmup_color);
   }
 
 void ASC_ExplorerRenderNavStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const int chart_w)
@@ -1039,7 +1054,9 @@ void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSet
 
 void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const int x,const int y,const int w,const int chart_w,const int chart_h)
   {
-   string status_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.") + " | Server " + runtime.server_clean + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
+   string base_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.");
+   string readiness_text="Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Initial " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count) + " | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count);
+   string status_text=base_text + " | " + readiness_text + " | Server " + runtime.server_clean + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
    ASC_ExplorerRect(ctx,"status.strip",x,y,w,ctx.theme.status_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,"status.bar",x,y,5,ctx.theme.status_height,(runtime.degraded ? ctx.theme.warning : ctx.theme.good),(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
    ASC_ExplorerLabel(ctx,"status.text",ASC_ExplorerFitText(status_text,w-24),x+ctx.theme.padding+4,y+7,(runtime.degraded ? ctx.theme.warning : ctx.theme.muted));
@@ -1072,7 +1089,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
       ASC_ExplorerLabel(ctx,"compact.title","ASC Explorer HUD",ctx.theme.margin+12,ctx.theme.margin+12,ctx.theme.text,11);
       ASC_ExplorerLabel(ctx,"compact.server",ASC_ExplorerFitText("Server " + runtime.server_clean + " | View " + ASC_ExplorerViewText(ctx.nav.current_view),root_w-24),ctx.theme.margin+12,ctx.theme.margin+32,ctx.theme.muted);
       ASC_ExplorerLabel(ctx,"compact.state",ASC_ExplorerFitText("Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + " | Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),root_w-24),ctx.theme.margin+12,ctx.theme.margin+50,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.dim));
-      ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : "Runtime steady") + " | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
+      ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : ASC_RuntimeModeText(runtime.mode)) + " | Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
       ASC_ExplorerEndFrame(ctx);
       ChartRedraw(ctx.chart_id);
       ctx.nav.last_render_at=TimeCurrent();

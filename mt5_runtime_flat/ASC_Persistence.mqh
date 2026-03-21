@@ -48,6 +48,12 @@ void ASC_AssignRuntimeField(ASC_RuntimeState &state,const string key,const strin
    else if(key=="Processed This Heartbeat") state.processed_this_heartbeat=ASC_IntegerFromText(value);
    else if(key=="Scheduler Cursor") state.scheduler_cursor=ASC_IntegerFromText(value);
    else if(key=="Heartbeats Since Boot") state.heartbeats_since_boot=ASC_IntegerFromText(value);
+   else if(key=="Initial Symbols Assessed") state.initial_symbols_assessed=ASC_IntegerFromText(value);
+   else if(key=="Primary Bucket Symbols Assessed") state.primary_bucket_symbols_assessed=ASC_IntegerFromText(value);
+   else if(key=="Primary Bucket Symbol Count") state.primary_bucket_symbol_count=ASC_IntegerFromText(value);
+   else if(key=="Warmup Minimum Met") state.warmup_minimum_met=ASC_BoolFromText(value);
+   else if(key=="Warmup Progress Percent") state.warmup_progress_percent=ASC_IntegerFromText(value);
+   else if(key=="Background Hydration Active") state.background_hydration_active=ASC_BoolFromText(value);
   }
 
 bool ASC_LoadRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,ASC_Logger &logger)
@@ -147,6 +153,12 @@ bool ASC_SaveRuntimeState(const ASC_ServerPaths &paths,ASC_RuntimeState &state,A
    body+="Processed This Heartbeat=" + IntegerToString(state.processed_this_heartbeat) + "\r\n";
    body+="Scheduler Cursor=" + IntegerToString(state.scheduler_cursor) + "\r\n";
    body+="Heartbeats Since Boot=" + IntegerToString(state.heartbeats_since_boot) + "\r\n";
+   body+="Initial Symbols Assessed=" + IntegerToString(state.initial_symbols_assessed) + "\r\n";
+   body+="Primary Bucket Symbols Assessed=" + IntegerToString(state.primary_bucket_symbols_assessed) + "\r\n";
+   body+="Primary Bucket Symbol Count=" + IntegerToString(state.primary_bucket_symbol_count) + "\r\n";
+   body+="Warmup Minimum Met=" + ASC_BoolText(state.warmup_minimum_met) + "\r\n";
+   body+="Warmup Progress Percent=" + IntegerToString(state.warmup_progress_percent) + "\r\n";
+   body+="Background Hydration Active=" + ASC_BoolText(state.background_hydration_active) + "\r\n";
    bool ok=ASC_AtomicWrite(paths.runtime_state_file,body,logger);
    if(ok)
      {

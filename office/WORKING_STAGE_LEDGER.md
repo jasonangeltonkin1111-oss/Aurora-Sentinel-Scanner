@@ -70,9 +70,18 @@ The sequence above remains active canon for debugging and future implementation 
 - **Regression warning:** do not mix text/binary semantics or bypass the promote flow.
 - **Future extension:** later capability sections must append through the same atomic writer instead of writing directly.
 
+
+### Layer 1 warmup readiness
+- **Status:** working
+- **Pass:** boot and recovery enter `ASC_RUNTIME_WARMUP`, readiness is measured from first-pass Layer 1 coverage rather than missing dossiers alone, and runtime promotes to `ASC_RUNTIME_STEADY` once the minimum universe-plus-primary-bucket threshold is met.
+- **Break symptoms:** warmup never clears despite primary readiness being met, steady mode begins before compressed priority-set-1 buckets are first-pass assessed, or background hydration is hidden after steady promotion.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel.mq5`, `mt5_runtime_flat/ASC_Common.mqh`, `mt5_runtime_flat/ASC_Persistence.mqh`
+- **Regression warning:** do not let dossier-missing count silently become the sole warmup gate again.
+- **Future extension:** later layers may add their own readiness surfaces, but Layer 1 promotion must remain grounded in Layer 1-owned truth only.
+
 ### Runtime continuity save / load
 - **Status:** working
-- **Pass:** runtime state writes atomically, reloads on restart, and may fall back to `.last-good` with honest logging when the primary file is invalid.
+- **Pass:** runtime state writes atomically, reloads on restart, may fall back to `.last-good` with honest logging when the primary file is invalid, and preserves Layer 1 readiness / warmup continuity fields.
 - **Break symptoms:** mode/heartbeat timestamps reset unexpectedly, false save success timestamps, or silent fallback without a log trail.
 - **Owners:** `mt5_runtime_flat/ASC_Persistence.mqh`, `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`
 - **Regression warning:** do not mark save timestamps successful when promotion fails.

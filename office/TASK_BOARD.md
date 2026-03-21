@@ -47,7 +47,7 @@ Do not continue building on unresolved contradiction.
 |---|---|---:|---|---|
 | Office control | ACTIVE | 70% | compact office exists but task/state mapping is too shallow for current repo complexity | deepen task board, tighten stage ledger honesty, keep work log and SHA ledger in lockstep |
 | Blueprint canon | ACTIVE | 78% | strong ownership laws exist, but some active docs still describe identity/bucketing as reserved | update canon to reflect provisional active classification/bucketing without overstating maturity |
-| Foundation runtime | ACTIVE | 82% | heartbeat, fairness, persistence, dossier publication, and continuity are structurally strong | keep stable while ownership and explorer issues are corrected |
+| Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong | keep stable while ownership and explorer issues are corrected |
 | Market State Detection | WORKING | 88% | still the only fully working capability with real runtime truth | compile/test re-verify after any structural runtime change |
 | Classification catalog | ACTIVE-PROVISIONAL | 55% | standalone classification exists and drives buckets, but catalog quality is mixed and some mappings are too broad or wrong | audit classification truth before treating bucket output as trusted |
 | Dynamic buckets | ACTIVE-PROVISIONAL | 58% | membership is live/classification-driven, but preparation currently happens in explorer-side flows | move bucket preparation to runtime-owned prepared state / snapshot layer |
@@ -105,6 +105,7 @@ Still needed:
 ### 4. Explorer HUD
 Half-done because:
 - layout/navigation/paging/filtering are materially advanced
+- Layer 1 warmup and background hydration truth is now surfaced explicitly
 - but render churn, full object recreation, and recompute-in-render remain unresolved
 
 Still needed:
@@ -187,11 +188,12 @@ Before closing any future pass, explicitly check:
 4. codify runtime-prepared bucket truth and explorer-consumed snapshot law more explicitly
 
 ### Immediate task group C — runtime / explorer architecture
-1. design runtime-owned bucket snapshot / adapter structure
-2. remove full bucket model generation from explorer render paths
-3. remove full bucket model generation from click handlers
-4. reduce full chart-object delete/recreate churn where feasible
-5. keep explorer presentation-only after the refactor
+1. preserve runtime-owned Layer 1 warmup threshold and background hydration truth
+2. design runtime-owned bucket snapshot / adapter structure
+3. remove full bucket model generation from explorer render paths
+4. remove full bucket model generation from click handlers
+5. reduce full chart-object delete/recreate churn where feasible
+6. keep explorer presentation-only after the refactor
 
 ### Immediate task group D — classification truth
 1. compare active ASC classification to researched AFS source

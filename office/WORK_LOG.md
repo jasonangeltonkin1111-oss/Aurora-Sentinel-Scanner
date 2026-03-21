@@ -233,3 +233,19 @@ Shared version constants, blueprint 11 doctrine, and file-log failure visibility
 
 ### Result
 Current repo truth is tighter: shared version constants now match the live runtime header, blueprint doctrine no longer understates active prepared-bucket behavior, and file-log failure is no longer silent.
+
+---
+## 2026-03-21 — Layer 1 readiness warmup threshold pass
+
+### Why
+Warmup was still coupled too closely to missing dossier count, which meant the runtime could stay in warmup long after the minimum Layer 1 scanner truth was already available.
+
+### What changed
+- bumped the wrapper to 1.090 and the explorer subsystem to 0.390 for this runtime, persistence, HUD, and control-surface readiness pass
+- replaced dossier-count-only warmup gating with a Layer 1 readiness model based on first-pass assessment coverage plus all currently discovered compressed priority-set-1 buckets
+- added explicit runtime readiness fields for initial assessed symbols, primary-bucket assessed symbols, warmup minimum status, warmup progress percent, and background hydration activity
+- persisted the new readiness fields in runtime continuity and surfaced them in the Explorer header, overview, and status banner
+- updated active blueprint and office control surfaces so warmup/steady semantics match the new runtime truth
+
+### Result
+Boot and recovery now enter warmup honestly, promote to steady once the minimum Layer 1 threshold is met, and keep lower-priority preparation visible as background hydration instead of trapping the runtime in warmup forever.
