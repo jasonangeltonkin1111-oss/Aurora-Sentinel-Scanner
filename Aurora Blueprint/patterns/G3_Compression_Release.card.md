@@ -75,5 +75,9 @@ Future books and extractions may add:
 ## Parent family dependencies
 - `Aurora Blueprint/strategy_families/CORE/Breakout_Compression_Release.md`
 
+# STAGE FIT
+- Most native in `STAGE_EMERGENT`, `STAGE_DEVELOPING`, and `STAGE_CONFIRMED` release conditions
+- Usually weak once the move is already mature or late without renewed compression logic
+
 # CURRENT JUDGMENT
 Compression Release is a valid first approved pattern group because it is a core child of the breakout/release family and one of the main pattern classes that Aurora needs to preserve from broader price-behavior knowledge.

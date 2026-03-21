@@ -60,6 +60,15 @@ Reject or suppress the family when:
 - post-break acceptance structures
 - false release rejection patterns
 
+# OPPORTUNITY STAGE PROFILE
+- Native stages: `STAGE_EMERGENT`, `STAGE_DEVELOPING`, `STAGE_CONFIRMED`
+- Legitimate but more sensitive: `STAGE_CONTINUATION` when release remains alive after acceptance
+- Usually weak or invalid: `STAGE_LATE`, `STAGE_EXHAUSTED` once the release becomes chased, overextended, or failure-prone
+
+# BUCKET / REGIME FIT NOTES
+- Best in buckets where compression and release behavior is structurally visible and not purely noisy print-through behavior
+- Needs tighter caution in hostile, news-distorted, or fake-break-prone environments
+
 # FUTURE TESTING / RESEARCH NEEDS
 - breakout hold quality by environment
 - fake-release vs real-release differentiation

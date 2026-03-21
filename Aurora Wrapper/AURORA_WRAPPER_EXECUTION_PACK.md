@@ -50,6 +50,7 @@ It must carry truth through a fixed staged chain and preserve uncertainty, missi
 - family competition before pattern competition
 - pattern competition before opportunity preservation and ranking
 - opportunity preservation before deployability narrowing
+- stage-aware opportunity classification before forcing card timing assumptions
 - deployability before geometry
 - geometry before generated card
 - generated card before EA-safe export
@@ -131,6 +132,7 @@ Typical revisit triggers include:
 - missing-surface arrival
 - hostility decay
 - path expansion large enough to change deployability
+- stage transition from emergent/developing into confirmed, continuation, re-entry, or salvage legitimacy
 
 ## Deployability law
 
@@ -195,6 +197,16 @@ A card should only be generated when Aurora has, at minimum:
 - human-only commentary/assumption fields
 
 A symbol may retain an opportunity without earning a live generated strategy card.
+
+## Abundance and stage-aware execution law
+
+Aurora should prefer truthful opportunity abundance over artificial scarcity.
+That means the wrapper must remember:
+- more opportunity should come from broader valid family/pattern/stage coverage, not from looser filters
+- early entry is not the only legitimate opportunity timing
+- mature, late, continuation, re-entry, and salvage cases may stay valid when remaining path and family structure still support them
+- `OBSERVE_ONLY` and watch-only states are part of the opportunity ecology, not failures
+- stage exhaustion can block a card even when the family diagnosis is still correct
 
 ## Packet and review law
 

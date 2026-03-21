@@ -415,7 +415,26 @@ Immediate next likely children:
 
 ---
 
-# 9. CURRENT JUDGMENT
+# 9. STAGE-AWARE AND BUCKET-AWARE EXPANSION LAW
+
+Aurora family growth should now explicitly evolve along four axes:
+- new family roots
+- new family branches
+- richer stage profiles
+- richer bucket/regime applicability
+
+The registry should therefore support future additions such as:
+- continuation families with clearer mature/late/re-entry distinctions
+- reversal families with clearer developing-versus-confirmed failure timing
+- balance families with clearer mature-range and late-rotation logic
+- bucket-specialized family branches that stay family-first rather than symbol-first
+
+This is not permission for generic sprawl.
+It is permission for truthful expansion.
+
+---
+
+# 10. CURRENT JUDGMENT
 
 The strategy material is now preserved in the repo in a form that separates:
 - what belongs in immediate Aurora family doctrine

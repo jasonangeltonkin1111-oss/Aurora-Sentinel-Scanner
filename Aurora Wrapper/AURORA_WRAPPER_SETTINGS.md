@@ -1,10 +1,10 @@
 # AURORA WRAPPER SETTINGS
 
-- wrapper_status: `ACTIVE_COMPILATION_V3`
+- wrapper_status: `ACTIVE_COMPILATION_V3_STAGE_AWARE`
 - compiled_on: `2026-03-21`
 - source_truth_root: `Aurora Blueprint/`
 - wrapper_root: `Aurora Wrapper/`
-- active_run_ref: `Aurora Blueprint/runs/AURORA_RUN_065.md`
+- active_run_ref: `Aurora Blueprint/runs/AURORA_RUN_066.md`
 - default_mode: `WRAPPER_OPERATOR_MODE`
 - alternate_mode: `WRAPPER_MAINTENANCE_MODE`
 - bridge_status: `NO_BRIDGE_CHANGE_NEEDED`

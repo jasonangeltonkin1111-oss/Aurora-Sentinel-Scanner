@@ -58,6 +58,15 @@ Reject or suppress the family when:
 - post-break retracement hold patterns
 - trend resumption structures
 
+# OPPORTUNITY STAGE PROFILE
+- Native stages: `STAGE_DEVELOPING`, `STAGE_CONFIRMED`, `STAGE_CONTINUATION`
+- Legitimate but more sensitive: `STAGE_REENTRY`, `STAGE_MATURE`
+- Usually weak or invalid: `STAGE_LATE` when pullback quality is actually deterioration, `STAGE_EXHAUSTED` when trend repair is no longer credible
+
+# BUCKET / REGIME FIT NOTES
+- Strongest where directional structure survives retracement cleanly and execution burden remains bounded
+- Can thin out in hostile buckets where pullbacks mutate into failed trend state too quickly
+
 # FUTURE TESTING / RESEARCH NEEDS
 - pullback depth and quality studies by environment
 - distinction between healthy retracement and deterioration

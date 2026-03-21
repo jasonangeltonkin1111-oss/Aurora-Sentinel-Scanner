@@ -28,7 +28,7 @@ From this point onward:
 # 2. MASTER PROJECT STATUS
 
 ## Overall project state
-- Status: MULTI-WAVE FOUNDATION BUILT / CONSOLIDATION ACTIVE / DEEPENING PROTOCOL ACTIVE / OFFICE CONTROL HARDENED / EXECUTION-SIDE ENUM-WORKFLOW HARDENED
+- Status: MULTI-WAVE FOUNDATION BUILT / CONSOLIDATION ACTIVE / DEEPENING PROTOCOL ACTIVE / OFFICE CONTROL HARDENED / EXECUTION-SIDE ENUM-WORKFLOW HARDENED / ABUNDANCE-STAGE EXPANSION ACTIVE
 - Project mode: long-horizon layered blueprint build with doctrine sharpening, wrapper hardening, tighter active control discipline, and bounded execution-side artifact completion
 - Current governing approach: preserve lineage, consolidate before sprawl, harden active control, and deepen by sharpening boundaries and translation value rather than by bloating prose
 
@@ -38,7 +38,8 @@ From this point onward:
 - Wave 3 research/testing and review foundation: 76%
 - Wave 4 volatility/hostile-environment foundation: 71%
 - Wave 5 adaptation/review depth: 63%
-- strategy-layer structural completeness: 88%
+- strategy-layer structural completeness: 90%
+- opportunity-stage / anti-starvation architecture: 74%
 - book-to-blueprint extraction overall: 48%
 - doctrine consolidation overall: 41%
 - active control-layer discipline: 82%
@@ -50,6 +51,7 @@ From this point onward:
 - active ledger deltas still live partly in supplements pending a future lossless merge
 - wrapper/machine surfaces are stronger, but future passes can still drift unless office discipline is maintained
 - first concrete group-context, review-packet, and filled worked-example artifacts now exist for one active lane, but verified real-case libraries remain thin
+- stage-aware family and bucket expansion doctrine is now explicit, but many future family branches and bucket-specialized variants remain to be extracted
 
 ## Current project risk
 - future passes could become verbose but not sharper unless the deepening protocol is enforced
@@ -93,6 +95,8 @@ From this point onward:
 - `Aurora Blueprint/AURORA_INTRADAY_GEOMETRY_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_OPPORTUNITY_INVENTORY_AND_RANKING_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_OPPORTUNITY_ABUNDANCE_AND_ANTI_STARVATION_LAW.md`
+- `Aurora Blueprint/AURORA_OPPORTUNITY_STAGE_TAXONOMY_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_EA_SAFE_OUTPUT_BOUNDARY_SPEC.md`
 - active wrapper prompt templates
 - active operator scaffolds
@@ -156,10 +160,10 @@ Judgment:
 # 5. CURRENT NEXT TASK
 
 The next highest-leverage active task is:
-- preserve the stronger wrapper canon and execution-side normalization while waiting for a verified ASC-backed case that can upgrade the illustrative C-04 / G4 packet chain into a real example
+- continue stage-aware family and pattern extraction so more bucket-targeted families, late-join branches, and mid-progress opportunity classes can be added without weakening current quality gates
 
 If doctrine work is preferred immediately after that, the next doctrine task is:
-- open Wave 2 consolidation planning under the deepening-pass protocol with explicit anti-flattening and active/historical cross-linking discipline
+- open Wave 2 consolidation planning under the deepening-pass protocol with explicit anti-flattening, stage-profile propagation, and active/historical cross-linking discipline
 
 ---
 

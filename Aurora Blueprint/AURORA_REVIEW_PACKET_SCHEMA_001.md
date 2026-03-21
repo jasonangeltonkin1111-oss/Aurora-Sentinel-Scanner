@@ -66,6 +66,7 @@ Every review packet should contain:
 ## 4.3 Original state summary
 - `original_context_ref`
 - `original_opportunity_status`
+- `original_opportunity_stage` if relevant
 - `original_deployability_class`
 - `original_card_eligibility_gate`
 - `original_geometry_validity`
@@ -97,11 +98,12 @@ Required field:
 
 A review packet must answer:
 - was the issue structural?
+- was the issue stage classification or stage exhaustion?
 - was the issue deployability?
 - was the issue geometry?
 - was the issue timing / timebox?
 - was the issue missing truth?
-- was the system correct to degrade or observe only?
+- was the system correct to preserve a late-join, re-entry, salvage, degrade, or observe-only posture?
 
 If the review cannot answer this, it should remain unresolved rather than inventing certainty.
 

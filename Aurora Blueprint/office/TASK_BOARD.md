@@ -18,6 +18,7 @@
 | Wave 2 consolidation discipline | ACTIVE | prepare the richest unconsolidated lane for safe consolidation | use deepening-pass law before any flattening move |
 | Wrapper architecture precision | ACTIVE | make object, deployability, geometry, and strategy-card layers more machine-usable | tighten field-level contracts and machine-safe boundaries |
 | Wrapper canon compilation | ACTIVE | keep `Aurora Wrapper/` low-count, replaceable, and aligned to active source truth | deepen existing packs from verified Blueprint truth before adding any new wrapper files |
+| Opportunity abundance and stage-awareness | ACTIVE | widen truthful opportunity coverage without drift, starvation, or early-entry bias | propagate abundance law, stage taxonomy, and late-join legitimacy through active Blueprint + Wrapper surfaces |
 | Operator usability | ACTIVE | keep Aurora workable for future chats and beginner operators | preserve clear read order, active stack, and scaffold references |
 | ASC ⇄ Aurora bridge | ACTIVE | keep Aurora demands aligned with ASC context truth | record bridge-check outcome on meaningful Aurora-side architecture passes |
 | Historical lineage preservation | ACTIVE | preserve runs, source sets, passes, older trackers, and strengthening lineage | classify as historical/reference rather than deleting or collapsing |
@@ -30,8 +31,9 @@
 3. continue Wave 2 consolidation planning under the deepening-pass protocol rather than flattening prematurely
 4. preserve run and source lineage while improving wrapper-ready precision on active objects, protocols, and compiled wrapper packs
 5. keep Wave 3 wrapper-preparation gains synchronized with future control and doctrine changes
-6. only consider optional wrapper-tooling support if it stays off the default hot path and proves more useful than expanding current packs
-7. propagate the new status/enum alignment and packet/review law without widening ASC scope
+6. propagate abundance law, opportunity-stage taxonomy, late-join legitimacy, and bucket-targeted growth rules through active Blueprint and wrapper surfaces
+7. only consider optional wrapper-tooling support if it stays off the default hot path and proves more useful than expanding current packs
+8. propagate the new status/enum alignment and packet/review law without widening ASC scope
 
 ## Blocking rules
 

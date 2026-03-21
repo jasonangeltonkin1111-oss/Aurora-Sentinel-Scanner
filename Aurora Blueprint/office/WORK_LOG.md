@@ -225,3 +225,30 @@ Aurora already contained implicit family-competition truth across the wrapper ob
 
 ### Result
 Aurora now has a dedicated family competition layer that can preserve contested primaries, multiple live families, deferral, rejection reasons, and invalid-input stops without swallowing downstream pattern, opportunity, or card logic.
+
+
+## 2026-03-21 — Aurora evolution wave for abundance, stage-aware opportunity, and wrapper synchronization
+
+### Why
+Aurora already had strong family-first and pattern-second discipline, but its active doctrine still risked becoming too narrow, too early-entry-biased, and too starvation-prone as future family/card growth continued.
+The missing layer was not permissiveness.
+It was explicit law for truthful opportunity abundance, a canonical stage taxonomy, late-join legitimacy, and bucket-targeted expansion guidance that both Blueprint and Wrapper could use consistently.
+
+### What changed
+- created `AURORA_OPPORTUNITY_ABUNDANCE_AND_ANTI_STARVATION_LAW.md` as the explicit abundance, anti-starvation, observe-only, and multi-opportunity ecology doctrine surface
+- created `AURORA_OPPORTUNITY_STAGE_TAXONOMY_PROTOCOL.md` as the canonical stage vocabulary for emergent, developing, confirmed, mature, late, continuation, re-entry, salvage, and exhausted opportunity states
+- patched enum, opportunity, strategy-card, packet, review, family-registry, family-system, family-schema, family-card, pattern-card, and wrapper-pack surfaces so stage-aware and abundance-aware law now flows through the active architecture instead of living as one isolated note
+- refreshed office/control/progress/SHA continuity and created `AURORA_RUN_066.md` as the append-only continuity record for this growth wave
+
+### What was intentionally not done
+- no ASC contract or MT5 runtime surface was widened
+- no generic strategy explosion was created
+- no attempt was made to force every family into one identical stage behavior model
+- no new wrapper files were added
+- no claim was made that every deferred bucket/family branch is now fully extracted
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+Aurora is now more explicit about how to find more truthful opportunity without quality collapse: preserve family-first competition, add real stage awareness, legitimize mid-progress and late-join cases when structure still supports them, and grow bucket-targeted family breadth over time rather than by loosening standards.

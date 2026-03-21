@@ -70,6 +70,7 @@ Every packet should explicitly contain some combination of:
 - object chain references
 - output expectations
 - stop conditions
+- stage posture
 - operator notes
 - follow-up notes
 
@@ -111,6 +112,7 @@ Required fields:
 - `stage_entry_conditions`
 - `stage_exit_conditions`
 - `stage_stop_conditions`
+- `stage_preservation_rules`
 
 Purpose:
 - keep Aurora packets from becoming vague “read this and think” documents
@@ -142,7 +144,20 @@ Purpose:
 
 ---
 
-# 9. OPERATOR NOTE FIELDS
+
+# 9. STAGE POSTURE FIELDS
+
+Recommended fields:
+- `opportunity_stage_profile`
+- `late_join_legitimacy_notes`
+- `reentry_or_salvage_conditions`
+- `stage_exhaustion_conditions`
+
+Purpose:
+- preserve when mid-progress and later-stage opportunity is still valid
+- show when an example or lane should remain observe-only instead of being forced into an early-entry template
+
+# 10. OPERATOR NOTE FIELDS
 
 Recommended fields:
 - `operator_attention_points`
@@ -155,7 +170,7 @@ Purpose:
 
 ---
 
-# 10. FAMILY-LANE PACKET SPECIAL FIELDS
+# 11. FAMILY-LANE PACKET SPECIAL FIELDS
 
 For family-lane packets, add:
 - `primary_family_id`
@@ -167,7 +182,7 @@ For family-lane packets, add:
 
 ---
 
-# 11. WORKED-EXAMPLE PACKET SPECIAL FIELDS
+# 12. WORKED-EXAMPLE PACKET SPECIAL FIELDS
 
 For worked-example packets, add:
 - `symbol`
@@ -179,7 +194,7 @@ For worked-example packets, add:
 
 ---
 
-# 12. FORBIDDEN PACKET SHAPE
+# 13. FORBIDDEN PACKET SHAPE
 
 A valid packet must not be:
 - a vague prose note
@@ -190,7 +205,7 @@ A valid packet must not be:
 
 ---
 
-# 13. CURRENT JUDGMENT
+# 14. CURRENT JUDGMENT
 
 Aurora now has a more explicit packet schema direction.
 

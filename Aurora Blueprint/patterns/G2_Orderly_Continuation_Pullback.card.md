@@ -75,5 +75,9 @@ Future books and extractions may add:
 - `Aurora Blueprint/strategy_families/CORE/Trend_Pullback_Continuation.md`
 - `Aurora Blueprint/strategy_families/CORE/Trend_Continuation.md`
 
+# STAGE FIT
+- Most native in `STAGE_DEVELOPING`, `STAGE_CONTINUATION`, and `STAGE_REENTRY` conditions
+- Should not be forced when the parent family is already exhausted or no longer structurally dominant
+
 # CURRENT JUDGMENT
 Orderly Continuation Pullback is a valid first approved pattern group because it is one of the clearest practical children of the continuation family stack and can deepen safely as more books are processed.

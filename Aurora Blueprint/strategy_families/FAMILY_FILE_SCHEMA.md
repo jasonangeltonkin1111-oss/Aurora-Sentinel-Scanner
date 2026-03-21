@@ -23,10 +23,12 @@ Each family file should contain these sections in order:
 4. ANTI-HABITAT
 5. STRUCTURAL SIGNATURES
 6. MAIN COMPETING INTERPRETATIONS
-7. MAIN ANTI-CONFUSIONS
-8. FUTURE PATTERN DEPENDENCIES
-9. FUTURE WRAPPER / EA TRANSLATION VALUE
-10. CURRENT JUDGMENT
+7. STAGE PROFILE
+8. BUCKET / REGIME FIT
+9. MAIN ANTI-CONFUSIONS
+10. FUTURE PATTERN DEPENDENCIES
+11. FUTURE WRAPPER / EA TRANSLATION VALUE
+12. CURRENT JUDGMENT
 
 ---
 
@@ -36,6 +38,8 @@ A future GPT wrapper should be able to parse a family file and answer:
 - what the family is
 - where it belongs
 - where it does not belong
+- what stage expressions are native, degraded, or exhausted
+- what buckets or regimes fit it best
 - what it is commonly confused with
 - what pattern or testing layers it still needs later
 

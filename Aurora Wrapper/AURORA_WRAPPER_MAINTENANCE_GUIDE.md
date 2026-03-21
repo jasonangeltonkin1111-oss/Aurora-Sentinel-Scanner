@@ -55,6 +55,8 @@ Edit in place only for:
 - `Aurora Blueprint/AURORA_WRAPPER_WORKFLOW_PACKET_002.md`
 - `Aurora Blueprint/AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md`
 - `Aurora Blueprint/AURORA_ENUM_REGISTRY_001.md`
+- `Aurora Blueprint/AURORA_OPPORTUNITY_ABUNDANCE_AND_ANTI_STARVATION_LAW.md`
+- `Aurora Blueprint/AURORA_OPPORTUNITY_STAGE_TAXONOMY_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_DEPLOYABILITY_ENGINE_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_INTRADAY_GEOMETRY_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md`
@@ -75,6 +77,7 @@ Edit in place only for:
 - `Aurora Blueprint/AURORA_FAMILY_COMPETITION_ENGINE_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_FAMILY_COMPETITION_OBJECT_SCHEMA.md`
 - `Aurora Blueprint/AURORA_FAMILY_COMPETITION_WORKED_EXAMPLE_001.md`
+- family-card stage profiles and bucket-fit notes
 
 ### Pattern vault
 - `Aurora Blueprint/AURORA_SETUP_PATTERN_ATLAS.md`
@@ -132,5 +135,5 @@ Edit in place only for:
 - wrapper file count target preserved: `10`
 - kernel posture: still tiny router, left intentionally small
 - bridge posture: `NO_BRIDGE_CHANGE_NEEDED`
-- practical result: hot-path packs now carry more execution-stage law, family/pattern anti-confusion depth, and packet/review usage clarity
-- next likely wrapper-focused pass: only consider an optional tooling/template support pack if it stays off the default hot path and clearly improves real wrapper execution quality
+- practical result: hot-path packs now carry more execution-stage law, abundance/stage-aware opportunity guidance, family/pattern anti-confusion depth, and packet/review usage clarity
+- next likely wrapper-focused pass: add more bucket-specific family branches and stage-aware examples before considering any optional tooling/template support pack

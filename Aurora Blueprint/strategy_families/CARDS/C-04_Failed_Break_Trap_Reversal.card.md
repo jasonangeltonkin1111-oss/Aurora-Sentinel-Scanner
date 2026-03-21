@@ -63,6 +63,15 @@ Reject or suppress the family when:
 - false release rejection patterns
 - return-through-initiating-structure patterns
 
+# OPPORTUNITY STAGE PROFILE
+- Native stages: `STAGE_DEVELOPING`, `STAGE_CONFIRMED`
+- Legitimate but more sensitive: `STAGE_SALVAGE`, `STAGE_REENTRY` when reclaim logic remains intact after initial imperfection
+- Usually weak or invalid: `STAGE_EMERGENT` before failure evidence exists, `STAGE_EXHAUSTED` after the reclaim has already fully spent itself
+
+# BUCKET / REGIME FIT NOTES
+- Particularly useful in fake-break-prone, trap-prone, and reclaim-capable environments
+- Bucket context matters because some environments produce cleaner failed-break transitions than others
+
 # FUTURE TESTING / RESEARCH NEEDS
 - failure quality by environment
 - distinction between clean failed break and unstable chop
