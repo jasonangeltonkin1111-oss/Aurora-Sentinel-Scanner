@@ -6,6 +6,7 @@
 - The active need is not a rewrite; it is tighter control, clearer active/historical distinction, safer updates, and stronger machine precision.
 - Wave 2 remains the richest unconsolidated doctrine lane.
 - Wrapper/object/deployability/geometry surfaces are active and must stay synchronized with bridge and operator control files.
+- The wrapper canon now requires periodic fidelity-audit passes so compiled packs do not drift from active Blueprint law.
 
 ## Active streams
 
@@ -28,7 +29,8 @@
 2. refresh active control files whenever a new tracker, ledger merge, or canonical doctrine shift lands
 3. continue Wave 2 consolidation planning under the deepening-pass protocol rather than flattening prematurely
 4. preserve run and source lineage while improving wrapper-ready precision on active objects, protocols, and compiled wrapper packs
-5. propagate the new status/enum alignment and first concrete packet artifacts without widening ASC scope
+5. after the Wave 2 audit, consider optional wrapper-tooling support only if it stays off the default hot path
+6. propagate the new status/enum alignment and first concrete packet artifacts without widening ASC scope
 
 ## Blocking rules
 
