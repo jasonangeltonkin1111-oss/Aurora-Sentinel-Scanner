@@ -8,9 +8,9 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ## Current checkpoint
 
 - checkpoint date: 2026-03-21
-- checkpoint scope: Layer 2 reserved scaffolding pass
+- checkpoint scope: Prepared state primitive-array copy fix
 - hash type: SHA-256
-- note: refreshed for Layer 2 reserved runtime/publication scaffolding, continuity markers, and control-surface activation guardrails
+- note: refreshed for the follow-up prepared-state array copy fix and version/control continuity updates
 - rule: refresh this file when a pass materially changes active control or scanner-foundation truth
 
 ## Entries
@@ -20,7 +20,7 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 a1a0fcf8200512cec5eee0e91bc68c5bc08f4816b4faf7c600b8a9d9814c8d1b  office/OFFICE_CANON.md
 c665d8c9f19b9fa10429a2525fbe499965889f8cb8603c2e583ca69a31cce052  office/TASK_BOARD.md
 951b5b6322199d60f1764fb9a82d651089219326d11c111ad053b1a526b6e22a  office/DECISIONS.md
-cfc03aa69cc942544194ad34a4a7241794de49385aaf928c92ed28dc6e6c4a5c  office/WORK_LOG.md
+c79778342e0c8ea03cd09426ae1f1cfd4abd5b4fd27bae1b79585412bb592400  office/WORK_LOG.md
 ea4aa1123c056d424c57631a0dbe78161b8dd12f9971ed5cc4ab466c55a432f9  office/WORKING_STAGE_LEDGER.md
 5cb93527acefb1593d6e7f9b3899490f2e1a75029206b90393fdfa2d7697c22b  blueprint/README.md
 1e93ea5e17b39437f6411c9bf4de394a235b69818a85748be2af78a01e4cc088  blueprint/01_ASC_SYSTEM_OVERVIEW.md
@@ -47,13 +47,13 @@ fe3a4a7723cd7e4966ccbcb18d9e4baaa2834e51a3f4dd0d0c9a3677f77ce132  asc-mt5-scanne
 6a9430f3a8a2d329aa76a07b840e585c87fe70d431d55a20fd47f6445460c9c0  asc-mt5-scanner-blueprint/21_ASC_PACK_AUTHORITY_AND_ANTI_DRIFT.md
 0796928097bf3a9ccdb182cf7b4ce5acf16d2974d2e1711fd0b7690e8c63bf41  asc-mt5-scanner-blueprint/22_ASC_AURORA_BRIDGE_CONTRACT.md
 c3cd1fe9b687bad416e9c721465188b62e8f7520eaef03f1afee3caf7a06d72e  mt5_layout_plan/Include/ASC/README.md
-af8f94e9760b49f9ba6a2f5b4ef7284186c251d94c927e2d8c3429ddfaa7250a  mt5_runtime_flat/AuroraSentinel.mq5
-f33ee6405c2e7897e726795fbde35d2c563db3ae880106113dbfb4c71471cfb7  mt5_runtime_flat/ASC_Common.mqh
+1f87bdcf11c88183f75a8c236c11f4d1fcb265d865005256bef948c4a4777327  mt5_runtime_flat/AuroraSentinel.mq5
+d24c7792ecdf7a34e53acf5de06ce2ed58dc7fe702cfcdd06aa492316196c1d6  mt5_runtime_flat/ASC_Common.mqh
 510d93f88c54cc573c2573674d22345340849c9f9312e731c956f5ef847bd715  mt5_runtime_flat/ASC_Dossiers.mqh
 1ee0224286934b77d7ab29cb65a0f9953c6749e12a78df7dde25914e4a730149  mt5_runtime_flat/ASC_MarketState.mqh
 2a50fab29fded3ac73a63b531b979006a6e71caf024d07a0b235bab67ed0768a  mt5_runtime_flat/ASC_FileIO.mqh
 f050754b72b4f2123c7aee6b720abe49f74d536c09222a98ad918f352866ae39  mt5_runtime_flat/ASC_Persistence.mqh
-d779603caa8a1fa438208b08feacff72b0464092e7d12004a8bd73d214581c38  mt5_runtime_flat/ASC_ExplorerBuckets.mqh
+8c4dd2c8342f93b52a459d1d626cb8afdc4c80395076554ddb84b20856851572  mt5_runtime_flat/ASC_ExplorerBuckets.mqh
 d5ac98961b16734be5ee9bbf236a578a5b69e919430b9cd5c1cc0e5779290a76  mt5_runtime_flat/ASC_ExplorerHUD.mqh
 9aabd265e95cbb3104f9099759cb99a3258a4aaececdc0672aac93efca3bf2f4  mt5_runtime_flat/ASC_Logging.mqh
 ```

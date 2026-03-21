@@ -1,3 +1,32 @@
+## 2026-03-21 — Prepared state primitive-array copy fix
+
+### Why
+Review of the previous compile-hardening pass showed one remaining MT5-incompatible copy pattern: the prepared-state copier still assigned dynamic integer arrays directly, which the compiler reports as invalid array access on the destination members.
+
+### What changed
+- bumped the wrapper to 1.124 and the explorer subsystem to 0.444 for this follow-up runtime hardening pass
+- added an explicit integer-array copy helper for prepared state arrays and routed `batch_ready`, `batch_pending`, `batch_reused`, `batch_progress_states`, and `bucket_progress_states` through that helper
+- kept the fix tightly scoped to ASC explorer bucket runtime copying; no ownership, bridge, or doctrine surfaces changed
+
+### Result
+Prepared state copying now uses explicit MT5-safe handling for both object-bearing arrays and primitive dynamic arrays, closing the remaining reported compile errors in the explorer bucket path.
+
+---
+## 2026-03-21 — Explorer bucket compile-hardening pass
+
+### Why
+The rolling prepared-batch lane had drifted into MT5-incompatible array and helper usage, leaving the active flat runtime unable to compile cleanly and risking dishonest progress-state behavior in the explorer bucket path.
+
+### What changed
+- bumped the wrapper to 1.123 and the explorer subsystem to 0.443 for this runtime-facing hardening pass
+- restored a shared uppercase helper in the common runtime surface so bucket readiness checks can normalize primary-bucket ids again
+- moved prepared-batch constants ahead of first use, corrected array-by-reference signatures, and replaced invalid prepared-symbol/state array copies with explicit copy helpers that preserve bucket and symbol payloads without illegal structure-array assignment
+- kept the change bounded to ASC-owned runtime truth; no bridge contract or Aurora-owned doctrine changed
+
+### Result
+The prepared bucket runtime now matches MT5 array/copy rules closely enough to clear the reported compile blockers while preserving runtime-owned hydration and explorer-consumer boundaries.
+
+---
 ## 2026-03-21 — Layer 2 reserved scaffolding pass
 
 ### Why

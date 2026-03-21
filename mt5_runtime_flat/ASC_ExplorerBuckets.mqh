@@ -77,6 +77,11 @@ struct ASC_PreparedBucketState
    int                          bucket_progress_states[];
   };
 
+#define ASC_PREPARED_BATCH_COUNT 3
+#define ASC_PREPARED_BATCH_PRIORITY_SET 1
+#define ASC_PREPARED_BATCH_STOCK_MAIN 2
+#define ASC_PREPARED_BATCH_STOCK_METADATA 3
+
 
 string ASC_PreparedBucketProgressStateText(const ASC_PreparedBucketProgressState state)
   {
@@ -129,7 +134,7 @@ string ASC_Layer1MainBucketNameBySlot(const int slot)
    return("Unknown");
   }
 
-ASC_PreparedBucketProgressState ASC_PreparedBucketProgressForSlot(const int slot,const int ready_batches[])
+ASC_PreparedBucketProgressState ASC_PreparedBucketProgressForSlot(const int slot,const int &ready_batches[])
   {
    bool batch1_ready=(ArraySize(ready_batches)>=1 && ready_batches[0]!=0);
    bool batch2_ready=(ArraySize(ready_batches)>=2 && ready_batches[1]!=0);
@@ -364,14 +369,55 @@ string ASC_CL_MainBucketNote(const ASC_SymbolClassification &classification)
    return(note);
   }
 
-#define ASC_PREPARED_BATCH_COUNT 3
-#define ASC_PREPARED_BATCH_PRIORITY_SET 1
-#define ASC_PREPARED_BATCH_STOCK_MAIN 2
-#define ASC_PREPARED_BATCH_STOCK_METADATA 3
-
 int ASC_PreparedNowMs(void)
   {
    return((int)GetTickCount());
+  }
+
+void ASC_CopyBucketViews(const ASC_BucketViewModel &source[],ASC_BucketViewModel &target[])
+  {
+   int total=ArraySize(source);
+   ArrayResize(target,total);
+   for(int i=0;i<total;i++)
+     {
+      target[i].bucket_id=source[i].bucket_id;
+      target[i].name=source[i].name;
+      target[i].family=source[i].family;
+      target[i].posture=source[i].posture;
+      target[i].note=source[i].note;
+      target[i].resolved_symbol_count=source[i].resolved_symbol_count;
+      target[i].open_symbol_count=source[i].open_symbol_count;
+      target[i].unresolved_symbol_count=source[i].unresolved_symbol_count;
+      target[i].source_symbol_count=source[i].source_symbol_count;
+      target[i].open_resolved_percent_tenths=source[i].open_resolved_percent_tenths;
+      target[i].unresolved_source_percent_tenths=source[i].unresolved_source_percent_tenths;
+      target[i].share_total_resolved_percent_tenths=source[i].share_total_resolved_percent_tenths;
+      target[i].prepared_symbol_offset=source[i].prepared_symbol_offset;
+      target[i].progress_state=source[i].progress_state;
+      target[i].progress_label=source[i].progress_label;
+      ArrayResize(target[i].symbol_refs,ArraySize(source[i].symbol_refs));
+      for(int j=0;j<ArraySize(source[i].symbol_refs);j++)
+         target[i].symbol_refs[j]=source[i].symbol_refs[j];
+      ArrayResize(target[i].symbol_notes,ArraySize(source[i].symbol_notes));
+      for(int j=0;j<ArraySize(source[i].symbol_notes);j++)
+         target[i].symbol_notes[j]=source[i].symbol_notes[j];
+     }
+  }
+
+void ASC_CopyPreparedSymbols(const ASC_BucketPreparedSymbol &source[],ASC_BucketPreparedSymbol &target[])
+  {
+   int total=ArraySize(source);
+   ArrayResize(target,total);
+   for(int i=0;i<total;i++)
+      target[i]=source[i];
+  }
+
+void ASC_CopyIntArray(const int &source[],int &target[])
+  {
+   int total=ArraySize(source);
+   ArrayResize(target,total);
+   for(int i=0;i<total;i++)
+      target[i]=source[i];
   }
 
 void ASC_PreparedStateDiagnosticsReset(ASC_PreparedStateDiagnostics &diagnostics)
@@ -467,7 +513,24 @@ void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
 
 void ASC_CopyPreparedBucketState(const ASC_PreparedBucketState &source,ASC_PreparedBucketState &target)
   {
-   target=source;
+   target.ready=source.ready;
+   target.server_key=source.server_key;
+   target.prepared_at=source.prepared_at;
+   target.source_symbol_count=source.source_symbol_count;
+   target.unresolved_count=source.unresolved_count;
+   target.total_resolved_symbols=source.total_resolved_symbols;
+   target.active_batch_id=source.active_batch_id;
+   target.working_batch_id=source.working_batch_id;
+   target.last_good_batch_id=source.last_good_batch_id;
+   target.batch_generation=source.batch_generation;
+   target.diagnostics=source.diagnostics;
+   ASC_CopyBucketViews(source.buckets,target.buckets);
+   ASC_CopyPreparedSymbols(source.symbols,target.symbols);
+   ASC_CopyIntArray(source.batch_ready,target.batch_ready);
+   ASC_CopyIntArray(source.batch_pending,target.batch_pending);
+   ASC_CopyIntArray(source.batch_reused,target.batch_reused);
+   ASC_CopyIntArray(source.batch_progress_states,target.batch_progress_states);
+   ASC_CopyIntArray(source.bucket_progress_states,target.bucket_progress_states);
   }
 
 int ASC_PreparedPromotedBatchCount(const ASC_PreparedBucketState &prepared)
@@ -618,7 +681,7 @@ void ASC_PreparedPhaseSymbolReorder(ASC_PreparedBucketState &prepared)
         }
       offset+=prepared.buckets[i].resolved_symbol_count;
      }
-   prepared.symbols=ordered;
+   ASC_CopyPreparedSymbols(ordered,prepared.symbols);
    prepared.total_resolved_symbols=ArraySize(prepared.symbols);
    ASC_PreparedRefreshBucketPercentages(prepared);
   }
@@ -635,7 +698,7 @@ void ASC_PreparedRemoveBatchSymbols(ASC_PreparedBucketState &prepared,const int 
       ArrayResize(kept,slot+1);
       kept[slot]=prepared.symbols[i];
      }
-   prepared.symbols=kept;
+   ASC_CopyPreparedSymbols(kept,prepared.symbols);
    prepared.total_resolved_symbols=ArraySize(prepared.symbols);
   }
 

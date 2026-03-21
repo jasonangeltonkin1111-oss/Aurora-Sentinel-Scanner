@@ -289,6 +289,13 @@ string ASC_ToLower(const string value)
    return(out);
   }
 
+string ASC_ToUpper(const string value)
+  {
+   string out=value;
+   StringToUpper(out);
+   return(out);
+  }
+
 string ASC_ToUpperFirst(const string value)
   {
    if(value=="")
