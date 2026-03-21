@@ -161,6 +161,9 @@ Should include per bucket:
 - dominant pending reason
 - last update when available
 
+The right rail owns the active Layer 1 surface filter for this page.
+`All Symbols` and `Open Only` must change compressed bucket-list visibility globally for the Layer 1 bucket surfaces.
+
 ### View 2 — Bucket Detail
 Triggered by clicking a compressed Layer 1 bucket.
 
@@ -172,6 +175,9 @@ Should show:
 - future regional stock grouping hints without promoting US/EU/HK groupings into first-class main pages
 - visible-window scrolling when the list exceeds the screen
 - safe pagination or row-based scroll controls
+- right-rail operator filter ownership for the active Layer 1 surface using `All Symbols` and `Open Only`
+
+The same right-rail filter selection must stay global across Layer 1 bucket surfaces so it also controls bucket-detail symbol visibility and suppresses zero-open buckets in `Open Only` mode.
 
 ### View 3 — Symbol Detail
 Triggered by clicking a symbol.
@@ -328,8 +334,8 @@ Recommended button groups:
 - `Back`
 - `Buckets`
 - `Overview`
-- `Scroll Up`
-- `Scroll Down`
+- `All Symbols`
+- `Open Only`
 - `Page Up`
 - `Page Down`
 - `Compact`

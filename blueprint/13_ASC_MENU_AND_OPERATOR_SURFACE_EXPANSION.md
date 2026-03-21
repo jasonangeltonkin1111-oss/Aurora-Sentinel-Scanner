@@ -194,9 +194,11 @@ Examples of explorer-only quick actions:
 - Back
 - Open Buckets
 - Open Symbol Detail
-- Scroll Up / Down
+- All Symbols / Open Only filter ownership in the right rail for the active Layer 1 bucket surface
 - View Density toggle
 - Refresh display
+
+For Layer 1 bucket surfaces, the right rail must own `All Symbols` and `Open Only`. That explorer-owned filter must stay global across compressed bucket-list visibility, bucket-detail symbol visibility, and zero-open bucket suppression in `Open Only` mode.
 
 The menu should not be used as the substitute for click navigation.
 
