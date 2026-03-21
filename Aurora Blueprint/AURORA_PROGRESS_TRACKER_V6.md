@@ -28,8 +28,8 @@ From this point onward:
 # 2. MASTER PROJECT STATUS
 
 ## Overall project state
-- Status: MULTI-WAVE FOUNDATION BUILT / CONSOLIDATION ACTIVE / DEEPENING PROTOCOL ACTIVE / OFFICE CONTROL HARDENED
-- Project mode: long-horizon layered blueprint build with doctrine sharpening, wrapper hardening, and tighter active control discipline
+- Status: MULTI-WAVE FOUNDATION BUILT / CONSOLIDATION ACTIVE / DEEPENING PROTOCOL ACTIVE / OFFICE CONTROL HARDENED / EXECUTION-SIDE ENUM-WORKFLOW HARDENED
+- Project mode: long-horizon layered blueprint build with doctrine sharpening, wrapper hardening, tighter active control discipline, and bounded execution-side artifact completion
 - Current governing approach: preserve lineage, consolidate before sprawl, harden active control, and deepen by sharpening boundaries and translation value rather than by bloating prose
 
 ## Overall completion estimate
@@ -41,13 +41,15 @@ From this point onward:
 - strategy-layer structural completeness: 88%
 - book-to-blueprint extraction overall: 48%
 - doctrine consolidation overall: 41%
-- active control-layer discipline: 79%
+- active control-layer discipline: 82%
+- execution-side packet/artifact completeness: 73%
 
 ## Current bottleneck
 - Wave 2 remains the richest and highest-risk unconsolidated lane
 - deeper-pass sharpening is not yet propagated into all consolidated doctrine surfaces
 - active ledger deltas still live partly in supplements pending a future lossless merge
 - wrapper/machine surfaces are stronger, but future passes can still drift unless office discipline is maintained
+- first concrete group-context, review-packet, and filled worked-example artifacts now exist for one active lane, but verified real-case libraries remain thin
 
 ## Current project risk
 - future passes could become verbose but not sharper unless the deepening protocol is enforced
@@ -80,6 +82,8 @@ From this point onward:
 - `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
 
 ## Active wrapper / bridge / machine surfaces
+- `Aurora Blueprint/AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md`
+- `Aurora Blueprint/AURORA_WRAPPER_WORKFLOW_PACKET_002.md`
 - `Aurora Blueprint/ASC_TO_AURORA_CONTEXT_CONTRACT.md`
 - `Aurora Blueprint/ASC_AURORA_JOINT_EVOLUTION_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_WRAPPER_OBJECT_MODEL.md`
@@ -150,7 +154,7 @@ Judgment:
 # 5. CURRENT NEXT TASK
 
 The next highest-leverage active task is:
-- keep the new office layer and active control files synchronized while continuing Wave 2 consolidation planning under the deepening-pass protocol
+- preserve the new execution-side normalization and artifact continuity while waiting for a verified ASC-backed case that can upgrade the illustrative C-04 / G4 packet chain into a real example
 
 If doctrine work is preferred immediately after that, the next doctrine task is:
 - open Wave 2 consolidation planning under the deepening-pass protocol with explicit anti-flattening and active/historical cross-linking discipline
