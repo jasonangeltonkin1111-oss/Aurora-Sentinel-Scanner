@@ -22,6 +22,10 @@ struct ASC_BucketViewModel
    int resolved_symbol_count;
    int open_symbol_count;
    int unresolved_symbol_count;
+   int source_symbol_count;
+   int open_resolved_percent_tenths;
+   int unresolved_source_percent_tenths;
+   int share_total_resolved_percent_tenths;
    int prepared_symbol_offset;
    ASC_PreparedBucketProgressState progress_state;
    string progress_label;
@@ -160,6 +164,10 @@ void ASC_PreparedSeedMainBuckets(ASC_PreparedBucketState &prepared)
       prepared.buckets[i].resolved_symbol_count=0;
       prepared.buckets[i].open_symbol_count=0;
       prepared.buckets[i].unresolved_symbol_count=0;
+      prepared.buckets[i].source_symbol_count=0;
+      prepared.buckets[i].open_resolved_percent_tenths=0;
+      prepared.buckets[i].unresolved_source_percent_tenths=0;
+      prepared.buckets[i].share_total_resolved_percent_tenths=0;
       prepared.buckets[i].prepared_symbol_offset=-1;
       prepared.buckets[i].progress_state=ASC_PreparedBucketProgressForSlot(i,prepared.batch_ready);
       if(i==5 && ArraySize(prepared.batch_progress_states)>=ASC_PREPARED_BATCH_COUNT)
@@ -504,6 +512,30 @@ void ASC_PreparedRefreshBatchProgressStates(ASC_PreparedBucketState &prepared)
      }
   }
 
+
+int ASC_PercentTenths(const int numerator,const int denominator)
+  {
+   if(denominator<=0 || numerator<=0)
+      return(0);
+   long scaled=((long)numerator*1000 + (denominator/2))/denominator;
+   if(scaled<0)
+      scaled=0;
+   if(scaled>1000)
+      scaled=1000;
+   return((int)scaled);
+  }
+
+void ASC_PreparedRefreshBucketPercentages(ASC_PreparedBucketState &prepared)
+  {
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+     {
+      prepared.buckets[i].source_symbol_count=prepared.buckets[i].resolved_symbol_count+prepared.buckets[i].unresolved_symbol_count;
+      prepared.buckets[i].open_resolved_percent_tenths=ASC_PercentTenths(prepared.buckets[i].open_symbol_count,prepared.buckets[i].resolved_symbol_count);
+      prepared.buckets[i].unresolved_source_percent_tenths=ASC_PercentTenths(prepared.buckets[i].unresolved_symbol_count,prepared.buckets[i].source_symbol_count);
+      prepared.buckets[i].share_total_resolved_percent_tenths=ASC_PercentTenths(prepared.buckets[i].resolved_symbol_count,prepared.total_resolved_symbols);
+     }
+  }
+
 void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int warmup_assessed,const int warmup_total,const int readiness_percent,const int due_now,const int budget)
   {
    prepared.diagnostics.last_prepared_batch_id=(prepared.active_batch_id>0 ? prepared.active_batch_id : prepared.last_good_batch_id);
@@ -588,6 +620,7 @@ void ASC_PreparedPhaseSymbolReorder(ASC_PreparedBucketState &prepared)
      }
    prepared.symbols=ordered;
    prepared.total_resolved_symbols=ArraySize(prepared.symbols);
+   ASC_PreparedRefreshBucketPercentages(prepared);
   }
 
 void ASC_PreparedRemoveBatchSymbols(ASC_PreparedBucketState &prepared,const int batch_id)
@@ -612,6 +645,7 @@ void ASC_PreparedAppendSymbol(ASC_PreparedBucketState &prepared,const ASC_Bucket
    ArrayResize(prepared.symbols,slot+1);
    prepared.symbols[slot]=symbol;
    prepared.total_resolved_symbols=ArraySize(prepared.symbols);
+   ASC_PreparedRefreshBucketPercentages(prepared);
   }
 
 void ASC_PreparedPhaseClassificationPass(const string server_key,ASC_SymbolState &states[],const int count,const int batch_id,ASC_PreparedBucketState &working)
@@ -659,10 +693,12 @@ void ASC_PreparedPhaseClassificationPass(const string server_key,ASC_SymbolState
       if(!ASC_PreparedClassificationInBatch(classification,batch_id))
          continue;
 
+      string prepared_bucket_id=ASC_CL_MainBucketId(classification);
+
       ASC_BucketPreparedSymbol prepared_symbol;
       prepared_symbol.live_symbol=states[i].symbol;
       prepared_symbol.canonical_symbol=classification.canonical_symbol;
-      prepared_symbol.bucket_id=ASC_CL_MainBucketId(classification);
+      prepared_symbol.bucket_id=prepared_bucket_id;
       prepared_symbol.bucket_name=ASC_CL_MainBucketName(classification);
       prepared_symbol.asset_class=classification.asset_class;
       prepared_symbol.primary_bucket=classification.primary_bucket;
