@@ -121,11 +121,11 @@ The sequence above remains active canon for debugging and future implementation 
 
 ### Dynamic bucket truth
 - **Status:** active but provisional
-- **Pass:** bucket membership shown to the operator is based on classified live broker symbols, compressed into six Layer 1 main buckets for the first surface, and does not reintroduce fake canonical membership as active truth.
-- **Break symptoms:** unresolved placeholders count as live members, misclassified symbols pollute visible bucket truth, or bucket detail implies more runtime authority than the system actually has, or regional stock groupings become first-class main pages instead of preserved detail metadata.
-- **Owners:** `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`, `mt5_runtime_flat/ASC_Classification.mqh`
-- **Regression warning:** current bucket truth is not complete enough to justify downstream selection logic.
-- **Future extension:** bucket preparation must migrate into runtime-owned prepared state / snapshot ownership before deeper capability expansion continues.
+- **Pass:** bucket membership shown to the operator is based on classified live broker symbols, compressed into six Layer 1 main buckets for the first surface, and promoted through rolling prepared-state batches with last-good fallback instead of whole-world rebuild semantics.
+- **Break symptoms:** unresolved placeholders count as live members, misclassified symbols pollute visible bucket truth, prepared-batch promotion wipes prior good state, or regional stock groupings become first-class main pages instead of preserved detail metadata.
+- **Owners:** `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`, `mt5_runtime_flat/ASC_Classification.mqh`, `mt5_runtime_flat/AuroraSentinel.mq5`
+- **Regression warning:** current bucket truth is not complete enough to justify downstream selection logic, and unchanged-batch reuse is still scaffold-grade rather than delta-driven.
+- **Future extension:** deepen batch reuse, stock-taxonomy enrichment, and any later persistence only after the promoted prepared-state boundary stays stable under restart and runtime churn.
 
 ### Explorer HUD shell
 - **Status:** working but structurally fragile
@@ -136,12 +136,12 @@ The sequence above remains active canon for debugging and future implementation 
 - **Future extension:** bucket detail, stat detail, identity cards, operator filters, and later Aurora-facing reserved panels should plug into the existing controller/layout/action split rather than replacing it.
 
 ### Explorer / runtime ownership boundary
-- **Status:** failing / must be corrected
-- **Pass:** runtime computes and prepares bucket truth; explorer consumes prepared truth only.
-- **Break symptoms:** full bucket view models are generated in render paths, full bucket view models are generated again in click handlers, or explorer-side actions become data-preparation engines.
-- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
-- **Regression warning:** do not continue deeper HUD work on top of this contradiction.
-- **Future extension:** focus-scoped runtime elevation and stale-bound refresh should later flow through runtime-owned adapters/snapshots, not through explorer recomputation.
+- **Status:** improved but still under watch
+- **Pass:** runtime computes and promotes bucket truth in rolling batches; explorer consumes last-good promoted prepared state only.
+- **Break symptoms:** render or click paths start rebuilding classifications, bucket preparation starts depending on whole-universe navigation rebuilds again, or failed batch work leaves explorer without the prior promoted state.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel.mq5`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
+- **Regression warning:** do not reintroduce scanner computation into button handlers. Do not describe batch reuse as complete; this pass only establishes the safe scaffold.
+- **Future extension:** focus-scoped runtime elevation and stale-bound refresh should later flow through runtime-owned adapters/snapshots, with stronger unchanged-batch reuse and optional dedicated persistence only after evidence justifies it.
 
 ### Reserved future capability scaffolding
 - **Status:** reserved
