@@ -23,6 +23,16 @@ struct ASC_BucketPreparedSymbol
   {
    string            live_symbol;
    string            canonical_symbol;
+   string            bucket_id;
+   string            bucket_name;
+   string            asset_class;
+   string            primary_bucket;
+   string            sector;
+   string            industry;
+   string            theme_bucket;
+   string            subtype;
+   string            match_kind;
+   string            review_status;
    string            note;
    ASC_MarketStatus  market_status;
    bool              open_now;
@@ -99,6 +109,75 @@ void ASC_BucketSortViews(ASC_BucketViewModel &views[])
      }
   }
 
+
+string ASC_CL_MainBucketId(const ASC_SymbolClassification &classification)
+  {
+   string asset_class=classification.asset_class;
+   if(asset_class=="FX")
+      return("fx");
+   if(asset_class=="INDEX")
+      return("indices");
+   if(asset_class=="METALS")
+      return("metals");
+   if(asset_class=="ENERGY")
+      return("energy");
+   if(asset_class=="CRYPTO")
+      return("crypto");
+   if(asset_class=="STOCK")
+      return("stocks");
+   return(ASC_CL_BucketId(classification.primary_bucket));
+  }
+
+string ASC_CL_MainBucketName(const ASC_SymbolClassification &classification)
+  {
+   string bucket_id=ASC_CL_MainBucketId(classification);
+   if(bucket_id=="fx")
+      return("FX");
+   if(bucket_id=="indices")
+      return("Indices");
+   if(bucket_id=="metals")
+      return("Metals");
+   if(bucket_id=="energy")
+      return("Energy");
+   if(bucket_id=="crypto")
+      return("Crypto");
+   if(bucket_id=="stocks")
+      return("Stocks");
+   return(ASC_CL_BucketName(classification));
+  }
+
+string ASC_CL_MainBucketFamily(const ASC_SymbolClassification &classification)
+  {
+   string bucket_id=ASC_CL_MainBucketId(classification);
+   if(bucket_id=="stocks")
+      return("Layer 1 Main Bucket");
+   if(bucket_id=="indices")
+      return("Layer 1 Main Bucket");
+   if(bucket_id=="fx" || bucket_id=="metals" || bucket_id=="energy" || bucket_id=="crypto")
+      return("Layer 1 Main Bucket");
+   return(ASC_CL_BucketFamily(classification));
+  }
+
+string ASC_CL_MainBucketNote(const ASC_SymbolClassification &classification)
+  {
+   string note="Compressed Layer 1 bucket from richer ASC classification truth.";
+   if(classification.primary_bucket!="")
+      note+=" Primary " + classification.primary_bucket + ".";
+   if(classification.asset_class=="STOCK")
+     {
+      if(classification.theme_bucket!="")
+         note+=" Region/Theme seed " + classification.theme_bucket + ".";
+      if(classification.sector!="")
+         note+=" Sector " + classification.sector + ".";
+      return(note);
+     }
+   if(classification.sector!="")
+      note+=" Sector " + classification.sector + ".";
+   if(classification.theme_bucket!="")
+      note+=" Theme " + classification.theme_bucket + ".";
+   return(note);
+  }
+
 void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
   {
    prepared.ready=false;
@@ -113,7 +192,7 @@ void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
 
 int ASC_FindOrAddBucket(ASC_BucketViewModel &views[],const ASC_SymbolClassification &classification)
   {
-   string bucket_id=ASC_CL_BucketId(classification.primary_bucket);
+   string bucket_id=ASC_CL_MainBucketId(classification);
    for(int i=0;i<ArraySize(views);i++)
      {
       if(views[i].bucket_id==bucket_id)
@@ -122,10 +201,10 @@ int ASC_FindOrAddBucket(ASC_BucketViewModel &views[],const ASC_SymbolClassificat
    int slot=ArraySize(views);
    ArrayResize(views,slot+1);
    views[slot].bucket_id=bucket_id;
-   views[slot].name=ASC_CL_BucketName(classification);
-   views[slot].family=ASC_CL_BucketFamily(classification);
-   views[slot].posture="Classification Driven";
-   views[slot].note=ASC_CL_BucketNote(classification);
+   views[slot].name=ASC_CL_MainBucketName(classification);
+   views[slot].family=ASC_CL_MainBucketFamily(classification);
+   views[slot].posture="Compressed Layer 1";
+   views[slot].note=ASC_CL_MainBucketNote(classification);
    views[slot].resolved_symbol_count=0;
    views[slot].open_symbol_count=0;
    views[slot].unresolved_symbol_count=0;
@@ -157,7 +236,8 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
       ArrayResize(prepared.buckets[bucket_index].symbol_notes,bucket_slot+1);
       prepared.buckets[bucket_index].symbol_refs[bucket_slot]=states[i].symbol;
       prepared.buckets[bucket_index].symbol_notes[bucket_slot]="Canonical " + classification.canonical_symbol
-                                                      + " | Match " + classification.match_kind
+                                                      + " | Primary " + classification.primary_bucket
+                                                      + " | Theme " + (classification.theme_bucket=="" ? "N/A" : classification.theme_bucket)
                                                       + " | Review " + classification.review_status;
       prepared.buckets[bucket_index].resolved_symbol_count++;
       if(states[i].market_status==ASC_MARKET_OPEN)
@@ -167,6 +247,16 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
       ArrayResize(prepared.symbols,prepared_slot+1);
       prepared.symbols[prepared_slot].live_symbol=states[i].symbol;
       prepared.symbols[prepared_slot].canonical_symbol=classification.canonical_symbol;
+      prepared.symbols[prepared_slot].bucket_id=prepared.buckets[bucket_index].bucket_id;
+      prepared.symbols[prepared_slot].bucket_name=prepared.buckets[bucket_index].name;
+      prepared.symbols[prepared_slot].asset_class=classification.asset_class;
+      prepared.symbols[prepared_slot].primary_bucket=classification.primary_bucket;
+      prepared.symbols[prepared_slot].sector=classification.sector;
+      prepared.symbols[prepared_slot].industry=classification.industry;
+      prepared.symbols[prepared_slot].theme_bucket=classification.theme_bucket;
+      prepared.symbols[prepared_slot].subtype=classification.subtype;
+      prepared.symbols[prepared_slot].match_kind=classification.match_kind;
+      prepared.symbols[prepared_slot].review_status=classification.review_status;
       prepared.symbols[prepared_slot].note=prepared.buckets[bucket_index].symbol_notes[bucket_slot];
       prepared.symbols[prepared_slot].market_status=states[i].market_status;
       prepared.symbols[prepared_slot].open_now=(states[i].market_status==ASC_MARKET_OPEN);

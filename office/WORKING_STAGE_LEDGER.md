@@ -121,8 +121,8 @@ The sequence above remains active canon for debugging and future implementation 
 
 ### Dynamic bucket truth
 - **Status:** active but provisional
-- **Pass:** bucket membership shown to the operator is based on classified live broker symbols and does not reintroduce fake canonical membership as active truth.
-- **Break symptoms:** unresolved placeholders count as live members, misclassified symbols pollute visible bucket truth, or bucket detail implies more runtime authority than the system actually has.
+- **Pass:** bucket membership shown to the operator is based on classified live broker symbols, compressed into six Layer 1 main buckets for the first surface, and does not reintroduce fake canonical membership as active truth.
+- **Break symptoms:** unresolved placeholders count as live members, misclassified symbols pollute visible bucket truth, or bucket detail implies more runtime authority than the system actually has, or regional stock groupings become first-class main pages instead of preserved detail metadata.
 - **Owners:** `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`, `mt5_runtime_flat/ASC_Classification.mqh`
 - **Regression warning:** current bucket truth is not complete enough to justify downstream selection logic.
 - **Future extension:** bucket preparation must migrate into runtime-owned prepared state / snapshot ownership before deeper capability expansion continues.

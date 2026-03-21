@@ -49,6 +49,7 @@ Read together with:
 Interpretation:
 - identity and bucketing should eventually become a clear semantic domain rather than disappearing into `Common`
 - the explorer should eventually become a real presentation subsystem with layout, widgets, state, theme, and actions separated cleanly
+- the first operator surface should consume a compressed six-bucket Layer 1 adapter (`FX`, `Indices`, `Metals`, `Energy`, `Crypto`, `Stocks`) while richer classification truth stays attached to prepared symbols
 - the presentation domain must remain a consumer of prepared truth rather than a hidden scanner engine
 
 ### Existing canon file: `10_ASC_MENU_AND_TESTABILITY.md`
@@ -126,6 +127,7 @@ Aurora-reserved surfaces must still consume prepared runtime truth and bounded r
 - menu is not a navigation substitute
 - focused symbol compute is runtime-owned, not HUD-owned
 - dynamic bucket membership is runtime-prepared truth, not render-path reconstruction
+- compressed Layer 1 main buckets must stay separate from later stock-region drilldown such as US/EU/HK
 - combined cross-bucket summary does not replace bucket-preserving shortlist truth
 - open-trade exclusion applies to the later combined lane, not to bucket truth itself
 - no explorer interaction may justify full-universe recomputation by itself
@@ -144,11 +146,12 @@ Implementation work that changes these operator-facing surfaces must update the 
 ## Dynamic bucket architecture bridge
 
 The explorer bucket flow must now be read as dynamic-ready even before live identity activation:
-- bucket count is not fixed at 15
+- first-surface main bucket count is fixed at six compressed Layer 1 buckets (`FX`, `Indices`, `Metals`, `Energy`, `Crypto`, `Stocks`)
 - per-bucket symbol count is not fixed at 3
 - bucket detail mode is part of navigation state
 - all-mode scrolling is owned by the symbol lane rather than by one rigid placeholder list
 - bucket list and bucket detail must consume prepared bucket snapshots rather than raw identity catalogs
+- prepared symbol rows beneath those buckets must retain the richer primary-bucket / sector / industry / theme / subtype truth for later detail surfaces
 
 Placeholder taxonomy remains allowed as a temporary source, but only through an honest view-model layer that does not imply live broker membership.
 

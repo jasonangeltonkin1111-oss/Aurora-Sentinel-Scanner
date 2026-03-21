@@ -249,3 +249,19 @@ Warmup was still coupled too closely to missing dossier count, which meant the r
 
 ### Result
 Boot and recovery now enter warmup honestly, promote to steady once the minimum Layer 1 threshold is met, and keep lower-priority preparation visible as background hydration instead of trapping the runtime in warmup forever.
+
+---
+## 2026-03-21 — Compressed Layer 1 bucket adapter pass
+
+### Why
+The active classification taxonomy was rich enough for future drilldown, but the first operator surface still exposed overly granular main buckets instead of a compressed Layer 1 menu.
+
+### What changed
+- bumped the wrapper to 1.091 and the explorer subsystem to 0.391 for this runtime, HUD, and control-surface bucketing pass
+- kept the standalone classification taxonomy intact while adding a compressed Layer 1 bucket adapter for exactly six main buckets: FX, Indices, Metals, Energy, Crypto, and Stocks
+- updated prepared bucket naming and lookup so bucket list pages use compressed IDs/names while prepared symbol metadata still carries `primary_bucket`, sector, industry, theme bucket, and subtype for later drilldown
+- updated bucket detail HUD wording so future regional stock grouping can surface as metadata without becoming first-class main pages
+- aligned active blueprint and office control surfaces to state the compressed Layer 1 bucket law explicitly
+
+### Result
+The first operator surface is now simpler and truer to Layer 1 intent: main navigation stays compressed, while deeper classification truth remains preserved for later stock-region and sector drilldown work.
