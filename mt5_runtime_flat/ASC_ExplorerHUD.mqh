@@ -716,35 +716,60 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
         }
      }
 
-   int total_visible_refs=ArraySize(visible_symbols);
-   int display_count=(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL ? total_visible_refs : total_visible_refs);
+   int total_visible_symbols=ArraySize(visible_symbols);
+   int mode_limit=total_visible_symbols;
    if(ctx.nav.bucket_display_mode!=ASC_BUCKET_DISPLAY_ALL)
      {
-      int limit=ASC_BucketDisplayLimit(bucket);
-      if(display_count>limit)
-         display_count=limit;
+      mode_limit=ASC_BucketDisplayLimit(bucket);
+      if(mode_limit>total_visible_symbols)
+         mode_limit=total_visible_symbols;
+     }
+   int capped_total=mode_limit;
+
+   int wide_summary_min=760;
+   int summary_w=(w>=wide_summary_min ? (w*30)/100 : 0);
+   if(summary_w>280)
+      summary_w=280;
+   if(summary_w>0 && summary_w<210)
+      summary_w=210;
+   int symbol_w=w;
+   bool show_side_summary=false;
+   if(summary_w>0)
+     {
+      int candidate_symbol_w=w-summary_w-ctx.theme.gap;
+      if(candidate_symbol_w>=320)
+        {
+         symbol_w=candidate_symbol_w;
+         show_side_summary=true;
+        }
+      else
+         summary_w=0;
      }
 
-   int header_h=92;
+   int header_h=78;
    int controls_h=42;
-   int future_h=74;
-   int split_gap=ctx.theme.gap;
-   int split_y=y+header_h+controls_h+(ctx.theme.gap*2);
-   int split_h=h-header_h-controls_h-future_h-(ctx.theme.gap*4);
-   if(split_h<160)
-      split_h=160;
-   int left_w=(w*62)/100;
-   int right_w=w-left_w-split_gap;
-   int future_y=y+h-future_h;
+   int strip_h=(show_side_summary ? ctx.theme.row_height+12 : (ctx.theme.row_height*2)+16);
+   int footer_h=ctx.theme.button_height+ctx.theme.gap+4;
+   int row_h=(ctx.theme.row_height*3)+18;
+   int available_symbol_h=h-header_h-controls_h-strip_h-footer_h-(ctx.theme.gap*4);
+   if(available_symbol_h<row_h)
+      available_symbol_h=row_h;
+   int rows_per_page=ASC_ExplorerVisibleRows(ctx,available_symbol_h,row_h+ctx.theme.gap);
+   int symbol_pages=ASC_ExplorerPageCount(capped_total,rows_per_page);
+   ASC_ExplorerClampPage(ctx.nav.bucket_symbol_page,capped_total,rows_per_page);
+   int lane_start=ctx.nav.bucket_symbol_page*rows_per_page;
+   int lane_end=lane_start+rows_per_page;
+   if(lane_end>capped_total)
+      lane_end=capped_total;
+
+   int resolved_open_count=ASC_ExplorerVisibleBucketCount(bucket,states,count,ASC_EXPLORER_FILTER_OPEN_ONLY);
+   color bucket_accent=(resolved_open_count>0 ? ctx.theme.good : ctx.theme.accent);
 
    ASC_ExplorerRect(ctx,"bucket.detail.header",x,y,w,header_h,ctx.theme.panel_fill,ctx.theme.border);
-   int resolved_open_count=ASC_ExplorerVisibleBucketCount(bucket,states,count,ASC_EXPLORER_FILTER_OPEN_ONLY);
-   ASC_ExplorerRect(ctx,"bucket.detail.header.bar",x,y,6,header_h,(resolved_open_count>0 ? ctx.theme.good : ctx.theme.accent),(resolved_open_count>0 ? ctx.theme.good : ctx.theme.accent));
+   ASC_ExplorerRect(ctx,"bucket.detail.header.bar",x,y,6,header_h,bucket_accent,bucket_accent);
    ASC_ExplorerLabel(ctx,"bucket.detail.title",ASC_ExplorerFitText(bucket.name,w-24,11),x+14,y+8,ctx.theme.text,11);
-   ASC_ExplorerLabel(ctx,"bucket.detail.family",ASC_ExplorerFitText(bucket.family + " | " + bucket.posture + " | Bucket ID " + bucket.bucket_id,w-24),x+14,y+28,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"bucket.detail.family",ASC_ExplorerFitText("Dynamic Classified Bucket | " + bucket.family + " | " + bucket.posture + " | Bucket ID " + bucket.bucket_id,w-24),x+14,y+28,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"bucket.detail.note",ASC_ExplorerFitText(bucket.note,w-24),x+14,y+46,ctx.theme.dim);
-   string honesty_line="Truth: bucket membership is classification-driven from live broker symbols; unresolved symbols never keep a bucket alive.";
-   ASC_ExplorerLabel(ctx,"bucket.detail.honesty",ASC_ExplorerFitText(honesty_line,w-24),x+14,y+66,ctx.theme.warning);
 
    int controls_y=y+header_h+ctx.theme.gap;
    ASC_ExplorerRect(ctx,"bucket.detail.controls",x,controls_y,w,controls_h,ctx.theme.section_fill,ctx.theme.border);
@@ -758,71 +783,75 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
    ASC_ExplorerButton(ctx,"action.market_filter.all","All Symbols",mode_x,controls_y+8,82,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS));
    mode_x+=88;
    ASC_ExplorerButton(ctx,"action.market_filter.open","Open Only",mode_x,controls_y+8,78,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY));
-   string summary_text="Visible now: " + IntegerToString(display_count) + " of " + IntegerToString(bucket.resolved_symbol_count) + " classified symbols";
+   string page_mode_text="Visible Classified Symbols " + IntegerToString(capped_total) + " | Page " + IntegerToString(ctx.nav.bucket_symbol_page+1) + " of " + IntegerToString(symbol_pages);
+   ASC_ExplorerLabel(ctx,"bucket.detail.page",ASC_ExplorerFitText(page_mode_text,220),x+w-224,controls_y+7,(symbol_pages>1 ? ctx.theme.good : ctx.theme.dim));
+   ASC_ExplorerLabel(ctx,"bucket.detail.visibility",ASC_ExplorerFitText("Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode) + " | Physical rows " + IntegerToString(rows_per_page),220),x+w-224,controls_y+22,ctx.theme.muted);
+
+   int strip_y=controls_y+controls_h+ctx.theme.gap;
+   ASC_ExplorerRect(ctx,"bucket.detail.meta",x,strip_y,w,strip_h,ctx.theme.panel_soft_fill,ctx.theme.border);
+   string membership_truth="Membership based on live broker symbols present on this server.";
    if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
-      summary_text="Visible now: " + IntegerToString(display_count) + " open classified symbols";
-   ASC_ExplorerLabel(ctx,"bucket.detail.visibility",ASC_ExplorerFitText(summary_text,220),x+w-224,controls_y+6,ctx.theme.muted);
-
-   int row_h=52;
-   int lane_available=split_h-ctx.theme.title_height-ctx.theme.gap-(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL ? ctx.theme.button_height+ctx.theme.gap : 0);
-   int rows_per_page=ASC_ExplorerVisibleRows(ctx,lane_available,row_h+ctx.theme.gap);
-   int symbol_pages=ASC_ExplorerPageCount(display_count,rows_per_page);
-   if(ctx.nav.bucket_display_mode!=ASC_BUCKET_DISPLAY_ALL)
-      ctx.nav.bucket_symbol_page=0;
-   ASC_ExplorerClampPage(ctx.nav.bucket_symbol_page,display_count,rows_per_page);
-   if(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL && symbol_pages>1)
-      ASC_ExplorerLabel(ctx,"bucket.detail.page","Page " + IntegerToString(ctx.nav.bucket_symbol_page+1) + " of " + IntegerToString(symbol_pages),x+w-224,controls_y+22,ctx.theme.good);
+      membership_truth="Membership based on live broker symbols present on this server and currently OPEN.";
+   string left_meta="Bucket Members " + IntegerToString(bucket.resolved_symbol_count) + " | Open " + IntegerToString(bucket.open_symbol_count) + " | Visible Classified Symbols " + IntegerToString(capped_total);
+   string right_meta="Showing " + IntegerToString(lane_start+1) + "-" + IntegerToString((capped_total>0 ? lane_end : 0)) + " of " + IntegerToString(capped_total) + " | " + membership_truth;
+   if(capped_total<=0)
+      right_meta=membership_truth;
+   if(show_side_summary)
+     {
+      ASC_ExplorerLabel(ctx,"bucket.detail.meta.left",ASC_ExplorerFitText(left_meta,w-24),x+ctx.theme.padding,strip_y+6,ctx.theme.muted);
+      ASC_ExplorerLabel(ctx,"bucket.detail.meta.right",ASC_ExplorerFitText(membership_truth,w-24),x+ctx.theme.padding+250,strip_y+6,ctx.theme.dim);
+     }
    else
-      ASC_ExplorerLabel(ctx,"bucket.detail.page","Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),x+w-224,controls_y+22,ctx.theme.dim);
+     {
+      ASC_ExplorerLabel(ctx,"bucket.detail.meta.left",ASC_ExplorerFitText(left_meta,w-24),x+ctx.theme.padding,strip_y+6,ctx.theme.muted);
+      ASC_ExplorerLabel(ctx,"bucket.detail.meta.right",ASC_ExplorerFitText(right_meta,w-24),x+ctx.theme.padding,strip_y+6+ctx.theme.row_height,ctx.theme.dim);
+     }
 
-   int left_x=x;
-   int right_x=x+left_w+split_gap;
-   ASC_ExplorerPanelTitle(ctx,"bucket.detail.lane","Symbol Lane",left_x,split_y,left_w,ctx.theme.accent);
-   int lane_start=(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL ? ctx.nav.bucket_symbol_page*rows_per_page : 0);
-   int lane_end=lane_start+display_count;
-   if(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL && lane_end>lane_start+rows_per_page)
-      lane_end=lane_start+rows_per_page;
-   if(lane_end>display_count)
-      lane_end=display_count;
-   int list_y=split_y+ctx.theme.title_height+ctx.theme.gap;
+   int lane_y=strip_y+strip_h+ctx.theme.gap;
+   int lane_h=h-(lane_y-y)-footer_h;
+   if(lane_h<row_h+ctx.theme.title_height+ctx.theme.gap)
+      lane_h=row_h+ctx.theme.title_height+ctx.theme.gap;
+   ASC_ExplorerPanelTitle(ctx,"bucket.detail.lane","Bucket Members",x,lane_y,symbol_w,ctx.theme.accent);
+   int list_y=lane_y+ctx.theme.title_height+ctx.theme.gap;
    for(int i=lane_start;i<lane_end;i++)
      {
       int visual=i-lane_start;
-      int row_y=list_y+(visual*(row_h+ctx.theme.gap));
+      int card_y=list_y+(visual*(row_h+ctx.theme.gap));
       color accent=ASC_ExplorerStatusAccent(ctx,visible_symbols[i].market_status,visible_symbols[i].matched_live_symbol);
-      color fill=(visible_symbols[i].matched_live_symbol ? ctx.theme.panel_alt_fill : ctx.theme.panel_soft_fill);
-      ASC_ExplorerRect(ctx,"bucket.detail.seed." + IntegerToString(i),left_x,row_y,left_w,row_h,fill,ctx.theme.border);
-      ASC_ExplorerRect(ctx,"bucket.detail.seed.bar." + IntegerToString(i),left_x,row_y,5,row_h,accent,accent);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].display_symbol,left_w-120,10),left_x+14,row_y+7,ctx.theme.text,10);
-      string state_text="Classified live symbol | State " + ASC_MarketStatusText(visible_symbols[i].market_status);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.state." + IntegerToString(i),ASC_ExplorerFitText(state_text,left_w-120),left_x+14,row_y+24,ctx.theme.muted);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].note,left_w-120),left_x+14,row_y+24+ctx.theme.row_height,visible_symbols[i].matched_live_symbol ? ctx.theme.good : ctx.theme.dim);
-      ASC_ExplorerButton(ctx,"action.seed_symbol." + IntegerToString(i),"Inspect",left_x+left_w-82,row_y+14,70,ctx.theme.button_height,ctx.theme.accent,false);
+      color fill=(visible_symbols[i].matched_live_symbol ? ctx.theme.panel_fill : ctx.theme.panel_soft_fill);
+      ASC_ExplorerRect(ctx,"bucket.detail.seed." + IntegerToString(i),x,card_y,symbol_w,row_h,fill,ctx.theme.border);
+      ASC_ExplorerRect(ctx,"bucket.detail.seed.bar." + IntegerToString(i),x,card_y,6,row_h,accent,accent);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].display_symbol,symbol_w-160,10),x+14,card_y+6,ctx.theme.text,10);
+      string state_text=(visible_symbols[i].matched_live_symbol ? "Classified live symbol" : "Classification pending visibility") + " | State " + ASC_MarketStatusText(visible_symbols[i].market_status);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.state." + IntegerToString(i),ASC_ExplorerFitText(state_text,symbol_w-160),x+14,card_y+24,ctx.theme.muted);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].note,symbol_w-160),x+14,card_y+24+ctx.theme.row_height,(visible_symbols[i].matched_live_symbol ? ctx.theme.good : ctx.theme.dim));
+      ASC_ExplorerButton(ctx,"action.seed_symbol." + IntegerToString(i),"Inspect",x+symbol_w-82,card_y+((row_h-ctx.theme.button_height)/2),70,ctx.theme.button_height,ctx.theme.accent,false);
      }
-   if(display_count<=0)
+   if(capped_total<=0)
      {
-      string empty_text=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "No open classified symbols are available for this bucket right now." : "No classified symbols are available for this bucket on this broker.");
-      ASC_ExplorerLabel(ctx,"bucket.detail.emptylane",ASC_ExplorerFitText(empty_text,left_w-24),left_x+ctx.theme.padding,list_y+6,ctx.theme.warning);
+      string empty_text=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "No open classified symbols are available for this bucket right now." : "No classified broker symbols are currently visible for this bucket on this server.");
+      ASC_ExplorerLabel(ctx,"bucket.detail.emptylane",ASC_ExplorerFitText(empty_text,symbol_w-24),x+ctx.theme.padding,list_y+6,ctx.theme.warning);
      }
-   if(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL && symbol_pages>1)
-      ASC_ExplorerRenderPageButtons(ctx,"action.bucket_symbol_page",ctx.nav.bucket_symbol_page,symbol_pages,left_x,split_y+split_h-ctx.theme.button_height,left_w);
 
-   ASC_ExplorerPanelTitle(ctx,"bucket.detail.summary","Bucket Summary",right_x,split_y,right_w,ctx.theme.accent_alt);
-   int summary_y=split_y+ctx.theme.title_height+ctx.theme.gap;
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.family","Bucket Family",bucket.family,right_x,summary_y,right_w,ctx.theme.accent_alt);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.refs","Classified Members",IntegerToString(bucket.resolved_symbol_count),right_x,summary_y+30,right_w,ctx.theme.accent_alt);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.resolved","Visibility",IntegerToString(bucket.open_symbol_count) + " open | " + IntegerToString(total_visible_refs) + " current mode | " + IntegerToString(unresolved_count) + " unresolved broker symbols",right_x,summary_y+60,right_w,(resolved_open_count>0 ? ctx.theme.good : ctx.theme.warning));
-   string membership_truth=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only keeps only buckets with one or more classified broker symbols whose Market State is Open." : "Bucket membership comes only from classified broker symbols actually present on this server.");
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.truth","Membership Truth",membership_truth,right_x,summary_y+90,right_w,ctx.theme.warning);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.filter","Market Filter",ASC_ExplorerMarketFilterText(ctx.nav.market_filter),right_x,summary_y+120,right_w,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.reserved));
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.posture","Bucket Posture",bucket.posture,right_x,summary_y+150,right_w,ctx.theme.reserved);
+   if(show_side_summary)
+     {
+      int summary_x=x+symbol_w+ctx.theme.gap;
+      ASC_ExplorerPanelTitle(ctx,"bucket.detail.summary","Bucket Summary",summary_x,lane_y,summary_w,ctx.theme.accent_alt);
+      int summary_y=lane_y+ctx.theme.title_height+ctx.theme.gap;
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.family","Bucket Family",bucket.family,summary_x,summary_y,summary_w,ctx.theme.accent_alt);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.members","Bucket Members",IntegerToString(bucket.resolved_symbol_count),summary_x,summary_y+30,summary_w,ctx.theme.accent_alt);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.visible","Visible Classified",IntegerToString(capped_total) + " shown in mode | " + IntegerToString(total_visible_symbols) + " filter-visible",summary_x,summary_y+60,summary_w,bucket_accent);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.truth","Membership Truth",membership_truth,summary_x,summary_y+90,summary_w,ctx.theme.warning);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.filter","Market Filter",ASC_ExplorerMarketFilterText(ctx.nav.market_filter),summary_x,summary_y+120,summary_w,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.reserved));
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.posture","Bucket Posture",bucket.posture,summary_x,summary_y+150,summary_w,ctx.theme.reserved);
+     }
 
-   ASC_ExplorerRect(ctx,"bucket.detail.future",x,future_y,w,future_h,ctx.theme.panel_soft_fill,ctx.theme.border);
-   ASC_ExplorerRect(ctx,"bucket.detail.future.bar",x,future_y,6,future_h,ctx.theme.reserved,ctx.theme.reserved);
-   ASC_ExplorerLabel(ctx,"bucket.detail.future.title","Reserved Future Strip",x+14,future_y+8,ctx.theme.dim,10);
-   ASC_ExplorerLabel(ctx,"bucket.detail.future.l1",ASC_ExplorerFitText("Open Symbol Snapshot — reserved insertion point only.",w-24),x+14,future_y+26,ctx.theme.dim);
-   ASC_ExplorerLabel(ctx,"bucket.detail.future.l2",ASC_ExplorerFitText("Candidate Filtering / Shortlist — reserved insertion point only.",w-24),x+14,future_y+26+ctx.theme.row_height,ctx.theme.dim);
-   ASC_ExplorerLabel(ctx,"bucket.detail.future.l3",ASC_ExplorerFitText("Deep Selective / Combined / Aurora — reserved insertion point only.",w-24),x+14,future_y+26+(ctx.theme.row_height*2),ctx.theme.dim);
+   int footer_y=y+h-footer_h;
+   if(symbol_pages>1)
+     {
+      ASC_ExplorerLabel(ctx,"bucket.detail.page.summary","Page " + IntegerToString(ctx.nav.bucket_symbol_page+1) + " of " + IntegerToString(symbol_pages),x+ctx.theme.padding,footer_y+4,ctx.theme.muted);
+      ASC_ExplorerRenderPageButtons(ctx,"action.bucket_symbol_page",ctx.nav.bucket_symbol_page,symbol_pages,x+120,footer_y,w-130);
+     }
   }
 
 void ASC_ExplorerSectionPanel(const ASC_ExplorerContext &ctx,const string id,const string title,const string l1,const string l2,const string l3,const int x,const int y,const int w,const int h,const bool selected,const color accent)
