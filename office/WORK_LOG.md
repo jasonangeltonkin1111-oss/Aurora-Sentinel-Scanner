@@ -190,3 +190,5 @@ The Explorer HUD was close, but cross-broker symbol resolution, Open Only truth,
 
 ### Result
 The active Explorer HUD remains presentation-only, but it is now more truthful across brokers, more diagnosable across terminals, and cleaner about what is resolved live truth versus canonical placeholder structure.
+
+- 2026-03-21: Migrated Explorer bucket truth to standalone ASC classification and dynamic live-broker buckets; Open Only now hides zero-open classified buckets and bucket detail uses real classified symbols.
