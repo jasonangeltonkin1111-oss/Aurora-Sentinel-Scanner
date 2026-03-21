@@ -59,72 +59,91 @@ void ASC_BucketPlaceholderCatalog(ASC_BucketDefinition &buckets[])
   {
    ArrayResize(buckets,12);
 
-   ASC_BucketDefine(buckets[0],"fx-major","FX Major","FX","Reference Taxonomy","Canonical major-FX bucket placeholder until Symbol Identity and Bucketing can resolve live broker membership.");
-   ASC_BucketAppendSeedRef(buckets[0],"EURUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[0],"GBPUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[0],"USDJPY","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[0],"AUDUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[0],"USDCHF","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[0],"fx-major","FX Major","FX","Canonical Reference Set","Canonical major-FX references aligned to symbols that recur across the multi-server sample. Live membership still requires safe broker-symbol resolution.");
+   ASC_BucketAppendSeedRef(buckets[0],"EURUSD","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
+   ASC_BucketAppendSeedRef(buckets[0],"GBPUSD","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
+   ASC_BucketAppendSeedRef(buckets[0],"USDJPY","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
+   ASC_BucketAppendSeedRef(buckets[0],"USDCHF","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
+   ASC_BucketAppendSeedRef(buckets[0],"USDCAD","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
+   ASC_BucketAppendSeedRef(buckets[0],"AUDUSD","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
+   ASC_BucketAppendSeedRef(buckets[0],"NZDUSD","Canonical major FX reference; sample evidence shows plain broker symbols across multiple servers.");
 
-   ASC_BucketDefine(buckets[1],"fx-cross","FX Cross","FX","Reference Taxonomy","Cross-currency placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[1],"EURGBP","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[1],"AUDNZD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[1],"CADJPY","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[1],"CHFJPY","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[1],"fx-cross","FX Cross","FX","Canonical Reference Set","Cross-currency FX references kept broker-neutral while remaining close to the observed sample universe.");
+   ASC_BucketAppendSeedRef(buckets[1],"EURGBP","Canonical cross FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[1],"EURJPY","Canonical cross FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[1],"GBPJPY","Canonical cross FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[1],"AUDJPY","Canonical cross FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[1],"AUDNZD","Canonical cross FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[1],"CADJPY","Canonical cross FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[1],"CHFJPY","Canonical cross FX reference only.");
 
-   ASC_BucketDefine(buckets[2],"fx-regional","FX Regional and Exotic","FX","Reference Taxonomy","Regional and exotic FX placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[2],"USDMXN","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[2],"USDZAR","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[2],"EURTRY","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[2],"fx-regional","FX Regional and Exotic","FX","Canonical Reference Set","Regional and exotic FX references taken from instruments already evidenced in the multi-server sample.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDMXN","Canonical regional FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDZAR","Canonical regional FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDCNH","Canonical regional FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDHKD","Canonical regional FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDNOK","Canonical regional FX reference only.");
+   ASC_BucketAppendSeedRef(buckets[2],"USDSEK","Canonical regional FX reference only.");
 
-   ASC_BucketDefine(buckets[3],"index-us","Index US","Index","Reference Taxonomy","US index placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[3],"US30","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[3],"US500","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[3],"NAS100","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[3],"index-us","Index US","Index","Canonical Reference Set","US index references normalized away from broker suffix variants such as .m, .c, and cash-1 when safely evidenced.");
+   ASC_BucketAppendSeedRef(buckets[3],"US30","Canonical US equity-index reference only.");
+   ASC_BucketAppendSeedRef(buckets[3],"US500","Canonical US equity-index reference only.");
+   ASC_BucketAppendSeedRef(buckets[3],"US100","Canonical US equity-index reference only.");
+   ASC_BucketAppendSeedRef(buckets[3],"US2000","Canonical US small-cap index reference only.");
 
-   ASC_BucketDefine(buckets[4],"index-europe","Index Europe","Index","Reference Taxonomy","European index placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[4],"GER40","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[4],"UK100","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[4],"EU50","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[4],"index-europe","Index Europe","Index","Canonical Reference Set","European index references trimmed to common broker-neutral canon while allowing safe resolution from evidenced cash and suffix variants.");
+   ASC_BucketAppendSeedRef(buckets[4],"GER40","Canonical European index reference only.");
+   ASC_BucketAppendSeedRef(buckets[4],"UK100","Canonical European index reference only.");
+   ASC_BucketAppendSeedRef(buckets[4],"EU50","Canonical European index reference only.");
+   ASC_BucketAppendSeedRef(buckets[4],"FRA40","Canonical European index reference only.");
+   ASC_BucketAppendSeedRef(buckets[4],"SPA35","Canonical European index reference only.");
 
-   ASC_BucketDefine(buckets[5],"index-asia","Index Asia","Index","Reference Taxonomy","Asian index placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[5],"JPN225","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[5],"HK50","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[5],"AUS200","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[5],"index-asia","Index Asia","Index","Canonical Reference Set","Asia-Pacific index references limited to instruments already seen in the sample universe.");
+   ASC_BucketAppendSeedRef(buckets[5],"JPN225","Canonical Asia-Pacific index reference only.");
+   ASC_BucketAppendSeedRef(buckets[5],"HK50","Canonical Asia-Pacific index reference only.");
+   ASC_BucketAppendSeedRef(buckets[5],"AUS200","Canonical Asia-Pacific index reference only.");
 
-   ASC_BucketDefine(buckets[6],"metals-precious","Metals Precious","Metals","Reference Taxonomy","Precious-metals placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[6],"XAUUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[6],"XAGUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[6],"XPTUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[6],"metals-precious","Metals Precious","Metals","Canonical Reference Set","Precious-metals references kept canonical while preserving unresolved states for non-matching broker variants.");
+   ASC_BucketAppendSeedRef(buckets[6],"XAUUSD","Canonical precious-metals reference only.");
+   ASC_BucketAppendSeedRef(buckets[6],"XAGUSD","Canonical precious-metals reference only.");
+   ASC_BucketAppendSeedRef(buckets[6],"XPTUSD","Canonical precious-metals reference only.");
+   ASC_BucketAppendSeedRef(buckets[6],"XPDUSD","Canonical precious-metals reference only.");
 
-   ASC_BucketDefine(buckets[7],"energy","Energy","Commodities","Reference Taxonomy","Energy placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[7],"BRENT","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[7],"WTI","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[7],"NATGAS","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[7],"energy","Energy","Commodities","Canonical Reference Set","Energy references support safe matching from evidenced .o and cash broker variants without widening into speculative aliases.");
+   ASC_BucketAppendSeedRef(buckets[7],"BRENT","Canonical Brent reference only.");
+   ASC_BucketAppendSeedRef(buckets[7],"WTI","Canonical WTI reference only.");
+   ASC_BucketAppendSeedRef(buckets[7],"NATGAS","Canonical natural-gas reference only.");
 
-   ASC_BucketDefine(buckets[8],"crypto-core","Crypto Core","Crypto","Reference Taxonomy","Core crypto placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[8],"BTCUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[8],"ETHUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[8],"BNBUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[8],"SOLUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[8],"ADAUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[8],"crypto-core","Crypto Core","Crypto","Canonical Reference Set","Core crypto references aligned to repeated broker symbols and safe .nx/.m normalization patterns evidenced in the sample.");
+   ASC_BucketAppendSeedRef(buckets[8],"BTCUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[8],"ETHUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[8],"BNBUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[8],"SOLUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[8],"ADAUSD","Canonical crypto reference only.");
 
-   ASC_BucketDefine(buckets[9],"crypto-network-themes","Crypto Network Themes","Crypto","Reference Taxonomy","Crypto thematic placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[9],"XRPUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[9],"LTCUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[9],"UNIUSD","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[9],"LINKUSD","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[9],"crypto-network-themes","Crypto Network Themes","Crypto","Canonical Reference Set","Secondary crypto references chosen from the actual sample universe so families stay even without pretending live identity is active.");
+   ASC_BucketAppendSeedRef(buckets[9],"XRPUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[9],"LTCUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[9],"UNIUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[9],"LINKUSD","Canonical crypto reference only.");
+   ASC_BucketAppendSeedRef(buckets[9],"ALGOUSD","Canonical crypto reference only.");
 
-   ASC_BucketDefine(buckets[10],"equity-us-tech","US Equity Technology","Stocks","Reference Taxonomy","US technology equity placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[10],"AAPL","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[10],"MSFT","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[10],"NVDA","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[10],"META","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[10],"equity-us-tech","US Equity Technology","Stocks","Canonical Reference Set","US technology equity references stay canonical while allowing safe resolution from evidenced .OQ quote-suffix variants.");
+   ASC_BucketAppendSeedRef(buckets[10],"AAPL","Canonical US equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[10],"MSFT","Canonical US equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[10],"NVDA","Canonical US equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[10],"META","Canonical US equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[10],"GOOG","Canonical US equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[10],"AMZN","Canonical US equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[10],"TSLA","Canonical US equity reference only.");
 
-   ASC_BucketDefine(buckets[11],"equity-us-financial","US Equity Financial","Stocks","Reference Taxonomy","US financial equity placeholder bucket with canonical references only.");
-   ASC_BucketAppendSeedRef(buckets[11],"JPM","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[11],"BAC","Canonical reference symbol only; not a claim of broker availability.");
-   ASC_BucketAppendSeedRef(buckets[11],"GS","Canonical reference symbol only; not a claim of broker availability.");
+   ASC_BucketDefine(buckets[11],"equity-us-financial","US Equity Financial","Stocks","Canonical Reference Set","US financial references expanded so the family stays comparable to other primary families without implying live classification activation.");
+   ASC_BucketAppendSeedRef(buckets[11],"JPM","Canonical US financial equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[11],"BAC","Canonical US financial equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[11],"GS","Canonical US financial equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[11],"MS","Canonical US financial equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[11],"BK","Canonical US financial equity reference only.");
+   ASC_BucketAppendSeedRef(buckets[11],"USB","Canonical US financial equity reference only.");
   }
 
 int ASC_GetBucketViewModels(ASC_BucketViewModel &views[],const ASC_ExplorerBucketDisplayMode display_mode)
