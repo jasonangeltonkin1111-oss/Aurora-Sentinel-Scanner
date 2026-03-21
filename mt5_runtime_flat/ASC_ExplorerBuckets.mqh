@@ -412,6 +412,14 @@ void ASC_CopyPreparedSymbols(const ASC_BucketPreparedSymbol &source[],ASC_Bucket
       target[i]=source[i];
   }
 
+void ASC_CopyIntArray(const int &source[],int &target[])
+  {
+   int total=ArraySize(source);
+   ArrayResize(target,total);
+   for(int i=0;i<total;i++)
+      target[i]=source[i];
+  }
+
 void ASC_PreparedStateDiagnosticsReset(ASC_PreparedStateDiagnostics &diagnostics)
   {
    diagnostics.bucket_prep_total_ms=0;
@@ -518,11 +526,11 @@ void ASC_CopyPreparedBucketState(const ASC_PreparedBucketState &source,ASC_Prepa
    target.diagnostics=source.diagnostics;
    ASC_CopyBucketViews(source.buckets,target.buckets);
    ASC_CopyPreparedSymbols(source.symbols,target.symbols);
-   target.batch_ready=source.batch_ready;
-   target.batch_pending=source.batch_pending;
-   target.batch_reused=source.batch_reused;
-   target.batch_progress_states=source.batch_progress_states;
-   target.bucket_progress_states=source.bucket_progress_states;
+   ASC_CopyIntArray(source.batch_ready,target.batch_ready);
+   ASC_CopyIntArray(source.batch_pending,target.batch_pending);
+   ASC_CopyIntArray(source.batch_reused,target.batch_reused);
+   ASC_CopyIntArray(source.batch_progress_states,target.batch_progress_states);
+   ASC_CopyIntArray(source.bucket_progress_states,target.bucket_progress_states);
   }
 
 int ASC_PreparedPromotedBatchCount(const ASC_PreparedBucketState &prepared)
