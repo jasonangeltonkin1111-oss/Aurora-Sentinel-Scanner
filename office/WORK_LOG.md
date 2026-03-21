@@ -2,6 +2,20 @@
 
 This file is append-only.
 
+## 2026-03-21 — Rolling prepared batch promotion pass
+
+### Why
+The explorer bucket path still behaved too much like a single rebuild surface. The runtime needed explicit working versus promoted truth, atomic per-batch promotion, and honest markers for pending and reused batches without letting HUD navigation wait on a click rebuild.
+
+### What changed
+- replaced the single prepared rebuild promotion path with a rolling batch flow that keeps working-batch state, last-good promoted state, pending batch markers, and unchanged-batch reuse markers explicit in runtime memory
+- changed batch promotion to validate the built batch first, then promote only that batch into active prepared truth while preserving unaffected promoted batches from the prior last-good state
+- kept the first implementation runtime-memory-only and updated HUD/control wording so the unpersisted posture is explicit rather than implied complete persistence
+
+### Result
+Explorer rendering now consumes promoted prepared truth and last-good state only, while bounded runtime flow owns batch progression and click/navigation paths stay consumer-only.
+
+---
 ## 2026-03-21 — Layer 1 readiness warmup-rule replacement pass
 
 ### Why

@@ -8,9 +8,9 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ## Current checkpoint
 
 - checkpoint date: 2026-03-21
-- checkpoint scope: readiness-gated warmup pass
+- checkpoint scope: rolling prepared batch promotion pass
 - hash type: SHA-256
-- note: refreshed for Layer 1 readiness warmup-rule replacement, persistence continuity, and HUD wording alignment
+- note: refreshed for runtime-owned rolling batch promotion, explicit working/last-good/pending/reuse markers, and HUD truth alignment
 - rule: refresh this file when a pass materially changes active control or scanner-foundation truth
 
 ## Entries
@@ -18,9 +18,9 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ```text
 3c4ad6ec1b628e7e35c9673610aa3ee92377ed510c88c4096343fbfa90046f7f  office/README.md
 a1a0fcf8200512cec5eee0e91bc68c5bc08f4816b4faf7c600b8a9d9814c8d1b  office/OFFICE_CANON.md
-5ade14c09e4190b93a3e5e797f726168907bd2e2b517a5a25cf62a7033875686  office/TASK_BOARD.md
-12a63f5285f489619736f79aa3f6f8d021708a6bc0b8c06edd0ce0a79bce98e6  office/DECISIONS.md
-c915b37372cdd820a69890160491b2228342f05c81cd05b558a3c50f7a424fbf  office/WORK_LOG.md
+35bdef178f9dfa415f6ad39cdc790b549c7b40d5e44c8ea86d83b6a24b94924d  office/TASK_BOARD.md
+951b5b6322199d60f1764fb9a82d651089219326d11c111ad053b1a526b6e22a  office/DECISIONS.md
+ed8f1c030d505394b1d794c3a45bfa61b9f5707986deef52d53efc1e03cf6112  office/WORK_LOG.md
 92acad82681e3219c5719c95b60d764e6982ad5800683c4abc4b74cc7bea4a85  office/WORKING_STAGE_LEDGER.md
 5cb93527acefb1593d6e7f9b3899490f2e1a75029206b90393fdfa2d7697c22b  blueprint/README.md
 1e93ea5e17b39437f6411c9bf4de394a235b69818a85748be2af78a01e4cc088  blueprint/01_ASC_SYSTEM_OVERVIEW.md
@@ -47,13 +47,13 @@ fe3a4a7723cd7e4966ccbcb18d9e4baaa2834e51a3f4dd0d0c9a3677f77ce132  asc-mt5-scanne
 6a9430f3a8a2d329aa76a07b840e585c87fe70d431d55a20fd47f6445460c9c0  asc-mt5-scanner-blueprint/21_ASC_PACK_AUTHORITY_AND_ANTI_DRIFT.md
 0796928097bf3a9ccdb182cf7b4ce5acf16d2974d2e1711fd0b7690e8c63bf41  asc-mt5-scanner-blueprint/22_ASC_AURORA_BRIDGE_CONTRACT.md
 c3cd1fe9b687bad416e9c721465188b62e8f7520eaef03f1afee3caf7a06d72e  mt5_layout_plan/Include/ASC/README.md
-27ea84485328c23457c2fb04d57b1de1152a583c33c0160b8184eaf786320e31  mt5_runtime_flat/AuroraSentinel.mq5
+84eed5f696e9e4b9d84fa1a83aba9f991ed944d508ea50c9bbcae5bdd05dcdc6  mt5_runtime_flat/AuroraSentinel.mq5
 225ebcf79a030695dcf4eeb390e454c36902321f7f53323b5c85a7b0a67e83a2  mt5_runtime_flat/ASC_Common.mqh
 476e89a01ac1f2a74f3163cf8701ce5af63f1d59fdbc3782b49b48477ddaa267  mt5_runtime_flat/ASC_Dossiers.mqh
 1ee0224286934b77d7ab29cb65a0f9953c6749e12a78df7dde25914e4a730149  mt5_runtime_flat/ASC_MarketState.mqh
 2a50fab29fded3ac73a63b531b979006a6e71caf024d07a0b235bab67ed0768a  mt5_runtime_flat/ASC_FileIO.mqh
 7c6156a083e7083806ac11b5b57ae75c4e2e7cc40a23878fc619da08e8f9add8  mt5_runtime_flat/ASC_Persistence.mqh
-7b76694740ac0360b83cb592e26cc842abde776a6225ce4bf7b6cb4938bec14f  mt5_runtime_flat/ASC_ExplorerBuckets.mqh
-820fb09baf74fcb992ce088cec38499ee723c8bbb8e9ea158155094a585668f4  mt5_runtime_flat/ASC_ExplorerHUD.mqh
+c62de46655e8eb90f1b154ddf3ba87605190d4d42b16de03e1a7ecebc3dd6fc4  mt5_runtime_flat/ASC_ExplorerBuckets.mqh
+a3cf2a25cf3dec6df1d4e73ab738682fc495f3ae0a500b7432ad6a6c201e858e  mt5_runtime_flat/ASC_ExplorerHUD.mqh
 9aabd265e95cbb3104f9099759cb99a3258a4aaececdc0672aac93efca3bf2f4  mt5_runtime_flat/ASC_Logging.mqh
 ```

@@ -758,7 +758,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
    ASC_ExplorerLabel(ctx,"bucket.detail.title",ASC_ExplorerFitText(bucket.name,w-24,11),x+14,y+8,ctx.theme.text,11);
    ASC_ExplorerLabel(ctx,"bucket.detail.family",ASC_ExplorerFitText("Compressed Layer 1 Main Bucket | Six-bucket adapter | Bucket ID " + bucket.bucket_id,w-24),x+14,y+28,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"bucket.detail.note",ASC_ExplorerFitText(bucket.note,w-24),x+14,y+46,ctx.theme.dim);
-   ASC_ExplorerLabel(ctx,"bucket.detail.progress",ASC_ExplorerFitText("Prepared state " + bucket.progress_label + " | Promoted batches " + IntegerToString(prepared.diagnostics.promoted_batch_count) + "/" + IntegerToString(ASC_PREPARED_BATCH_COUNT),w-24),x+14,y+46+ctx.theme.row_height,ctx.theme.good);
+   ASC_ExplorerLabel(ctx,"bucket.detail.progress",ASC_ExplorerFitText("Prepared state " + bucket.progress_label + " | Promoted batches " + IntegerToString(prepared.diagnostics.promoted_batch_count) + "/" + IntegerToString(ASC_PREPARED_BATCH_COUNT) + " | Last-good batch " + IntegerToString(prepared.last_good_batch_id),w-24),x+14,y+46+ctx.theme.row_height,ctx.theme.good);
 
    int controls_y=y+header_h+ctx.theme.gap;
    ASC_ExplorerRect(ctx,"bucket.detail.controls",x,controls_y,w,controls_h,ctx.theme.section_fill,ctx.theme.border);
@@ -1171,7 +1171,7 @@ void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSta
   {
    string base_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.");
    string readiness_text="Readiness " + IntegerToString(runtime.readiness_percent) + "% | Initial " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered) + " | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " | Primary Ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready);
-   string status_text=base_text + " | " + readiness_text + " | Batch " + IntegerToString(prepared.diagnostics.last_prepared_batch_id) + " | " + prepared.diagnostics.active_hydration_priority_set + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
+   string status_text=base_text + " | " + readiness_text + " | Promoted batch " + IntegerToString(prepared.diagnostics.last_prepared_batch_id) + " | Last-good " + IntegerToString(prepared.last_good_batch_id) + " | " + prepared.diagnostics.active_hydration_priority_set + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
    ASC_ExplorerRect(ctx,"status.strip",x,y,w,ctx.theme.status_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,"status.bar",x,y,5,ctx.theme.status_height,(runtime.degraded ? ctx.theme.warning : ctx.theme.good),(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
    ASC_ExplorerLabel(ctx,"status.text",ASC_ExplorerFitText(status_text,w-24),x+ctx.theme.padding+4,y+7,(runtime.degraded ? ctx.theme.warning : ctx.theme.muted));

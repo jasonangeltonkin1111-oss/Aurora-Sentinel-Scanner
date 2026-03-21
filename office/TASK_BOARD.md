@@ -50,7 +50,7 @@ Do not continue building on unresolved contradiction.
 | Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong, but warmup exit now needs explicit readiness-field doctrine instead of dossier-missing gating assumptions | keep stable while readiness wording and persistence stay aligned |
 | Market State Detection | WORKING | 88% | still the only fully working capability with real runtime truth | compile/test re-verify after any structural runtime change |
 | Classification catalog | ACTIVE-PROVISIONAL | 55% | standalone classification exists and drives buckets, but catalog quality is mixed and some mappings are too broad or wrong | audit classification truth before treating bucket output as trusted |
-| Dynamic buckets | ACTIVE-PROVISIONAL | 64% | membership is live/classification-driven, with the first operator surface compressed into six Layer 1 main buckets and now promoted through rolling prepared-state batches; deeper stock taxonomy still remains metadata-grade and incomplete | harden batch reuse, verify compile/runtime behavior in MT5, and keep richer stock metadata out of fake first-class bucket claims |
+| Dynamic buckets | ACTIVE-PROVISIONAL | 64% | membership is live/classification-driven, with the first operator surface compressed into six Layer 1 main buckets and now promoted through rolling prepared-state batches that carry explicit working, last-good, pending, and reuse markers; deeper stock taxonomy still remains metadata-grade and incomplete | harden batch reuse, verify compile/runtime behavior in MT5, and keep richer stock metadata out of fake first-class bucket claims |
 | Explorer HUD | ACTIVE-FRAGILE | 52% | advanced navigation and layout exist, but render/delete churn and bucket recompute-in-render are still architectural faults | fix ownership boundary first, then performance, then behavior/layout polish |
 | Dossiers and summary | ACTIVE | 76% | atomic publication and scaffold output exist, but wording still understates active provisional identity work | update wording to reflect current truth honestly |
 | ASC ⇄ Aurora bridge | ACTIVE | 80% | separation is still good and future insertion points remain preserved | preserve boundary while tightening upstream truth discipline |
@@ -126,7 +126,7 @@ Still needed:
 ## What is wrong or fragile now
 
 ### Structural faults
-1. rolling prepared-state ownership is now runtime-side, but unchanged-batch reuse is still scaffold-grade rather than diff-driven
+1. rolling prepared-state ownership is now runtime-side with explicit working/last-good/pending/reuse markers, but unchanged-batch reuse is still scope-grade rather than diff-driven and remains runtime-memory-only
 2. render path still deletes and recreates all owned chart objects
 3. bucket truth can still look more mature than it really is because classification quality is mixed
 4. stock taxonomy enrichment is still metadata-only and not yet a deeper snapshot surface
