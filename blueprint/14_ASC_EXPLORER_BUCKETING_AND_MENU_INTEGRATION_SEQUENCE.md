@@ -117,3 +117,14 @@ Implementation work should follow this bridge rather than improvising its own in
 
 Version bumps are mandatory for meaningful wrapper, explorer, menu, and dossier-contract edits.
 Implementation work that changes these operator-facing surfaces must update the wrapper/header version and keep the blueprint wording aligned in the same pass.
+
+
+## Dynamic bucket architecture bridge
+
+The explorer bucket flow must now be read as dynamic-ready even before live identity activation:
+- bucket count is not fixed at 15
+- per-bucket symbol count is not fixed at 3
+- bucket detail mode is part of navigation state
+- all-mode scrolling is owned by the symbol lane rather than by one rigid placeholder list
+
+Placeholder taxonomy remains allowed as a temporary source, but only through an honest view-model layer that does not imply live broker membership.

@@ -2,12 +2,12 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.020"
+#define ASC_WRAPPER_VERSION "1.030"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
 #define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
-#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.300"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.310"
 
 enum ASC_RuntimeMode
   {
@@ -31,6 +31,13 @@ enum ASC_LogVerbosity
    ASC_LOG_ERRORS_ONLY=0,
    ASC_LOG_NORMAL=1,
    ASC_LOG_DEBUG=2
+  };
+
+enum ASC_ExplorerBucketDisplayMode
+  {
+   ASC_BUCKET_DISPLAY_TOP_3=0,
+   ASC_BUCKET_DISPLAY_TOP_5=1,
+   ASC_BUCKET_DISPLAY_ALL=2
   };
 
 struct ASC_ServerPaths

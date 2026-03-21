@@ -39,8 +39,8 @@ Initial wrapper version:
 - `1.001`
 
 Current explorer scaffold milestone after HUD v2 shell expansion:
-- `1.020` wrapper
-- `0.300` explorer subsystem
+- `1.030` wrapper
+- `0.310` explorer subsystem
 
 Suggested version law:
 - patch bump: `1.001 -> 1.002` for non-breaking polish and fixes
@@ -513,3 +513,27 @@ The scaffold should now favor a stronger console hierarchy with:
 - bottom status strip
 
 This remains presentation-only and must not activate future compute capabilities prematurely.
+
+
+## Bucket detail mode law
+
+Bucket Detail must keep an explicit operator-visible display mode state:
+- `Top 3`
+- `Top 5`
+- `All`
+
+Rules:
+- Top 3 shows `min(3, bucket symbol count)`
+- Top 5 shows `min(5, bucket symbol count)`
+- All shows the full symbol lane with scrolling
+- the current mode persists in navigation state and back-stack restores
+- the mode strip belongs inside Bucket Detail rather than hidden in the control rail
+
+Bucket Detail layout should now reserve these regions in order:
+1. bucket header
+2. bucket mode toggle strip
+3. symbol lane
+4. bucket summary
+5. reserved future layer strip
+
+Those later insertion points are structural only. They must not activate snapshot, filtering, shortlist, deep analysis, combined-summary, or Aurora logic early.
