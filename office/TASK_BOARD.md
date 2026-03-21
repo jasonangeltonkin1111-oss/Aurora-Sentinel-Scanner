@@ -6,6 +6,7 @@
 - flat MT5 foundation exists and remains the active runtime surface
 - office normalization is active and now needs disciplined checkpoint maintenance
 - restart continuity, bounded scheduler behavior, dossier integrity, menu discipline, and explorer shell safety remain the active hardening center
+- explorer bucket truth now needs to stay runtime-prepared so HUD render and click paths consume snapshots instead of rebuilding classifiers ad hoc
 - Market State Detection remains the only working capability; later explorer surfaces stay placeholder-only
 - ranking, basket logic, strategy logic, and trade logic remain blocked
 
@@ -29,7 +30,7 @@
 3. keep dossier and continuity contracts stable enough for future Aurora ingestion
 4. complete Market State Detection compile validation and first-run/restore test passes in MetaEditor
 5. keep the MT5 menu/input surface clean as reserved capability controls are added
-6. verify the Explorer HUD shell stays presentation-only, navigation-safe, and bounded
+6. verify the Explorer HUD shell stays presentation-only, navigation-safe, bounded, and fed by runtime-prepared bucket truth
 
 ## Blocking rules
 

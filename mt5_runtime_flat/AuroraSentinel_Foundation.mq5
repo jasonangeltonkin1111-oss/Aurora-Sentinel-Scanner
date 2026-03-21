@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.070
+// Wrapper Version: 1.080
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.370
+// Explorer Subsystem Version: 0.380
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -101,6 +101,7 @@ ASC_RuntimeState g_runtime;
 ASC_Logger g_logger;
 ASC_SymbolState g_symbols[];
 ASC_ExplorerContext g_explorer;
+ASC_PreparedBucketState g_prepared_buckets;
 int g_symbol_count=0;
 bool g_heartbeat_running=false;
 bool g_last_degraded_state=false;
@@ -172,6 +173,12 @@ void ASC_LogSettingsSummary(void)
    g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + " with timeframe placeholders, filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + " with timeframe placeholders, combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
   }
 
+void ASC_RefreshPreparedBucketState(void)
+  {
+   ASC_PrepareBucketState(g_runtime.server_clean,g_symbols,g_symbol_count,g_prepared_buckets);
+   g_runtime.summary_dirty=true;
+  }
+
 void ASC_ResetRuntimeState(void)
   {
    g_runtime.schema_version="ASC Foundation v1";
@@ -193,6 +200,7 @@ void ASC_ResetRuntimeState(void)
    g_runtime.processed_this_heartbeat=0;
    g_runtime.scheduler_cursor=0;
    g_runtime.heartbeats_since_boot=0;
+   ASC_PreparedBucketStateReset(g_prepared_buckets);
    g_last_degraded_state=false;
   }
 
@@ -272,6 +280,7 @@ void ASC_SyncUniverse(void)
    g_runtime.runtime_dirty=true;
    g_runtime.scheduler_dirty=true;
    g_runtime.summary_dirty=true;
+   ASC_RefreshPreparedBucketState();
    g_logger.Info("Universe","synced " + IntegerToString(total) + " symbols");
    if(g_settings.repair_missing_dossiers_on_boot && missing_repairs>0)
       g_logger.Info("DossierRepair","queued " + IntegerToString(missing_repairs) + " missing dossier repairs");
@@ -285,6 +294,7 @@ void ASC_RestoreContinuity(void)
    ASC_SyncUniverse();
    if(ASC_LoadSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger))
       g_runtime.scheduler_dirty=true;
+   ASC_RefreshPreparedBucketState();
    if(g_settings.log_recovery_events)
       g_logger.Info("Recovery",(g_runtime.recovery_used ? "continuity available" : "no prior continuity found"));
   }
@@ -417,6 +427,7 @@ void ASC_RunHeartbeat(void)
    int remaining_due=ASC_CountDueSymbols(now);
    g_runtime.degraded=(remaining_due>0 && touched_this_heartbeat>=g_settings.symbol_budget_per_heartbeat);
    ASC_UpdateRuntimeMode(ASC_CountMissingDossiers());
+   ASC_RefreshPreparedBucketState();
    g_runtime.runtime_dirty=true;
 
    g_logger.Info("Heartbeat","processed " + IntegerToString(touched_this_heartbeat) + " due symbols from " + IntegerToString(initial_due) + "; promoted " + IntegerToString(promoted_this_heartbeat) + " dossiers; failed " + IntegerToString(failed_promotions_this_heartbeat) + "; backlog " + IntegerToString(remaining_due));
@@ -465,7 +476,7 @@ void ASC_RunHeartbeat(void)
    if(attempted_save || !runtime_saved || !scheduler_saved || !summary_saved)
       g_logger.Info("Persistence","runtime save " + (runtime_saved ? "succeeded" : "failed") + "; scheduler save " + (scheduler_saved ? "succeeded" : "failed") + "; summary save " + (summary_saved ? "succeeded" : "failed"));
 
-   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
    g_heartbeat_running=false;
   }
 
@@ -485,7 +496,7 @@ int OnInit()
    ASC_RestoreContinuity();
    ASC_ExplorerInit(g_explorer,ChartID());
    g_logger.Info("Explorer","init chart=" + IntegerToString((int)ChartID()) + ", server=" + g_runtime.server_clean);
-   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
    EventSetTimer(g_settings.heartbeat_seconds);
    return(INIT_SUCCEEDED);
   }
@@ -517,7 +528,7 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
    if(id==CHARTEVENT_CHART_CHANGE)
      {
       g_explorer.nav.dirty=true;
-      ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
+      ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
       return;
      }
 
@@ -526,6 +537,6 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
    if(StringFind(sparam,ASC_HUD_PREFIX)!=0)
       return;
 
-   ASC_ExplorerHandleAction(g_explorer,g_settings,g_runtime,sparam,g_symbols,g_symbol_count,g_logger);
-   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
+   ASC_ExplorerHandleAction(g_explorer,g_settings,g_runtime,g_prepared_buckets,sparam,g_symbols,g_symbol_count,g_logger);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
   }

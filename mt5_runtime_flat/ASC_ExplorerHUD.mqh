@@ -26,12 +26,6 @@ enum ASC_ExplorerStatView
    ASC_EXPLORER_STAT_FUTURE_SURFACES=5
   };
 
-enum ASC_ExplorerMarketFilter
-  {
-   ASC_EXPLORER_FILTER_ALL_SYMBOLS=0,
-   ASC_EXPLORER_FILTER_OPEN_ONLY=1
-  };
-
 struct ASC_ExplorerTheme
   {
    int margin;
@@ -107,18 +101,8 @@ struct ASC_ExplorerContext
    ASC_ExplorerTheme theme;
    ASC_ExplorerNavState nav;
    bool initialized;
-  };
-
-struct ASC_ExplorerBucketResolvedSymbol
-  {
-   string display_symbol;
-   string note;
-   bool matched_live_symbol;
-   bool canonical_match;
-   string canonical_symbol;
-   int symbol_state_index;
-   ASC_MarketStatus market_status;
-   bool open_now;
+   string frame_objects[];
+   string previous_frame_objects[];
   };
 
 void ASC_ExplorerThemeDefaults(ASC_ExplorerTheme &theme,const int density_mode)
@@ -170,11 +154,63 @@ void ASC_ExplorerDeleteOwnedObjects(const ASC_ExplorerContext &ctx)
      }
   }
 
-bool ASC_ExplorerRect(const ASC_ExplorerContext &ctx,const string id,const int x,const int y,const int w,const int h,const color fill,const color border)
+bool ASC_ExplorerObjectTracked(const string &objects[],const string name)
+  {
+   for(int i=0;i<ArraySize(objects);i++)
+     {
+      if(objects[i]==name)
+         return(true);
+     }
+   return(false);
+  }
+
+void ASC_ExplorerBeginFrame(ASC_ExplorerContext &ctx)
+  {
+   ctx.previous_frame_objects=ctx.frame_objects;
+   ArrayResize(ctx.frame_objects,0);
+  }
+
+void ASC_ExplorerTouchObject(ASC_ExplorerContext &ctx,const string name)
+  {
+   if(ASC_ExplorerObjectTracked(ctx.frame_objects,name))
+      return;
+   int slot=ArraySize(ctx.frame_objects);
+   ArrayResize(ctx.frame_objects,slot+1);
+   ctx.frame_objects[slot]=name;
+  }
+
+void ASC_ExplorerEndFrame(ASC_ExplorerContext &ctx)
+  {
+   for(int i=0;i<ArraySize(ctx.previous_frame_objects);i++)
+     {
+      if(!ASC_ExplorerObjectTracked(ctx.frame_objects,ctx.previous_frame_objects[i]))
+         ObjectDelete(ctx.chart_id,ctx.previous_frame_objects[i]);
+     }
+   ArrayResize(ctx.previous_frame_objects,0);
+  }
+
+bool ASC_ExplorerEnsureObject(ASC_ExplorerContext &ctx,const string name,const ENUM_OBJECT object_type)
+  {
+   if(ObjectFind(ctx.chart_id,name)>=0)
+     {
+      ENUM_OBJECT existing=(ENUM_OBJECT)ObjectGetInteger(ctx.chart_id,name,OBJPROP_TYPE);
+      if(existing==object_type)
+        {
+         ASC_ExplorerTouchObject(ctx,name);
+         return(true);
+        }
+      ObjectDelete(ctx.chart_id,name);
+     }
+   if(!ObjectCreate(ctx.chart_id,name,object_type,0,0,0))
+      return(false);
+   ASC_ExplorerTouchObject(ctx,name);
+   return(true);
+  }
+
+bool ASC_ExplorerRect(ASC_ExplorerContext &ctx,const string id,const int x,const int y,const int w,const int h,const color fill,const color border)
   {
    string name=ASC_ExplorerObjectName(ctx,id);
-   ObjectDelete(ctx.chart_id,name);
-   if(!ObjectCreate(ctx.chart_id,name,OBJ_RECTANGLE_LABEL,0,0,0))
+   if(!ASC_ExplorerEnsureObject(ctx,name,OBJ_RECTANGLE_LABEL))
       return(false);
    ObjectSetInteger(ctx.chart_id,name,OBJPROP_CORNER,CORNER_LEFT_UPPER);
    ObjectSetInteger(ctx.chart_id,name,OBJPROP_XDISTANCE,x);
@@ -190,11 +226,10 @@ bool ASC_ExplorerRect(const ASC_ExplorerContext &ctx,const string id,const int x
    return(true);
   }
 
-bool ASC_ExplorerLabel(const ASC_ExplorerContext &ctx,const string id,const string text,const int x,const int y,const color text_color,const int font_size=9)
+bool ASC_ExplorerLabel(ASC_ExplorerContext &ctx,const string id,const string text,const int x,const int y,const color text_color,const int font_size=9)
   {
    string name=ASC_ExplorerObjectName(ctx,id);
-   ObjectDelete(ctx.chart_id,name);
-   if(!ObjectCreate(ctx.chart_id,name,OBJ_LABEL,0,0,0))
+   if(!ASC_ExplorerEnsureObject(ctx,name,OBJ_LABEL))
       return(false);
    ObjectSetInteger(ctx.chart_id,name,OBJPROP_CORNER,CORNER_LEFT_UPPER);
    ObjectSetInteger(ctx.chart_id,name,OBJPROP_XDISTANCE,x);
@@ -207,11 +242,10 @@ bool ASC_ExplorerLabel(const ASC_ExplorerContext &ctx,const string id,const stri
    return(true);
   }
 
-bool ASC_ExplorerButton(const ASC_ExplorerContext &ctx,const string id,const string text,const int x,const int y,const int w,const int h,const color fill,const bool selected=false)
+bool ASC_ExplorerButton(ASC_ExplorerContext &ctx,const string id,const string text,const int x,const int y,const int w,const int h,const color fill,const bool selected=false)
   {
    string name=ASC_ExplorerObjectName(ctx,id);
-   ObjectDelete(ctx.chart_id,name);
-   if(!ObjectCreate(ctx.chart_id,name,OBJ_BUTTON,0,0,0))
+   if(!ASC_ExplorerEnsureObject(ctx,name,OBJ_BUTTON))
       return(false);
    ObjectSetInteger(ctx.chart_id,name,OBJPROP_CORNER,CORNER_LEFT_UPPER);
    ObjectSetInteger(ctx.chart_id,name,OBJPROP_XDISTANCE,x);
@@ -268,14 +302,14 @@ color ASC_ExplorerStatusAccent(const ASC_ExplorerContext &ctx,const ASC_MarketSt
    return(ctx.theme.reserved);
   }
 
-void ASC_ExplorerPanelTitle(const ASC_ExplorerContext &ctx,const string id,const string title,const int x,const int y,const int w,const color stripe)
+void ASC_ExplorerPanelTitle(ASC_ExplorerContext &ctx,const string id,const string title,const int x,const int y,const int w,const color stripe)
   {
    ASC_ExplorerRect(ctx,id + ".title",x,y,w,ctx.theme.title_height,ctx.theme.section_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,id + ".title.stripe",x,y,5,ctx.theme.title_height,stripe,stripe);
    ASC_ExplorerLabel(ctx,id + ".title.text",ASC_ExplorerFitText(title,w-ctx.theme.padding-16,10),x+ctx.theme.padding+4,y+6,ctx.theme.text,10);
   }
 
-void ASC_ExplorerInfoRow(const ASC_ExplorerContext &ctx,const string id,const string label,const string value,const int x,const int y,const int w,const color accent)
+void ASC_ExplorerInfoRow(ASC_ExplorerContext &ctx,const string id,const string label,const string value,const int x,const int y,const int w,const color accent)
   {
    int row_h=ctx.theme.row_height+6;
    int label_w=w/3;
@@ -471,71 +505,11 @@ void ASC_ExplorerCounts(ASC_SymbolState &states[],const int count,int &open_coun
      }
   }
 
-void ASC_ExplorerBuildBucketSymbols(const ASC_BucketViewModel &bucket,ASC_SymbolState &states[],const int count,ASC_ExplorerBucketResolvedSymbol &resolved[])
+string ASC_ExplorerSelectedBucketName(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared)
   {
-   ArrayResize(resolved,bucket.resolved_symbol_count);
-   for(int i=0;i<bucket.resolved_symbol_count;i++)
-     {
-      resolved[i].display_symbol=bucket.symbol_refs[i];
-      resolved[i].note=bucket.symbol_notes[i];
-      resolved[i].matched_live_symbol=true;
-      resolved[i].canonical_match=true;
-      resolved[i].canonical_symbol=bucket.symbol_refs[i];
-      resolved[i].symbol_state_index=-1;
-      resolved[i].market_status=ASC_MARKET_UNKNOWN;
-      resolved[i].open_now=false;
-      for(int j=0;j<count;j++)
-        {
-         if(states[j].symbol!=bucket.symbol_refs[i])
-            continue;
-         resolved[i].symbol_state_index=j;
-         resolved[i].market_status=states[j].market_status;
-         resolved[i].open_now=(states[j].market_status==ASC_MARKET_OPEN);
-         break;
-        }
-     }
-  }
-
-int ASC_ExplorerVisibleBucketCount(const ASC_BucketViewModel &bucket,ASC_SymbolState &states[],const int count,const ASC_ExplorerMarketFilter filter)
-  {
-   if(filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
-      return(bucket.resolved_symbol_count);
-   return(bucket.open_symbol_count);
-  }
-
-bool ASC_ExplorerBucketVisible(const ASC_BucketViewModel &bucket,ASC_SymbolState &states[],const int count,const ASC_ExplorerMarketFilter filter)
-  {
-   if(filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
-      return(bucket.resolved_symbol_count>0);
-   return(bucket.open_symbol_count>0);
-  }
-
-int ASC_ExplorerFilteredBuckets(ASC_BucketViewModel &source[],ASC_SymbolState &states[],const int count,const ASC_ExplorerMarketFilter filter,ASC_BucketViewModel &filtered[],int &source_indices[])
-  {
-   ArrayResize(filtered,0);
-   ArrayResize(source_indices,0);
-   int total=ArraySize(source);
-   for(int i=0;i<total;i++)
-     {
-      if(!ASC_ExplorerBucketVisible(source[i],states,count,filter))
-         continue;
-      int slot=ArraySize(filtered);
-      ArrayResize(filtered,slot+1);
-      ArrayResize(source_indices,slot+1);
-      filtered[slot]=source[i];
-      source_indices[slot]=i;
-     }
-   return(ArraySize(filtered));
-  }
-
-string ASC_ExplorerSelectedBucketName(ASC_ExplorerContext &ctx,const string server_key,ASC_SymbolState &states[],const int count)
-  {
-   ASC_BucketViewModel all_buckets[];
    ASC_BucketViewModel filtered[];
    int source_indices[];
-   int unresolved_count=0;
-   ASC_GetBucketViewModels(server_key,states,count,all_buckets,ctx.nav.bucket_display_mode,unresolved_count);
-   int total=ASC_ExplorerFilteredBuckets(all_buckets,states,count,ctx.nav.market_filter,filtered,source_indices);
+   int total=ASC_PreparedFilteredBuckets(prepared,ctx.nav.market_filter,filtered,source_indices);
    if(total<=0)
       return("Bucket Detail");
    if(ctx.nav.selected_bucket_index<0 || ctx.nav.selected_bucket_index>=total)
@@ -552,21 +526,21 @@ string ASC_ExplorerSelectedSymbolName(ASC_ExplorerContext &ctx,ASC_SymbolState &
    return("Symbol Detail");
   }
 
-string ASC_ExplorerBreadcrumbText(ASC_ExplorerContext &ctx,const string server_key,ASC_SymbolState &states[],const int count)
+string ASC_ExplorerBreadcrumbText(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count)
   {
    string path="Home / Overview";
    if(ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKETS)
       path="Home / Buckets";
    else if(ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKET_DETAIL)
-      path="Home / Buckets / " + ASC_ExplorerSelectedBucketName(ctx,server_key,states,count);
+      path="Home / Buckets / " + ASC_ExplorerSelectedBucketName(ctx,prepared);
    else if(ctx.nav.current_view==ASC_EXPLORER_VIEW_SYMBOL_DETAIL)
-      path="Home / Buckets / " + ASC_ExplorerSelectedBucketName(ctx,server_key,states,count) + " / " + ASC_ExplorerSelectedSymbolName(ctx,states,count);
+      path="Home / Buckets / " + ASC_ExplorerSelectedBucketName(ctx,prepared) + " / " + ASC_ExplorerSelectedSymbolName(ctx,states,count);
    else if(ctx.nav.current_view==ASC_EXPLORER_VIEW_STAT_DETAIL)
-      path="Home / Buckets / " + ASC_ExplorerSelectedBucketName(ctx,server_key,states,count) + " / " + ASC_ExplorerSelectedSymbolName(ctx,states,count) + " / " + ASC_ExplorerStatText(ctx.nav.selected_stat_view);
+      path="Home / Buckets / " + ASC_ExplorerSelectedBucketName(ctx,prepared) + " / " + ASC_ExplorerSelectedSymbolName(ctx,states,count) + " / " + ASC_ExplorerStatText(ctx.nav.selected_stat_view);
    return(path);
   }
 
-void ASC_ExplorerSummaryCard(const ASC_ExplorerContext &ctx,const string id,const string title,const string line1,const string line2,const string line3,const int x,const int y,const int w,const int h,const color accent)
+void ASC_ExplorerSummaryCard(ASC_ExplorerContext &ctx,const string id,const string title,const string line1,const string line2,const string line3,const int x,const int y,const int w,const int h,const color accent)
   {
    ASC_ExplorerRect(ctx,id + ".card",x,y,w,h,ctx.theme.panel_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,id + ".bar",x,y,6,h,accent,accent);
@@ -589,10 +563,10 @@ void ASC_ExplorerRenderOverview(ASC_ExplorerContext &ctx,const ASC_RuntimeSettin
    ASC_ExplorerSummaryCard(ctx,"overview.universe","Universe","Tracked symbols " + IntegerToString(count),"Open " + IntegerToString(open_count) + " | Closed " + IntegerToString(closed_count),"Uncertain " + IntegerToString(uncertain_count) + " | Unknown " + IntegerToString(unknown_count),x,y+card_h+gap,card_w,card_h,ctx.theme.accent_alt);
    ASC_ExplorerSummaryCard(ctx,"overview.scheduler","Scheduler","Cursor " + IntegerToString(runtime.scheduler_cursor),"Due now " + IntegerToString(due_count),"Budget per beat " + IntegerToString(settings.symbol_budget_per_heartbeat),x+card_w+gap,y+card_h+gap,card_w,card_h,ctx.theme.accent);
    ASC_ExplorerSummaryCard(ctx,"overview.health","Health and Attention","Recovery " + (runtime.recovery_used ? "Used" : "Fresh Start"),"Degraded " + ASC_BoolText(runtime.degraded),"Last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),x,y+(card_h+gap)*2,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
-   ASC_ExplorerSummaryCard(ctx,"overview.capability","Capability Progress","Market State Detection: Working","Identity, filtering, shortlist, and Aurora: Reserved","Classification backbone and dynamic bucket pass active",x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,ctx.theme.reserved);
+   ASC_ExplorerSummaryCard(ctx,"overview.capability","Capability Progress","Market State Detection: Working","Identity, filtering, shortlist, and Aurora: Reserved","Runtime-prepared bucket snapshot active; later layers still reserved",x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,ctx.theme.reserved);
   }
 
-void ASC_ExplorerRenderPageButtons(const ASC_ExplorerContext &ctx,const string id_prefix,const int page_index,const int page_count,const int x,const int y,const int max_width)
+void ASC_ExplorerRenderPageButtons(ASC_ExplorerContext &ctx,const string id_prefix,const int page_index,const int page_count,const int x,const int y,const int max_width)
   {
    if(page_count<=1)
       return;
@@ -620,14 +594,11 @@ void ASC_ExplorerRenderPageButtons(const ASC_ExplorerContext &ctx,const string i
      }
   }
 
-void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const string server_key,ASC_SymbolState &states[],const int count,const int x,const int y,const int w,const int h)
+void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared,const int x,const int y,const int w,const int h)
   {
-   ASC_BucketViewModel buckets[];
    ASC_BucketViewModel filtered[];
    int source_indices[];
-   int unresolved_count=0;
-   ASC_GetBucketViewModels(server_key,states,count,buckets,ctx.nav.bucket_display_mode,unresolved_count);
-   int total=ASC_ExplorerFilteredBuckets(buckets,states,count,ctx.nav.market_filter,filtered,source_indices);
+   int total=ASC_PreparedFilteredBuckets(prepared,ctx.nav.market_filter,filtered,source_indices);
 
    int row_h=(ctx.theme.row_height*3)+18;
    int intro_h=ctx.theme.row_height+12;
@@ -640,8 +611,8 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const string server_k
    ASC_ExplorerPanelTitle(ctx,"buckets.panel","Bucket List",x,y,w,ctx.theme.accent);
    ASC_ExplorerRect(ctx,"buckets.intro",x,y+ctx.theme.title_height,w,intro_h,ctx.theme.panel_soft_fill,ctx.theme.border);
    string filter_note=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only shows only dynamic buckets with at least one classified symbol that is currently OPEN." : "All Symbols shows only classified live broker symbols; unresolved symbols remain outside bucket membership.");
-   if(unresolved_count>0)
-      filter_note+=" Unresolved live symbols: " + IntegerToString(unresolved_count) + ".";
+   if(prepared.unresolved_count>0)
+      filter_note+=" Unresolved live symbols: " + IntegerToString(prepared.unresolved_count) + ".";
    ASC_ExplorerLabel(ctx,"buckets.note",ASC_ExplorerFitText(filter_note,w-ctx.theme.padding-8),x+ctx.theme.padding,y+ctx.theme.title_height+6,ctx.theme.muted);
 
    int start=ctx.nav.bucket_page*rows_per_page;
@@ -653,7 +624,7 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const string server_k
      {
       int visual=i-start;
       int card_y=row_y+(visual*(row_h+ctx.theme.gap));
-      int live_visible=ASC_ExplorerVisibleBucketCount(filtered[i],states,count,ctx.nav.market_filter);
+      int live_visible=ASC_PreparedVisibleBucketCount(filtered[i],ctx.nav.market_filter);
       bool selected=(i==ctx.nav.selected_bucket_index);
       color fill=(selected ? ctx.theme.selected_soft_fill : ctx.theme.panel_fill);
       color accent=(live_visible>0 ? ctx.theme.good : ctx.theme.warning);
@@ -679,14 +650,11 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const string server_k
      }
   }
 
-void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server_key,ASC_SymbolState &states[],const int count,const int x,const int y,const int w,const int h)
+void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared,const int x,const int y,const int w,const int h)
   {
-   ASC_BucketViewModel all_buckets[];
    ASC_BucketViewModel filtered[];
    int source_indices[];
-   int unresolved_count=0;
-   ASC_GetBucketViewModels(server_key,states,count,all_buckets,ctx.nav.bucket_display_mode,unresolved_count);
-   int total=ASC_ExplorerFilteredBuckets(all_buckets,states,count,ctx.nav.market_filter,filtered,source_indices);
+   int total=ASC_PreparedFilteredBuckets(prepared,ctx.nav.market_filter,filtered,source_indices);
    if(total<=0)
      {
       ASC_ExplorerRect(ctx,"bucket.detail.empty",x,y,w,h,ctx.theme.panel_fill,ctx.theme.border);
@@ -698,16 +666,16 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
       ctx.nav.selected_bucket_index=0;
 
    ASC_BucketViewModel bucket=filtered[ctx.nav.selected_bucket_index];
-   ASC_ExplorerBucketResolvedSymbol resolved[];
-   ASC_ExplorerBuildBucketSymbols(bucket,states,count,resolved);
+   ASC_BucketPreparedSymbol resolved[];
+   ASC_PreparedBucketSymbols(prepared,bucket,resolved);
 
-   ASC_ExplorerBucketResolvedSymbol visible_symbols[];
+   ASC_BucketPreparedSymbol visible_symbols[];
    ArrayResize(visible_symbols,0);
    for(int i=0;i<ArraySize(resolved);i++)
      {
       bool include=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS);
       if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
-         include=(resolved[i].matched_live_symbol && resolved[i].open_now);
+         include=(resolved[i].open_now);
       if(include)
         {
          int slot=ArraySize(visible_symbols);
@@ -720,7 +688,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
    int mode_limit=total_visible_symbols;
    if(ctx.nav.bucket_display_mode!=ASC_BUCKET_DISPLAY_ALL)
      {
-      mode_limit=ASC_BucketDisplayLimit(bucket);
+      mode_limit=ASC_BucketDisplayLimit(bucket,ctx.nav.bucket_display_mode);
       if(mode_limit>total_visible_symbols)
          mode_limit=total_visible_symbols;
      }
@@ -762,7 +730,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
    if(lane_end>capped_total)
       lane_end=capped_total;
 
-   int resolved_open_count=ASC_ExplorerVisibleBucketCount(bucket,states,count,ASC_EXPLORER_FILTER_OPEN_ONLY);
+   int resolved_open_count=ASC_PreparedVisibleBucketCount(bucket,ASC_EXPLORER_FILTER_OPEN_ONLY);
    color bucket_accent=(resolved_open_count>0 ? ctx.theme.good : ctx.theme.accent);
 
    ASC_ExplorerRect(ctx,"bucket.detail.header",x,y,w,header_h,ctx.theme.panel_fill,ctx.theme.border);
@@ -817,14 +785,14 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
      {
       int visual=i-lane_start;
       int card_y=list_y+(visual*(row_h+ctx.theme.gap));
-      color accent=ASC_ExplorerStatusAccent(ctx,visible_symbols[i].market_status,visible_symbols[i].matched_live_symbol);
-      color fill=(visible_symbols[i].matched_live_symbol ? ctx.theme.panel_fill : ctx.theme.panel_soft_fill);
+      color accent=ASC_ExplorerStatusAccent(ctx,visible_symbols[i].market_status,true);
+      color fill=ctx.theme.panel_fill;
       ASC_ExplorerRect(ctx,"bucket.detail.seed." + IntegerToString(i),x,card_y,symbol_w,row_h,fill,ctx.theme.border);
       ASC_ExplorerRect(ctx,"bucket.detail.seed.bar." + IntegerToString(i),x,card_y,6,row_h,accent,accent);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].display_symbol,symbol_w-160,10),x+14,card_y+6,ctx.theme.text,10);
-      string state_text=(visible_symbols[i].matched_live_symbol ? "Classified live symbol" : "Classification pending visibility") + " | State " + ASC_MarketStatusText(visible_symbols[i].market_status);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].live_symbol,symbol_w-160,10),x+14,card_y+6,ctx.theme.text,10);
+      string state_text="Prepared live symbol | State " + ASC_MarketStatusText(visible_symbols[i].market_status);
       ASC_ExplorerLabel(ctx,"bucket.detail.seed.state." + IntegerToString(i),ASC_ExplorerFitText(state_text,symbol_w-160),x+14,card_y+24,ctx.theme.muted);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].note,symbol_w-160),x+14,card_y+24+ctx.theme.row_height,(visible_symbols[i].matched_live_symbol ? ctx.theme.good : ctx.theme.dim));
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].note,symbol_w-160),x+14,card_y+24+ctx.theme.row_height,ctx.theme.good);
       ASC_ExplorerButton(ctx,"action.seed_symbol." + IntegerToString(i),"Inspect",x+symbol_w-82,card_y+((row_h-ctx.theme.button_height)/2),70,ctx.theme.button_height,ctx.theme.accent,false);
      }
    if(capped_total<=0)
@@ -854,7 +822,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const string server
      }
   }
 
-void ASC_ExplorerSectionPanel(const ASC_ExplorerContext &ctx,const string id,const string title,const string l1,const string l2,const string l3,const int x,const int y,const int w,const int h,const bool selected,const color accent)
+void ASC_ExplorerSectionPanel(ASC_ExplorerContext &ctx,const string id,const string title,const string l1,const string l2,const string l3,const int x,const int y,const int w,const int h,const bool selected,const color accent)
   {
    color stripe=(accent==C'0,0,0' ? ctx.theme.accent : accent);
    ASC_ExplorerRect(ctx,id + ".panel",x,y,w,h,(selected ? ctx.theme.selected_fill : ctx.theme.panel_fill),ctx.theme.border);
@@ -1023,13 +991,13 @@ void ASC_ExplorerRenderHeader(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings
    ASC_ExplorerLabel(ctx,"header.time",ASC_ExplorerFitText("Server " + runtime.server_clean + " | Time " + ASC_DateTimeText(TimeTradeServer()) + " | Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),320),chart_w-330,ctx.theme.margin+16,ctx.theme.dim);
   }
 
-void ASC_ExplorerRenderNavStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,const int chart_w)
+void ASC_ExplorerRenderNavStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const int chart_w)
   {
    int y=ctx.theme.margin+ctx.theme.header_height+ctx.theme.gap;
    ASC_ExplorerRect(ctx,"nav.strip",ctx.theme.margin,y,chart_w-(ctx.theme.margin*2),ctx.theme.nav_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerLabel(ctx,"nav.current","Current View: " + ASC_ExplorerViewText(ctx.nav.current_view),ctx.theme.margin+ctx.theme.padding,y+7,ctx.theme.text);
    if(settings.explorer_show_breadcrumbs)
-      ASC_ExplorerLabel(ctx,"nav.breadcrumb",ASC_ExplorerFitText(ASC_ExplorerBreadcrumbText(ctx,runtime.server_clean,states,count),chart_w-260),ctx.theme.margin+170,y+7,ctx.theme.muted);
+      ASC_ExplorerLabel(ctx,"nav.breadcrumb",ASC_ExplorerFitText(ASC_ExplorerBreadcrumbText(ctx,prepared,states,count),chart_w-260),ctx.theme.margin+170,y+7,ctx.theme.muted);
   }
 
 void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,ASC_SymbolState &states[],const int count,const int x,const int y,const int w,const int h)
@@ -1074,7 +1042,7 @@ void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSta
    ASC_ExplorerLabel(ctx,"status.text",ASC_ExplorerFitText(status_text,w-24),x+ctx.theme.padding+4,y+7,(runtime.degraded ? ctx.theme.warning : ctx.theme.muted));
   }
 
-void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
+void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
    if(!settings.explorer_enabled)
      {
@@ -1091,7 +1059,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
      }
 
    ASC_ExplorerThemeDefaults(ctx.theme,settings.explorer_density_mode);
-   ASC_ExplorerDeleteOwnedObjects(ctx);
+   ASC_ExplorerBeginFrame(ctx);
    int root_w=chart_w-(ctx.theme.margin*2);
    int root_h=chart_h-(ctx.theme.margin*2);
    if(root_w<440 || root_h<260)
@@ -1102,6 +1070,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
       ASC_ExplorerLabel(ctx,"compact.server",ASC_ExplorerFitText("Server " + runtime.server_clean + " | View " + ASC_ExplorerViewText(ctx.nav.current_view),root_w-24),ctx.theme.margin+12,ctx.theme.margin+32,ctx.theme.muted);
       ASC_ExplorerLabel(ctx,"compact.state",ASC_ExplorerFitText("Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + " | Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),root_w-24),ctx.theme.margin+12,ctx.theme.margin+50,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.dim));
       ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : "Runtime steady") + " | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
+      ASC_ExplorerEndFrame(ctx);
       ChartRedraw(ctx.chart_id);
       ctx.nav.last_render_at=TimeCurrent();
       ctx.nav.dirty=false;
@@ -1110,7 +1079,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
    logger.Debug("Explorer","render entry server=" + runtime.server_clean + ", view=" + ASC_ExplorerViewText(ctx.nav.current_view) + ", filter=" + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + ", mode=" + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode) + ", chart=" + IntegerToString(chart_w) + "x" + IntegerToString(chart_h));
    ASC_ExplorerRect(ctx,"root",ctx.theme.margin,ctx.theme.margin,root_w,root_h,ctx.theme.background,ctx.theme.border);
    ASC_ExplorerRenderHeader(ctx,settings,runtime,chart_w);
-   ASC_ExplorerRenderNavStrip(ctx,settings,runtime,states,count,chart_w);
+   ASC_ExplorerRenderNavStrip(ctx,settings,runtime,prepared,states,count,chart_w);
 
    int main_x=ctx.theme.margin+ctx.theme.padding;
    int main_y=ctx.theme.margin+ctx.theme.header_height+ctx.theme.nav_height+(ctx.theme.gap*2);
@@ -1125,10 +1094,10 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
    switch(ctx.nav.current_view)
      {
       case ASC_EXPLORER_VIEW_BUCKETS:
-         ASC_ExplorerRenderBucketList(ctx,runtime.server_clean,states,count,main_x,main_y,content_w,main_h);
+         ASC_ExplorerRenderBucketList(ctx,prepared,main_x,main_y,content_w,main_h);
          break;
       case ASC_EXPLORER_VIEW_BUCKET_DETAIL:
-         ASC_ExplorerRenderBucketDetail(ctx,runtime.server_clean,states,count,main_x,main_y,content_w,main_h);
+         ASC_ExplorerRenderBucketDetail(ctx,prepared,main_x,main_y,content_w,main_h);
          break;
       case ASC_EXPLORER_VIEW_SYMBOL_DETAIL:
          ASC_ExplorerRenderSymbolDetail(ctx,runtime,states,count,main_x,main_y,content_w,main_h);
@@ -1142,6 +1111,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
      }
 
    ASC_ExplorerRenderStatusStrip(ctx,runtime,main_x,main_y+main_h+ctx.theme.gap,chart_w-(ctx.theme.margin*2)-(ctx.theme.padding*2),chart_w,chart_h);
+   ASC_ExplorerEndFrame(ctx);
    ChartRedraw(ctx.chart_id);
    ctx.nav.last_render_at=TimeCurrent();
    ctx.nav.dirty=false;
@@ -1169,6 +1139,8 @@ void ASC_ExplorerInit(ASC_ExplorerContext &ctx,const long chart_id)
    ctx.nav.selected_seed_symbol="";
    ctx.nav.dirty=true;
    ctx.nav.last_render_at=0;
+   ArrayResize(ctx.frame_objects,0);
+   ArrayResize(ctx.previous_frame_objects,0);
    ctx.initialized=true;
   }
 
@@ -1177,10 +1149,12 @@ void ASC_ExplorerShutdown(ASC_ExplorerContext &ctx)
    if(!ctx.initialized)
       return;
    ASC_ExplorerDeleteOwnedObjects(ctx);
+   ArrayResize(ctx.frame_objects,0);
+   ArrayResize(ctx.previous_frame_objects,0);
    ctx.initialized=false;
   }
 
-void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,const bool force,ASC_Logger &logger)
+void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const bool force,ASC_Logger &logger)
   {
    if(!ctx.initialized || !settings.explorer_enabled)
      {
@@ -1191,7 +1165,7 @@ void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings 
    datetime now=TimeCurrent();
    if(!force && !ctx.nav.dirty && ctx.nav.last_render_at>0 && (now-ctx.nav.last_render_at)<settings.explorer_refresh_seconds)
       return;
-   ASC_ExplorerRender(ctx,settings,runtime,states,count,logger);
+   ASC_ExplorerRender(ctx,settings,runtime,prepared,states,count,logger);
   }
 
 void ASC_ExplorerAdjustScroll(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const int direction)
@@ -1211,7 +1185,7 @@ void ASC_ExplorerAdjustScroll(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings
    ctx.nav.dirty=true;
   }
 
-void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const string object_name,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
+void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,const string object_name,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
    string action=object_name;
    StringReplace(action,ctx.prefix,"");
@@ -1312,23 +1286,20 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
    else if(StringFind(action,"action.seed_symbol.")==0)
      {
       int seed_index=(int)StringToInteger(StringSubstr(action,StringLen("action.seed_symbol.")));
-      ASC_BucketViewModel all_buckets[];
       ASC_BucketViewModel filtered[];
       int source_indices[];
-      int unresolved_count=0;
-      ASC_GetBucketViewModels(runtime.server_clean,states,count,all_buckets,ctx.nav.bucket_display_mode,unresolved_count);
-      int bucket_total=ASC_ExplorerFilteredBuckets(all_buckets,states,count,ctx.nav.market_filter,filtered,source_indices);
+      int bucket_total=ASC_PreparedFilteredBuckets(prepared,ctx.nav.market_filter,filtered,source_indices);
       if(ctx.nav.selected_bucket_index<0 || ctx.nav.selected_bucket_index>=bucket_total)
          return;
-      ASC_ExplorerBucketResolvedSymbol resolved[];
-      ASC_ExplorerBuildBucketSymbols(filtered[ctx.nav.selected_bucket_index],states,count,resolved);
-      ASC_ExplorerBucketResolvedSymbol visible_symbols[];
+      ASC_BucketPreparedSymbol resolved[];
+      ASC_PreparedBucketSymbols(prepared,filtered[ctx.nav.selected_bucket_index],resolved);
+      ASC_BucketPreparedSymbol visible_symbols[];
       ArrayResize(visible_symbols,0);
       for(int i=0;i<ArraySize(resolved);i++)
         {
          bool include=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS);
          if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
-            include=(resolved[i].matched_live_symbol && resolved[i].open_now);
+            include=resolved[i].open_now;
          if(include)
            {
             int slot=ArraySize(visible_symbols);
@@ -1339,14 +1310,14 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
       int display_count=ArraySize(visible_symbols);
       if(ctx.nav.bucket_display_mode!=ASC_BUCKET_DISPLAY_ALL)
         {
-         int limit=ASC_BucketDisplayLimit(filtered[ctx.nav.selected_bucket_index]);
+         int limit=ASC_BucketDisplayLimit(filtered[ctx.nav.selected_bucket_index],ctx.nav.bucket_display_mode);
          if(display_count>limit)
             display_count=limit;
         }
       if(seed_index<0 || seed_index>=display_count)
          return;
       ctx.nav.selected_symbol_index=visible_symbols[seed_index].symbol_state_index;
-      ctx.nav.selected_seed_symbol=visible_symbols[seed_index].display_symbol;
+      ctx.nav.selected_seed_symbol=visible_symbols[seed_index].live_symbol;
       ctx.nav.selected_stat_view=ASC_EXPLORER_STAT_IDENTITY;
       ctx.nav.symbol_scroll=0;
       ctx.nav.stat_scroll=0;
