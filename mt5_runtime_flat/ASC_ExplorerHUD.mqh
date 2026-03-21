@@ -575,11 +575,11 @@ void ASC_ExplorerRenderOverview(ASC_ExplorerContext &ctx,const ASC_RuntimeSettin
    ASC_ExplorerCounts(states,count,open_count,closed_count,uncertain_count,unknown_count,due_count);
 
    ASC_ExplorerSummaryCard(ctx,"overview.identity","System Identity",ASC_PRODUCT_NAME,"Wrapper " + ASC_WRAPPER_VERSION + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION,"Market Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter),x,y,card_w,card_h,ctx.theme.accent);
-   ASC_ExplorerSummaryCard(ctx,"overview.runtime","Runtime","Mode " + ASC_RuntimeModeText(runtime.mode),"Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Beat " + IntegerToString(runtime.heartbeats_since_boot),"Server " + runtime.server_clean,x+card_w+gap,y,card_w,card_h,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
+   ASC_ExplorerSummaryCard(ctx,"overview.runtime","Runtime","Mode " + ASC_RuntimeModeText(runtime.mode),"Readiness " + IntegerToString(runtime.readiness_percent) + "% | Beat " + IntegerToString(runtime.heartbeats_since_boot),"Server " + runtime.server_clean,x+card_w+gap,y,card_w,card_h,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
    ASC_ExplorerSummaryCard(ctx,"overview.universe","Universe","Tracked symbols " + IntegerToString(count),"Open " + IntegerToString(open_count) + " | Closed " + IntegerToString(closed_count),"Uncertain " + IntegerToString(uncertain_count) + " | Unknown " + IntegerToString(unknown_count),x,y+card_h+gap,card_w,card_h,ctx.theme.accent_alt);
    ASC_ExplorerSummaryCard(ctx,"overview.scheduler","Scheduler","Cursor " + IntegerToString(runtime.scheduler_cursor),"Due now " + IntegerToString(due_count),"Budget per beat " + IntegerToString(settings.symbol_budget_per_heartbeat),x+card_w+gap,y+card_h+gap,card_w,card_h,ctx.theme.accent);
    ASC_ExplorerSummaryCard(ctx,"overview.health","Health and Attention","Recovery " + (runtime.recovery_used ? "Used" : "Fresh Start"),"Degraded " + ASC_BoolText(runtime.degraded) + " | Warmup Min " + ASC_BoolText(runtime.warmup_minimum_met),"Last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),x,y+(card_h+gap)*2,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
-   ASC_ExplorerSummaryCard(ctx,"overview.capability","Layer 1 Readiness","Initial assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count),"Primary buckets " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count),"Background hydration " + ASC_BoolText(runtime.background_hydration_active),x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,(runtime.background_hydration_active ? ctx.theme.accent : ctx.theme.reserved));
+   ASC_ExplorerSummaryCard(ctx,"overview.capability","Layer 1 Readiness","Initial assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered),"Compressed primary ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready),"Background completion " + ASC_BoolText(runtime.background_hydration_active),x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,(runtime.background_hydration_active ? ctx.theme.accent : (runtime.compressed_primary_buckets_ready ? ctx.theme.good : ctx.theme.reserved)));
   }
 
 void ASC_ExplorerRenderPageButtons(ASC_ExplorerContext &ctx,const string id_prefix,const int page_index,const int page_count,const int x,const int y,const int max_width)
@@ -1008,36 +1008,36 @@ void ASC_ExplorerRenderStatDetail(ASC_ExplorerContext &ctx,const ASC_RuntimeStat
 
 string ASC_ExplorerWarmupBannerText(const ASC_RuntimeState &runtime)
   {
-   string progress=IntegerToString(runtime.warmup_progress_percent) + "%";
+   string progress=IntegerToString(runtime.readiness_percent) + "%";
    string primary_scope=IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count);
    if(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met)
-      return("Warmup active: assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count)
-             + " discovered symbols | primary buckets " + primary_scope + " | readiness " + progress + ".");
+      return("Warmup active — initial market-state scan in progress | assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered)
+             + " discovered live symbols | primary buckets " + primary_scope + " | readiness " + progress + ".");
    if(runtime.background_hydration_active)
-      return("Layer 1 minimum met: steady mode active while background hydration continues for "
-             + IntegerToString(runtime.symbol_count-runtime.initial_symbols_assessed) + " lower-priority symbols | readiness " + progress + ".");
-   return("Layer 1 readiness complete: all discovered symbols assessed at least once | readiness " + progress + ".");
+      return("Layer 1 readiness met | primary buckets promoted and first-pass coverage reached | background completion continues without blocking navigation | readiness " + progress + ".");
+   return("Layer 1 readiness complete: primary buckets promoted and discovered live symbols assessed | readiness " + progress + ".");
   }
 
 string ASC_ExplorerWarmupModeText(const ASC_RuntimeState &runtime)
   {
    if(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met)
-      return("Warmup active/full mode");
+      return("Warmup active — initial market-state scan in progress");
    if(runtime.background_hydration_active)
-      return("Warmup minimum met; steady mode with background completion");
-   return("Warmup complete; full Layer 1 steady mode");
+      return("Layer 1 ready — background completion continues without blocking navigation");
+   return("Layer 1 ready — background completion caught up");
   }
 
 string ASC_ExplorerPrimaryBucketLoadingText(const ASC_RuntimeState &runtime)
   {
-   return("Primary buckets loading first: " + IntegerToString(runtime.primary_bucket_symbols_assessed)
-          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " assessed.");
+   return("Primary buckets loading first | compressed ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready)
+          + " | assessed " + IntegerToString(runtime.primary_bucket_symbols_assessed)
+          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + ".");
   }
 
 string ASC_ExplorerBackgroundCompletionText(const ASC_RuntimeState &runtime)
   {
    if(runtime.background_hydration_active)
-      return("Background completion continues for lower-priority symbols after Layer 1 readiness.");
+      return("Background completion continues without blocking navigation.");
    return("Background completion is caught up right now.");
   }
 
@@ -1165,7 +1165,7 @@ void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSet
 void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,const int x,const int y,const int w,const int chart_w,const int chart_h)
   {
    string base_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.");
-   string readiness_text="Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Initial " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count) + " | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count);
+   string readiness_text="Readiness " + IntegerToString(runtime.readiness_percent) + "% | Initial " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered) + " | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " | Primary Ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready);
    string status_text=base_text + " | " + readiness_text + " | Batch " + IntegerToString(prepared.diagnostics.last_prepared_batch_id) + " | " + prepared.diagnostics.active_hydration_priority_set + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
    ASC_ExplorerRect(ctx,"status.strip",x,y,w,ctx.theme.status_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,"status.bar",x,y,5,ctx.theme.status_height,(runtime.degraded ? ctx.theme.warning : ctx.theme.good),(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
@@ -1200,7 +1200,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
       ASC_ExplorerLabel(ctx,"compact.title","ASC Explorer HUD",ctx.theme.margin+12,ctx.theme.margin+12,ctx.theme.text,11);
       ASC_ExplorerLabel(ctx,"compact.server",ASC_ExplorerFitText("Server " + runtime.server_clean + " | View " + ASC_ExplorerViewText(ctx.nav.current_view),root_w-24),ctx.theme.margin+12,ctx.theme.margin+32,ctx.theme.muted);
       ASC_ExplorerLabel(ctx,"compact.state",ASC_ExplorerFitText("Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + " | Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),root_w-24),ctx.theme.margin+12,ctx.theme.margin+50,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.dim));
-      ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : ASC_RuntimeModeText(runtime.mode)) + " | Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
+      ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : ASC_RuntimeModeText(runtime.mode)) + " | Readiness " + IntegerToString(runtime.readiness_percent) + "% | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
       ASC_ExplorerEndFrame(ctx);
       ChartRedraw(ctx.chart_id);
       ASC_ExplorerCommitTiming(ctx,prepared);

@@ -47,7 +47,7 @@ Do not continue building on unresolved contradiction.
 |---|---|---:|---|---|
 | Office control | ACTIVE | 70% | compact office exists but task/state mapping is too shallow for current repo complexity | deepen task board, tighten stage ledger honesty, keep work log and SHA ledger in lockstep |
 | Blueprint canon | ACTIVE | 78% | strong ownership laws exist, but some active docs still describe identity/bucketing as reserved | update canon to reflect provisional active classification/bucketing without overstating maturity |
-| Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong | keep stable while ownership and explorer issues are corrected |
+| Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong, but warmup exit now needs explicit readiness-field doctrine instead of dossier-missing gating assumptions | keep stable while readiness wording and persistence stay aligned |
 | Market State Detection | WORKING | 88% | still the only fully working capability with real runtime truth | compile/test re-verify after any structural runtime change |
 | Classification catalog | ACTIVE-PROVISIONAL | 55% | standalone classification exists and drives buckets, but catalog quality is mixed and some mappings are too broad or wrong | audit classification truth before treating bucket output as trusted |
 | Dynamic buckets | ACTIVE-PROVISIONAL | 64% | membership is live/classification-driven, with the first operator surface compressed into six Layer 1 main buckets and now promoted through rolling prepared-state batches; deeper stock taxonomy still remains metadata-grade and incomplete | harden batch reuse, verify compile/runtime behavior in MT5, and keep richer stock metadata out of fake first-class bucket claims |
@@ -188,12 +188,12 @@ Before closing any future pass, explicitly check:
 4. codify runtime-prepared bucket truth and explorer-consumed snapshot law more explicitly
 
 ### Immediate task group C — runtime / explorer architecture
-1. preserve runtime-owned Layer 1 warmup threshold and background hydration truth
+1. preserve runtime-owned Layer 1 warmup threshold and background hydration truth using compressed-priority-bucket promotion plus configurable first-pass symbol coverage
 2. harden the new runtime-owned rolling prepared-state scaffold and batch reuse markers
 3. verify explorer render/click paths stay consumer-only against promoted last-good state
 4. reduce full chart-object delete/recreate churn where feasible
 5. keep explorer presentation-only after the refactor
-6. preserve compact Layer 1 diagnostics continuity in runtime state; decide later whether prepared-state persistence needs a dedicated artifact beyond summary metrics
+6. persist compact Layer 1 readiness continuity in runtime state, including total discovered, initial assessed, compressed-primary-ready, warmup minimum, background completion, and readiness percent
 
 ### Immediate task group D — classification truth
 1. compare active ASC classification to researched AFS source

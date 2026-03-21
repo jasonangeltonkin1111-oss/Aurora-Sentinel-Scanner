@@ -55,7 +55,8 @@ Determine whether each symbol is open, closed, uncertain, or unknown and decide 
 - compressed priority-set-1 buckets currently mean `FX_MAJOR`, `INDEX_US`, `INDEX_EUROPE`, `METALS_PRECIOUS`, `ENERGY`, and `CRYPTO_LARGE_CAP`
 - once that threshold is met, runtime promotes to `ASC_RUNTIME_STEADY` even if lower-priority symbols still need their first pass
 - lower-priority hydration may continue in the background and must be surfaced honestly as background preparation rather than keeping warmup active forever
-- runtime continuity and HUD surfaces must carry explicit warmup fields: initial symbols assessed, primary-bucket symbols assessed, warmup minimum met, warmup progress percent, and background hydration active
+- runtime continuity and HUD surfaces must carry explicit readiness fields: total symbols discovered, initial symbols assessed, compressed primary buckets ready, warmup minimum met, background completion active, and readiness percent
+- the warmup exit rule is Layer 1-only: all compressed priority-set-1 buckets must have promoted prepared truth and the first market-state assessment must cover the configured minimum share of discovered live symbols
 
 ## Capability 2 — Open Symbol Snapshot
 

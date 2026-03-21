@@ -1,5 +1,20 @@
 # Aurora Office Work Log
 
+## 2026-03-21 — ASC readiness-gated warmup continuity note
+### Why
+ASC warmup exit now depends on explicit Layer 1 readiness rather than dossier-missing heuristics, so Aurora continuity needs the upstream dependency recorded accurately.
+
+### What changed
+- recorded that ASC warmup now exits on promoted compressed priority-set-1 bucket truth plus configurable first-pass coverage of discovered live symbols
+- noted that lower-priority completion remains background work and should not be misread by Aurora as blocked readiness
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+Aurora control now tracks the sharper ASC readiness contract without changing ownership boundaries.
+
+
 ## 2026-03-21 — ASC explorer progressive hydration tracking alignment
 ### Why
 - ASC runtime and HUD work now depend on a progressive-fill contract for Layer 1 rather than full-completion gating

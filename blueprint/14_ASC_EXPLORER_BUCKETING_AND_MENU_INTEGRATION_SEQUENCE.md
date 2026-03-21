@@ -90,7 +90,7 @@ The system must now be implemented with the following binding rules:
 - changed truth persists atomically by owned section or prepared snapshot surface
 - explorer redraws reuse prepared snapshots until invalidated
 - focus change or exit removes elevated work promptly while preserving honest last-good display state
-- runtime-owned Layer 1 readiness must gate warmup versus steady mode using first-pass coverage of the live universe and compressed priority-set-1 buckets, not dossier-missing count alone
+- runtime-owned Layer 1 readiness must gate warmup versus steady mode using promoted prepared truth for compressed priority-set-1 buckets plus first-pass coverage of the configured minimum share of discovered live symbols, not dossier-missing count alone
 
 These rules apply generally across overview, bucket, symbol, stat, shortlist, deep-analysis, and Aurora-reserved surfaces.
 
@@ -166,8 +166,9 @@ The explorer and menu surfaces must now assume a two-stage Layer 1 startup model
 - `ASC_RUNTIME_STEADY` once the Layer 1 minimum readiness threshold is met
 
 That threshold should be interpreted as:
-- all currently discovered symbols inside compressed priority-set-1 buckets assessed at least once, and
-- a configurable minimum portion of the currently discovered live universe assessed at least once
+- all compressed priority-set-1 buckets have promoted prepared truth, and
+- a configurable minimum portion of the currently discovered live universe has completed a first market-state assessment
 
 After promotion, lower-priority first-pass work may continue as background hydration.
 HUD status and persisted continuity must keep this visible without forcing warmup to remain active forever.
+Persisted/readiness fields should include at least total symbols discovered, initial symbols assessed, compressed primary buckets ready, warmup minimum met, background completion active, and readiness percent.

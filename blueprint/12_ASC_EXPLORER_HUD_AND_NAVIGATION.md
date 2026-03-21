@@ -134,7 +134,7 @@ Should include:
 - server and server time
 - runtime state
 - current capability progress
-- Layer 1 readiness / warmup banner
+- Layer 1 readiness / warmup banner with explicit background-completion wording
 - bucket totals
 - target symbols
 - pending reason summary
@@ -170,7 +170,7 @@ Triggered by clicking a compressed Layer 1 bucket.
 Should show:
 - bucket summary header
 - top symbols in that bucket
-- readiness status
+- readiness status using explicit wording such as `Warmup active — initial market-state scan in progress`, `Primary buckets loading first`, and `Background completion continues without blocking navigation`
 - preserved second-level metadata such as `primary_bucket`, sector, industry, theme, and subtype for later drilldown
 - future regional stock grouping hints without promoting US/EU/HK groupings into first-class main pages
 - visible-window scrolling when the list exceeds the screen
@@ -197,6 +197,7 @@ Compressed bucket prepared state must report one of:
 Explorer rendering law for this flow:
 - the HUD consumes only promoted prepared truth
 - Priority 1 buckets become visible as soon as their promoted batch is ready
+- the overview/header wording must state when warmup is still active, when primary buckets are loading first, and when background completion continues without blocking navigation
 - the `Stocks` lane may appear before finer stock metadata is complete, and must truthfully show background enrich pending until Priority 3 promotion lands
 - page opening, bucket opening, symbol opening, and other navigation actions must not enqueue whole-universe hydration work
 - hydration progression remains runtime-owned and bounded to heartbeat/background flow
