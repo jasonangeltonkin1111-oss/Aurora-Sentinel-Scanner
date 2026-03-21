@@ -1,5 +1,39 @@
 # Aurora Office Work Log
 
+## 2026-03-21 — Aurora Wrapper Wave 3 wrapper-preparation and Blueprint knowledge-transfer pass
+### Why
+- deepen the compiled wrapper canon so it is more practically useful for a future GPT trader wrapper
+- transfer more execution/family/pattern/packet doctrine out of Blueprint hot dependence and into the existing wrapper packs
+- keep file count flat, kernel small, and bridge scope unchanged while improving retrieval clarity
+
+### What was reviewed
+- all current wrapper files under `Aurora Wrapper/`
+- official prompt / structure / long-context guidance used only to improve wrapper packaging discipline
+- active office/control files and latest run continuity
+- active execution-side object/workflow/status/enum/deployability/geometry/card/packet/review/opportunity/EA-boundary files
+- active family competition, pattern competition, family registry/system, current family cards, and current pattern cards
+- bridge contract, joint evolution protocol, and the real ASC intake anchor
+
+### What changed
+- kept wrapper file count at 10 and left the kernel untouched as a tiny router
+- deepened execution pack law around stop conditions, gating, opportunity-versus-deployability-versus-geometry separation, and review usage
+- deepened family and pattern vaults with stronger anti-habitat, suppressor, invalidity, competitor, and anti-confusion coverage
+- strengthened packet/example and bridge packs so illustrative-vs-real-case use, refusal behavior, and minimum upstream truth are clearer
+- strengthened settings, file map, control pack, and maintenance guide to better support targeted loading and safe future replacement
+- created `AURORA_RUN_065.md` and refreshed active metadata/control surfaces where the Wave 3 wrapper pass materially changed active operating truth
+
+### What was intentionally not done
+- did not widen the ASC contract
+- did not move source truth out of `Aurora Blueprint/`
+- did not increase wrapper file count beyond the existing 10-file structure
+- did not turn the wrapper into a source-workspace clone or giant monolithic prompt
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+- Aurora Wrapper is now more useful as a practical GPT-facing knowledge base while preserving low-clutter routing, replaceable pack boundaries, and source-truth fidelity
+
 ## 2026-03-21 — Aurora Wrapper Wave 2 fidelity audit and knowledge-transfer pass
 ### Why
 The first wrapper compilation wave created a sound low-file-count canon, but the packs still needed a fidelity audit against active Blueprint truth, stronger strategy-card/review/doctrine transfer, and refreshed run/control continuity.

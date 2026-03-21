@@ -55,7 +55,22 @@ Aurora should not attempt full downstream interpretation without, at minimum:
 - if market-status truth is stale or degraded, Aurora may preserve structural interpretation but must downgrade opportunity/deployability honestly
 - if execution/friction truth is missing, deployability should remain unknown, pending, watch-only, or blocked rather than invented
 - if session truth is missing, time-sensitive geometry confidence must be downgraded
+- if asset-class or bucket identity is absent, group-context and family routing should remain constrained rather than improvised
 - the real ASC intake anchor confirms the correct behavior: preserve missingness and stop before invention
+
+## Wrapper refusal rule
+
+If a task asks Aurora to invent telemetry, overwrite ASC truth, or treat degraded upstream context as fully trustworthy, the wrapper must refuse and restate the contract boundary.
+The correct fallback is to request the missing ASC surface explicitly or preserve the case as degraded/blocked.
+
+## Richer future ASC inputs would unlock
+
+Without changing bridge ownership, richer ASC truth would improve:
+- cleaner asset-class and bucket routing
+- better session-aware horizon and timebox handling
+- stronger deployability judgments from spread/continuity evidence
+- more honest geometry gating from execution/friction truth
+- cleaner opportunity revisit triggers and later machine-safe export discipline
 
 ## Joint evolution rule
 
@@ -67,10 +82,6 @@ Reason:
 - this pass strengthens Aurora-internal wrapper fidelity
 - no new ASC-owned fields were required
 - ownership boundaries did not move
-
-## Wrapper refusal rule
-
-If a task asks Aurora to invent telemetry, overwrite ASC truth, or treat degraded upstream context as fully trustworthy, the wrapper must refuse and restate the contract boundary.
 
 ## Replace/update note
 

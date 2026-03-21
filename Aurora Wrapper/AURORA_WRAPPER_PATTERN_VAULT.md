@@ -34,36 +34,49 @@ Canonical wrapper-visible outcomes:
 - `NO_VALID_PATTERN`
 - `INVALID_INPUT`
 
+## Pattern structure G1 through G5
+
+- `G1` = accepted break-and-hold expression of already credible release/continuation
+- `G2` = orderly continuation pullback inside still-valid directional authority
+- `G3` = compression-release expression inside a real breakout family route
+- `G4` = failed-break / reclaim expression inside a real trap-reversal family route
+- `G5` = range rejection / return-to-value expression inside a real rotational family route
+
 ## Current pattern canon
 
 ### G1 — Accepted Break and Hold
 - **Parent families:** mainly C-01 and C-03.
 - **Structural role:** successful acceptance outside prior containment; release is already holding.
 - **Native habitat:** directional discovery, trend expansion, balance-to-expansion transition with credible hold.
-- **Main anti-confusion:** do not label a failed excursion or weak hold as accepted break.
+- **Invalidity law:** weak persistence, failed acceptance, reclaim back through initiating structure, trap logic taking over.
+- **Main anti-confusion:** do not label a failed excursion, cheap spike, or exhausted late move as accepted break.
 
 ### G2 — Orderly Continuation Pullback
 - **Parent families:** mainly C-02, sometimes C-01.
 - **Structural role:** constructive retracement inside intact directional structure.
 - **Native habitat:** trend pullback with orderly restoration potential.
+- **Invalidity law:** retracement becomes deterioration, reversal logic dominates, balance re-forms, environment turns too unstable.
 - **Main anti-confusion:** do not misread messy reversal/exhaustion as orderly continuation pullback.
 
 ### G3 — Compression Release
 - **Parent families:** mainly C-03.
 - **Structural role:** local breakout-release expression from meaningful compression.
 - **Native habitat:** compression resolving into expansion or balance-to-break transition.
-- **Main anti-confusion:** do not use when expansion never truly confirms or compression was never real.
+- **Invalidity law:** containment was never truly clear, release does not persist, false-commitment logic dominates.
+- **Main anti-confusion:** do not use when expansion never confirms or compression was never real.
 
 ### G4 — Failed Break / Reclaim
 - **Parent families:** mainly C-04.
 - **Structural role:** failed release reverting through initiating structure with reclaim confirmation.
 - **Native habitat:** failed break/trap state, false release, rejection then reclaim.
-- **Main anti-confusion:** do not misclassify unresolved breakout drift as confirmed failed-break reclaim.
+- **Invalidity law:** reclaim not actually secured, renewed acceptance beyond original break restores continuation authority, unstable alternating false moves remove hierarchy.
+- **Main anti-confusion:** do not misclassify unresolved breakout drift, ordinary pullback, or unstable chop as confirmed failed-break reclaim.
 
 ### G5 — Range Rejection / Return to Value
 - **Parent families:** mainly C-05.
 - **Structural role:** rejection from range edge or failed excursion back toward accepted value.
 - **Native habitat:** balance/range, stable accepted rotational trade, meaningful range extremes.
+- **Invalidity law:** rejection weakens, breakout acceptance emerges, range stability degrades, directional migration dominates.
 - **Main anti-confusion:** do not use when price is actually leaving balance into trend or breakout discovery.
 
 ## Pattern preservation fields
@@ -76,6 +89,14 @@ For each candidate pattern, preserve:
 - invalidation logic
 - anti-confusions and false-positive risks
 - candidate visibility when not yet decisive
+
+## Pattern competition implications the wrapper must remember
+
+- a living family candidate can keep a weaker-but-plausible child pattern alive if rejection would require missing evidence
+- pattern competition can be deferred even when family competition is valid
+- unresolved pattern posture should remain explicit before geometry generation
+- pattern invalidity does not automatically rewrite the whole family read, but it can block opportunity narrowing and card emission
+- a pattern card is not permission to infer unsupported local structure from sparse context
 
 ## Canonical example anchor
 

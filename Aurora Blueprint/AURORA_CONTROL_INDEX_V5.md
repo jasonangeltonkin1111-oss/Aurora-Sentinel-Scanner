@@ -58,7 +58,7 @@ After the control stack, the primary active surfaces are:
 
 ## Active doctrine / protocol truth
 - `Aurora Wrapper/` is a compiled wrapper-facing canon derived from these active surfaces; it is operationally useful but not the source-truth owner.
-- The wrapper canon has completed a Wave 2 fidelity-audit refresh and remains a low-file-count compiled layer rather than a substitute workspace.
+- The wrapper canon has completed a Wave 3 preparation refresh and remains a low-file-count compiled layer rather than a substitute workspace.
 - current ledger base plus latest supplements not yet merged
 - current module map and book master index
 - current bridge, wrapper, deployability, geometry, generated-card, opportunity, and EA-boundary protocol files
