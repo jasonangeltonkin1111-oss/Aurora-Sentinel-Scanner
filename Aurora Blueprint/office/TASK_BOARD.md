@@ -6,6 +6,7 @@
 - The active need is not a rewrite; it is tighter control, clearer active/historical distinction, safer updates, and stronger machine precision.
 - Wave 2 remains the richest unconsolidated doctrine lane.
 - Wrapper/object/deployability/geometry surfaces are active and must stay synchronized with bridge and operator control files.
+- ASC explorer next-wave tracking now includes progressive Layer 1 hydration, promoted-bucket fill states, and strict no-page-open whole-universe enqueue law.
 - The wrapper canon now requires periodic fidelity-audit and wrapper-preparation passes so compiled packs do not drift from active Blueprint law and remain genuinely usable for GPT-facing operation.
 - The wrapper has now entered the owning-pack consolidation phase: useful manual content should live in the main packs, and transitional wrapper companion files should be removed once merged losslessly.
 
@@ -36,6 +37,7 @@
 6. propagate abundance law, opportunity-stage taxonomy, late-join legitimacy, and bucket-targeted growth rules through active Blueprint and wrapper surfaces
 7. only consider optional wrapper-tooling support if it stays off the default hot path and proves more useful than expanding current packs
 8. propagate the new status/enum alignment and packet/review law without widening ASC scope
+9. track the ASC explorer progressive-fill lane so next-wave Aurora work does not assume full-completion gating or page-open-triggered hydration
 
 ## Blocking rules
 

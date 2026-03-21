@@ -24,6 +24,7 @@
 - late-join and mid-progress opportunities are legitimate when remaining structure, deployability, and geometry truth still support them
 - operator-created archive mirrors under `archives/` are reference only and must never be treated as permission to remove active knowledge
 - the stable wrapper architecture target is the 13-file owning-pack model; transitional wrapper manuals may exist briefly as hardening scaffolds but should be merged back into their owner packs and then removed once the merge is lossless
+- ASC explorer next wave must keep progressive hydration runtime-owned: Layer 1 Priority 1 promotes first, Stocks/regional grouping second, finer stock metadata third, and page opening must never enqueue whole-universe hydration work
 
 ## Current bridge-check lock
 
