@@ -64,16 +64,25 @@ Determine whether each symbol is open, closed, uncertain, or unknown and decide 
 - `LAYER_2_OPEN_SYMBOL_SNAPSHOT`
 
 ### Purpose
-Capture a controlled snapshot of open symbols only.
+Capture a controlled snapshot of open symbols only. The current build prepares the Layer 2 runtime/publication contract but keeps the capability inactive.
 
 ### Owns
-- open-symbol snapshot assembly
-- static specs merge for open symbols
-- changing Market Watch snapshot writes on controlled cadence
-- atomic writes for snapshot-owned sections
+- reserved Layer 2 runtime/publication structs, readiness markers, and timestamp/pending-reason fields
+- reserved cadence settings mirrored from existing inputs so later activation can reuse stable names
+- later open-symbol snapshot assembly when the capability is activated
+- later static specs merge for open symbols
+- later changing Market Watch snapshot writes on controlled cadence
+- later atomic writes for snapshot-owned sections
 - later focus-safe elevation only for snapshot-owned fields that are both relevant and stale
 
+### Activation posture
+- next capability prepared: yes
+- active in runtime sequence: no
+- allowed in this repo pass: scaffolding only, with no live compute or broad refresh behavior
+
 ### Does not own
+- live snapshot compute while Layer 2 is still inactive
+- history pulls or broad open-symbol refresh loops before activation
 - candidate filtering
 - shortlist ranking
 - deep selective analysis

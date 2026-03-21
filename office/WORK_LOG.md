@@ -1,3 +1,18 @@
+## 2026-03-21 — Layer 2 reserved scaffolding pass
+
+### Why
+Open Symbol Snapshot was the next planned capability, but the runtime and publication surfaces still lacked stable Layer 2 names for readiness, last-built, pending-reason, and reserved cadence markers. The repo needed insertion-safe scaffolding without accidentally activating snapshot behavior early.
+
+### What changed
+- bumped the wrapper to 1.122 for this runtime and control-surface Layer 2 preparation pass
+- added reserved Open Symbol Snapshot runtime structs/status markers in the flat MT5 common surface for readiness, last-built timestamp, pending reason, and mirrored reserved cadence settings
+- extended runtime continuity and dossier publication scaffolding so Layer 2 fields can persist and publish later without renaming churn
+- tightened active blueprint and task-board wording so Layer 2 is explicitly prepared as the next capability but still inactive and blocked from live compute, history pulls, and broad refresh loops
+
+### Result
+Layer 2 now has stable reserved insertion points across runtime state, continuity, and dossier publication, while actual Open Symbol Snapshot behavior remains inactive by design.
+
+---
 # Work Log
 
 This file is append-only.

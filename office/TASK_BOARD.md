@@ -173,6 +173,11 @@ Before closing any future pass, explicitly check:
 9. much later: Open Symbol Snapshot promotion
 10. later still: Candidate Filtering / Shortlist / Aurora downstream work
 
+## Layer 2 posture guardrail
+
+- **Layer 2 preparation ready:** reserved runtime structs, status markers, publication slots, and mirrored cadence inputs may exist now so Open Symbol Snapshot can be inserted later without renaming churn.
+- **Layer 2 activation blocked:** no live snapshot compute, no history pulls, no broad open-symbol refresh loop, and no dossier/runtime wording may describe Layer 2 as active behavior.
+
 ## Immediate next tasks
 
 ### Immediate task group A — office and control truth

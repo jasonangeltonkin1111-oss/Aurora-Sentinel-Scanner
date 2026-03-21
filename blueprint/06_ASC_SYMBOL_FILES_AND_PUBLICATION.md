@@ -10,11 +10,12 @@ They are created early and fill gradually as capabilities do their work.
 The symbol file exists before the summary.
 The summary is downstream and later.
 Market State Detection must not create the final ranked summary.
+Reserved Layer 2 publication scaffolding may exist before activation, but it must stay explicitly inactive and must not imply live snapshot compute.
 
 ## Evolution model
 
 1. Market State Detection creates the base file and reserved capability sections
-2. Open Symbol Snapshot adds snapshot content
+2. Open Symbol Snapshot later adds snapshot content; current runtime only carries reserved Layer 2 scaffolding so activation can land without renaming churn
 3. Candidate Filtering adds filter content
 4. Shortlist Selection adds shortlist content
 5. Deep Selective Analysis adds deep-analysis content
@@ -42,7 +43,7 @@ Each section has one owner.
 
 Examples:
 - Market State Detection writes only its owned state and the reserved scaffolding it owns
-- Open Symbol Snapshot writes only snapshot state
+- Open Symbol Snapshot writes only snapshot state when activated; until then the dossier/runtime may expose reserved readiness, last-built, pending-reason, and cadence markers only
 - Shortlist Selection writes only shortlist state
 - the HUD writes nothing to symbol files
 
