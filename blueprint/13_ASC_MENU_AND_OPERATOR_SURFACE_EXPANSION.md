@@ -198,7 +198,14 @@ Examples of explorer-only quick actions:
 - View Density toggle
 - Refresh display
 
-For Layer 1 bucket surfaces, the right rail must own `All Symbols` and `Open Only`. That explorer-owned filter must stay global across compressed bucket-list visibility, bucket-detail symbol visibility, and zero-open bucket suppression in `Open Only` mode.
+For Layer 1 bucket surfaces, the right rail must own `All Symbols` and `Open Only` as the canonical Layer 1 market-filter state.
+That explorer-owned filter must stay global across:
+- compressed bucket-list visibility
+- bucket-detail symbol visibility
+- zero-open bucket suppression in `Open Only` mode
+- any bucket summary percentages shown to operators
+
+Detail pages may echo the active filter state for orientation, but they must not create competing local filter surfaces.
 
 The menu should not be used as the substitute for click navigation.
 
