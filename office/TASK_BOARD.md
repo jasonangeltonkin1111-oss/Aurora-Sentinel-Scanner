@@ -8,6 +8,7 @@
 - Market State Detection remains the only fully working capability
 - standalone classification and dynamic bucket generation are now active but still provisional and not yet correctly runtime-owned
 - Explorer HUD is materially advanced, but it still violates the intended ownership boundary by rebuilding bucket truth in explorer-side code paths
+- debug observability for prepared buckets/HUD is now active as a debug-only lane and must stay threshold-based rather than becoming normal-log spam
 - ASC-to-Aurora separation remains structurally good and must be preserved while upstream scanner truth is hardened
 - ranking, shortlist, strategy logic, execution logic, and account logic remain blocked
 
@@ -206,7 +207,8 @@ Before closing any future pass, explicitly check:
 2. verify compile status
 3. verify startup / restore / heartbeat / dossier / summary behavior
 4. verify HUD responsiveness and bucket behavior using uploaded logs/results
-5. prefer testing after ownership fixes before more visual polishing
+5. verify the debug observability lane in debug verbosity: prep summary threshold lines, render/page-switch threshold lines, warmup transition reasons, unchanged-batch rewrite signals, last-good preservation, Open Only visibility anomalies, and bounded-work severity buckets
+6. prefer testing after ownership fixes before more visual polishing
 
 ## Blocking rules
 

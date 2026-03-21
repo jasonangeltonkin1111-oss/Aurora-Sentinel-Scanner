@@ -1079,6 +1079,36 @@ void ASC_ExplorerMaybeStartPageSwitchTiming(ASC_ExplorerContext &ctx,const strin
       ASC_ExplorerMarkPageSwitchTiming(ctx,action_name);
   }
 
+void ASC_ExplorerDebugLogTiming(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared,ASC_Logger &logger)
+  {
+   if(ctx.nav.last_render_duration_ms>=ASC_DEBUG_RENDER_THRESHOLD_MS)
+     {
+      string dominant=(prepared.diagnostics.bucket_prep_total_ms>ctx.nav.last_render_duration_ms+ASC_DEBUG_DOMINANT_DELTA_MS ? "prep" : (ctx.nav.last_render_duration_ms>prepared.diagnostics.bucket_prep_total_ms+ASC_DEBUG_DOMINANT_DELTA_MS ? "hud" : "mixed"));
+      logger.Debug("Diagnostics","render time over threshold | render=" + IntegerToString((int)ctx.nav.last_render_duration_ms) + "ms | prep=" + IntegerToString((int)prepared.diagnostics.bucket_prep_total_ms) + "ms | dominant=" + dominant + " | view=" + ASC_ExplorerViewText(ctx.nav.current_view));
+     }
+   if(ctx.nav.last_page_switch_action_to_render_ms>=ASC_DEBUG_PAGE_SWITCH_THRESHOLD_MS)
+      logger.Debug("Diagnostics","page-switch latency over threshold | action=" + (ctx.nav.pending_page_switch_action=="" ? "none" : ctx.nav.pending_page_switch_action) + " | latency=" + IntegerToString((int)ctx.nav.last_page_switch_action_to_render_ms) + "ms | render=" + IntegerToString((int)ctx.nav.last_render_duration_ms) + "ms | prep=" + IntegerToString((int)prepared.diagnostics.bucket_prep_total_ms) + "ms");
+  }
+
+void ASC_ExplorerDebugLogFilterVisibility(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared,ASC_Logger &logger)
+  {
+   static int s_last_open_visible=-1;
+   if(ctx.nav.market_filter!=ASC_EXPLORER_FILTER_OPEN_ONLY)
+      return;
+   int open_visible=ASC_PreparedVisibleOpenBucketTotal(prepared);
+   if(open_visible<=0)
+      logger.Debug("Diagnostics","filter-visible bucket count under Open Only = 0 | verify no zero-open buckets are shown");
+   if(s_last_open_visible>=0 && open_visible!=s_last_open_visible)
+      logger.Debug("Diagnostics","filter-visible bucket count changed unexpectedly | filter=Open Only | visible=" + IntegerToString(s_last_open_visible) + "->" + IntegerToString(open_visible));
+   s_last_open_visible=open_visible;
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+     {
+      bool visible=ASC_PreparedBucketVisible(prepared.buckets[i],ASC_EXPLORER_FILTER_OPEN_ONLY);
+      if(visible && prepared.buckets[i].open_symbol_count<=0)
+         logger.Debug("Diagnostics","filter-visible bucket count changed unexpectedly | filter=Open Only | bucket=" + prepared.buckets[i].bucket_id + " | open_count=" + IntegerToString(prepared.buckets[i].open_symbol_count));
+     }
+  }
+
 void ASC_ExplorerCommitTiming(ASC_ExplorerContext &ctx,ASC_PreparedBucketState &prepared)
   {
    ctx.nav.last_render_duration_ms=GetTickCount()-ctx.nav.last_render_started_ms;
@@ -1218,6 +1248,8 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
       ASC_ExplorerEndFrame(ctx);
       ChartRedraw(ctx.chart_id);
       ASC_ExplorerCommitTiming(ctx,prepared);
+      ASC_ExplorerDebugLogTiming(ctx,prepared,logger);
+      ASC_ExplorerDebugLogFilterVisibility(ctx,prepared,logger);
       ctx.nav.dirty=false;
       return;
      }
@@ -1259,6 +1291,8 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
    ASC_ExplorerEndFrame(ctx);
    ChartRedraw(ctx.chart_id);
    ASC_ExplorerCommitTiming(ctx,prepared);
+   ASC_ExplorerDebugLogTiming(ctx,prepared,logger);
+   ASC_ExplorerDebugLogFilterVisibility(ctx,prepared,logger);
    ctx.nav.dirty=false;
   }
 
@@ -1404,6 +1438,8 @@ void ASC_ExplorerHandleAction(ASC_ExplorerContext &ctx,ASC_RuntimeSettings &sett
       ctx.nav.bucket_page=0;
       ctx.nav.bucket_symbol_page=0;
       ctx.nav.dirty=true;
+      int open_visible=ASC_PreparedVisibleOpenBucketTotal(prepared);
+      logger.Debug("Diagnostics","filter-visible bucket count under Open Only | visible=" + IntegerToString(open_visible));
      }
    else if(StringFind(action,"action.bucket_page.")==0)
      {

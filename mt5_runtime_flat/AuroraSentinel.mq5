@@ -1,7 +1,7 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.122
+// Wrapper Version: 1.121
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
@@ -115,6 +115,9 @@ int g_last_logged_warmup_progress=-1;
 string g_last_logged_bounded_work_summary="";
 string g_last_logged_hydration_priority_set="";
 int g_last_logged_prepared_batch_id=-1;
+bool g_last_logged_warmup_minimum_met=false;
+bool g_last_logged_primary_buckets_ready=false;
+bool g_last_logged_background_hydration_active=false;
 
 ASC_LogVerbosity ASC_InputVerbosity(const int value)
   {
@@ -218,13 +221,49 @@ bool ASC_HydrationShouldAdvance(const ASC_PreparedBucketState &prepared,const in
    return(true);
   }
 
+string ASC_DebugBacklogSeverityText(const int due_now,const int budget)
+  {
+   if(due_now<=0)
+      return("clear");
+   int safe_budget=(budget>0 ? budget : 1);
+   if(due_now>=(safe_budget*ASC_DEBUG_BACKLOG_SEVERE_MULTIPLIER))
+      return("severe");
+   if(due_now>=(safe_budget*ASC_DEBUG_BACKLOG_ELEVATED_MULTIPLIER))
+      return("elevated");
+   if(due_now>safe_budget)
+      return("watch");
+   return("within-budget");
+  }
+
+void ASC_DebugLogWarmupTransition(void)
+  {
+   bool minimum_changed=(g_last_logged_warmup_minimum_met!=g_runtime.warmup_minimum_met);
+   bool primary_changed=(g_last_logged_primary_buckets_ready!=g_runtime.compressed_primary_buckets_ready);
+   bool background_changed=(g_last_logged_background_hydration_active!=g_runtime.background_hydration_active);
+   if(!minimum_changed && !primary_changed && !background_changed)
+      return;
+
+   int minimum_assessed=ASC_PercentOfCountCeil(g_symbol_count,g_settings.warmup_minimum_universe_percent);
+   string reason="minimum_assessed=" + IntegerToString(minimum_assessed)
+      + ", assessed=" + IntegerToString(g_runtime.initial_symbols_assessed) + "/" + IntegerToString(g_runtime.total_symbols_discovered)
+      + ", primary=" + IntegerToString(g_runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(g_runtime.primary_bucket_symbol_count)
+      + ", primary_batches_ready=" + ASC_BoolText(g_runtime.compressed_primary_buckets_ready)
+      + ", warmup_minimum_met=" + ASC_BoolText(g_runtime.warmup_minimum_met)
+      + ", background_hydration=" + ASC_BoolText(g_runtime.background_hydration_active)
+      + ", readiness=" + IntegerToString(g_runtime.readiness_percent) + "%";
+   g_logger.Debug("Diagnostics","warmup-state transition | mode=" + ASC_RuntimeModeText(g_runtime.mode) + " | " + reason);
+   g_last_logged_warmup_minimum_met=g_runtime.warmup_minimum_met;
+   g_last_logged_primary_buckets_ready=g_runtime.compressed_primary_buckets_ready;
+   g_last_logged_background_hydration_active=g_runtime.background_hydration_active;
+  }
+
 void ASC_LogPreparedDiagnosticsSummary(const string reason)
   {
    bool warmup_changed=(g_last_logged_warmup_progress!=g_runtime.warmup_progress_percent);
    bool pressure_changed=ASC_LogMaterialStringChange(g_last_logged_bounded_work_summary,g_prepared_buckets.diagnostics.bounded_work_pressure_summary);
    bool priority_changed=ASC_LogMaterialStringChange(g_last_logged_hydration_priority_set,g_prepared_buckets.diagnostics.active_hydration_priority_set);
    bool batch_changed=(g_last_logged_prepared_batch_id!=g_prepared_buckets.diagnostics.last_prepared_batch_id);
-   bool threshold_hit=(g_prepared_buckets.diagnostics.bucket_prep_total_ms>=25
+   bool threshold_hit=(g_prepared_buckets.diagnostics.bucket_prep_total_ms>=ASC_DEBUG_PREP_SUMMARY_THRESHOLD_MS
                        || g_prepared_buckets.diagnostics.classification_loop_ms>=15
                        || g_prepared_buckets.diagnostics.bucket_sort_ms>=10
                        || g_prepared_buckets.diagnostics.prepared_symbol_reorder_ms>=10
@@ -244,11 +283,9 @@ void ASC_LogPreparedDiagnosticsSummary(const string reason)
          + " | batch=" + IntegerToString(g_prepared_buckets.diagnostics.last_prepared_batch_id)
          + " (" + ASC_LogChangedText(batch_changed) + ")"
          + " | hydration=" + g_prepared_buckets.diagnostics.active_hydration_priority_set
-         + " (" + ASC_LogChangedText(priority_changed) + ")";
-      if(threshold_hit)
-         g_logger.Warn("Diagnostics",message);
-      else
-         g_logger.Info("Diagnostics",message);
+         + " (" + ASC_LogChangedText(priority_changed) + ")"
+         + " | dominant=" + (g_prepared_buckets.diagnostics.bucket_prep_total_ms>g_prepared_buckets.diagnostics.hud_render_ms+ASC_DEBUG_DOMINANT_DELTA_MS ? "prep" : (g_prepared_buckets.diagnostics.hud_render_ms>g_prepared_buckets.diagnostics.bucket_prep_total_ms+ASC_DEBUG_DOMINANT_DELTA_MS ? "hud" : "mixed"));
+      g_logger.Debug("Diagnostics",message);
      }
    g_last_logged_warmup_progress=g_runtime.warmup_progress_percent;
    g_last_logged_bounded_work_summary=g_prepared_buckets.diagnostics.bounded_work_pressure_summary;
@@ -264,17 +301,16 @@ void ASC_LogHeartbeatDiagnosticsSummary(const int initial_due,const int remainin
                        || remaining_due>=g_backlog_attention_threshold);
    if(pressure_changed || warmup_changed || threshold_hit)
      {
+      string severity=ASC_DebugBacklogSeverityText(remaining_due,g_settings.symbol_budget_per_heartbeat);
       string message="dispatch=" + IntegerToString((int)g_runtime.diagnostics.last_heartbeat_dispatch_ms) + "ms"
          + " | due=" + IntegerToString(initial_due)
          + " -> " + IntegerToString(remaining_due)
+         + " | severity=" + severity
          + " | warmup=" + IntegerToString(g_runtime.diagnostics.warmup_progress_percent) + "%"
          + " (" + ASC_LogChangedText(warmup_changed) + ")"
          + " | pressure=" + g_runtime.diagnostics.bounded_work_pressure_summary
          + " (" + ASC_LogChangedText(pressure_changed) + ")";
-      if(threshold_hit)
-         g_logger.Warn("HeartbeatDiag",message);
-      else
-         g_logger.Info("HeartbeatDiag",message);
+      g_logger.Debug("Diagnostics","bounded-work backlog severity bucket | " + message);
      }
    g_last_logged_warmup_progress=g_runtime.diagnostics.warmup_progress_percent;
    g_last_logged_bounded_work_summary=g_runtime.diagnostics.bounded_work_pressure_summary;
@@ -309,8 +345,16 @@ void ASC_RunPreparedHydrationController(const string reason)
      }
 
    long promotion_started_ms=GetTickCount();
+   int previous_generation=g_prepared_buckets.batch_generation;
+   int previous_last_good_batch=g_prepared_buckets.last_good_batch_id;
+   bool unchanged_batch=(ASC_PreparedBatchMatches(g_prepared_working_buckets,g_prepared_buckets,batch_id)
+                         || ASC_PreparedBatchMatches(g_prepared_working_buckets,g_prepared_last_good_buckets,batch_id));
    ASC_PromotePreparedBucketState(g_prepared_working_buckets,batch_id,g_prepared_last_good_buckets,g_prepared_buckets);
    g_prepared_buckets.diagnostics.final_promotion_ms=GetTickCount()-promotion_started_ms;
+   if(unchanged_batch)
+      g_logger.Debug("Diagnostics","unchanged batch rewritten | reason=" + reason + " | batch=" + ASC_PreparedBatchName(batch_id) + " | generation=" + IntegerToString(previous_generation) + "->" + IntegerToString(g_prepared_buckets.batch_generation));
+   if(previous_last_good_batch!=g_prepared_buckets.last_good_batch_id)
+      g_logger.Debug("Diagnostics","batch promotion preserved last-good truth | reason=" + reason + " | promoted=" + ASC_PreparedBatchName(batch_id) + " | last_good_batch=" + IntegerToString(previous_last_good_batch) + "->" + IntegerToString(g_prepared_buckets.last_good_batch_id));
    g_prepared_buckets.diagnostics.bucket_prep_total_ms=GetTickCount()-prep_started_ms;
    ASC_SyncPreparedRuntimeMetadata();
    g_prepared_next_batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
@@ -318,6 +362,7 @@ void ASC_RunPreparedHydrationController(const string reason)
    g_runtime.runtime_dirty=true;
    g_logger.Debug("Hydration","reason=" + reason + ", promoted batch=" + ASC_PreparedBatchName(batch_id) + " | planner=" + ASC_HydrationPrioritySetText(g_prepared_next_batch_id));
    ASC_LogPreparedDiagnosticsSummary(reason);
+   ASC_DebugLogWarmupTransition();
   }
 
 void ASC_SyncPreparedRuntimeMetadata(void)
@@ -602,6 +647,7 @@ void ASC_UpdateRuntimeMode(void)
       g_runtime.mode=ASC_RUNTIME_WARMUP;
    else
       g_runtime.mode=ASC_RUNTIME_STEADY;
+   ASC_DebugLogWarmupTransition();
   }
 
 void ASC_LogSchedulerDecision(const ASC_SymbolState &state)

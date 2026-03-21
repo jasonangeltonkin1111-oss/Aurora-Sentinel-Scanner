@@ -210,6 +210,40 @@ A healthy Market State Detection test run should make it easy to find:
 - explicit focus elevation / downgrade signals once focus-scoped refresh exists
 - snapshot reuse or invalidation traces when explorer boundary diagnostics are enabled
 
+
+## Debug observability lane for explorer and warmup verification
+
+Use this lane only with `Log Verbosity` set to `Debug`. It exists to verify where explorer latency occurs, whether batch promotion preserves last-good truth, whether warmup exits on the right evidence, and whether Open Only stays tied to non-zero-open bucket truth.
+
+### Debug procedure
+
+1. Start the EA with Explorer HUD enabled and `Log Verbosity = Debug`.
+2. Let the runtime boot through warmup until at least one prepared batch promotes.
+3. Watch the log for `warmup-state transition` lines while initial assessed share and compressed primary-bucket readiness move.
+4. Navigate across Overview, Buckets, Bucket Detail, Symbol Detail, and back again to trigger `page-switch latency over threshold` and `render time over threshold` lines when navigation is materially slow.
+5. Toggle `Open Only` on and off while primary buckets contain a mix of open and closed symbols. The debug lane should report visible Open Only bucket counts and should only emit an anomaly line when a zero-open bucket would have been shown.
+6. Leave the terminal idle long enough for repeated hydration/controller passes without meaningful truth changes. If a batch is promoted again with identical batch truth, the log should emit `unchanged batch rewritten` so churn can be traced.
+7. Create bounded-work pressure by enlarging the symbol universe or lowering the per-heartbeat budget. The runtime should emit `bounded-work backlog severity bucket` with watch/elevated/severe posture rather than only raw counts.
+
+### Expected debug signals
+
+- `prep phase summary over threshold` behavior appears through the prepared diagnostics summary when prep, classify, sort, reorder, or promote phases cross their debug thresholds, and the line now declares whether prep or HUD render is dominant.
+- `render time over threshold` shows total HUD render time, the paired prep time, the current view, and whether HUD or prep is dominant.
+- `page-switch latency over threshold` shows the action name plus nav-to-render latency so slow page switches can be separated from pure prep or pure render cost.
+- `unchanged batch rewritten` signals prepared-state churn when a promoted batch matches active or last-good batch truth.
+- `batch promotion preserved last-good truth` confirms that rolling promotion kept prior last-good truth intact when a new batch promoted.
+- `filter-visible bucket count changed unexpectedly` or `filter-visible bucket count under Open Only = 0` are the key signals for verifying that Open Only never shows zero-open buckets.
+- `warmup-state transition` states the exact readiness evidence used for mode changes: minimum assessed threshold, assessed counts, primary assessed counts, primary batch readiness, background hydration state, and readiness percent.
+- `bounded-work backlog severity bucket` bins pressure into `within-budget`, `watch`, `elevated`, or `severe` so backlog posture can be seen quickly.
+
+### Interpretation guide
+
+- If `page-switch latency over threshold` fires while prep is low and render is high, investigate HUD object churn first.
+- If prepared summaries show `dominant=prep`, investigate classification, bucket rebuild, sort, reorder, or promotion work before tuning HUD layout.
+- If `unchanged batch rewritten` fires repeatedly without corresponding market-state or classification movement, prepared-state reuse is still too churn-heavy.
+- If a `warmup-state transition` reaches steady mode before compressed primary buckets are ready, that is a bug. If it never transitions despite the logged criteria being met, that is also a bug.
+- If `filter-visible bucket count changed unexpectedly` fires under Open Only, treat it as an ownership/truth regression until disproved.
+
 ## Version bump discipline
 
 Every meaningful edit to the wrapper, menu, or explorer contract must bump version.
