@@ -2,11 +2,11 @@
 
 ## Current repo posture
 
-- active blueprint canon exists and remains the authoritative ASC design surface, but parts of the canon are now stale relative to runtime truth and must be corrected
+- active blueprint canon exists and remains the authoritative ASC design surface, and its identity/bucketing wording is now aligned to current runtime truth
 - flat MT5 foundation exists and remains the active runtime surface
 - office normalization is active and now needs stricter task/state/ledger discipline
 - Market State Detection remains the only fully working capability
-- standalone classification and dynamic bucket generation are now active but still provisional and not yet correctly runtime-owned
+- standalone classification and dynamic bucket generation are now active but still provisional; prepared bucket truth now exists for Layer 1 explorer use and must stay runtime-owned
 - Explorer HUD is materially advanced, but it still violates the intended ownership boundary by rebuilding bucket truth in explorer-side code paths
 - debug observability for prepared buckets/HUD is now active as a debug-only lane and must stay threshold-based rather than becoming normal-log spam
 - ASC-to-Aurora separation remains structurally good and must be preserved while upstream scanner truth is hardened
@@ -47,13 +47,13 @@ Do not continue building on unresolved contradiction.
 | STREAM | STATUS | MATURITY | CURRENT TRUTH | NEXT REQUIRED ACTION |
 |---|---|---:|---|---|
 | Office control | ACTIVE | 70% | compact office exists but task/state mapping is too shallow for current repo complexity | deepen task board, tighten stage ledger honesty, keep work log and SHA ledger in lockstep |
-| Blueprint canon | ACTIVE | 78% | strong ownership laws exist, but some active docs still describe identity/bucketing as reserved | update canon to reflect provisional active classification/bucketing without overstating maturity |
+| Blueprint canon | ACTIVE | 80% | strong ownership laws exist and identity/bucketing wording now reflects active-but-provisional runtime truth with runtime-prepared, explorer-consumed Layer 1 bucket surfaces | keep canon aligned as architecture hardening continues |
 | Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong, but warmup exit now needs explicit readiness-field doctrine instead of dossier-missing gating assumptions | keep stable while readiness wording and persistence stay aligned |
 | Market State Detection | WORKING | 88% | still the only fully working capability with real runtime truth | compile/test re-verify after any structural runtime change |
 | Classification catalog | ACTIVE-PROVISIONAL | 55% | standalone classification exists and drives buckets, but catalog quality is mixed and some mappings are too broad or wrong | audit classification truth before treating bucket output as trusted |
 | Dynamic buckets | ACTIVE-PROVISIONAL | 64% | membership is live/classification-driven, with the first operator surface compressed into six Layer 1 main buckets and now promoted through rolling prepared-state batches that carry explicit working, last-good, pending, and reuse markers; deeper stock taxonomy still remains metadata-grade and incomplete | harden batch reuse, verify compile/runtime behavior in MT5, and keep richer stock metadata out of fake first-class bucket claims |
 | Explorer HUD | ACTIVE-FRAGILE | 52% | advanced navigation and layout exist, but render/delete churn and bucket recompute-in-render are still architectural faults | fix ownership boundary first, then performance, then behavior/layout polish |
-| Dossiers and summary | ACTIVE | 76% | atomic publication and scaffold output exist, but wording still understates active provisional identity work | update wording to reflect current truth honestly |
+| Dossiers and summary | ACTIVE | 79% | atomic publication and scaffold output now states identity/bucketing is active-but-provisional, Layer 1 prepared bucket truth is active, and later capabilities remain reserved | keep publication wording aligned if runtime ownership changes again |
 | ASC ⇄ Aurora bridge | ACTIVE | 80% | separation is still good and future insertion points remain preserved | preserve boundary while tightening upstream truth discipline |
 | Deep intelligence | BLOCKED | 0% | not allowed to activate yet | keep blocked |
 | Trade / account logic | BLOCKED | 0% | not part of ASC foundation | keep blocked |
@@ -76,12 +76,12 @@ These must not be destabilized while fixing explorer and classification problems
 ### 1. Blueprint hardening
 Half-done because:
 - modern ownership laws exist
-- but active docs still contain stale “reserved / not implemented” wording around identity and bucketing
+- active docs now describe identity/bucketing as active-but-provisional, but that wording still needs to stay synchronized with runtime ownership changes
 
 Still needed:
-- update blueprint sections that describe identity/bucketing maturity
-- define classification/bucketing as active-but-provisional
-- make runtime-prepared snapshot law explicit for bucket truth
+- keep blueprint sections synchronized with runtime ownership and publication wording
+- preserve classification/bucketing as active-but-provisional without overstating trust
+- keep runtime-prepared snapshot law explicit for bucket truth
 
 ### 2. Classification activation
 Half-done because:
@@ -188,10 +188,10 @@ Before closing any future pass, explicitly check:
 5. keep office compact; do not create more root office files unless a truly new long-lived role exists
 
 ### Immediate task group B — blueprint truth correction
-1. update blueprint sections that still describe identity/bucketing as fully reserved
+1. keep blueprint wording aligned with runtime when identity/bucketing posture changes again
 2. keep Market State Detection as the only fully working capability
-3. describe classification and dynamic buckets as active but provisional
-4. codify runtime-prepared bucket truth and explorer-consumed snapshot law more explicitly
+3. preserve classification and dynamic buckets as active but provisional
+4. preserve runtime-prepared bucket truth and explorer-consumed snapshot law explicitly
 
 ### Immediate task group C — runtime / explorer architecture
 1. preserve runtime-owned Layer 1 warmup threshold and background hydration truth using compressed-priority-bucket promotion plus configurable first-pass symbol coverage

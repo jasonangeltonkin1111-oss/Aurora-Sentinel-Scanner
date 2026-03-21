@@ -69,7 +69,7 @@ Current status:
 - prepared bucket truth is runtime-owned and explorer-consumed
 - not yet trusted as fully mature downstream identity truth
 
-This capability is active enough to support the current Explorer bucket flow, but taxonomy depth, confidence posture, and publication wording still need hardening before later downstream systems should treat it as fully trusted identity truth.
+This capability is active enough to support the current Explorer bucket flow, but Market State Detection remains the only fully working capability. Taxonomy depth, confidence posture, and publication wording still need hardening before later downstream systems should treat identity/bucketing as fully trusted identity truth.
 
 ## Capability ownership
 
@@ -219,7 +219,7 @@ It should consume already prepared identity records and prepared bucket snapshot
 
 ## Publication implications
 
-Future dossiers should be able to expose a reserved or active identity section containing:
+Future dossiers should expose an active-but-provisional identity/bucketing section for current Layer 1 explorer use while keeping later capability sections reserved. That section should contain:
 - raw symbol
 - canonical symbol
 - display name

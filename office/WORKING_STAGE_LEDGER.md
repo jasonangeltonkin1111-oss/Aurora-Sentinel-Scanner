@@ -10,7 +10,7 @@ Compact regression ledger for the current ASC foundation. This file is operation
 4. Shortlist Selection — **reserved**
 5. Deep Selective Analysis — **reserved**
 
-The sequence above remains active canon for debugging and future implementation order. Only Market State Detection currently owns fully working live behavior.
+The sequence above remains active canon for debugging and future implementation order. Only Market State Detection currently owns fully working live behavior; classification/bucketing and prepared Layer 1 bucket truth are active but provisional.
 
 ## Working items
 
@@ -129,7 +129,7 @@ The sequence above remains active canon for debugging and future implementation 
 
 ### Explorer HUD shell
 - **Status:** working but structurally fragile
-- **Pass:** the explorer owns only its prefixed chart objects, resolves symbols safely, keeps Open Only tied strictly to resolved live `Open` symbols, and falls back compactly on tight viewports.
+- **Pass:** the explorer owns only its prefixed chart objects, resolves symbols safely, keeps Open Only tied strictly to resolved live `Open` symbols, falls back compactly on tight viewports, and consumes runtime-prepared Layer 1 bucket truth without owning deeper compute.
 - **Break symptoms:** chart clutter overlaps unrelated objects, page buttons overrun the viewport, Open Only shows buckets with no resolved live open symbols, canonical placeholders are counted as live membership, or small/odd chart sizes produce silent blank renders.
 - **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Common.mqh`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
 - **Regression warning:** do not describe the explorer as presentation-only unless render and click paths stop preparing bucket truth. Do not move scanner computation into button handlers. Do not widen normalization beyond evidenced patterns.
