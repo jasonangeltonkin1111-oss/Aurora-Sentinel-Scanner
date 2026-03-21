@@ -166,7 +166,10 @@ bool ASC_ExplorerObjectTracked(const string &objects[],const string name)
 
 void ASC_ExplorerBeginFrame(ASC_ExplorerContext &ctx)
   {
-   ctx.previous_frame_objects=ctx.frame_objects;
+   int total=ArraySize(ctx.frame_objects);
+   ArrayResize(ctx.previous_frame_objects,total);
+   for(int i=0;i<total;i++)
+      ctx.previous_frame_objects[i]=ctx.frame_objects[i];
    ArrayResize(ctx.frame_objects,0);
   }
 
