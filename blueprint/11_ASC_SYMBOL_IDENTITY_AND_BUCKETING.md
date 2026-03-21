@@ -173,7 +173,7 @@ It should support:
 
 Primary bucket remains the rich taxonomy truth for classification.
 The first operator surface must map that richer truth into exactly six compressed Layer 1 main buckets: `FX`, `Indices`, `Metals`, `Energy`, `Crypto`, and `Stocks`.
-Sector, industry, theme, and subtype remain secondary but should be preserved for future drilldown, later regional stock grouping such as US/EU/HK, and Aurora context.
+Sector, industry, theme, and subtype remain secondary and must be preserved alongside canonical symbol metadata for future drilldown, later regional stock grouping such as `US Stocks`, `EU Stocks`, and `HK Stocks`, and Aurora context.
 
 ## Dynamic bucket preparation law
 
@@ -187,7 +187,7 @@ The current runtime already prepares and caches:
 That active preparation is still provisional. Taxonomy depth, confidence posture, and publication wording remain subject to further hardening before this should be treated as fully trusted downstream identity truth.
 
 The HUD must consume prepared bucket membership and summaries through adapters.
-Prepared symbol metadata must still carry the richer classification fields (`primary_bucket`, sector, industry, theme bucket, subtype) even when the visible bucket page only shows the compressed Layer 1 grouping.
+Prepared symbol metadata must still carry the richer classification fields (`primary_bucket`, sector, industry, theme bucket, subtype) plus canonical symbol metadata and stock secondary-group metadata even when the visible bucket page only shows the compressed Layer 1 grouping.
 It must not classify symbols, rebuild active membership, or walk raw identity catalogs during render.
 
 ## Data-source law

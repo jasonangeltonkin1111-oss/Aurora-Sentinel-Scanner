@@ -172,7 +172,7 @@ Should show:
 - top symbols in that bucket
 - readiness status using explicit wording such as `Warmup active — initial market-state scan in progress`, `Primary buckets loading first`, and `Background completion continues without blocking navigation`
 - preserved second-level metadata such as `primary_bucket`, sector, industry, theme, and subtype for later drilldown
-- future regional stock grouping hints without promoting US/EU/HK groupings into first-class main pages
+- future regional stock grouping hints such as `US Stocks`, `EU Stocks`, and `HK Stocks` without promoting them into first-class main pages
 - visible-window scrolling when the list exceeds the screen
 - safe pagination or row-based scroll controls
 - right-rail operator filter ownership for the active Layer 1 surface using `All Symbols` and `Open Only`
@@ -185,7 +185,7 @@ The Layer 1 main surface must hydrate progressively from runtime-owned prepared 
 
 Required progression:
 - Priority 1: `FX`, `Indices`, `Metals`, `Energy`, `Crypto`
-- Priority 2: `Stocks` and regional stock grouping truth attached to that same compressed stocks lane
+- Priority 2: `Stocks` and regional stock grouping truth attached to that same compressed stocks lane through preserved secondary grouping metadata
 - Priority 3: finer stock metadata such as sector, industry, subtype, and related taxonomy detail
 
 Compressed bucket prepared state must report one of:
