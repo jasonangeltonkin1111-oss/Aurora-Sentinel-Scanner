@@ -78,9 +78,23 @@ Allowed values:
 - `UNRESOLVED`
 
 Use for:
-- family competition outputs
+- family competition candidate-level outputs
 
-## 3.3 Pattern result state
+## 3.3 Family competition status
+Allowed values:
+- `CLEAR_PRIMARY`
+- `CONTESTED_PRIMARY`
+- `MULTIPLE_LIVE`
+- `DEFERRED_CLASSIFICATION`
+- `NO_VALID_FAMILY`
+- `INVALID_COMPETITION_INPUT`
+
+Use for:
+- `AURORA_FAMILY_COMPETITION_OBJECT`
+- workflow packets
+- worked examples
+
+## 3.4 Pattern result state
 Allowed values:
 - `CONFIRMED`
 - `CANDIDATE`

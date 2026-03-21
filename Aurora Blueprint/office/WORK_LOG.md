@@ -96,3 +96,29 @@ The first execution-side hardening wave was already strong, so this pass was lim
 
 ### Result
 The new Aurora hardening files remain in place, but the most evidence-sensitive illustrative horizon wording is now more conservative and the later real-case upgrade path is slightly cleaner.
+
+
+## 2026-03-21 — Aurora family competition engine formalization and integration
+
+### Why
+Aurora already contained implicit family-competition truth across the wrapper object model, workflow packet, family system, cards, and worked examples, but it still lacked one canonical engine layer defining how families stay alive, get rejected, or remain unresolved under partial context.
+
+### What changed
+- created `AURORA_FAMILY_COMPETITION_ENGINE_PROTOCOL.md` as the canonical stage protocol between context interpretation and pattern competition
+- created `AURORA_FAMILY_COMPETITION_OBJECT_SCHEMA.md` so the family competition result has an exact machine-shapable object form
+- created `AURORA_FAMILY_COMPETITION_WORKED_EXAMPLE_001.md` using the active C-04 / C-03 / C-01 / C-05 neighborhood without turning a symbol shell into doctrine
+- patched `AURORA_ENUM_REGISTRY_001.md` to add a dedicated family-competition-status enum set
+- patched `AURORA_WRAPPER_WORKFLOW_PACKET_002.md` to split family competition from pattern competition explicitly
+- patched `AURORA_WRAPPER_OBJECT_MODEL.md`, the family/pattern prompt template, and the opportunity inventory protocol so the new layer is consumed consistently rather than recreated ad hoc
+
+### What was intentionally not done
+- no ASC-side runtime or contract file was changed
+- no family doctrine was duplicated out of the registry, core family files, or family cards
+- no pattern engine wave, opportunity-rule rewrite, or card-generation expansion was started
+- no numeric scoring system was introduced
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+Aurora now has a dedicated family competition layer that can preserve contested primaries, multiple live families, deferral, rejection reasons, and invalid-input stops without swallowing downstream pattern, opportunity, or card logic.

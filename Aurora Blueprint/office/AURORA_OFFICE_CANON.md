@@ -42,6 +42,8 @@ These are active doctrine or bridge truths that current wrapper/machine work sho
 - `Aurora Blueprint/ASC_TO_AURORA_CONTEXT_CONTRACT.md`
 - `Aurora Blueprint/ASC_AURORA_JOINT_EVOLUTION_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_WRAPPER_OBJECT_MODEL.md`
+- `Aurora Blueprint/AURORA_FAMILY_COMPETITION_ENGINE_PROTOCOL.md`
+- `Aurora Blueprint/AURORA_FAMILY_COMPETITION_OBJECT_SCHEMA.md`
 - `Aurora Blueprint/AURORA_DEPLOYABILITY_ENGINE_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_INTRADAY_GEOMETRY_PROTOCOL.md`
 - `Aurora Blueprint/AURORA_GENERATED_STRATEGY_CARD_PROTOCOL.md`
