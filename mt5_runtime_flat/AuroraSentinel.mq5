@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.111
+// Wrapper Version: 1.120
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.431
+// Explorer Subsystem Version: 0.440
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -48,6 +48,7 @@ input int InpRuntimeSaveSeconds=30;                    // Runtime Save Interval 
 input int InpSchedulerSaveSeconds=15;                  // Scheduler Save Interval Seconds
 input int InpSummarySaveSeconds=60;                    // Summary Save Interval Seconds
 input int InpWarmupMinimumUniversePercent=35;          // Warmup Minimum Universe Percent
+input int InpWarmupMinimumAssessedSharePercent=35;     // Warmup Minimum Assessed Share Percent
 input bool InpRepairMissingDossiersOnBoot=true;        // Repair Missing Dossiers On Boot
 
 input group "Logging & Attention"
@@ -137,7 +138,7 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.runtime_save_seconds=(InpRuntimeSaveSeconds>0 ? InpRuntimeSaveSeconds : 30);
    g_settings.scheduler_save_seconds=(InpSchedulerSaveSeconds>0 ? InpSchedulerSaveSeconds : 15);
    g_settings.summary_save_seconds=(InpSummarySaveSeconds>0 ? InpSummarySaveSeconds : 60);
-   g_settings.warmup_minimum_universe_percent=ASC_PercentClamp((InpWarmupMinimumUniversePercent>0 ? InpWarmupMinimumUniversePercent : 35));
+   g_settings.warmup_minimum_universe_percent=ASC_PercentClamp((InpWarmupMinimumAssessedSharePercent>0 ? InpWarmupMinimumAssessedSharePercent : InpWarmupMinimumUniversePercent));
    g_settings.fresh_tick_seconds=(InpFreshTickSeconds>0 ? InpFreshTickSeconds : 90);
    g_settings.open_recheck_seconds=(InpOpenRecheckSeconds>0 ? InpOpenRecheckSeconds : 10);
    g_settings.uncertain_burst_limit=(InpUncertainBurstLimit>=0 ? InpUncertainBurstLimit : 0);
@@ -348,12 +349,15 @@ void ASC_ResetRuntimeState(void)
    g_runtime.processed_this_heartbeat=0;
    g_runtime.scheduler_cursor=0;
    g_runtime.heartbeats_since_boot=0;
+   g_runtime.total_symbols_discovered=0;
    g_runtime.initial_symbols_assessed=0;
    g_runtime.primary_bucket_symbols_assessed=0;
    g_runtime.primary_bucket_symbol_count=0;
+   g_runtime.compressed_primary_buckets_ready=false;
    g_runtime.warmup_minimum_met=false;
    g_runtime.warmup_progress_percent=0;
    g_runtime.background_hydration_active=false;
+   g_runtime.readiness_percent=0;
    g_runtime.prepared_last_batch_id=0;
    g_runtime.prepared_promoted_batch_count=0;
    g_runtime.prepared_pending_batch_count=ASC_PREPARED_BATCH_COUNT;
@@ -534,26 +538,34 @@ void ASC_UpdateLayer1Readiness(void)
          primary_assessed++;
      }
 
+   bool primary_buckets_ready=(ArraySize(g_prepared_buckets.batch_ready)>=ASC_PREPARED_BATCH_COUNT
+                               && g_prepared_buckets.batch_ready[ASC_PREPARED_BATCH_PRIORITY_SET-1]!=0);
+   g_runtime.total_symbols_discovered=g_symbol_count;
    g_runtime.initial_symbols_assessed=assessed;
    g_runtime.primary_bucket_symbols_assessed=primary_assessed;
    g_runtime.primary_bucket_symbol_count=primary_total;
+   g_runtime.compressed_primary_buckets_ready=primary_buckets_ready;
 
    int minimum_assessed=ASC_PercentOfCountCeil(g_symbol_count,g_settings.warmup_minimum_universe_percent);
-   bool universe_minimum_met=(g_symbol_count<=0 || assessed>=minimum_assessed);
-   bool primary_minimum_met=(primary_total<=0 || primary_assessed>=primary_total);
-   g_runtime.warmup_minimum_met=(universe_minimum_met && primary_minimum_met);
+   bool assessed_share_minimum_met=(g_symbol_count<=0 || assessed>=minimum_assessed);
+   bool primary_bucket_assessment_met=(primary_total<=0 || primary_assessed>=primary_total);
+   g_runtime.warmup_minimum_met=(assessed_share_minimum_met && primary_bucket_assessment_met && primary_buckets_ready);
 
-   int universe_progress=(g_symbol_count>0 ? (assessed*100)/g_symbol_count : 100);
-   int primary_progress=(primary_total>0 ? (primary_assessed*100)/primary_total : 100);
-   int threshold_progress=(universe_minimum_met ? 100 : ((assessed*100)/minimum_assessed));
-   if(threshold_progress>100)
-      threshold_progress=100;
-   int progress=threshold_progress;
-   if(primary_progress<progress)
-      progress=primary_progress;
-   if(universe_progress>progress && g_runtime.warmup_minimum_met)
-      progress=universe_progress;
-   g_runtime.warmup_progress_percent=ASC_PercentClamp(progress);
+   int assessed_share_progress=(g_symbol_count>0 ? (assessed*100)/g_symbol_count : 100);
+   int assessed_threshold_progress=(minimum_assessed>0 ? (assessed*100)/minimum_assessed : 100);
+   if(assessed_threshold_progress>100)
+      assessed_threshold_progress=100;
+   int primary_assessment_progress=(primary_total>0 ? (primary_assessed*100)/primary_total : 100);
+   int primary_bucket_progress=(primary_buckets_ready ? 100 : 0);
+   int progress=assessed_threshold_progress;
+   if(primary_assessment_progress<progress)
+      progress=primary_assessment_progress;
+   if(primary_bucket_progress<progress)
+      progress=primary_bucket_progress;
+   if(g_runtime.warmup_minimum_met && assessed_share_progress>progress)
+      progress=assessed_share_progress;
+   g_runtime.readiness_percent=ASC_PercentClamp(progress);
+   g_runtime.warmup_progress_percent=g_runtime.readiness_percent;
    g_runtime.background_hydration_active=(g_runtime.warmup_minimum_met && assessed<g_symbol_count);
    g_runtime.diagnostics.warmup_progress_percent=g_runtime.warmup_progress_percent;
   }
@@ -566,7 +578,8 @@ void ASC_UpdateRuntimeMode(void)
       return;
      }
 
-   if(!g_runtime.warmup_minimum_met)
+   bool layer1_ready=(g_runtime.compressed_primary_buckets_ready && g_runtime.warmup_minimum_met);
+   if(!layer1_ready)
       g_runtime.mode=ASC_RUNTIME_WARMUP;
    else
       g_runtime.mode=ASC_RUNTIME_STEADY;

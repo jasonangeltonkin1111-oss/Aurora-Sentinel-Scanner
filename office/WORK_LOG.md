@@ -2,6 +2,20 @@
 
 This file is append-only.
 
+## 2026-03-21 — Layer 1 readiness warmup-rule replacement pass
+
+### Why
+The active runtime still carried warmup language that could be mistaken for dossier-missing gating, but Layer 1 readiness is now owned by promoted compressed-priority buckets plus first-pass market-state coverage.
+
+### What changed
+- replaced the warmup exit rule with Layer 1-only readiness checks based on promoted priority-set-1 prepared truth and configurable discovered-symbol assessment share
+- added persisted runtime readiness fields for total discovered symbols, compressed primary readiness, warmup minimum state, background completion, and readiness percent
+- updated HUD wording and active blueprint/control files so warmup, primary loading, and background completion read honestly and consistently
+
+### Result
+Warmup now exits on truthful Layer 1 readiness rather than dossier-missing heuristics, while lower-priority completion remains visible and non-blocking.
+
+---
 ## 2026-03-20 — Office normalization baseline
 
 ### Why

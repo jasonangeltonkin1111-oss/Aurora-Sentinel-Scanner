@@ -25,6 +25,7 @@
 - operator-created archive mirrors under `archives/` are reference only and must never be treated as permission to remove active knowledge
 - the stable wrapper architecture target is the 13-file owning-pack model; transitional wrapper manuals may exist briefly as hardening scaffolds but should be merged back into their owner packs and then removed once the merge is lossless
 - ASC explorer next wave must keep progressive hydration runtime-owned: Layer 1 Priority 1 promotes first, Stocks/regional grouping second, finer stock metadata third, and page opening must never enqueue whole-universe hydration work
+- ASC explorer warmup exit is now explicitly Layer 1-readiness-owned: promoted compressed priority-set-1 buckets plus configurable discovered-symbol first-pass coverage, with lower-priority completion continuing in background
 
 ## Current bridge-check lock
 

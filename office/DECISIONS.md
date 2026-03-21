@@ -18,6 +18,7 @@
 - ASC is the sensing substrate; Aurora remains the downstream interpretation and execution-intelligence layer
 - MT5 properties inputs must be grouped early and reserved cleanly for future layers
 - Market State Detection dossier output must expose later reserved capabilities honestly rather than leaving them structurally absent
+- warmup exit is Layer 1-readiness-owned and must not be keyed off missing dossier count; steady mode requires promoted compressed priority-set-1 buckets plus configurable first-pass coverage across discovered live symbols
 - ranking, basket selection, strategy logic, trade logic, and account logic remain blocked
 
 ## Archive-derived control decisions

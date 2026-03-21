@@ -37,7 +37,7 @@
 6. propagate abundance law, opportunity-stage taxonomy, late-join legitimacy, and bucket-targeted growth rules through active Blueprint and wrapper surfaces
 7. only consider optional wrapper-tooling support if it stays off the default hot path and proves more useful than expanding current packs
 8. propagate the new status/enum alignment and packet/review law without widening ASC scope
-9. track the ASC explorer progressive-fill lane so next-wave Aurora work does not assume full-completion gating or page-open-triggered hydration
+9. track the ASC explorer progressive-fill lane so next-wave Aurora work does not assume full-completion gating, dossier-missing warmup rules, or page-open-triggered hydration
 
 ## Blocking rules
 
