@@ -82,6 +82,7 @@ From this point onward:
 - `Aurora Blueprint/AURORA_BOOK_MASTER_INDEX.md`
 
 ## Active wrapper / bridge / machine surfaces
+- `Aurora Wrapper/` now exists as the first compiled wrapper-facing canon package sourced from active Aurora truth.
 - `Aurora Blueprint/AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md`
 - `Aurora Blueprint/AURORA_WRAPPER_WORKFLOW_PACKET_002.md`
 - `Aurora Blueprint/ASC_TO_AURORA_CONTEXT_CONTRACT.md`

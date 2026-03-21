@@ -57,6 +57,7 @@ After the control stack, the primary active surfaces are:
 - `AURORA_PROGRESS_TRACKER_V6.md`
 
 ## Active doctrine / protocol truth
+- `Aurora Wrapper/` is a compiled wrapper-facing canon derived from these active surfaces; it is operationally useful but not the source-truth owner.
 - current ledger base plus latest supplements not yet merged
 - current module map and book master index
 - current bridge, wrapper, deployability, geometry, generated-card, opportunity, and EA-boundary protocol files

@@ -1,5 +1,35 @@
 # Aurora Office Work Log
 
+## 2026-03-21 — Aurora Wrapper compiled canon foundation pass
+### Why
+Aurora had enough active execution-side, family, pattern, bridge, and packet truth that a wrapper-facing compiled canon could now be built without moving source truth out of `Aurora Blueprint/`.
+
+### What was reviewed
+- active office/control files
+- latest run continuity
+- active wrapper/object/workflow/enum/deployability/geometry/card/packet surfaces
+- family competition and pattern competition layers
+- family and pattern doctrine/cards
+- bridge contract and real ASC intake example
+
+### What changed
+- created `Aurora Wrapper/` as the first compiled wrapper-facing canon
+- added a tiny wrapper kernel, routing/file-map/settings surfaces, five major wrapper packs, and one maintenance guide
+- kept `Aurora Blueprint/` as source truth and classified the wrapper folder as compiled canon rather than replacement workspace
+- recorded the wrapper package structure in run continuity and refreshed office/control truth where the new wrapper layer became materially relevant
+
+### What was intentionally not done
+- did not move, delete, or flatten source truth out of `Aurora Blueprint/`
+- did not widen the ASC bridge contract
+- did not turn Aurora into a generic trading framework or symbol-bound wrapper pack
+- did not pull raw work logs, ledgers, extraction queues, or archive mirrors onto the wrapper hot path
+
+### Bridge-check outcome
+`NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+Aurora now has a low-file-count wrapper-ready compiled canon that is easier for GPT-wrapper ingestion while preserving source-truth ownership, staged execution logic, family-first interpretation, and future file-by-file replacement.
+
 This file is append-only.
 
 ## 2026-03-20 — Aurora office-layer hardening and control reorganization baseline
