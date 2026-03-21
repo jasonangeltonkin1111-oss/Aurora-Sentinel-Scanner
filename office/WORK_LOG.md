@@ -333,3 +333,17 @@ Prepared-bucket hydration, heartbeat dispatch, and HUD render timing had become 
 
 ### Result
 Layer 1 observability is now explicit, compact, and continuity-safe: operators can see prep/dispatch/render pressure in the HUD and runtime state without per-symbol or per-frame log spam.
+
+---
+## 2026-03-21 — Debug observability lane pass
+
+### Why
+Explorer and warmup ownership were measurably better than before, but there was still no debug-only lane that made it easy to prove where page-switch latency lived, whether prep or HUD dominated, whether unchanged batches churned, whether last-good truth survived promotion, whether Open Only stayed honest, or why warmup changed state.
+
+### What changed
+- added threshold-based debug diagnostics across runtime hydration, prepared bucket state, and HUD timing/action paths
+- logged unchanged-batch rewrites, last-good preservation, Open Only filter-visible anomalies, warmup-state transition reasons, and bounded-work backlog severity buckets
+- documented the debug procedure and expected operator signals in the active blueprint and office control surfaces
+
+### Result
+The active runtime now has a bounded debug observability lane that can localize prep versus HUD cost, explain warmup state changes, and surface batch/filter truth anomalies without turning normal logs into noise.

@@ -143,6 +143,14 @@ The sequence above remains active canon for debugging and future implementation 
 - **Regression warning:** do not reintroduce scanner computation into button handlers. Do not describe batch reuse as complete; this pass only establishes the safe scaffold.
 - **Future extension:** focus-scoped runtime elevation and stale-bound refresh should later flow through runtime-owned adapters/snapshots, with stronger unchanged-batch reuse and optional dedicated persistence only after evidence justifies it.
 
+### Debug observability lane
+- **Status:** working debug-only
+- **Pass:** debug verbosity emits threshold-based lines for prep summaries, render time, page-switch latency, unchanged-batch rewrites, last-good preservation, Open Only filter-visible bucket anomalies, warmup-state transitions, and bounded-work severity buckets.
+- **Break symptoms:** slow page switches cannot be localized to prep vs HUD, unchanged prepared batches churn silently, warmup readiness transitions have no reason trail, Open Only anomalies are invisible, or backlog pressure appears only as raw counts.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel.mq5`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `blueprint/10_ASC_MENU_AND_TESTABILITY.md`
+- **Regression warning:** keep this lane debug-only; do not promote threshold diagnostics into always-on noise for normal operators.
+- **Future extension:** if unchanged-batch reuse becomes diff-driven later, keep the rewrite signal but reword it to reflect delta-skip truth rather than batch rewrite truth.
+
 ### Reserved future capability scaffolding
 - **Status:** reserved
 - **Pass:** Open Symbol Snapshot, Candidate Filtering, Shortlist Selection, and Deep Selective Analysis remain explicitly named, clearly reserved, and visibly insertable in runtime inputs, placeholder hooks, dossier progression, and blueprint order.

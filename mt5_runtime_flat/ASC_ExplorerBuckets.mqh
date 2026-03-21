@@ -873,6 +873,67 @@ void ASC_PromotePreparedBucketState(const ASC_PreparedBucketState &completed,con
    promoted.diagnostics.pending_batch_count=ASC_PREPARED_BATCH_COUNT-promoted.diagnostics.promoted_batch_count;
   }
 
+bool ASC_PreparedBatchMatches(const ASC_PreparedBucketState &left,const ASC_PreparedBucketState &right,const int batch_id)
+  {
+   if(batch_id<=0 || batch_id>ASC_PREPARED_BATCH_COUNT)
+      return(false);
+
+   int left_count=0;
+   int right_count=0;
+   for(int i=0;i<ArraySize(left.symbols);i++)
+     {
+      if(!ASC_PreparedSymbolInBatch(left.symbols[i],batch_id))
+         continue;
+      left_count++;
+     }
+   for(int i=0;i<ArraySize(right.symbols);i++)
+     {
+      if(!ASC_PreparedSymbolInBatch(right.symbols[i],batch_id))
+         continue;
+      right_count++;
+     }
+   if(left_count!=right_count)
+      return(false);
+
+   int left_seen=0;
+   for(int i=0;i<ArraySize(left.symbols);i++)
+     {
+      if(!ASC_PreparedSymbolInBatch(left.symbols[i],batch_id))
+         continue;
+      bool found=false;
+      for(int j=0;j<ArraySize(right.symbols);j++)
+        {
+         if(!ASC_PreparedSymbolInBatch(right.symbols[j],batch_id))
+            continue;
+         if(left.symbols[i].live_symbol!=right.symbols[j].live_symbol)
+            continue;
+         if(left.symbols[i].bucket_id!=right.symbols[j].bucket_id)
+            continue;
+         if(left.symbols[i].open_now!=right.symbols[j].open_now)
+            continue;
+         if(left.symbols[i].canonical_symbol!=right.symbols[j].canonical_symbol)
+            continue;
+         found=true;
+         break;
+        }
+      if(!found)
+         return(false);
+      left_seen++;
+     }
+   return(left_seen==left_count);
+  }
+
+int ASC_PreparedVisibleOpenBucketTotal(const ASC_PreparedBucketState &prepared)
+  {
+   int visible=0;
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+     {
+      if(prepared.buckets[i].open_symbol_count>0)
+         visible++;
+     }
+   return(visible);
+  }
+
 int ASC_PreparedVisibleBucketCount(const ASC_BucketViewModel &bucket,const ASC_ExplorerMarketFilter filter)
   {
    if(filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
