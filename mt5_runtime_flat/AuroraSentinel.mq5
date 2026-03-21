@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.121
+// Wrapper Version: 1.122
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.440
+// Explorer Subsystem Version: 0.441
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -297,10 +297,19 @@ void ASC_RunPreparedHydrationController(const string reason)
                           g_runtime.warmup_progress_percent,
                           due_now,
                           g_settings.symbol_budget_per_heartbeat,
+                          g_prepared_buckets,
                           g_prepared_last_good_buckets,
                           g_prepared_working_buckets);
+   if(!ASC_PreparedValidateBatchCompleteness(g_prepared_working_buckets,batch_id))
+     {
+      g_prepared_working_buckets.diagnostics.bucket_prep_total_ms=GetTickCount()-prep_started_ms;
+      g_logger.Warn("Hydration","reason=" + reason + ", batch validation failed for " + ASC_PreparedBatchName(batch_id) + "; active prepared truth kept on last-good state");
+      ASC_LogPreparedDiagnosticsSummary(reason + ":validation-failed");
+      return;
+     }
+
    long promotion_started_ms=GetTickCount();
-   ASC_PromotePreparedBucketState(g_prepared_working_buckets,g_prepared_last_good_buckets,g_prepared_buckets);
+   ASC_PromotePreparedBucketState(g_prepared_working_buckets,batch_id,g_prepared_last_good_buckets,g_prepared_buckets);
    g_prepared_buckets.diagnostics.final_promotion_ms=GetTickCount()-promotion_started_ms;
    g_prepared_buckets.diagnostics.bucket_prep_total_ms=GetTickCount()-prep_started_ms;
    ASC_SyncPreparedRuntimeMetadata();

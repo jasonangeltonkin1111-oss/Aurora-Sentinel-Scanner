@@ -60,11 +60,14 @@ struct ASC_PreparedBucketState
    int                          unresolved_count;
    int                          total_resolved_symbols;
    int                          active_batch_id;
+   int                          working_batch_id;
+   int                          last_good_batch_id;
    int                          batch_generation;
    ASC_PreparedStateDiagnostics diagnostics;
    ASC_BucketViewModel          buckets[];
    ASC_BucketPreparedSymbol     symbols[];
    int                          batch_ready[];
+   int                          batch_pending[];
    int                          batch_reused[];
    int                          batch_progress_states[];
    int                          bucket_progress_states[];
@@ -431,17 +434,21 @@ void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
    prepared.unresolved_count=0;
    prepared.total_resolved_symbols=0;
    prepared.active_batch_id=0;
+   prepared.working_batch_id=0;
+   prepared.last_good_batch_id=0;
    prepared.batch_generation=0;
    ASC_PreparedStateDiagnosticsReset(prepared.diagnostics);
    ArrayResize(prepared.buckets,0);
    ArrayResize(prepared.symbols,0);
    ArrayResize(prepared.batch_ready,ASC_PREPARED_BATCH_COUNT);
+   ArrayResize(prepared.batch_pending,ASC_PREPARED_BATCH_COUNT);
    ArrayResize(prepared.batch_reused,ASC_PREPARED_BATCH_COUNT);
    ArrayResize(prepared.batch_progress_states,ASC_PREPARED_BATCH_COUNT);
    ArrayResize(prepared.bucket_progress_states,6);
    for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
      {
       prepared.batch_ready[i]=0;
+      prepared.batch_pending[i]=0;
       prepared.batch_reused[i]=0;
       prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
      }
@@ -488,7 +495,7 @@ void ASC_PreparedRefreshBatchProgressStates(ASC_PreparedBucketState &prepared)
       int batch_id=i+1;
       if(prepared.batch_ready[i]!=0)
          prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_READY;
-      else if(prepared.active_batch_id==batch_id)
+      else if(prepared.batch_pending[i]!=0 || prepared.working_batch_id==batch_id)
          prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_PREPARING;
       else if(batch_id<next_batch)
          prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING;
@@ -499,7 +506,7 @@ void ASC_PreparedRefreshBatchProgressStates(ASC_PreparedBucketState &prepared)
 
 void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int warmup_assessed,const int warmup_total,const int readiness_percent,const int due_now,const int budget)
   {
-   prepared.diagnostics.last_prepared_batch_id=prepared.active_batch_id;
+   prepared.diagnostics.last_prepared_batch_id=(prepared.active_batch_id>0 ? prepared.active_batch_id : prepared.last_good_batch_id);
    prepared.diagnostics.promoted_batch_count=ASC_PreparedPromotedBatchCount(prepared);
    prepared.diagnostics.pending_batch_count=ASC_PREPARED_BATCH_COUNT-prepared.diagnostics.promoted_batch_count;
    prepared.diagnostics.warmup_assessed_count=warmup_assessed;
@@ -679,33 +686,65 @@ void ASC_PreparedPhaseClassificationPass(const string server_key,ASC_SymbolState
      }
   }
 
-void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],const int count,const int batch_id,const int warmup_assessed,const int warmup_total,const int readiness_percent,const int due_now,const int budget,const ASC_PreparedBucketState &last_good,ASC_PreparedBucketState &working)
+bool ASC_PreparedValidateBatchCompleteness(const ASC_PreparedBucketState &working,const int batch_id)
+  {
+   if(batch_id<=0 || batch_id>ASC_PREPARED_BATCH_COUNT)
+      return(false);
+   if(ArraySize(working.batch_ready)<ASC_PREPARED_BATCH_COUNT)
+      return(false);
+   if(working.batch_ready[batch_id-1]==0)
+      return(false);
+   for(int i=0;i<ArraySize(working.symbols);i++)
+     {
+      if(!ASC_PreparedSymbolInBatch(working.symbols[i],batch_id))
+         continue;
+      if(ASC_Trim(working.symbols[i].live_symbol)=="" || ASC_Trim(working.symbols[i].bucket_id)=="")
+         return(false);
+      if(batch_id==ASC_PREPARED_BATCH_STOCK_METADATA)
+        {
+         if(ASC_Trim(working.symbols[i].canonical_symbol)=="")
+            return(false);
+        }
+     }
+   return(true);
+  }
+
+void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],const int count,const int batch_id,const int warmup_assessed,const int warmup_total,const int readiness_percent,const int due_now,const int budget,const ASC_PreparedBucketState &promoted,const ASC_PreparedBucketState &last_good,ASC_PreparedBucketState &working)
   {
    int prep_started=ASC_PreparedNowMs();
-   if(!last_good.ready || last_good.server_key!=server_key)
-      ASC_PreparedBucketStateReset(working);
-   else
+   if(promoted.ready && promoted.server_key==server_key)
+      ASC_CopyPreparedBucketState(promoted,working);
+   else if(last_good.ready && last_good.server_key==server_key)
       ASC_CopyPreparedBucketState(last_good,working);
+   else
+      ASC_PreparedBucketStateReset(working);
 
    working.server_key=server_key;
    working.prepared_at=TimeCurrent();
    working.source_symbol_count=count;
-   working.active_batch_id=batch_id;
+   working.active_batch_id=0;
+   working.working_batch_id=batch_id;
+   working.last_good_batch_id=(last_good.ready ? last_good.active_batch_id : 0);
    working.unresolved_count=0;
    if(ArraySize(working.batch_ready)!=ASC_PREPARED_BATCH_COUNT)
      {
       ArrayResize(working.batch_ready,ASC_PREPARED_BATCH_COUNT);
+      ArrayResize(working.batch_pending,ASC_PREPARED_BATCH_COUNT);
       ArrayResize(working.batch_reused,ASC_PREPARED_BATCH_COUNT);
       ArrayResize(working.batch_progress_states,ASC_PREPARED_BATCH_COUNT);
       for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
         {
          working.batch_ready[i]=0;
+         working.batch_pending[i]=0;
          working.batch_reused[i]=0;
          working.batch_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
         }
      }
    for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
-      working.batch_reused[i]=(i==(batch_id-1) ? 0 : 1);
+     {
+      working.batch_pending[i]=(i==(batch_id-1) ? 1 : 0);
+      working.batch_reused[i]=(i==(batch_id-1) ? 0 : (working.batch_ready[i]!=0 ? 1 : 0));
+     }
 
    ASC_PreparedRefreshBatchProgressStates(working);
 
@@ -722,11 +761,10 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
    ASC_PreparedPhaseSymbolReorder(working);
    working.diagnostics.prepared_symbol_reorder_ms=ASC_PreparedNowMs()-phase_started;
 
-   phase_started=ASC_PreparedNowMs();
    working.batch_ready[batch_id-1]=1;
+   working.batch_pending[batch_id-1]=0;
    ASC_PreparedRefreshBatchProgressStates(working);
    ASC_PreparedRefreshBucketProgressStates(working);
-   working.batch_generation++;
    working.ready=(ASC_PreparedPromotedBatchCount(working)>0);
    ASC_PreparedRefreshDiagnostics(working,warmup_assessed,warmup_total,readiness_percent,due_now,budget);
    working.diagnostics.bucket_prep_total_ms=ASC_PreparedNowMs()-prep_started;
@@ -734,17 +772,69 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
    working.diagnostics.last_prepared_batch_id=batch_id;
    working.diagnostics.promoted_batch_count=ASC_PreparedPromotedBatchCount(working);
    working.diagnostics.pending_batch_count=ASC_PREPARED_BATCH_COUNT-working.diagnostics.promoted_batch_count;
-   int promotion_ms=ASC_PreparedNowMs()-phase_started;
-   if(promotion_ms<0)
-      promotion_ms=0;
-   working.diagnostics.final_promotion_ms=promotion_ms;
-   working.diagnostics.bucket_prep_total_ms=ASC_PreparedNowMs()-prep_started;
+   working.diagnostics.final_promotion_ms=0;
   }
 
-void ASC_PromotePreparedBucketState(const ASC_PreparedBucketState &completed,ASC_PreparedBucketState &last_good,ASC_PreparedBucketState &promoted)
+void ASC_PromotePreparedBucketState(const ASC_PreparedBucketState &completed,const int batch_id,ASC_PreparedBucketState &last_good,ASC_PreparedBucketState &promoted)
   {
-   last_good=completed;
-   promoted=completed;
+   if(!ASC_PreparedValidateBatchCompleteness(completed,batch_id))
+      return;
+
+   ASC_PreparedBucketState base;
+   if(promoted.ready && promoted.server_key==completed.server_key)
+      ASC_CopyPreparedBucketState(promoted,base);
+   else if(last_good.ready && last_good.server_key==completed.server_key)
+      ASC_CopyPreparedBucketState(last_good,base);
+   else
+      ASC_PreparedBucketStateReset(base);
+
+   ASC_CopyPreparedBucketState(base,last_good);
+   ASC_CopyPreparedBucketState(base,promoted);
+
+   promoted.server_key=completed.server_key;
+   promoted.prepared_at=completed.prepared_at;
+   promoted.source_symbol_count=completed.source_symbol_count;
+   promoted.unresolved_count=completed.unresolved_count;
+   promoted.active_batch_id=batch_id;
+   promoted.working_batch_id=0;
+   promoted.last_good_batch_id=last_good.active_batch_id;
+   promoted.batch_generation=last_good.batch_generation+1;
+   promoted.diagnostics=completed.diagnostics;
+
+   ASC_PreparedRemoveBatchSymbols(promoted,batch_id);
+   for(int i=0;i<ArraySize(completed.symbols);i++)
+     {
+      if(!ASC_PreparedSymbolInBatch(completed.symbols[i],batch_id))
+         continue;
+      ASC_PreparedAppendSymbol(promoted,completed.symbols[i]);
+     }
+
+   if(ArraySize(promoted.batch_ready)!=ASC_PREPARED_BATCH_COUNT)
+     {
+      ArrayResize(promoted.batch_ready,ASC_PREPARED_BATCH_COUNT);
+      ArrayResize(promoted.batch_pending,ASC_PREPARED_BATCH_COUNT);
+      ArrayResize(promoted.batch_reused,ASC_PREPARED_BATCH_COUNT);
+      ArrayResize(promoted.batch_progress_states,ASC_PREPARED_BATCH_COUNT);
+     }
+   for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
+     {
+      promoted.batch_pending[i]=0;
+      promoted.batch_reused[i]=(i==(batch_id-1) ? 0 : (last_good.batch_ready[i]!=0 ? 1 : 0));
+      if(i==(batch_id-1))
+         promoted.batch_ready[i]=1;
+      else if(ArraySize(last_good.batch_ready)==ASC_PREPARED_BATCH_COUNT)
+         promoted.batch_ready[i]=last_good.batch_ready[i];
+     }
+
+   ASC_PreparedRebuildBucketsFromSymbols(promoted);
+   ASC_PreparedPhaseBucketSort(promoted);
+   ASC_PreparedPhaseSymbolReorder(promoted);
+   ASC_PreparedRefreshBatchProgressStates(promoted);
+   ASC_PreparedRefreshBucketProgressStates(promoted);
+   promoted.ready=(ASC_PreparedPromotedBatchCount(promoted)>0);
+   promoted.diagnostics.last_prepared_batch_id=batch_id;
+   promoted.diagnostics.promoted_batch_count=ASC_PreparedPromotedBatchCount(promoted);
+   promoted.diagnostics.pending_batch_count=ASC_PREPARED_BATCH_COUNT-promoted.diagnostics.promoted_batch_count;
   }
 
 int ASC_PreparedVisibleBucketCount(const ASC_BucketViewModel &bucket,const ASC_ExplorerMarketFilter filter)
