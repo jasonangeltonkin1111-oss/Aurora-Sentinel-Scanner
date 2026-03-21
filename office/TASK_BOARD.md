@@ -173,6 +173,30 @@ Before closing any future pass, explicitly check:
 9. much later: Open Symbol Snapshot promotion
 10. later still: Candidate Filtering / Shortlist / Aurora downstream work
 
+## Layer 1 completion gate before any true Layer 2 activation work
+
+This checklist is now the blocking gate for any future pass that would activate true Layer 2 behavior. Do not begin live Open Symbol Snapshot activation, history pulls, broad open-symbol refresh loops, or Layer 2-owned publication wording until every item below is explicitly carried as pass in `office/WORKING_STAGE_LEDGER.md`.
+
+### Blocking checklist
+- honest warmup contract implemented
+- compressed six-bucket main surface implemented
+- progressive hydration active
+- rolling prepared truth at least safely scaffolded
+- right rail owns All Symbols / Open Only
+- Open Only hides zero-open buckets
+- overview and bucket percentages visible
+- prep/render/page-switch instrumentation visible
+- explorer page changes do not trigger whole-universe rebuild behavior
+- dossier/summary/HUD wording aligned
+- version bump applied
+- SHA ledger refreshed
+- MT5 compile/test evidence captured in a later code-mode pass
+
+### Gate discipline
+- treat any failed item as a hard stop for true Layer 2 activation work
+- allow office/doc/runtime hardening only when it moves failed items toward honest pass status
+- keep this checklist synchronized with the working-stage ledger rather than claiming completion by narrative alone
+
 ## Layer 2 posture guardrail
 
 - **Layer 2 preparation ready:** reserved runtime structs, status markers, publication slots, and mirrored cadence inputs may exist now so Open Symbol Snapshot can be inserted later without renaming churn.

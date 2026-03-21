@@ -8,9 +8,9 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ## Current checkpoint
 
 - checkpoint date: 2026-03-21
-- checkpoint scope: Layer 2 reserved scaffolding pass
+- checkpoint scope: Layer 1 completion gate office pass
 - hash type: SHA-256
-- note: refreshed for Layer 2 reserved runtime/publication scaffolding, continuity markers, and control-surface activation guardrails
+- note: refreshed for the Layer 1 completion gate office pass across task board, working-stage ledger, and work-log control truth
 - rule: refresh this file when a pass materially changes active control or scanner-foundation truth
 
 ## Entries
@@ -18,10 +18,10 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ```text
 3c4ad6ec1b628e7e35c9673610aa3ee92377ed510c88c4096343fbfa90046f7f  office/README.md
 a1a0fcf8200512cec5eee0e91bc68c5bc08f4816b4faf7c600b8a9d9814c8d1b  office/OFFICE_CANON.md
-c665d8c9f19b9fa10429a2525fbe499965889f8cb8603c2e583ca69a31cce052  office/TASK_BOARD.md
+1a4dcae853a48adbf4765ac58260ac7500ab6e2d7f32d5e9410ad610e2d3aa0b  office/TASK_BOARD.md
 951b5b6322199d60f1764fb9a82d651089219326d11c111ad053b1a526b6e22a  office/DECISIONS.md
-cfc03aa69cc942544194ad34a4a7241794de49385aaf928c92ed28dc6e6c4a5c  office/WORK_LOG.md
-ea4aa1123c056d424c57631a0dbe78161b8dd12f9971ed5cc4ab466c55a432f9  office/WORKING_STAGE_LEDGER.md
+62c4ae944d6cb218cd14f5f1e7475e696d5dbb9b1f5bb2c65b858e8afcef5a24  office/WORK_LOG.md
+2c40115a70e9e18211ff4cc9af72c4e8e6a7a02033b6d570fb8a6291bf81cf62  office/WORKING_STAGE_LEDGER.md
 5cb93527acefb1593d6e7f9b3899490f2e1a75029206b90393fdfa2d7697c22b  blueprint/README.md
 1e93ea5e17b39437f6411c9bf4de394a235b69818a85748be2af78a01e4cc088  blueprint/01_ASC_SYSTEM_OVERVIEW.md
 f91f2d675139dd3e95379b494dc205feada19e557523eaf1e943d83d7b1f0419  blueprint/02_ASC_RUNTIME_AND_SCHEDULER.md
