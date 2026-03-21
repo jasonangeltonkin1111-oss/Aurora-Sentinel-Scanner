@@ -1,7 +1,7 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.120
+// Wrapper Version: 1.121
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
@@ -193,21 +193,29 @@ int ASC_HydrationNextBatchId(const ASC_PreparedBucketState &prepared)
       if(prepared.batch_ready[i]==0)
          return(i+1);
      }
-   return(ASC_PREPARED_BATCH_STOCK_METADATA);
+   return(0);
   }
 
-bool ASC_HydrationShouldAdvance(const ASC_PreparedBucketState &prepared)
+string ASC_HydrationPrioritySetText(const int batch_id)
   {
-   if(g_symbol_count<=0)
+   if(batch_id==ASC_PREPARED_BATCH_PRIORITY_SET)
+      return("Priority 1: FX, Indices, Metals, Energy, Crypto");
+   if(batch_id==ASC_PREPARED_BATCH_STOCK_MAIN)
+      return("Priority 2: Stocks and regional stock groups");
+   if(batch_id==ASC_PREPARED_BATCH_STOCK_METADATA)
+      return("Priority 3: finer stock detail metadata");
+   return("Hydration complete");
+  }
+
+bool ASC_HydrationShouldAdvance(const ASC_PreparedBucketState &prepared,const int next_batch)
+  {
+   if(g_symbol_count<=0 || next_batch<=0)
       return(false);
-   int next_batch=ASC_HydrationNextBatchId(prepared);
    if(next_batch==ASC_PREPARED_BATCH_PRIORITY_SET)
       return(true);
    if(!g_runtime.warmup_minimum_met)
       return(false);
-   if(next_batch==ASC_PREPARED_BATCH_STOCK_MAIN)
-      return(true);
-   return(g_runtime.background_hydration_active || prepared.batch_ready[ASC_PREPARED_BATCH_STOCK_METADATA-1]==0);
+   return(true);
   }
 
 void ASC_LogPreparedDiagnosticsSummary(const string reason)
@@ -274,10 +282,10 @@ void ASC_LogHeartbeatDiagnosticsSummary(const int initial_due,const int remainin
 
 void ASC_RunPreparedHydrationController(const string reason)
   {
-   if(!ASC_HydrationShouldAdvance(g_prepared_buckets))
+   int batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
+   if(!ASC_HydrationShouldAdvance(g_prepared_buckets,batch_id))
       return;
 
-   int batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
    int due_now=ASC_CountDueSymbols(TimeCurrent());
    long prep_started_ms=GetTickCount();
    ASC_PrepareBucketState(g_runtime.server_clean,
@@ -299,7 +307,7 @@ void ASC_RunPreparedHydrationController(const string reason)
    g_prepared_next_batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
    g_runtime.summary_dirty=true;
    g_runtime.runtime_dirty=true;
-   g_logger.Debug("Hydration","reason=" + reason + ", promoted batch=" + ASC_PreparedBatchName(batch_id));
+   g_logger.Debug("Hydration","reason=" + reason + ", promoted batch=" + ASC_PreparedBatchName(batch_id) + " | planner=" + ASC_HydrationPrioritySetText(g_prepared_next_batch_id));
    ASC_LogPreparedDiagnosticsSummary(reason);
   }
 
@@ -566,7 +574,9 @@ void ASC_UpdateLayer1Readiness(void)
       progress=assessed_share_progress;
    g_runtime.readiness_percent=ASC_PercentClamp(progress);
    g_runtime.warmup_progress_percent=g_runtime.readiness_percent;
-   g_runtime.background_hydration_active=(g_runtime.warmup_minimum_met && assessed<g_symbol_count);
+   int next_prepared_batch=ASC_HydrationNextBatchId(g_prepared_buckets);
+   g_runtime.background_hydration_active=(g_runtime.warmup_minimum_met
+                                          && (assessed<g_symbol_count || next_prepared_batch==ASC_PREPARED_BATCH_STOCK_MAIN || next_prepared_batch==ASC_PREPARED_BATCH_STOCK_METADATA));
    g_runtime.diagnostics.warmup_progress_percent=g_runtime.warmup_progress_percent;
   }
 

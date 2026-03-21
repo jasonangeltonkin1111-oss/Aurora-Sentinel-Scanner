@@ -626,7 +626,7 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const ASC_PreparedBuc
 
    ASC_ExplorerPanelTitle(ctx,"buckets.panel","Layer 1 Main Buckets",x,y,w,ctx.theme.accent);
    ASC_ExplorerRect(ctx,"buckets.intro",x,y+ctx.theme.title_height,w,intro_h,ctx.theme.panel_soft_fill,ctx.theme.border);
-   string filter_note=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only shows only the six compressed Layer 1 main buckets when they have at least one classified symbol that is currently OPEN." : "All Symbols progressively reveals only the six compressed Layer 1 main buckets from promoted prepared truth; unopened batches remain honestly marked until hydration reaches them.");
+   string filter_note=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only shows only compressed buckets that already have OPEN classified symbols; lower-priority hydration continues in the background without blocking navigation." : "All Symbols reveals primary buckets first, then the stock bucket, while finer stock detail stays visibly pending until its later hydration priority completes.");
    if(prepared.unresolved_count>0)
       filter_note+=" Unresolved live symbols: " + IntegerToString(prepared.unresolved_count) + ".";
    ASC_ExplorerLabel(ctx,"buckets.note",ASC_ExplorerFitText(filter_note,w-ctx.theme.padding-8),x+ctx.theme.padding,y+ctx.theme.title_height+6,ctx.theme.muted);
@@ -649,6 +649,10 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const ASC_PreparedBuc
       ASC_ExplorerLabel(ctx,"buckets.name." + IntegerToString(i),ASC_ExplorerFitText(filtered[i].name,w-160,10),x+14,card_y+6,ctx.theme.text,10);
       ASC_ExplorerLabel(ctx,"buckets.meta." + IntegerToString(i),ASC_ExplorerFitText("Compressed Layer 1 Main Bucket | Six-bucket adapter | ID " + filtered[i].bucket_id,w-160),x+14,card_y+24,ctx.theme.muted);
       string truth_line="State " + filtered[i].progress_label + " | Classified live " + IntegerToString(filtered[i].resolved_symbol_count) + " | Open " + IntegerToString(filtered[i].open_symbol_count);
+      if(filtered[i].progress_state==ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING)
+         truth_line+=" | Deeper detail pending";
+      else if(filtered[i].progress_state==ASC_PREPARED_BUCKET_PREPARING)
+         truth_line+=" | Hydrating now";
       if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
          truth_line="State " + filtered[i].progress_label + " | Open classified visible " + IntegerToString(live_visible);
       ASC_ExplorerLabel(ctx,"buckets.truth." + IntegerToString(i),ASC_ExplorerFitText(truth_line,w-160),x+14,card_y+24+ctx.theme.row_height,accent);
@@ -1015,7 +1019,7 @@ string ASC_ExplorerWarmupBannerText(const ASC_RuntimeState &runtime)
       return("Warmup active — initial market-state scan in progress | assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered)
              + " discovered live symbols | primary buckets " + primary_scope + " | readiness " + progress + ".");
    if(runtime.background_hydration_active)
-      return("Layer 1 readiness met | primary buckets promoted and first-pass coverage reached | background completion continues without blocking navigation | readiness " + progress + ".");
+      return("Layer 1 readiness met | primary buckets promoted first | lower-priority stock hydration continues in the background without blocking navigation | readiness " + progress + ".");
    return("Layer 1 readiness complete: primary buckets promoted and discovered live symbols assessed | readiness " + progress + ".");
   }
 
@@ -1024,21 +1028,21 @@ string ASC_ExplorerWarmupModeText(const ASC_RuntimeState &runtime)
    if(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met)
       return("Warmup active — initial market-state scan in progress");
    if(runtime.background_hydration_active)
-      return("Layer 1 ready — background completion continues without blocking navigation");
+      return("Layer 1 ready — lower-priority hydration continues without blocking navigation");
    return("Layer 1 ready — background completion caught up");
   }
 
 string ASC_ExplorerPrimaryBucketLoadingText(const ASC_RuntimeState &runtime)
   {
-   return("Primary buckets loading first | compressed ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready)
+   return("Primary buckets load first | compressed ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready)
           + " | assessed " + IntegerToString(runtime.primary_bucket_symbols_assessed)
-          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + ".");
+          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " | stock detail may still be pending.");
   }
 
 string ASC_ExplorerBackgroundCompletionText(const ASC_RuntimeState &runtime)
   {
    if(runtime.background_hydration_active)
-      return("Background completion continues without blocking navigation.");
+      return("Background hydration continues: stock regions and finer stock detail remain visibly pending until promoted.");
    return("Background completion is caught up right now.");
   }
 

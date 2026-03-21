@@ -66,6 +66,7 @@ struct ASC_PreparedBucketState
    ASC_BucketPreparedSymbol     symbols[];
    int                          batch_ready[];
    int                          batch_reused[];
+   int                          batch_progress_states[];
    int                          bucket_progress_states[];
   };
 
@@ -158,6 +159,14 @@ void ASC_PreparedSeedMainBuckets(ASC_PreparedBucketState &prepared)
       prepared.buckets[i].unresolved_symbol_count=0;
       prepared.buckets[i].prepared_symbol_offset=-1;
       prepared.buckets[i].progress_state=ASC_PreparedBucketProgressForSlot(i,prepared.batch_ready);
+      if(i==5 && ArraySize(prepared.batch_progress_states)>=ASC_PREPARED_BATCH_COUNT)
+        {
+         if(prepared.batch_progress_states[ASC_PREPARED_BATCH_STOCK_MAIN-1]==ASC_PREPARED_BUCKET_PREPARING)
+            prepared.buckets[i].progress_state=ASC_PREPARED_BUCKET_PREPARING;
+         else if(prepared.batch_progress_states[ASC_PREPARED_BATCH_STOCK_MAIN-1]==ASC_PREPARED_BUCKET_READY
+                 && prepared.batch_progress_states[ASC_PREPARED_BATCH_STOCK_METADATA-1]!=ASC_PREPARED_BUCKET_READY)
+            prepared.buckets[i].progress_state=ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING;
+        }
       prepared.buckets[i].progress_label=ASC_PreparedBucketProgressStateText(prepared.buckets[i].progress_state);
       ArrayResize(prepared.buckets[i].symbol_refs,0);
       ArrayResize(prepared.buckets[i].symbol_notes,0);
@@ -377,11 +386,11 @@ void ASC_PreparedStateDiagnosticsReset(ASC_PreparedStateDiagnostics &diagnostics
 string ASC_PreparedBatchName(const int batch_id)
   {
    if(batch_id==ASC_PREPARED_BATCH_PRIORITY_SET)
-      return("Priority Set Main");
+      return("Priority 1: FX, Indices, Metals, Energy, Crypto");
    if(batch_id==ASC_PREPARED_BATCH_STOCK_MAIN)
-      return("Stock Main and Regions");
+      return("Priority 2: Stocks and regional stock groups");
    if(batch_id==ASC_PREPARED_BATCH_STOCK_METADATA)
-      return("Stock Taxonomy Metadata");
+      return("Priority 3: finer stock detail metadata");
    return("Unknown Batch");
   }
 
@@ -428,11 +437,13 @@ void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
    ArrayResize(prepared.symbols,0);
    ArrayResize(prepared.batch_ready,ASC_PREPARED_BATCH_COUNT);
    ArrayResize(prepared.batch_reused,ASC_PREPARED_BATCH_COUNT);
+   ArrayResize(prepared.batch_progress_states,ASC_PREPARED_BATCH_COUNT);
    ArrayResize(prepared.bucket_progress_states,6);
    for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
      {
       prepared.batch_ready[i]=0;
       prepared.batch_reused[i]=0;
+      prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
      }
    for(int i=0;i<6;i++)
       prepared.bucket_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
@@ -464,7 +475,26 @@ int ASC_PreparedNextPendingBatchId(const ASC_PreparedBucketState &prepared)
       if(prepared.batch_ready[i]==0)
          return(i+1);
      }
-   return(ASC_PREPARED_BATCH_STOCK_METADATA);
+   return(0);
+  }
+
+void ASC_PreparedRefreshBatchProgressStates(ASC_PreparedBucketState &prepared)
+  {
+   if(ArraySize(prepared.batch_progress_states)!=ASC_PREPARED_BATCH_COUNT)
+      ArrayResize(prepared.batch_progress_states,ASC_PREPARED_BATCH_COUNT);
+   int next_batch=ASC_PreparedNextPendingBatchId(prepared);
+   for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
+     {
+      int batch_id=i+1;
+      if(prepared.batch_ready[i]!=0)
+         prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_READY;
+      else if(prepared.active_batch_id==batch_id)
+         prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_PREPARING;
+      else if(batch_id<next_batch)
+         prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING;
+      else
+         prepared.batch_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
+     }
   }
 
 void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int warmup_assessed,const int warmup_total,const int readiness_percent,const int due_now,const int budget)
@@ -479,7 +509,10 @@ void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int 
       + " | budget=" + IntegerToString(budget)
       + " | backlog=" + IntegerToString((due_now>budget) ? (due_now-budget) : 0);
    int next_batch=ASC_PreparedNextPendingBatchId(prepared);
-   prepared.diagnostics.active_hydration_priority_set="next=" + ASC_PreparedBatchName(next_batch)
+   string active_batch=((next_batch>0 && prepared.active_batch_id>0) ? ASC_PreparedBatchName(prepared.active_batch_id) : "Idle");
+   string next_label=(next_batch>0 ? ASC_PreparedBatchName(next_batch) : "Hydration complete");
+   prepared.diagnostics.active_hydration_priority_set="active=" + active_batch
+      + " | next=" + next_label
       + " | promoted=" + IntegerToString(prepared.diagnostics.promoted_batch_count)
       + "/" + IntegerToString(ASC_PREPARED_BATCH_COUNT);
   }
@@ -663,14 +696,18 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
      {
       ArrayResize(working.batch_ready,ASC_PREPARED_BATCH_COUNT);
       ArrayResize(working.batch_reused,ASC_PREPARED_BATCH_COUNT);
+      ArrayResize(working.batch_progress_states,ASC_PREPARED_BATCH_COUNT);
       for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
         {
          working.batch_ready[i]=0;
          working.batch_reused[i]=0;
+         working.batch_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
         }
      }
    for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
       working.batch_reused[i]=(i==(batch_id-1) ? 0 : 1);
+
+   ASC_PreparedRefreshBatchProgressStates(working);
 
    int phase_started=ASC_PreparedNowMs();
    ASC_PreparedPhaseClassificationPass(server_key,states,count,batch_id,working);
@@ -687,6 +724,7 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
 
    phase_started=ASC_PreparedNowMs();
    working.batch_ready[batch_id-1]=1;
+   ASC_PreparedRefreshBatchProgressStates(working);
    ASC_PreparedRefreshBucketProgressStates(working);
    working.batch_generation++;
    working.ready=(ASC_PreparedPromotedBatchCount(working)>0);
