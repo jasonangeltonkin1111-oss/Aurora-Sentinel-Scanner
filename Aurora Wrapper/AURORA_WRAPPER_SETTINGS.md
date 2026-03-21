@@ -1,15 +1,16 @@
 # AURORA WRAPPER SETTINGS
 
-- wrapper_status: `ACTIVE_COMPILATION_V1`
+- wrapper_status: `ACTIVE_COMPILATION_V2`
 - compiled_on: `2026-03-21`
 - source_truth_root: `Aurora Blueprint/`
 - wrapper_root: `Aurora Wrapper/`
-- active_run_ref: `Aurora Blueprint/runs/AURORA_RUN_063.md`
+- active_run_ref: `Aurora Blueprint/runs/AURORA_RUN_064.md`
 - default_mode: `WRAPPER_OPERATOR_MODE`
 - alternate_mode: `WRAPPER_MAINTENANCE_MODE`
 - bridge_status: `NO_BRIDGE_CHANGE_NEEDED`
-- kernel_target: `~8k chars max`
-- file_count_target: `8-15`
+- kernel_target: `<= ~5k chars`
+- file_count_target: `10`
+- file_count_soft_range: `8-12`
 - file_count_hard_ceiling: `20`
 
 ## Default hot-path files
@@ -23,28 +24,25 @@
 7. `AURORA_WRAPPER_PATTERN_VAULT.md`
 8. `AURORA_WRAPPER_BRIDGE_PACK.md`
 
-## Conditional files
+## Conditional support files
 
-- `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when object, packet, review, or worked-example anchoring is required.
-- `AURORA_WRAPPER_MAINTENANCE_GUIDE.md` when updating the wrapper package.
+- `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when object shapes, review behavior, or example anchoring is required.
+- `AURORA_WRAPPER_MAINTENANCE_GUIDE.md` when auditing, recompiling, or replacing packs.
 
-## Replacement model
+## Pack replacement model
 
-- replace `AURORA_WRAPPER_CONTROL_PACK.md` when active control law changes materially
-- replace `AURORA_WRAPPER_EXECUTION_PACK.md` when workflow/object/protocol/schema layers change materially
-- replace `AURORA_WRAPPER_FAMILY_VAULT.md` when family doctrine or family competition law changes materially
-- replace `AURORA_WRAPPER_PATTERN_VAULT.md` when pattern doctrine or pattern competition law changes materially
-- replace `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when new packet schemas or better examples become canonical
-- replace `AURORA_WRAPPER_BRIDGE_PACK.md` only when ASC⇄Aurora contract truth changes materially
-- refresh `AURORA_WRAPPER_FILE_MAP.md`, `AURORA_WRAPPER_SETTINGS.md`, and `AURORA_WRAPPER_KERNEL.md` only when routing or package structure changes materially
+- replace `AURORA_WRAPPER_CONTROL_PACK.md` when office/control/build-phase/scope law changes materially
+- replace `AURORA_WRAPPER_EXECUTION_PACK.md` when workflow, object, enum, deployability, geometry, strategy-card, opportunity, packet, or EA-boundary law changes materially
+- replace `AURORA_WRAPPER_FAMILY_VAULT.md` when family competition law, family registry posture, or current core family doctrine changes materially
+- replace `AURORA_WRAPPER_PATTERN_VAULT.md` when pattern competition law, atlas posture, or current pattern doctrine changes materially
+- replace `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` when packet schemas, worked examples, review doctrine, or canonical intake anchors change materially
+- replace `AURORA_WRAPPER_BRIDGE_PACK.md` only when ASC⇄Aurora ownership or minimum context requirements change materially
+- refresh `AURORA_WRAPPER_KERNEL.md`, `AURORA_WRAPPER_FILE_MAP.md`, and this file only when routing, file roles, or package structure changes materially
 
-## Cold-path areas kept off default wrapper reads
+## Cold-path surfaces intentionally excluded from default reads
 
 - `Aurora Blueprint/office/WORK_LOG.md`
 - `Aurora Blueprint/office/SHA_LEDGER.md`
 - `Aurora Blueprint/runs/`
-- `Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md`
-- `Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_SUPPLEMENT_*.md`
-- `Aurora Blueprint/AURORA_EXTRACTION_QUEUE.md`
-- strengthening residue under `Aurora Blueprint/doctrine/**`
-- archives and mirrors under `archives/`
+- extraction ledgers, supplements, queueing, and archive mirrors
+- deep source doctrine and strengthening residue already compiled into the active packs

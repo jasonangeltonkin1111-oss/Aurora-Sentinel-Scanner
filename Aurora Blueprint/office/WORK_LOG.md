@@ -1,5 +1,44 @@
 # Aurora Office Work Log
 
+## 2026-03-21 — Aurora Wrapper Wave 2 fidelity audit and knowledge-transfer pass
+### Why
+The first wrapper compilation wave created a sound low-file-count canon, but the packs still needed a fidelity audit against active Blueprint truth, stronger strategy-card/review/doctrine transfer, and refreshed run/control continuity.
+
+### What was reviewed
+- all current wrapper files under `Aurora Wrapper/`
+- active office/control files and latest run continuity
+- active execution-side object/workflow/status/enum/deployability/geometry/card/packet/review/opportunity/EA-boundary files
+- active family competition, pattern competition, family registry/system, current family cards, and current pattern cards
+- bridge contract, joint evolution protocol, and the real ASC intake anchor
+
+### What changed
+- audited and refreshed every existing wrapper file without increasing wrapper file count
+- kept the kernel in tiny-router role while tightening routing and pack-role language
+- deepened execution pack coverage for strategy-card gating, object order, opportunity inventory, deployability, geometry, and review packet law
+- deepened family and pattern vaults with stronger compiled doctrine, competitor/suppressor logic, and competition-status preservation
+- strengthened packet/example vault and maintenance guide traceability so future pack replacement is easier and less drift-prone
+- created `AURORA_RUN_064.md` and refreshed active metadata/control surfaces where the wrapper audit materially changed active operating truth
+
+### What was intentionally not done
+- did not widen the ASC contract
+- did not move source truth out of `Aurora Blueprint/`
+- did not increase wrapper file count beyond the existing 10-file structure
+- did not turn the wrapper into a source-workspace clone or generic trading summary layer
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+Reason:
+- the pass strengthened Aurora-internal wrapper fidelity only
+- no new ASC-owned fields were required
+- ownership boundaries remained unchanged
+
+### Result
+Aurora now has a more faithful and more knowledge-complete compiled wrapper canon while preserving source-truth separation, tiny-kernel discipline, low file count, and explicit control/run/SHA continuity.
+
+---
+
+
 ## 2026-03-21 — Aurora Wrapper compiled canon foundation pass
 ### Why
 Aurora had enough active execution-side, family, pattern, bridge, and packet truth that a wrapper-facing compiled canon could now be built without moving source truth out of `Aurora Blueprint/`.
