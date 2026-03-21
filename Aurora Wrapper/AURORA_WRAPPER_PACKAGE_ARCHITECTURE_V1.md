@@ -2,90 +2,52 @@
 
 ## PURPOSE
 
-This file defines the intended final package architecture for `Aurora Wrapper/` as a standalone compiled canon.
-
-Its job is to prevent wrapper growth from becoming accidental.
-
-The wrapper should not merely stay under a ceiling.
-It should stay:
-- low-count
-- standalone-capable
-- clearly routed
-- replaceable by pack
-- strong enough for GPT-only usage when `Aurora Blueprint/` is unavailable in the session
-
----
+This file locks the intended long-run package shape for `Aurora Wrapper/`.
+Its job is to keep the wrapper rich enough for standalone operation without drifting into file sprawl, duplicated doctrine, or a giant monolithic prompt dump.
 
 ## ROOT DESIGN LAW
 
-The wrapper must be designed as a standalone compiled operating package, not as a neat summary set.
+The wrapper should be:
+- standalone-capable
+- source-truth-faithful
+- grouped by function
+- rich in doctrine
+- low in file count
+- easy to refresh by owning pack
 
-That means:
-- each file must have a clean job
-- file boundaries must follow reasoning flow, not accidental topic clustering
-- the package must stay below the hard ceiling of `20` files
-- the preferred operating range remains `8–12` files
-- if the wrapper grows beyond `12`, that growth must be justified by clear standalone benefit
-
----
+The architecture should prefer richer owning packs over parallel pack-plus-manual duplication.
 
 ## CURRENT PACKAGE JUDGMENT
 
-Current wrapper shape is already good enough to preserve.
-The correct move is not to redesign from zero.
-The correct move is to lock a final package model and deepen toward it carefully.
+The wrapper has now completed the expected consolidation move:
+- control manual merged into control pack
+- execution manual merged into execution pack
+- family routing manual merged into family vault
+- pattern routing manual merged into pattern vault
+- bridge operating manual merged into bridge pack
+- packet/review operating manual merged into packet/example vault
 
-Current strengths:
-- tiny kernel discipline
-- clear file map
-- clean hot-path routing
-- good major-pack separation
-- maintenance path kept separate
-
-Current risk:
-- standalone hardening could create random support files unless the target package architecture is explicit first
-
----
+That returns the package to the intended stable architecture instead of a transitional 19-file split.
 
 ## TARGET PACKAGE SIZE
 
 ### Hard ceiling
-- absolute maximum: `19` files
+19 files maximum.
 
 ### Preferred final range
-- preferred final operating range: `10–14` files
+12–14 files.
 
 ### Best-current target
-- target end-state: `12` files
-
-Why `12` is the best current target:
-- enough room for standalone sufficiency
-- enough room for proper packet/example and maintenance separation
-- still compact enough for GPT upload/use
-- still disciplined enough to avoid wrapper sprawl
-
----
+13 files.
 
 ## TARGET FILE CLASSES
 
-The wrapper should be organized into five classes only.
-
 ### 1. Router / metadata class
-Purpose:
-- identify package status
-- define read order
-- define package boundaries
-
-Files:
 1. `AURORA_WRAPPER_KERNEL.md`
 2. `AURORA_WRAPPER_SETTINGS.md`
 3. `AURORA_WRAPPER_FILE_MAP.md`
 
 ### 2. Core doctrine hot path
-Purpose:
-- carry the main standalone operational doctrine
-
-Files:
 4. `AURORA_WRAPPER_CONTROL_PACK.md`
 5. `AURORA_WRAPPER_EXECUTION_PACK.md`
 6. `AURORA_WRAPPER_FAMILY_VAULT.md`
@@ -93,162 +55,77 @@ Files:
 8. `AURORA_WRAPPER_BRIDGE_PACK.md`
 
 ### 3. Support hot path
-Purpose:
-- carry examples, packets, reviews, and edge-case anchors without bloating the central doctrine packs
-
-Files:
 9. `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md`
 
 ### 4. Package-governance / maintenance class
-Purpose:
-- support refresh, recompilation, replacement, and drift prevention
-
-Files:
 10. `AURORA_WRAPPER_MAINTENANCE_GUIDE.md`
 11. `AURORA_WRAPPER_STANDALONE_REQUIREMENTS_V1.md`
-
-### 5. Package-architecture lock class
-Purpose:
-- define the intended wrapper package shape and file-budget law so future growth remains disciplined
-
-Files:
 12. `AURORA_WRAPPER_PACKAGE_ARCHITECTURE_V1.md`
-
----
+13. `AURORA_WRAPPER_STANDALONE_AUDIT_V1.md`
 
 ## TARGET FINAL FILE SET
 
-The current best-designed end-state is therefore:
-
-1. `AURORA_WRAPPER_KERNEL.md`
-2. `AURORA_WRAPPER_SETTINGS.md`
-3. `AURORA_WRAPPER_FILE_MAP.md`
-4. `AURORA_WRAPPER_CONTROL_PACK.md`
-5. `AURORA_WRAPPER_EXECUTION_PACK.md`
-6. `AURORA_WRAPPER_FAMILY_VAULT.md`
-7. `AURORA_WRAPPER_PATTERN_VAULT.md`
-8. `AURORA_WRAPPER_BRIDGE_PACK.md`
-9. `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md`
-10. `AURORA_WRAPPER_MAINTENANCE_GUIDE.md`
-11. `AURORA_WRAPPER_STANDALONE_REQUIREMENTS_V1.md`
-12. `AURORA_WRAPPER_PACKAGE_ARCHITECTURE_V1.md`
-
-This is the current preferred wrapper package target.
-
----
+The final operating package should consist of the 13 files listed above.
+No parallel operating-manual companions should remain unless a future pass proves one truly earns permanent separation.
 
 ## READING FLOW
 
-The wrapper should support four clean reading flows.
-
 ### Flow A — fast standalone operator flow
-`KERNEL → SETTINGS → FILE_MAP → one primary doctrine pack`
-
-Use when:
-- normal GPT wrapper session
-- user asks one bounded Aurora question
-- low-cost retrieval is preferred
+`KERNEL → SETTINGS → FILE_MAP → one doctrine pack`
 
 ### Flow B — higher-certainty reasoning flow
-`KERNEL → SETTINGS → FILE_MAP → primary doctrine pack → one support pack`
-
-Use when:
-- packet/example certainty is needed
-- family-pattern interaction is contested
-- bridge or review law matters
+`KERNEL → SETTINGS → FILE_MAP → doctrine pack → support pack if needed`
 
 ### Flow C — wrapper-only standalone recovery flow
-`KERNEL → SETTINGS → FILE_MAP → CONTROL_PACK → EXECUTION_PACK → relevant doctrine vault`
-
-Use when:
-- Blueprint is unavailable in the session
-- wrapper must stand on its own
-- GPT must recover system posture from wrapper files alone
+`KERNEL → SETTINGS → FILE_MAP → CONTROL_PACK → task owner pack → PACKET_EXAMPLE as needed`
 
 ### Flow D — maintenance / refresh flow
-`KERNEL → SETTINGS → FILE_MAP → MAINTENANCE_GUIDE → STANDALONE_REQUIREMENTS → PACKAGE_ARCHITECTURE`
-
-Use when:
-- recompiling wrapper packs
-- checking drift
-- deciding whether a new wrapper file is justified
-
----
+`KERNEL → SETTINGS → FILE_MAP → MAINTENANCE_GUIDE → governance files → Blueprint roots → latest run / SHA`
 
 ## FILE BOUNDARY LAW
 
 ### Kernel
-Must remain tiny.
-It should route, not explain the whole system.
+Small router and boundary file only.
 
 ### Settings
-Must remain compact metadata and package law.
-It should not become doctrine-heavy.
+Status, file-count target, run ref, and operating modes.
 
 ### File map
-Must remain a routing surface.
-It should not duplicate pack content.
+Task routing and source-root map.
 
 ### Control pack
-Carries identity, authority, phase honesty, and wrapper operating boundaries.
-It must stay small enough to orient quickly.
+Identity, authority, build/scope locks, refusal, and anti-drift law.
 
 ### Execution pack
-This is the wrapper gravity center.
-It carries the main chain and therefore has the highest bloat risk.
-It should be the richest single pack, but still bounded.
+Stage chain, objects, enums, opportunity/deployability/geometry/card law, and packet/review consequences.
 
 ### Family vault
-Carries family-first ontology and current core family canon.
-It must not collapse into generic directional commentary.
+Family competition and current core family ecology.
 
 ### Pattern vault
-Carries pattern-second doctrine and pattern competition rules.
-It must remain downstream of family truth.
+Pattern competition and current pattern ecology.
 
 ### Bridge pack
-Carries missingness and ownership law.
-It must remain strict and refusal-capable.
+ASC ownership, missingness, downgrade/refusal, and joint-evolution posture.
 
 ### Packet/example vault
-Carries worked anchors, schema expectations, and review logic.
-It should absorb more examples rather than forcing examples into every doctrine pack.
+Concrete schema anchors, worked-example anchors, and review law.
 
-### Maintenance guide
-Carries replacement and refresh rules.
-It must stay off the default hot path.
-
-### Standalone requirements
-Carries the standalone sufficiency target.
-It prevents hidden Blueprint dependence.
-
-### Package architecture file
-Carries the package shape lock.
-It prevents random file-count drift.
-
----
+### Maintenance/governance files
+Refresh workflow, standalone bar, architecture lock, and audit findings.
 
 ## RULE FOR ADDING A NEW WRAPPER FILE
 
-A new wrapper file is allowed only if all of the following are true:
-1. the current pack structure cannot absorb the material cleanly
-2. adding the material to an existing pack would make routing worse
-3. the new file improves standalone sufficiency materially
-4. the new file keeps total wrapper count below `20`
-5. the new file does not duplicate Blueprint source truth lazily
+A new file must materially improve:
+- grouping
+- ambiguity reduction
+- standalone usefulness
+- refresh safety
 
-If these are not all true, deepen an existing pack instead.
-
----
+and must not simply duplicate owning-pack doctrine.
+If the knowledge fits cleanly into an existing owner, enrich the owner instead.
 
 ## CURRENT DESIGN DECISION
 
-At this stage, the wrapper should be designed toward a `12-file` final architecture.
-
-That is:
-- compact enough for upload and GPT use
-- rich enough for standalone compiled canon behavior
-- organized enough to preserve proper flow
-- strict enough to avoid future sprawl
-
-This should now govern future wrapper hardening passes.
+The owning-pack model is now locked as the preferred wrapper architecture.
+Future temporary densification files may be created only as scaffolds and should be merged back out once the owning pack is strong enough.

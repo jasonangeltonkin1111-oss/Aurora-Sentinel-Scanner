@@ -23,8 +23,9 @@
 - Aurora opportunity staging is canonical and must allow early, mid-progress, continuation, re-entry, salvage, late, and exhausted states without forcing every family into identical timing behavior
 - late-join and mid-progress opportunities are legitimate when remaining structure, deployability, and geometry truth still support them
 - operator-created archive mirrors under `archives/` are reference only and must never be treated as permission to remove active knowledge
+- the stable wrapper architecture target is the 13-file owning-pack model; transitional wrapper manuals may exist briefly as hardening scaffolds but should be merged back into their owner packs and then removed once the merge is lossless
 
 ## Current bridge-check lock
 
 - current pass outcome: `NO_BRIDGE_CHANGE_NEEDED`
-- reason: the abundance/stage-aware opportunity expansion pass is Aurora-internal and does not require ASC contract changes
+- reason: the wrapper consolidation pass deepened compiled carry and removed duplicate wrapper scaffolds without changing ASC-owned contract requirements

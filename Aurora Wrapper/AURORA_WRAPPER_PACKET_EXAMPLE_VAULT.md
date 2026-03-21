@@ -2,77 +2,158 @@
 
 ## What this vault compiles
 
-This vault compiles the minimum concrete packet, schema, review, and worked-example anchors a wrapper needs when abstract protocol text is not enough.
-It is support-path material, not the default first read for simple control or doctrine questions.
+This vault compiles packet schemas, group-context and review object shapes, family-lane packet usage, worked example usage, review law, and real-intake anchoring.
+It is the wrapper-facing support vault for concrete shape, continuity, and diagnosis.
 
 ## What this vault excludes
 
-- full source packet duplication when a compiled anchor is enough
-- office/run/SHA continuity material
-- family/pattern doctrine that belongs in the dedicated vaults
+- full doctrine ownership, which stays in control/execution/family/pattern/bridge packs
+- raw archive-style example libraries
+- maintenance-control residue such as work logs and SHA checkpoints
 
-## Active packet family
+## Root packet law
 
-### Workflow packet
-Used to define the full staged Aurora flow for a case.
-It must preserve input requirements, stage order, object chain, stop conditions, output expectations, and operator notes.
+Packets and examples do not exist to make Aurora look concrete.
+They exist to make staged reasoning auditable, reusable, diagnosable, and anti-fabrication-safe.
+A wrapper-only GPT should treat them as continuity structures, shape anchors, and diagnosis anchors.
 
-### Family-lane packet
-Used when a specific family/pattern lane needs a reusable operational route.
-The active lane anchor is C-04 / G4 and preserves habitat, competitors, required inputs, stage-specific checks, and stop/go boundaries.
+## Packet families
 
-### Worked-example packet
-Used to show a fully filled interpretation chain from ASC context through downstream judgment.
-The active filled example demonstrates honest intake, group-context construction, interpretation, family/pattern narrowing, opportunity posture, deployability/geometry gating, and card-ready logic.
+### 1. Workflow packets
+Purpose:
+- define the full staged route a case may take
+- preserve inputs, stage order, object chain, stop conditions, outputs, and operator notes
 
-### Review packet
-Used to compare original thesis against actual outcome without casually mutating doctrine.
-A review packet must preserve target reference, original state summary, actual outcome summary, review classification, learned changes, and stability notes.
-It exists to diagnose the correct layer of success/failure rather than to backfill certainty.
+Must not:
+- invent family or pattern truth
+- skip downgrade logic
+- imply that card output is the default endpoint
+
+### 2. Family-lane packets
+Purpose:
+- define a reusable route inside one family/pattern lane
+- preserve habitat, anti-habitat, competitors, required inputs, stage-aware checks, and go/stop boundaries
+
+Must not:
+- replace the family registry or pattern atlas
+- imply that one lane is universal doctrine
+
+### 3. Worked-example packets
+Purpose:
+- show a full staged interpretation chain from ASC intake through downstream judgment
+- preserve honest intake quality, group-context construction, interpretation, family/pattern narrowing, opportunity posture, deployability/geometry gating, and whether the case reached card-valid status
+
+Must not:
+- prove live deployability in general
+- hide ambiguity that survived honestly
+- rewrite missingness into certainty for neatness
+
+### 4. Review packets
+Purpose:
+- diagnose what happened after the original thesis/packet existed
+- preserve target reference, original state summary, actual outcome summary, review classification, learned changes, and stability notes
+
+Must not:
+- mutate the original packet retroactively
+- convert one outcome into sweeping doctrine rewrite
+- erase what was genuinely correct earlier in the chain
 
 ## Core schema anchors
 
-### Group-context object schema
-Preserves identity, membership, regime, routing, and boundary fields so Aurora is not reasoning from a vague symbol narrative alone.
-It separates family logic from symbol-specific constraints and keeps related-symbol context explicit.
+### Group-context object
+Preserve:
+- identity fields
+- membership fields
+- regime fields
+- routing fields
+- boundary fields
+
+This is the anti-symbol-shell anchor.
+Without group context, family reasoning collapses toward anecdotes.
+
+### Packet schema
+Preserve field groups for:
+- packet identity
+- input requirements
+- stage order
+- object chain
+- output expectations
+- stage posture
+- operator notes
+- family-lane special fields
+- worked-example special fields
 
 ### Strategy-card field schema
-Preserves identity, lineage, interpretation, family/pattern, opportunity/deployability, geometry, invalidation, timebox, machine-safe export, and human-only commentary groups.
+Use when concrete card-group recall is needed.
+The execution pack owns the card gate; this vault owns the concrete field-anchor reminder.
 
 ### Review-packet schema
-Defines how Aurora learns from reviewed cases without rewriting the original packet retroactively.
-It should answer what layer was right, what layer failed, and what changed versus what remains stable.
+Preserve:
+- packet identity
+- target reference
+- original state summary
+- actual outcome summary
+- review classification
+- learned changes
+- stability notes
 
-## Concrete example anchors
+## Example-type discipline
 
-- **Group context example 001** — C-04 / G4 object specimen showing clean field grouping and symbol-shell discipline.
-- **Family lane packet 002** — current reusable route for failed-break / reclaim logic.
-- **Worked example packet 002 filled** — full staged case showing honest ambiguity preservation and an honest no-live-card outcome.
-- **Review packet 001** — review specimen showing outcome classification and learned-change discipline.
-- **Real ASC intake example 001** — proof that Aurora can consume real ASC excerpt truth while preserving missingness and stopping before invention.
+### Illustrative examples
+Use to prove routing, shape, and honesty posture.
+Do not treat them as proof of live certainty.
 
-## Wrapper use rules
+### Real-intake examples
+Use to prove bridge behavior with real ASC-derived input and stop-before-invention discipline.
+Do not invent beyond the actual intake quality.
 
-- Read this vault when you need shape certainty, schema recall, or example anchoring.
-- Use it after the execution/family/pattern/bridge packs, not instead of them.
-- Do not turn examples into universal doctrine; they are anchors, not substitutes for the canonical protocols.
+### Review examples
+Use to prove diagnosis and non-retroactive learning.
+Do not use them to build hindsight mythology.
 
-## Example-usage law
+## Concrete anchors the wrapper should know
 
-- illustrative examples prove routing, object shape, and honesty posture; they do not prove live deployability
-- real-intake examples prove bridge behavior and missingness handling; they do not authorize downstream invention from partial ASC excerpts
-- review examples prove diagnosis discipline; they do not authorize retroactive certainty inflation
-- family-lane examples prove reusable route structure; they do not replace the wider family registry or pattern atlas
+- `AURORA_GROUP_CONTEXT_OBJECT_EXAMPLE_001_C04_G4.md` = group-context shape anchor
+- `AURORA_FAMILY_LANE_PACKET_002_C04_G4.md` = reusable family-lane route anchor
+- `AURORA_WORKED_EXAMPLE_PACKET_002_C04_G4_FILLED.md` = full staged worked example anchor
+- `AURORA_REVIEW_PACKET_001_C04_G4.md` = review diagnosis anchor
+- `AURORA_REAL_ASC_CONTEXT_INTAKE_EXAMPLE_001_3_XHKG.md` = real-intake bridge anchor
 
-## Concrete expectations the wrapper should remember
+## No-card-valid honesty
 
-- packets must keep stage sequence, entry/exit conditions, stop conditions, object references, output expectations, and operator notes explicit
-- worked examples may correctly end in observe-only, watch-only, geometry-invalid, stage-exhausted, or no-card-valid outcomes
-- review packets should isolate whether the issue was structure, stage classification/exhaustion, deployability, geometry, timebox, or missing truth
-- packet lanes may legitimately preserve mid-progress, continuation, re-entry, or salvage opportunity classes rather than forcing early-entry framing
-- group-context examples should keep family logic broader than one symbol shell so the wrapper does not become symbol-bound
+Packets and examples may end in:
+- `OBSERVE_ONLY`
+- watch-only
+- `ELIGIBLE_DEGRADED`
+- `EXECUTION_INVALID`
+- `STRUCTURE_INVALID`
+- `GEOMETRY_INVALID`
+- `GEOMETRY_UNRESOLVED`
+- stage exhaustion
+- `CARD_BLOCKED_*`
+- no-card-valid outcomes
 
-## Replace/update note
+That is proof of honesty, not a defect.
 
-Replace this vault when packet schemas, review logic, canonical examples, or the real-intake anchor change materially.
-Keep heavy run history and source packet residue outside the wrapper hot path.
+## Review diagnosis map
+
+Reviews should ask:
+- was the structure wrong?
+- was the stage wrong?
+- was deployability wrong?
+- was geometry wrong?
+- was upstream truth too thin?
+- what should change next time without rewriting the original packet retroactively?
+
+## Wrapper usage rule
+
+Load this vault when you need:
+- exact object/packet/review field groups
+- the difference between illustrative, real-intake, and review examples
+- a worked anchor for how the chain should look in concrete form
+
+Do not load it by default for every task.
+
+## Update note
+
+Replace this vault when packet schemas, canonical worked examples, review law, or real-intake anchors change materially.

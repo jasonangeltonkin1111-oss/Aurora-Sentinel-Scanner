@@ -85,7 +85,7 @@ From this point onward:
 
 ## Active wrapper / bridge / machine surfaces
 - `Aurora Wrapper/` now exists as the first compiled wrapper-facing canon package sourced from active Aurora truth.
-- The wrapper pack set has now passed a Wave 3 preparation refresh that further deepened execution-stage law, family/pattern anti-confusion coverage, bridge clarity, and packet/review usage without increasing file count.
+- The wrapper pack set has now passed a completion-and-consolidation refresh that merged the transitional manuals back into the owning packs, deepened standalone carry, and restored the wrapper to a stable 13-file architecture.
 - `Aurora Blueprint/AURORA_STATUS_AND_ENUM_ALIGNMENT_SPEC_001.md`
 - `Aurora Blueprint/AURORA_WRAPPER_WORKFLOW_PACKET_002.md`
 - `Aurora Blueprint/ASC_TO_AURORA_CONTEXT_CONTRACT.md`
