@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.060
+// Wrapper Version: 1.070
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.360
+// Explorer Subsystem Version: 0.370
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -526,6 +526,6 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
    if(StringFind(sparam,ASC_HUD_PREFIX)!=0)
       return;
 
-   ASC_ExplorerHandleAction(g_explorer,g_settings,sparam,g_symbols,g_symbol_count,g_logger);
+   ASC_ExplorerHandleAction(g_explorer,g_settings,g_runtime,sparam,g_symbols,g_symbol_count,g_logger);
    ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
   }
