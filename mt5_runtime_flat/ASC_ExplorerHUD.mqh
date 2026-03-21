@@ -92,8 +92,16 @@ struct ASC_ExplorerNavState
    string selected_seed_symbol;
    bool dirty;
    datetime last_render_at;
+   long last_render_started_ms;
    long last_render_duration_ms;
+   long render_duration_total_ms;
+   int render_sample_count;
+   long render_duration_max_ms;
+   datetime last_navigation_action_at;
    long last_page_switch_action_to_render_ms;
+   long page_switch_action_to_render_total_ms;
+   int page_switch_sample_count;
+   long page_switch_action_to_render_max_ms;
    long pending_page_switch_started_ms;
    bool pending_page_switch_timing;
    string pending_page_switch_action;
@@ -1042,6 +1050,7 @@ string ASC_ExplorerTimingMsText(const long value)
 
 void ASC_ExplorerMarkPageSwitchTiming(ASC_ExplorerContext &ctx,const string action_name)
   {
+   ctx.nav.last_navigation_action_at=TimeCurrent();
    ctx.nav.pending_page_switch_started_ms=GetTickCount();
    ctx.nav.pending_page_switch_timing=true;
    ctx.nav.pending_page_switch_action=action_name;
@@ -1054,6 +1063,27 @@ void ASC_ExplorerMaybeStartPageSwitchTiming(ASC_ExplorerContext &ctx,const strin
       || ctx.nav.selected_symbol_index!=before_symbol
       || ctx.nav.selected_stat_view!=before_stat)
       ASC_ExplorerMarkPageSwitchTiming(ctx,action_name);
+  }
+
+void ASC_ExplorerCommitTiming(ASC_ExplorerContext &ctx,ASC_PreparedBucketState &prepared)
+  {
+   ctx.nav.last_render_duration_ms=GetTickCount()-ctx.nav.last_render_started_ms;
+   ctx.nav.render_duration_total_ms+=ctx.nav.last_render_duration_ms;
+   ctx.nav.render_sample_count++;
+   if(ctx.nav.last_render_duration_ms>ctx.nav.render_duration_max_ms)
+      ctx.nav.render_duration_max_ms=ctx.nav.last_render_duration_ms;
+   if(ctx.nav.pending_page_switch_timing)
+     {
+      ctx.nav.last_page_switch_action_to_render_ms=GetTickCount()-ctx.nav.pending_page_switch_started_ms;
+      ctx.nav.page_switch_action_to_render_total_ms+=ctx.nav.last_page_switch_action_to_render_ms;
+      ctx.nav.page_switch_sample_count++;
+      if(ctx.nav.last_page_switch_action_to_render_ms>ctx.nav.page_switch_action_to_render_max_ms)
+         ctx.nav.page_switch_action_to_render_max_ms=ctx.nav.last_page_switch_action_to_render_ms;
+      ctx.nav.pending_page_switch_timing=false;
+     }
+   ctx.nav.last_render_at=TimeCurrent();
+   prepared.diagnostics.hud_render_ms=ctx.nav.last_render_duration_ms;
+   prepared.diagnostics.page_switch_action_to_render_ms=ctx.nav.last_page_switch_action_to_render_ms;
   }
 
 void ASC_ExplorerRenderHeader(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,const int chart_w)
@@ -1077,9 +1107,13 @@ void ASC_ExplorerRenderHeader(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings
    ASC_ExplorerLabel(ctx,"header.warmup.background",ASC_ExplorerFitText(ASC_ExplorerBackgroundCompletionText(runtime),panel_w-18),panel_x+12,panel_y+38,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"header.warmup.pressure",ASC_ExplorerFitText("Bounded-work pressure: " + prepared.diagnostics.bounded_work_pressure_summary,panel_w-18),panel_x+12,panel_y+54,(!runtime.degraded ? ctx.theme.dim : ctx.theme.warning));
    string page_switch_label=(ctx.nav.pending_page_switch_action!="" ? ctx.nav.pending_page_switch_action : "none");
-   string timing_line="Last prep " + ASC_ExplorerTimingMsText(prepared.diagnostics.bucket_prep_total_ms)
-      + " | HUD render " + ASC_ExplorerTimingMsText(ctx.nav.last_render_duration_ms)
-      + " | Page switch " + ASC_ExplorerTimingMsText(ctx.nav.last_page_switch_action_to_render_ms)
+   long render_avg=(ctx.nav.render_sample_count>0 ? (ctx.nav.render_duration_total_ms/ctx.nav.render_sample_count) : 0);
+   long page_switch_avg=(ctx.nav.page_switch_sample_count>0 ? (ctx.nav.page_switch_action_to_render_total_ms/ctx.nav.page_switch_sample_count) : 0);
+   string timing_line="Prep " + ASC_ExplorerTimingMsText(prepared.diagnostics.bucket_prep_total_ms)
+      + " | HUD " + ASC_ExplorerTimingMsText(ctx.nav.last_render_duration_ms)
+      + " avg/max " + ASC_ExplorerTimingMsText(render_avg) + "/" + ASC_ExplorerTimingMsText(ctx.nav.render_duration_max_ms)
+      + " | Nav->render " + ASC_ExplorerTimingMsText(ctx.nav.last_page_switch_action_to_render_ms)
+      + " avg/max " + ASC_ExplorerTimingMsText(page_switch_avg) + "/" + ASC_ExplorerTimingMsText(ctx.nav.page_switch_action_to_render_max_ms)
       + " (" + page_switch_label + ")";
    ASC_ExplorerLabel(ctx,"header.warmup.timing",ASC_ExplorerFitText(timing_line,panel_w-18),panel_x+12,panel_y+70,ctx.theme.dim);
   }
@@ -1128,19 +1162,19 @@ void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSet
    ASC_ExplorerLabel(ctx,"rail.density","Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),x+ctx.theme.padding+8,button_y+56,ctx.theme.dim);
   }
 
-void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const int x,const int y,const int w,const int chart_w,const int chart_h)
+void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,const int x,const int y,const int w,const int chart_w,const int chart_h)
   {
    string base_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.");
    string readiness_text="Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Initial " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.symbol_count) + " | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count);
-   string status_text=base_text + " | " + readiness_text + " | Server " + runtime.server_clean + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
+   string status_text=base_text + " | " + readiness_text + " | Batch " + IntegerToString(prepared.diagnostics.last_prepared_batch_id) + " | " + prepared.diagnostics.active_hydration_priority_set + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
    ASC_ExplorerRect(ctx,"status.strip",x,y,w,ctx.theme.status_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,"status.bar",x,y,5,ctx.theme.status_height,(runtime.degraded ? ctx.theme.warning : ctx.theme.good),(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
    ASC_ExplorerLabel(ctx,"status.text",ASC_ExplorerFitText(status_text,w-24),x+ctx.theme.padding+4,y+7,(runtime.degraded ? ctx.theme.warning : ctx.theme.muted));
   }
 
-void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
+void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
-   long render_started_ms=GetTickCount();
+   ctx.nav.last_render_started_ms=GetTickCount();
    if(!settings.explorer_enabled)
      {
       logger.Info("Explorer","render skipped because explorer is disabled");
@@ -1169,13 +1203,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
       ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : ASC_RuntimeModeText(runtime.mode)) + " | Warmup " + IntegerToString(runtime.warmup_progress_percent) + "% | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
       ASC_ExplorerEndFrame(ctx);
       ChartRedraw(ctx.chart_id);
-      ctx.nav.last_render_duration_ms=GetTickCount()-render_started_ms;
-      if(ctx.nav.pending_page_switch_timing)
-        {
-         ctx.nav.last_page_switch_action_to_render_ms=GetTickCount()-ctx.nav.pending_page_switch_started_ms;
-         ctx.nav.pending_page_switch_timing=false;
-        }
-      ctx.nav.last_render_at=TimeCurrent();
+      ASC_ExplorerCommitTiming(ctx,prepared);
       ctx.nav.dirty=false;
       return;
      }
@@ -1213,16 +1241,10 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
          break;
      }
 
-   ASC_ExplorerRenderStatusStrip(ctx,runtime,main_x,main_y+main_h+ctx.theme.gap,chart_w-(ctx.theme.margin*2)-(ctx.theme.padding*2),chart_w,chart_h);
+   ASC_ExplorerRenderStatusStrip(ctx,runtime,prepared,main_x,main_y+main_h+ctx.theme.gap,chart_w-(ctx.theme.margin*2)-(ctx.theme.padding*2),chart_w,chart_h);
    ASC_ExplorerEndFrame(ctx);
    ChartRedraw(ctx.chart_id);
-   ctx.nav.last_render_duration_ms=GetTickCount()-render_started_ms;
-   if(ctx.nav.pending_page_switch_timing)
-     {
-      ctx.nav.last_page_switch_action_to_render_ms=GetTickCount()-ctx.nav.pending_page_switch_started_ms;
-      ctx.nav.pending_page_switch_timing=false;
-     }
-   ctx.nav.last_render_at=TimeCurrent();
+   ASC_ExplorerCommitTiming(ctx,prepared);
    ctx.nav.dirty=false;
   }
 
@@ -1248,8 +1270,16 @@ void ASC_ExplorerInit(ASC_ExplorerContext &ctx,const long chart_id)
    ctx.nav.selected_seed_symbol="";
    ctx.nav.dirty=true;
    ctx.nav.last_render_at=0;
+   ctx.nav.last_render_started_ms=0;
    ctx.nav.last_render_duration_ms=0;
+   ctx.nav.render_duration_total_ms=0;
+   ctx.nav.render_sample_count=0;
+   ctx.nav.render_duration_max_ms=0;
+   ctx.nav.last_navigation_action_at=0;
    ctx.nav.last_page_switch_action_to_render_ms=0;
+   ctx.nav.page_switch_action_to_render_total_ms=0;
+   ctx.nav.page_switch_sample_count=0;
+   ctx.nav.page_switch_action_to_render_max_ms=0;
    ctx.nav.pending_page_switch_started_ms=0;
    ctx.nav.pending_page_switch_timing=false;
    ctx.nav.pending_page_switch_action="";
@@ -1268,7 +1298,7 @@ void ASC_ExplorerShutdown(ASC_ExplorerContext &ctx)
    ctx.initialized=false;
   }
 
-void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const bool force,ASC_Logger &logger)
+void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const bool force,ASC_Logger &logger)
   {
    if(!ctx.initialized || !settings.explorer_enabled)
      {

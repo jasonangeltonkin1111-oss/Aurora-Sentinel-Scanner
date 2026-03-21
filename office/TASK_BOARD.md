@@ -193,7 +193,7 @@ Before closing any future pass, explicitly check:
 3. verify explorer render/click paths stay consumer-only against promoted last-good state
 4. reduce full chart-object delete/recreate churn where feasible
 5. keep explorer presentation-only after the refactor
-6. decide later whether prepared-state persistence needs its own artifact beyond minimal runtime continuity metadata
+6. preserve compact Layer 1 diagnostics continuity in runtime state; decide later whether prepared-state persistence needs a dedicated artifact beyond summary metrics
 
 ### Immediate task group D — classification truth
 1. compare active ASC classification to researched AFS source

@@ -121,7 +121,7 @@ The sequence above remains active canon for debugging and future implementation 
 
 ### Dynamic bucket truth
 - **Status:** active but provisional
-- **Pass:** bucket membership shown to the operator is based on classified live broker symbols, compressed into six Layer 1 main buckets for the first surface, and promoted through rolling prepared-state batches with last-good fallback instead of whole-world rebuild semantics.
+- **Pass:** bucket membership shown to the operator is based on classified live broker symbols, compressed into six Layer 1 main buckets for the first surface, promoted through rolling prepared-state batches with last-good fallback instead of whole-world rebuild semantics, and summarized through compact Layer 1 diagnostics for prep cost, warmup/readiness, bounded-work pressure, and hydration priority state.
 - **Break symptoms:** unresolved placeholders count as live members, misclassified symbols pollute visible bucket truth, prepared-batch promotion wipes prior good state, or regional stock groupings become first-class main pages instead of preserved detail metadata.
 - **Owners:** `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`, `mt5_runtime_flat/ASC_Classification.mqh`, `mt5_runtime_flat/AuroraSentinel.mq5`
 - **Regression warning:** current bucket truth is not complete enough to justify downstream selection logic, and unchanged-batch reuse is still scaffold-grade rather than delta-driven.
