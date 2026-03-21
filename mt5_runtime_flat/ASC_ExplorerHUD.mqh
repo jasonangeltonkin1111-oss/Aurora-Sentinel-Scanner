@@ -114,6 +114,8 @@ struct ASC_ExplorerBucketResolvedSymbol
    string display_symbol;
    string note;
    bool matched_live_symbol;
+   bool canonical_match;
+   string canonical_symbol;
    int symbol_state_index;
    ASC_MarketStatus market_status;
    bool open_now;
@@ -127,22 +129,22 @@ void ASC_ExplorerThemeDefaults(ASC_ExplorerTheme &theme,const int density_mode)
    theme.header_height=(density_mode>=2 ? 58 : 52);
    theme.nav_height=(density_mode>=2 ? 34 : 30);
    theme.status_height=(density_mode>=2 ? 32 : 28);
-   theme.rail_width=(density_mode>=2 ? 174 : 162);
+   theme.rail_width=(density_mode>=2 ? 154 : 146);
    theme.row_height=(density_mode<=0 ? 16 : (density_mode>=2 ? 20 : 18));
    theme.title_height=(density_mode>=2 ? 30 : 26);
    theme.button_height=(density_mode>=2 ? 26 : 24);
-   theme.background=C'10,16,25';
-   theme.header_fill=C'18,27,41';
-   theme.panel_fill=C'21,31,45';
-   theme.panel_alt_fill=C'29,40,57';
-   theme.panel_soft_fill=C'16,24,36';
-   theme.section_fill=C'14,22,33';
-   theme.accent=C'78,163,255';
-   theme.accent_alt=C'104,186,255';
-   theme.good=C'96,207,154';
-   theme.warning=C'223,181,84';
-   theme.danger=C'224,118,92';
-   theme.reserved=C'108,119,143';
+   theme.background=C'7,12,20';
+   theme.header_fill=C'14,22,35';
+   theme.panel_fill=C'18,27,40';
+   theme.panel_alt_fill=C'26,39,58';
+   theme.panel_soft_fill=C'12,19,31';
+   theme.section_fill=C'10,17,28';
+   theme.accent=C'76,173,255';
+   theme.accent_alt=C'97,143,224';
+   theme.good=C'88,204,144';
+   theme.warning=C'224,181,90';
+   theme.danger=C'232,112,98';
+   theme.reserved=C'104,112,136';
    theme.text=clrWhite;
    theme.muted=C'196,204,219';
    theme.dim=C'146,155,174';
@@ -477,19 +479,22 @@ void ASC_ExplorerBuildBucketSymbols(const ASC_BucketViewModel &bucket,ASC_Symbol
       resolved[i].display_symbol=bucket.symbol_refs[i];
       resolved[i].note=bucket.symbol_notes[i];
       resolved[i].matched_live_symbol=false;
+      resolved[i].canonical_match=false;
+      resolved[i].canonical_symbol=bucket.symbol_refs[i];
       resolved[i].symbol_state_index=-1;
       resolved[i].market_status=ASC_MARKET_UNKNOWN;
       resolved[i].open_now=false;
       for(int j=0;j<count;j++)
         {
-         if(states[j].symbol==bucket.symbol_refs[i])
-           {
-            resolved[i].matched_live_symbol=true;
-            resolved[i].symbol_state_index=j;
-            resolved[i].market_status=states[j].market_status;
-            resolved[i].open_now=(states[j].market_status==ASC_MARKET_OPEN);
-            break;
-           }
+         if(!ASC_SymbolsMatchCanonical(states[j].symbol,bucket.symbol_refs[i]))
+            continue;
+         resolved[i].matched_live_symbol=true;
+         resolved[i].canonical_match=true;
+         resolved[i].display_symbol=states[j].symbol;
+         resolved[i].symbol_state_index=j;
+         resolved[i].market_status=states[j].market_status;
+         resolved[i].open_now=(states[j].market_status==ASC_MARKET_OPEN);
+         break;
         }
      }
   }
@@ -658,14 +663,14 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,ASC_SymbolState &stat
       int live_visible=ASC_ExplorerVisibleBucketCount(filtered[i],states,count,ctx.nav.market_filter);
       bool selected=(i==ctx.nav.selected_bucket_index);
       color fill=(selected ? ctx.theme.selected_soft_fill : ctx.theme.panel_fill);
-      color accent=(live_visible>0 ? ctx.theme.good : ctx.theme.accent);
+      color accent=(live_visible>0 ? ctx.theme.good : ctx.theme.warning);
       ASC_ExplorerRect(ctx,"buckets.card." + IntegerToString(i),x,card_y,w,row_h,fill,ctx.theme.border);
       ASC_ExplorerRect(ctx,"buckets.card.bar." + IntegerToString(i),x,card_y,6,row_h,accent,accent);
       ASC_ExplorerLabel(ctx,"buckets.name." + IntegerToString(i),ASC_ExplorerFitText(filtered[i].name,w-160,10),x+14,card_y+6,ctx.theme.text,10);
       ASC_ExplorerLabel(ctx,"buckets.meta." + IntegerToString(i),ASC_ExplorerFitText(filtered[i].family + " | " + filtered[i].posture + " | ID " + filtered[i].bucket_id,w-160),x+14,card_y+24,ctx.theme.muted);
-      string truth_line="Visible now: " + IntegerToString(live_visible) + " of " + IntegerToString(filtered[i].resolved_symbol_count) + " refs";
+      string truth_line="Resolved live: " + IntegerToString(live_visible) + " of " + IntegerToString(filtered[i].resolved_symbol_count) + " refs";
       if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
-         truth_line="Reference set: " + IntegerToString(filtered[i].resolved_symbol_count) + " canonical placeholders";
+         truth_line="Reference set: " + IntegerToString(filtered[i].resolved_symbol_count) + " canonical refs";
       ASC_ExplorerLabel(ctx,"buckets.truth." + IntegerToString(i),ASC_ExplorerFitText(truth_line,w-160),x+14,card_y+24+ctx.theme.row_height,accent);
       ASC_ExplorerButton(ctx,"action.bucket." + IntegerToString(i),"Open",x+w-82,card_y+((row_h-ctx.theme.button_height)/2),70,ctx.theme.button_height,ctx.theme.accent,selected);
      }
@@ -726,9 +731,9 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,ASC_SymbolState &st
          display_count=limit;
      }
 
-   int header_h=86;
-   int controls_h=50;
-   int future_h=82;
+   int header_h=92;
+   int controls_h=42;
+   int future_h=74;
    int split_gap=ctx.theme.gap;
    int split_y=y+header_h+controls_h+(ctx.theme.gap*2);
    int split_h=h-header_h-controls_h-future_h-(ctx.theme.gap*4);
@@ -739,29 +744,30 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,ASC_SymbolState &st
    int future_y=y+h-future_h;
 
    ASC_ExplorerRect(ctx,"bucket.detail.header",x,y,w,header_h,ctx.theme.panel_fill,ctx.theme.border);
-   ASC_ExplorerRect(ctx,"bucket.detail.header.bar",x,y,6,header_h,ctx.theme.accent,ctx.theme.accent);
+   int resolved_open_count=ASC_ExplorerVisibleBucketCount(bucket,states,count,ASC_EXPLORER_FILTER_OPEN_ONLY);
+   ASC_ExplorerRect(ctx,"bucket.detail.header.bar",x,y,6,header_h,(resolved_open_count>0 ? ctx.theme.good : ctx.theme.accent),(resolved_open_count>0 ? ctx.theme.good : ctx.theme.accent));
    ASC_ExplorerLabel(ctx,"bucket.detail.title",ASC_ExplorerFitText(bucket.name,w-24,11),x+14,y+8,ctx.theme.text,11);
    ASC_ExplorerLabel(ctx,"bucket.detail.family",ASC_ExplorerFitText(bucket.family + " | " + bucket.posture + " | Bucket ID " + bucket.bucket_id,w-24),x+14,y+28,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"bucket.detail.note",ASC_ExplorerFitText(bucket.note,w-24),x+14,y+46,ctx.theme.dim);
-   string honesty_line="Membership Truth: canonical references remain placeholders until live identity resolution exists; broker truth is shown only when a tracked symbol match is present.";
-   ASC_ExplorerLabel(ctx,"bucket.detail.honesty",ASC_ExplorerFitText(honesty_line,w-24),x+14,y+64,ctx.theme.warning);
+   string honesty_line="Truth: canonical references stay canonical; broker symbols surface only when safe normalization resolves a tracked live symbol.";
+   ASC_ExplorerLabel(ctx,"bucket.detail.honesty",ASC_ExplorerFitText(honesty_line,w-24),x+14,y+66,ctx.theme.warning);
 
    int controls_y=y+header_h+ctx.theme.gap;
    ASC_ExplorerRect(ctx,"bucket.detail.controls",x,controls_y,w,controls_h,ctx.theme.section_fill,ctx.theme.border);
    int mode_x=x+ctx.theme.padding;
-   ASC_ExplorerButton(ctx,"action.bucket_mode.top3","Top 3",mode_x,controls_y+12,66,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_TOP_3));
-   mode_x+=74;
-   ASC_ExplorerButton(ctx,"action.bucket_mode.top5","Top 5",mode_x,controls_y+12,66,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_TOP_5));
-   mode_x+=74;
-   ASC_ExplorerButton(ctx,"action.bucket_mode.all","All",mode_x,controls_y+12,60,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL));
+   ASC_ExplorerButton(ctx,"action.bucket_mode.top3","Top 3",mode_x,controls_y+8,62,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_TOP_3));
    mode_x+=68;
-   ASC_ExplorerButton(ctx,"action.market_filter.all","All Symbols",mode_x,controls_y+12,86,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS));
-   mode_x+=94;
-   ASC_ExplorerButton(ctx,"action.market_filter.open","Open Only",mode_x,controls_y+12,82,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY));
+   ASC_ExplorerButton(ctx,"action.bucket_mode.top5","Top 5",mode_x,controls_y+8,62,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_TOP_5));
+   mode_x+=68;
+   ASC_ExplorerButton(ctx,"action.bucket_mode.all","All",mode_x,controls_y+8,54,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL));
+   mode_x+=62;
+   ASC_ExplorerButton(ctx,"action.market_filter.all","All Symbols",mode_x,controls_y+8,82,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS));
+   mode_x+=88;
+   ASC_ExplorerButton(ctx,"action.market_filter.open","Open Only",mode_x,controls_y+8,78,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY));
    string summary_text="Visible now: " + IntegerToString(display_count) + " of " + IntegerToString(bucket.resolved_symbol_count) + " refs";
    if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
       summary_text="Visible now: " + IntegerToString(display_count) + " live open matches";
-   ASC_ExplorerLabel(ctx,"bucket.detail.visibility",ASC_ExplorerFitText(summary_text,220),x+w-232,controls_y+8,ctx.theme.muted);
+   ASC_ExplorerLabel(ctx,"bucket.detail.visibility",ASC_ExplorerFitText(summary_text,220),x+w-224,controls_y+6,ctx.theme.muted);
 
    int row_h=52;
    int rows_per_page=ASC_ExplorerVisibleRows(ctx,split_h-ctx.theme.title_height-ctx.theme.gap,row_h+ctx.theme.gap);
@@ -770,9 +776,9 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,ASC_SymbolState &st
       ctx.nav.bucket_symbol_page=0;
    ASC_ExplorerClampPage(ctx.nav.bucket_symbol_page,display_count,rows_per_page);
    if(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL && symbol_pages>1)
-      ASC_ExplorerLabel(ctx,"bucket.detail.page","Page " + IntegerToString(ctx.nav.bucket_symbol_page+1) + " of " + IntegerToString(symbol_pages),x+w-232,controls_y+24,ctx.theme.good);
+      ASC_ExplorerLabel(ctx,"bucket.detail.page","Page " + IntegerToString(ctx.nav.bucket_symbol_page+1) + " of " + IntegerToString(symbol_pages),x+w-224,controls_y+22,ctx.theme.good);
    else
-      ASC_ExplorerLabel(ctx,"bucket.detail.page","Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),x+w-232,controls_y+24,ctx.theme.dim);
+      ASC_ExplorerLabel(ctx,"bucket.detail.page","Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),x+w-224,controls_y+22,ctx.theme.dim);
 
    int left_x=x;
    int right_x=x+left_w+split_gap;
@@ -789,18 +795,18 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,ASC_SymbolState &st
       int visual=i-lane_start;
       int row_y=list_y+(visual*(row_h+ctx.theme.gap));
       color accent=ASC_ExplorerStatusAccent(ctx,visible_symbols[i].market_status,visible_symbols[i].matched_live_symbol);
-      color fill=(i==(ctx.nav.bucket_symbol_page*rows_per_page) && ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL ? ctx.theme.panel_alt_fill : ctx.theme.panel_soft_fill);
+      color fill=(visible_symbols[i].matched_live_symbol ? ctx.theme.panel_alt_fill : ctx.theme.panel_soft_fill);
       ASC_ExplorerRect(ctx,"bucket.detail.seed." + IntegerToString(i),left_x,row_y,left_w,row_h,fill,ctx.theme.border);
       ASC_ExplorerRect(ctx,"bucket.detail.seed.bar." + IntegerToString(i),left_x,row_y,5,row_h,accent,accent);
       ASC_ExplorerLabel(ctx,"bucket.detail.seed.sym." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].display_symbol,left_w-120,10),left_x+14,row_y+7,ctx.theme.text,10);
-      string state_text=(visible_symbols[i].matched_live_symbol ? "Live match | State " + ASC_MarketStatusText(visible_symbols[i].market_status) : "Reference only | no live broker match yet");
+      string state_text=(visible_symbols[i].matched_live_symbol ? "Resolved live match | Canonical " + visible_symbols[i].canonical_symbol + " | State " + ASC_MarketStatusText(visible_symbols[i].market_status) : "Reference only | unresolved on this broker/server");
       ASC_ExplorerLabel(ctx,"bucket.detail.seed.state." + IntegerToString(i),ASC_ExplorerFitText(state_text,left_w-120),left_x+14,row_y+24,ctx.theme.muted);
-      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].note,left_w-120),left_x+14,row_y+24+ctx.theme.row_height,ctx.theme.dim);
+      ASC_ExplorerLabel(ctx,"bucket.detail.seed.note." + IntegerToString(i),ASC_ExplorerFitText(visible_symbols[i].note,left_w-120),left_x+14,row_y+24+ctx.theme.row_height,visible_symbols[i].matched_live_symbol ? ctx.theme.good : ctx.theme.dim);
       ASC_ExplorerButton(ctx,"action.seed_symbol." + IntegerToString(i),"Inspect",left_x+left_w-82,row_y+14,70,ctx.theme.button_height,ctx.theme.accent,false);
      }
    if(display_count<=0)
      {
-      string empty_text=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "No open-market live matches are available for this bucket yet." : "No symbol references are available for this bucket.");
+      string empty_text=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "No resolved live open symbols are available for this bucket yet." : "No symbol references are available for this bucket.");
       ASC_ExplorerLabel(ctx,"bucket.detail.emptylane",ASC_ExplorerFitText(empty_text,left_w-24),left_x+ctx.theme.padding,list_y+6,ctx.theme.warning);
      }
    if(ctx.nav.bucket_display_mode==ASC_BUCKET_DISPLAY_ALL && symbol_pages>1)
@@ -810,8 +816,8 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,ASC_SymbolState &st
    int summary_y=split_y+ctx.theme.title_height+ctx.theme.gap;
    ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.family","Bucket Family",bucket.family,right_x,summary_y,right_w,ctx.theme.accent_alt);
    ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.refs","Reference Count",IntegerToString(bucket.resolved_symbol_count),right_x,summary_y+30,right_w,ctx.theme.accent_alt);
-   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.window","Visible Window",IntegerToString(display_count) + " shown in " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),right_x,summary_y+60,right_w,ctx.theme.accent_alt);
-   string membership_truth=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only hides unresolved placeholders; it does not invent live membership." : "Canonical references remain placeholders unless a tracked symbol match exists.");
+   ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.resolved","Resolved Live",IntegerToString(resolved_open_count) + " open | " + IntegerToString(total_visible_refs) + " visible",right_x,summary_y+60,right_w,(resolved_open_count>0 ? ctx.theme.good : ctx.theme.warning));
+   string membership_truth=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only requires at least one resolved live symbol whose Market State is Open." : "Unresolved canonical references remain visible here but are never counted as live membership.");
    ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.truth","Membership Truth",membership_truth,right_x,summary_y+90,right_w,ctx.theme.warning);
    ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.filter","Market Filter",ASC_ExplorerMarketFilterText(ctx.nav.market_filter),right_x,summary_y+120,right_w,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.reserved));
    ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.posture","Bucket Posture",bucket.posture,right_x,summary_y+150,right_w,ctx.theme.reserved);
@@ -1005,63 +1011,80 @@ void ASC_ExplorerRenderNavStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeSettin
 void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,ASC_SymbolState &states[],const int count,const int x,const int y,const int w,const int h)
   {
    ASC_ExplorerRect(ctx,"rail.panel",x,y,w,h,ctx.theme.rail_fill,ctx.theme.border);
-   ASC_ExplorerLabel(ctx,"rail.title","Control Rail",x+ctx.theme.padding,y+8,ctx.theme.text,10);
-   int button_y=y+28;
-   int button_gap=ctx.theme.gap;
-   ASC_ExplorerButton(ctx,"action.home","Home",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.accent,(ctx.nav.current_view==ASC_EXPLORER_VIEW_OVERVIEW));
+   ASC_ExplorerLabel(ctx,"rail.title","Global Rail",x+ctx.theme.padding,y+8,ctx.theme.text,10);
+   int button_y=y+26;
+   int button_gap=(ctx.theme.gap>4 ? ctx.theme.gap-1 : ctx.theme.gap);
+   int button_w=w-(ctx.theme.padding*2);
+   ASC_ExplorerButton(ctx,"action.home","Home",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.accent,(ctx.nav.current_view==ASC_EXPLORER_VIEW_OVERVIEW));
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.back","Back",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill);
+   ASC_ExplorerButton(ctx,"action.back","Back",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.overview","Overview",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_OVERVIEW));
+   ASC_ExplorerButton(ctx,"action.overview","Overview",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_OVERVIEW));
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.buckets","Buckets",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKETS));
+   ASC_ExplorerButton(ctx,"action.buckets","Buckets",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKETS || ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKET_DETAIL));
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.bucket_detail","Bucket Detail",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_BUCKET_DETAIL));
+   ASC_ExplorerButton(ctx,"action.symbol_detail","Symbol",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_SYMBOL_DETAIL));
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.symbol_detail","Symbol",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_SYMBOL_DETAIL));
+   ASC_ExplorerButton(ctx,"action.stat_detail","Stat Detail",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_STAT_DETAIL));
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.stat_detail","Stat Detail",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.current_view==ASC_EXPLORER_VIEW_STAT_DETAIL));
-   button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.density","Density",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill);
+   ASC_ExplorerButton(ctx,"action.density","Density",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    button_y+=ctx.theme.button_height+(button_gap*2);
-   ASC_ExplorerButton(ctx,"action.market_filter.all","All Symbols",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS));
+   ASC_ExplorerButton(ctx,"action.scroll_up","Scroll Up",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.market_filter.open","Open Only",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY));
+   ASC_ExplorerButton(ctx,"action.scroll_down","Scroll Down",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
+   button_y+=ctx.theme.button_height+button_gap;
+   ASC_ExplorerButton(ctx,"action.refresh","Refresh",x+ctx.theme.padding,button_y,button_w,ctx.theme.button_height,ctx.theme.panel_alt_fill);
    button_y+=ctx.theme.button_height+(button_gap*2);
-   ASC_ExplorerButton(ctx,"action.scroll_up","Scroll Up",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill);
-   button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.scroll_down","Scroll Down",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill);
-   button_y+=ctx.theme.button_height+button_gap;
-   ASC_ExplorerButton(ctx,"action.refresh","Refresh",x+ctx.theme.padding,button_y,w-(ctx.theme.padding*2),ctx.theme.button_height,ctx.theme.panel_alt_fill);
-   button_y+=ctx.theme.button_height+(button_gap*2);
-   ASC_ExplorerLabel(ctx,"rail.state","Operator State",x+ctx.theme.padding,button_y,ctx.theme.text,10);
-   ASC_ExplorerLabel(ctx,"rail.path",ASC_ExplorerFitText(ASC_ExplorerBreadcrumbText(ctx,states,count),w-(ctx.theme.padding*2)),x+ctx.theme.padding,button_y+18,ctx.theme.muted);
-   ASC_ExplorerLabel(ctx,"rail.filter","Market Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter),x+ctx.theme.padding,button_y+42,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.dim));
-   ASC_ExplorerLabel(ctx,"rail.bucketmode","Bucket Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),x+ctx.theme.padding,button_y+60,ctx.theme.dim);
-   ASC_ExplorerLabel(ctx,"rail.density","Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),x+ctx.theme.padding,button_y+78,ctx.theme.dim);
+   ASC_ExplorerRect(ctx,"rail.state.box",x+ctx.theme.padding,button_y,button_w,70,ctx.theme.panel_soft_fill,ctx.theme.border);
+   ASC_ExplorerLabel(ctx,"rail.state","Focus",x+ctx.theme.padding+8,button_y+6,ctx.theme.text,10);
+   ASC_ExplorerLabel(ctx,"rail.view",ASC_ExplorerFitText(ASC_ExplorerViewText(ctx.nav.current_view),button_w-16),x+ctx.theme.padding+8,button_y+24,ctx.theme.accent);
+   ASC_ExplorerLabel(ctx,"rail.filter","Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter),x+ctx.theme.padding+8,button_y+40,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.dim));
+   ASC_ExplorerLabel(ctx,"rail.density","Density " + ASC_ExplorerDensityText(settings.explorer_density_mode),x+ctx.theme.padding+8,button_y+56,ctx.theme.dim);
   }
 
-void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const int x,const int y,const int w)
+void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const int x,const int y,const int w,const int chart_w,const int chart_h)
   {
-   string status_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.");
+   string status_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.") + " | Server " + runtime.server_clean + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
    ASC_ExplorerRect(ctx,"status.strip",x,y,w,ctx.theme.status_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,"status.bar",x,y,5,ctx.theme.status_height,(runtime.degraded ? ctx.theme.warning : ctx.theme.good),(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
    ASC_ExplorerLabel(ctx,"status.text",ASC_ExplorerFitText(status_text,w-24),x+ctx.theme.padding+4,y+7,(runtime.degraded ? ctx.theme.warning : ctx.theme.muted));
   }
 
-void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count)
+void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,ASC_Logger &logger)
   {
    if(!settings.explorer_enabled)
+     {
+      logger.Info("Explorer","render skipped because explorer is disabled");
       return;
+     }
 
    int chart_w=(int)ChartGetInteger(ctx.chart_id,CHART_WIDTH_IN_PIXELS,0);
    int chart_h=(int)ChartGetInteger(ctx.chart_id,CHART_HEIGHT_IN_PIXELS,0);
-   if(chart_w<760 || chart_h<520)
+   if(chart_w<480 || chart_h<300)
+     {
+      logger.Warn("Explorer","render aborted because chart is too small: " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h));
       return;
+     }
 
    ASC_ExplorerThemeDefaults(ctx.theme,settings.explorer_density_mode);
    ASC_ExplorerDeleteOwnedObjects(ctx);
-   ASC_ExplorerRect(ctx,"root",ctx.theme.margin,ctx.theme.margin,chart_w-(ctx.theme.margin*2),chart_h-(ctx.theme.margin*2),ctx.theme.background,ctx.theme.border);
+   int root_w=chart_w-(ctx.theme.margin*2);
+   int root_h=chart_h-(ctx.theme.margin*2);
+   if(root_w<440 || root_h<260)
+     {
+      logger.Warn("Explorer","fallback render activated for root size " + IntegerToString(root_w) + "x" + IntegerToString(root_h));
+      ASC_ExplorerRect(ctx,"root.compact",ctx.theme.margin,ctx.theme.margin,root_w,root_h,ctx.theme.background,ctx.theme.border);
+      ASC_ExplorerLabel(ctx,"compact.title","ASC Explorer HUD",ctx.theme.margin+12,ctx.theme.margin+12,ctx.theme.text,11);
+      ASC_ExplorerLabel(ctx,"compact.server",ASC_ExplorerFitText("Server " + runtime.server_clean + " | View " + ASC_ExplorerViewText(ctx.nav.current_view),root_w-24),ctx.theme.margin+12,ctx.theme.margin+32,ctx.theme.muted);
+      ASC_ExplorerLabel(ctx,"compact.state",ASC_ExplorerFitText("Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + " | Mode " + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode),root_w-24),ctx.theme.margin+12,ctx.theme.margin+50,(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? ctx.theme.good : ctx.theme.dim));
+      ASC_ExplorerLabel(ctx,"compact.status",ASC_ExplorerFitText((runtime.degraded ? "Degraded runtime" : "Runtime steady") + " | Chart " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h),root_w-24),ctx.theme.margin+12,ctx.theme.margin+68,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
+      ChartRedraw(ctx.chart_id);
+      ctx.nav.last_render_at=TimeCurrent();
+      ctx.nav.dirty=false;
+      return;
+     }
+   logger.Debug("Explorer","render entry server=" + runtime.server_clean + ", view=" + ASC_ExplorerViewText(ctx.nav.current_view) + ", filter=" + ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + ", mode=" + ASC_BucketDisplayModeText(ctx.nav.bucket_display_mode) + ", chart=" + IntegerToString(chart_w) + "x" + IntegerToString(chart_h));
+   ASC_ExplorerRect(ctx,"root",ctx.theme.margin,ctx.theme.margin,root_w,root_h,ctx.theme.background,ctx.theme.border);
    ASC_ExplorerRenderHeader(ctx,settings,runtime,chart_w);
    ASC_ExplorerRenderNavStrip(ctx,settings,states,count,chart_w);
 
@@ -1094,7 +1117,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
          break;
      }
 
-   ASC_ExplorerRenderStatusStrip(ctx,runtime,main_x,main_y+main_h+ctx.theme.gap,chart_w-(ctx.theme.margin*2)-(ctx.theme.padding*2));
+   ASC_ExplorerRenderStatusStrip(ctx,runtime,main_x,main_y+main_h+ctx.theme.gap,chart_w-(ctx.theme.margin*2)-(ctx.theme.padding*2),chart_w,chart_h);
    ChartRedraw(ctx.chart_id);
    ctx.nav.last_render_at=TimeCurrent();
    ctx.nav.dirty=false;
@@ -1133,14 +1156,18 @@ void ASC_ExplorerShutdown(ASC_ExplorerContext &ctx)
    ctx.initialized=false;
   }
 
-void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,const bool force=false)
+void ASC_ExplorerMaybeRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,const bool force,ASC_Logger &logger)
   {
    if(!ctx.initialized || !settings.explorer_enabled)
+     {
+      if(settings.explorer_enabled)
+         logger.Warn("Explorer","maybe-render called before init");
       return;
+     }
    datetime now=TimeCurrent();
    if(!force && !ctx.nav.dirty && ctx.nav.last_render_at>0 && (now-ctx.nav.last_render_at)<settings.explorer_refresh_seconds)
       return;
-   ASC_ExplorerRender(ctx,settings,runtime,states,count);
+   ASC_ExplorerRender(ctx,settings,runtime,states,count,logger);
   }
 
 void ASC_ExplorerAdjustScroll(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const int direction)

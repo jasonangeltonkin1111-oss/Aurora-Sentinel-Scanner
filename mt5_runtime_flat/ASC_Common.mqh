@@ -2,12 +2,12 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.040"
+#define ASC_WRAPPER_VERSION "1.060"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
 #define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
-#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.320"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.360"
 
 enum ASC_RuntimeMode
   {
@@ -306,6 +306,73 @@ string ASC_TitleCase(const string value)
 string ASC_CleanServerName(const string raw)
   {
    return(ASC_TitleCase(raw));
+  }
+
+
+
+bool ASC_IsAlphaNumChar(const ushort ch)
+  {
+   return((ch>='0' && ch<='9') || (ch>='A' && ch<='Z') || (ch>='a' && ch<='z'));
+  }
+
+string ASC_StripKnownSymbolAffixes(const string raw)
+  {
+   string work=ASC_Trim(raw);
+   if(work=="")
+      return("");
+
+   string lower=ASC_ToLower(work);
+   if(StringLen(lower)>=3 && StringSubstr(lower,StringLen(lower)-3)==".oq")
+      work=StringSubstr(work,0,StringLen(work)-3);
+   else if(StringLen(lower)>=5 && StringSubstr(lower,StringLen(lower)-5)==".xhkg")
+      work=StringSubstr(work,0,StringLen(work)-5);
+   else if(StringLen(lower)>=3 && StringSubstr(lower,StringLen(lower)-3)==".nx")
+      work=StringSubstr(work,0,StringLen(work)-3);
+   else if(StringLen(lower)>=2)
+     {
+      string tail2=StringSubstr(lower,StringLen(lower)-2);
+      if(tail2==".m" || tail2==".c" || tail2==".o")
+         work=StringSubstr(work,0,StringLen(work)-2);
+     }
+
+   lower=ASC_ToLower(work);
+   if(StringLen(lower)>=4 && StringSubstr(lower,StringLen(lower)-4)=="cash")
+      work=StringSubstr(work,0,StringLen(work)-4);
+   else if(StringLen(lower)>=6 && StringSubstr(lower,StringLen(lower)-6)=="cash-1")
+      work=StringSubstr(work,0,StringLen(work)-6);
+
+   while(StringLen(work)>0)
+     {
+      ushort ch=(ushort)StringGetCharacter(work,StringLen(work)-1);
+      if(ch=='-' || ch=='_' || ch=='.')
+         work=StringSubstr(work,0,StringLen(work)-1);
+      else
+         break;
+     }
+   return(work);
+  }
+
+string ASC_NormalizeSymbolForMatch(const string raw)
+  {
+   string work=ASC_StripKnownSymbolAffixes(raw);
+   StringToUpper(work);
+   string out="";
+   for(int i=0;i<(int)StringLen(work);i++)
+     {
+      ushort ch=(ushort)StringGetCharacter(work,i);
+      if(ASC_IsAlphaNumChar(ch))
+         out+=ShortToString((short)ch);
+     }
+   return(out);
+  }
+
+bool ASC_SymbolsMatchCanonical(const string left,const string right)
+  {
+   string left_norm=ASC_NormalizeSymbolForMatch(left);
+   string right_norm=ASC_NormalizeSymbolForMatch(right);
+   if(left_norm=="" || right_norm=="")
+      return(false);
+   return(left_norm==right_norm);
   }
 
 string ASC_SafeFilePart(const string value)

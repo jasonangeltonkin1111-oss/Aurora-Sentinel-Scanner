@@ -112,8 +112,8 @@ The sequence above remains active canon for debugging and future implementation 
 
 ### Explorer HUD shell
 - **Status:** working
-- **Pass:** the explorer owns only its prefixed chart objects, shows overview plus bucket list, bucket detail, symbol detail, and stat-detail shell views, uses dynamic pagination for bucket list and all-mode symbol lanes, preserves bucket display mode and market-filter state across navigation/back flow, and renders prepared Layer 1 truth without triggering heavy compute on click.
-- **Break symptoms:** chart clutter overlaps unrelated objects, page buttons overrun the viewport, Open Only invents broker membership, bucket detail collapses back into one vertical pile, or redraw logic churns every event without cadence control.
-- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
-- **Regression warning:** do not move scanner computation into button handlers, do not reintroduce bucket-scroll dependence, and do not let placeholder references read as confirmed broker truth.
+- **Pass:** the explorer owns only its prefixed chart objects, resolves canonical bucket references against live broker symbols through safe evidence-based normalization, keeps Open Only tied strictly to resolved live `Open` symbols, preserves placeholder honesty under All Symbols, and falls back to a compact surface instead of going blank when a terminal viewport cannot fit the full HUD.
+- **Break symptoms:** chart clutter overlaps unrelated objects, page buttons overrun the viewport, Open Only shows buckets with no resolved live open symbols, canonical placeholders are counted as live membership, or small/odd chart sizes produce silent blank renders.
+- **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_Common.mqh`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
+- **Regression warning:** do not move scanner computation into button handlers, do not widen normalization beyond evidenced patterns, and do not let placeholder references read as confirmed broker truth.
 - **Future extension:** bucket detail, stat detail, identity cards, operator filters, and later Aurora-facing reserved panels should plug into the existing controller/layout/action split rather than replacing it.

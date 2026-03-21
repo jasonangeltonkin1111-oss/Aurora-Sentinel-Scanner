@@ -173,3 +173,20 @@ The Explorer HUD still depended on brittle bucket scrolling, bucket detail was c
 
 ### Result
 The Explorer surface is more navigable, more honest, and better prepared for future layer insertion while preserving Market State Detection as the only active capability.
+
+---
+## 2026-03-21 — Universal HUD and identity hardening pass
+
+### Why
+The Explorer HUD was close, but cross-broker symbol resolution, Open Only truth, render diagnostics, and rail fit still had honesty and reliability gaps across sampled terminals.
+
+### What changed
+- bumped the wrapper to 1.060 and the explorer subsystem to 0.360 for a meaningful universal HUD hardening pass
+- added evidence-based symbol normalization helpers for safe canonical-to-broker matching across sampled suffix families such as `.nx`, `.m`, `.c`, `.o`, `.OQ`, `.xhkg`, and `cash` variants
+- fixed bucket Open Only logic so only resolved live symbols in `ASC_MARKET_OPEN` qualify while unresolved placeholders remain visible only in All Symbols
+- completed and evened out the placeholder bucket catalog, including a full FX Major set and more balanced index, metals, energy, crypto, and equity families
+- hardened HUD render entry with bounded diagnostics, compact fallback rendering, richer status context, and a less overloaded global control rail
+- strengthened scanner-console hierarchy so resolved/open, warning, reserved, and muted states read more decisively without widening beyond Layer 1 truth
+
+### Result
+The active Explorer HUD remains presentation-only, but it is now more truthful across brokers, more diagnosable across terminals, and cleaner about what is resolved live truth versus canonical placeholder structure.

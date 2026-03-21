@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.040
+// Wrapper Version: 1.060
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.320
+// Explorer Subsystem Version: 0.360
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -465,7 +465,7 @@ void ASC_RunHeartbeat(void)
    if(attempted_save || !runtime_saved || !scheduler_saved || !summary_saved)
       g_logger.Info("Persistence","runtime save " + (runtime_saved ? "succeeded" : "failed") + "; scheduler save " + (scheduler_saved ? "succeeded" : "failed") + "; summary save " + (summary_saved ? "succeeded" : "failed"));
 
-   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
    g_heartbeat_running=false;
   }
 
@@ -484,7 +484,8 @@ int OnInit()
 
    ASC_RestoreContinuity();
    ASC_ExplorerInit(g_explorer,ChartID());
-   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
+   g_logger.Info("Explorer","init chart=" + IntegerToString((int)ChartID()) + ", server=" + g_runtime.server_clean);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
    EventSetTimer(g_settings.heartbeat_seconds);
    return(INIT_SUCCEEDED);
   }
@@ -499,6 +500,7 @@ void OnDeinit(const int reason)
    ASC_SaveRuntimeState(g_paths,g_runtime,g_logger);
    ASC_SaveSchedulerState(g_paths,g_symbols,g_symbol_count,g_logger);
    ASC_SaveSummary(g_paths,g_runtime,g_symbols,g_symbol_count,g_logger);
+   g_logger.Info("Explorer","shutdown server=" + g_runtime.server_clean);
    ASC_ExplorerShutdown(g_explorer);
    g_logger.Info("Deinit","foundation stopping with reason " + IntegerToString(reason));
   }
@@ -515,7 +517,7 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
    if(id==CHARTEVENT_CHART_CHANGE)
      {
       g_explorer.nav.dirty=true;
-      ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
+      ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
       return;
      }
 
@@ -525,5 +527,5 @@ void OnChartEvent(const int id,const long &lparam,const double &dparam,const str
       return;
 
    ASC_ExplorerHandleAction(g_explorer,g_settings,sparam,g_symbols,g_symbol_count,g_logger);
-   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true);
+   ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_symbols,g_symbol_count,true,g_logger);
   }
