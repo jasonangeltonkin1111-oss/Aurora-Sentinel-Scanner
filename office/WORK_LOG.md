@@ -1,3 +1,18 @@
+## 2026-03-21 — Explorer bucket compile-hardening pass
+
+### Why
+The rolling prepared-batch lane had drifted into MT5-incompatible array and helper usage, leaving the active flat runtime unable to compile cleanly and risking dishonest progress-state behavior in the explorer bucket path.
+
+### What changed
+- bumped the wrapper to 1.123 and the explorer subsystem to 0.443 for this runtime-facing hardening pass
+- restored a shared uppercase helper in the common runtime surface so bucket readiness checks can normalize primary-bucket ids again
+- moved prepared-batch constants ahead of first use, corrected array-by-reference signatures, and replaced invalid prepared-symbol/state array copies with explicit copy helpers that preserve bucket and symbol payloads without illegal structure-array assignment
+- kept the change bounded to ASC-owned runtime truth; no bridge contract or Aurora-owned doctrine changed
+
+### Result
+The prepared bucket runtime now matches MT5 array/copy rules closely enough to clear the reported compile blockers while preserving runtime-owned hydration and explorer-consumer boundaries.
+
+---
 ## 2026-03-21 — Layer 2 reserved scaffolding pass
 
 ### Why
