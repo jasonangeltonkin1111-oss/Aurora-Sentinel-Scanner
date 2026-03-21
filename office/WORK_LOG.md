@@ -192,3 +192,19 @@ The Explorer HUD was close, but cross-broker symbol resolution, Open Only truth,
 The active Explorer HUD remains presentation-only, but it is now more truthful across brokers, more diagnosable across terminals, and cleaner about what is resolved live truth versus canonical placeholder structure.
 
 - 2026-03-21: Migrated Explorer bucket truth to standalone ASC classification and dynamic live-broker buckets; Open Only now hides zero-open classified buckets and bucket detail uses real classified symbols.
+
+---
+## 2026-03-21 — Runtime-prepared bucket snapshot and HUD churn reduction pass
+
+### Why
+The Explorer HUD was still rebuilding bucket truth in both render and click handlers while also deleting and recreating its full owned object set every render. That kept runtime-truth ownership too explorer-heavy even though Market State Detection itself was already the stronger backbone.
+
+### What changed
+- bumped the wrapper to 1.080 and the explorer subsystem to 0.380 for a meaningful runtime-ownership and HUD hardening pass
+- introduced a runtime-owned prepared bucket snapshot that refreshes from current symbol state after universe sync, restore completion, and each heartbeat
+- rewired bucket list, bucket detail, breadcrumbs, and seed-symbol click handling to consume prepared bucket truth instead of rebuilding classification-driven bucket state ad hoc
+- reduced HUD render churn by reusing owned chart objects when possible and deleting only stale explorer-owned objects after each frame rather than wiping the entire HUD first
+- tightened Layer 1 explorer wording so the active console is honest about prepared bucket truth remaining Layer 1-adjacent support rather than downstream capability activation
+
+### Result
+Repo truth is now closer to the blueprint law: runtime prepares bucket truth, explorer consumes it, repeated bucket-build work is reduced, and Layer 1 continuity/persistence/dossier behavior remains untouched in ownership.

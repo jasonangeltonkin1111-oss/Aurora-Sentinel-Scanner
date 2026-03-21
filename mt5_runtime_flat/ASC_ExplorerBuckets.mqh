@@ -14,16 +14,38 @@ struct ASC_BucketViewModel
    int resolved_symbol_count;
    int open_symbol_count;
    int unresolved_symbol_count;
+   int prepared_symbol_offset;
    string symbol_refs[];
    string symbol_notes[];
-   ASC_ExplorerBucketDisplayMode display_mode;
   };
 
-int ASC_BucketDisplayLimit(const ASC_BucketViewModel &bucket)
+struct ASC_BucketPreparedSymbol
   {
-   if(bucket.display_mode==ASC_BUCKET_DISPLAY_TOP_3)
+   string            live_symbol;
+   string            canonical_symbol;
+   string            note;
+   ASC_MarketStatus  market_status;
+   bool              open_now;
+   int               symbol_state_index;
+  };
+
+struct ASC_PreparedBucketState
+  {
+   bool                     ready;
+   string                   server_key;
+   datetime                 prepared_at;
+   int                      source_symbol_count;
+   int                      unresolved_count;
+   int                      total_resolved_symbols;
+   ASC_BucketViewModel      buckets[];
+   ASC_BucketPreparedSymbol symbols[];
+  };
+
+int ASC_BucketDisplayLimit(const ASC_BucketViewModel &bucket,const ASC_ExplorerBucketDisplayMode display_mode)
+  {
+   if(display_mode==ASC_BUCKET_DISPLAY_TOP_3)
       return((bucket.resolved_symbol_count<3) ? bucket.resolved_symbol_count : 3);
-   if(bucket.display_mode==ASC_BUCKET_DISPLAY_TOP_5)
+   if(display_mode==ASC_BUCKET_DISPLAY_TOP_5)
       return((bucket.resolved_symbol_count<5) ? bucket.resolved_symbol_count : 5);
    return(bucket.resolved_symbol_count);
   }
@@ -77,7 +99,19 @@ void ASC_BucketSortViews(ASC_BucketViewModel &views[])
      }
   }
 
-int ASC_FindOrAddBucket(ASC_BucketViewModel &views[],const ASC_SymbolClassification &classification,const ASC_ExplorerBucketDisplayMode display_mode)
+void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
+  {
+   prepared.ready=false;
+   prepared.server_key="";
+   prepared.prepared_at=0;
+   prepared.source_symbol_count=0;
+   prepared.unresolved_count=0;
+   prepared.total_resolved_symbols=0;
+   ArrayResize(prepared.buckets,0);
+   ArrayResize(prepared.symbols,0);
+  }
+
+int ASC_FindOrAddBucket(ASC_BucketViewModel &views[],const ASC_SymbolClassification &classification)
   {
    string bucket_id=ASC_CL_BucketId(classification.primary_bucket);
    for(int i=0;i<ArraySize(views);i++)
@@ -95,41 +129,122 @@ int ASC_FindOrAddBucket(ASC_BucketViewModel &views[],const ASC_SymbolClassificat
    views[slot].resolved_symbol_count=0;
    views[slot].open_symbol_count=0;
    views[slot].unresolved_symbol_count=0;
-   views[slot].display_mode=display_mode;
+   views[slot].prepared_symbol_offset=-1;
    ArrayResize(views[slot].symbol_refs,0);
    ArrayResize(views[slot].symbol_notes,0);
    return(slot);
   }
 
-int ASC_GetBucketViewModels(const string server_key,ASC_SymbolState &states[],const int count,ASC_BucketViewModel &views[],const ASC_ExplorerBucketDisplayMode display_mode,int &unresolved_count)
+void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],const int count,ASC_PreparedBucketState &prepared)
   {
-   unresolved_count=0;
-   ArrayResize(views,0);
+   ASC_PreparedBucketStateReset(prepared);
+   prepared.server_key=server_key;
+   prepared.prepared_at=TimeCurrent();
+   prepared.source_symbol_count=count;
+
    for(int i=0;i<count;i++)
      {
       ASC_SymbolClassification classification;
       if(!ASC_CL_ClassifySymbol(server_key,states[i].symbol,classification))
         {
-         unresolved_count++;
+         prepared.unresolved_count++;
          continue;
         }
-      int bucket_index=ASC_FindOrAddBucket(views,classification,display_mode);
-      int slot=ArraySize(views[bucket_index].symbol_refs);
-      ArrayResize(views[bucket_index].symbol_refs,slot+1);
-      ArrayResize(views[bucket_index].symbol_notes,slot+1);
-      views[bucket_index].symbol_refs[slot]=states[i].symbol;
-      views[bucket_index].symbol_notes[slot]="Canonical " + classification.canonical_symbol
-                                       + " | Match " + classification.match_kind
-                                       + " | Review " + classification.review_status;
-      views[bucket_index].resolved_symbol_count++;
+
+      int bucket_index=ASC_FindOrAddBucket(prepared.buckets,classification);
+      int bucket_slot=ArraySize(prepared.buckets[bucket_index].symbol_refs);
+      ArrayResize(prepared.buckets[bucket_index].symbol_refs,bucket_slot+1);
+      ArrayResize(prepared.buckets[bucket_index].symbol_notes,bucket_slot+1);
+      prepared.buckets[bucket_index].symbol_refs[bucket_slot]=states[i].symbol;
+      prepared.buckets[bucket_index].symbol_notes[bucket_slot]="Canonical " + classification.canonical_symbol
+                                                      + " | Match " + classification.match_kind
+                                                      + " | Review " + classification.review_status;
+      prepared.buckets[bucket_index].resolved_symbol_count++;
       if(states[i].market_status==ASC_MARKET_OPEN)
-         views[bucket_index].open_symbol_count++;
+         prepared.buckets[bucket_index].open_symbol_count++;
+
+      int prepared_slot=ArraySize(prepared.symbols);
+      ArrayResize(prepared.symbols,prepared_slot+1);
+      prepared.symbols[prepared_slot].live_symbol=states[i].symbol;
+      prepared.symbols[prepared_slot].canonical_symbol=classification.canonical_symbol;
+      prepared.symbols[prepared_slot].note=prepared.buckets[bucket_index].symbol_notes[bucket_slot];
+      prepared.symbols[prepared_slot].market_status=states[i].market_status;
+      prepared.symbols[prepared_slot].open_now=(states[i].market_status==ASC_MARKET_OPEN);
+      prepared.symbols[prepared_slot].symbol_state_index=i;
      }
 
-   for(int i=0;i<ArraySize(views);i++)
-      ASC_BucketSortSymbols(views[i].symbol_refs,views[i].symbol_notes);
-   ASC_BucketSortViews(views);
-   return(ArraySize(views));
+   prepared.total_resolved_symbols=ArraySize(prepared.symbols);
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+      ASC_BucketSortSymbols(prepared.buckets[i].symbol_refs,prepared.buckets[i].symbol_notes);
+   ASC_BucketSortViews(prepared.buckets);
+
+   int offset=0;
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+     {
+      prepared.buckets[i].prepared_symbol_offset=offset;
+      for(int j=0;j<ArraySize(prepared.buckets[i].symbol_refs);j++)
+        {
+         string symbol_ref=prepared.buckets[i].symbol_refs[j];
+         for(int k=offset;k<ArraySize(prepared.symbols);k++)
+           {
+            if(prepared.symbols[k].live_symbol==symbol_ref)
+              {
+               if(k!=offset+j)
+                 {
+                  ASC_BucketPreparedSymbol temp=prepared.symbols[offset+j];
+                  prepared.symbols[offset+j]=prepared.symbols[k];
+                  prepared.symbols[k]=temp;
+                 }
+               break;
+              }
+           }
+        }
+      offset+=prepared.buckets[i].resolved_symbol_count;
+     }
+
+   prepared.ready=true;
+  }
+
+int ASC_PreparedVisibleBucketCount(const ASC_BucketViewModel &bucket,const ASC_ExplorerMarketFilter filter)
+  {
+   if(filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
+      return(bucket.resolved_symbol_count);
+   return(bucket.open_symbol_count);
+  }
+
+bool ASC_PreparedBucketVisible(const ASC_BucketViewModel &bucket,const ASC_ExplorerMarketFilter filter)
+  {
+   if(filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
+      return(bucket.resolved_symbol_count>0);
+   return(bucket.open_symbol_count>0);
+  }
+
+int ASC_PreparedFilteredBuckets(const ASC_PreparedBucketState &prepared,const ASC_ExplorerMarketFilter filter,ASC_BucketViewModel &filtered[],int &source_indices[])
+  {
+   ArrayResize(filtered,0);
+   ArrayResize(source_indices,0);
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+     {
+      if(!ASC_PreparedBucketVisible(prepared.buckets[i],filter))
+         continue;
+      int slot=ArraySize(filtered);
+      ArrayResize(filtered,slot+1);
+      ArrayResize(source_indices,slot+1);
+      filtered[slot]=prepared.buckets[i];
+      source_indices[slot]=i;
+     }
+   return(ArraySize(filtered));
+  }
+
+int ASC_PreparedBucketSymbols(const ASC_PreparedBucketState &prepared,const ASC_BucketViewModel &bucket,ASC_BucketPreparedSymbol &resolved[])
+  {
+   ArrayResize(resolved,0);
+   if(!prepared.ready || bucket.prepared_symbol_offset<0 || bucket.resolved_symbol_count<=0)
+      return(0);
+   ArrayResize(resolved,bucket.resolved_symbol_count);
+   for(int i=0;i<bucket.resolved_symbol_count;i++)
+      resolved[i]=prepared.symbols[bucket.prepared_symbol_offset+i];
+   return(ArraySize(resolved));
   }
 
 #endif
