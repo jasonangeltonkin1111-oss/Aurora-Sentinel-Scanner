@@ -1,5 +1,21 @@
 # Aurora Office Work Log
 
+## 2026-03-21 — ASC explorer progressive hydration tracking alignment
+### Why
+- ASC runtime and HUD work now depend on a progressive-fill contract for Layer 1 rather than full-completion gating
+- Aurora control continuity needs the next-wave tracker to remember that this hydration remains ASC-owned and bounded
+
+### What changed
+- recorded the new progressive hydration controller, promoted-bucket visibility states, and no-page-open whole-universe enqueue rule in active Aurora office tracking
+- kept this as continuity/coordination tracking only and did not change Aurora ownership boundaries
+
+### Bridge-check outcome
+- `NO_BRIDGE_CHANGE_NEEDED`
+
+### Result
+- Aurora office now tracks the ASC explorer progressive-fill lane as an active external dependency for the next implementation wave
+
+
 ## 2026-03-21 — Aurora Wrapper Wave 3 wrapper-preparation and Blueprint knowledge-transfer pass
 ### Why
 - deepen the compiled wrapper canon so it is more practically useful for a future GPT trader wrapper

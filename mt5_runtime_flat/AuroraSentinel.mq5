@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.092
+// Wrapper Version: 1.110
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.392
+// Explorer Subsystem Version: 0.410
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -178,11 +178,57 @@ void ASC_LogSettingsSummary(void)
    g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + " with timeframe placeholders, filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + " with timeframe placeholders, combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
   }
 
-int ASC_PreparedNextBatchId(const int previous_batch_id)
+
+int ASC_HydrationNextBatchId(const ASC_PreparedBucketState &prepared)
   {
-   if(previous_batch_id<ASC_PREPARED_BATCH_PRIORITY_SET || previous_batch_id>=ASC_PREPARED_BATCH_COUNT)
+   if(ArraySize(prepared.batch_ready)<ASC_PREPARED_BATCH_COUNT)
       return(ASC_PREPARED_BATCH_PRIORITY_SET);
-   return(previous_batch_id+1);
+   for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
+     {
+      if(prepared.batch_ready[i]==0)
+         return(i+1);
+     }
+   return(ASC_PREPARED_BATCH_STOCK_METADATA);
+  }
+
+bool ASC_HydrationShouldAdvance(const ASC_PreparedBucketState &prepared)
+  {
+   if(g_symbol_count<=0)
+      return(false);
+   int next_batch=ASC_HydrationNextBatchId(prepared);
+   if(next_batch==ASC_PREPARED_BATCH_PRIORITY_SET)
+      return(true);
+   if(!g_runtime.warmup_minimum_met)
+      return(false);
+   if(next_batch==ASC_PREPARED_BATCH_STOCK_MAIN)
+      return(true);
+   return(g_runtime.background_hydration_active || prepared.batch_ready[ASC_PREPARED_BATCH_STOCK_METADATA-1]==0);
+  }
+
+void ASC_RunPreparedHydrationController(const string reason)
+  {
+   if(!ASC_HydrationShouldAdvance(g_prepared_buckets))
+      return;
+
+   int batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
+   int due_now=ASC_CountDueSymbols(TimeCurrent());
+   ASC_PrepareBucketState(g_runtime.server_clean,
+                          g_symbols,
+                          g_symbol_count,
+                          batch_id,
+                          g_runtime.initial_symbols_assessed,
+                          g_runtime.symbol_count,
+                          g_runtime.warmup_progress_percent,
+                          due_now,
+                          g_settings.symbol_budget_per_heartbeat,
+                          g_prepared_last_good_buckets,
+                          g_prepared_working_buckets);
+   ASC_PromotePreparedBucketState(g_prepared_working_buckets,g_prepared_last_good_buckets,g_prepared_buckets);
+   ASC_SyncPreparedRuntimeMetadata();
+   g_prepared_next_batch_id=ASC_HydrationNextBatchId(g_prepared_buckets);
+   g_runtime.summary_dirty=true;
+   g_runtime.runtime_dirty=true;
+   g_logger.Debug("Hydration","reason=" + reason + ", promoted batch=" + ASC_PreparedBatchName(batch_id));
   }
 
 void ASC_SyncPreparedRuntimeMetadata(void)
@@ -195,23 +241,7 @@ void ASC_SyncPreparedRuntimeMetadata(void)
 
 void ASC_RefreshPreparedBucketState(void)
   {
-   int due_now=ASC_CountDueSymbols(TimeCurrent());
-   ASC_PrepareBucketState(g_runtime.server_clean,
-                          g_symbols,
-                          g_symbol_count,
-                          g_prepared_next_batch_id,
-                          g_runtime.initial_symbols_assessed,
-                          g_runtime.symbol_count,
-                          g_runtime.warmup_progress_percent,
-                          due_now,
-                          g_settings.symbol_budget_per_heartbeat,
-                          g_prepared_last_good_buckets,
-                          g_prepared_working_buckets);
-   ASC_PromotePreparedBucketState(g_prepared_working_buckets,g_prepared_last_good_buckets,g_prepared_buckets);
-   ASC_SyncPreparedRuntimeMetadata();
-   g_prepared_next_batch_id=ASC_PreparedNextBatchId(g_prepared_next_batch_id);
-   g_runtime.summary_dirty=true;
-   g_runtime.runtime_dirty=true;
+   ASC_RunPreparedHydrationController("runtime");
   }
 
 void ASC_ResetRuntimeState(void)

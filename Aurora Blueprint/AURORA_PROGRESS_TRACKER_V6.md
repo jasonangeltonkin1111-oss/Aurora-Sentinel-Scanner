@@ -52,6 +52,7 @@ From this point onward:
 - wrapper/machine surfaces are stronger, but future passes can still drift unless office discipline is maintained
 - first concrete group-context, review-packet, and filled worked-example artifacts now exist for one active lane, but verified real-case libraries remain thin
 - stage-aware family and bucket expansion doctrine is now explicit, but many future family branches and bucket-specialized variants remain to be extracted
+- ASC explorer progressive hydration is now a tracked dependency: Layer 1 should appear in promoted batches with honest bucket states instead of waiting for whole-surface completion.
 
 ## Current project risk
 - future passes could become verbose but not sharper unless the deepening protocol is enforced

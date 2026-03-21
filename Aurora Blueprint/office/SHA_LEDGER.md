@@ -8,7 +8,7 @@ It deliberately hashes active control, bridge, wrapper, ledger, and canonical do
 ## Current checkpoint
 
 - checkpoint date: 2026-03-21
-- checkpoint scope: Aurora wrapper completion, owning-pack consolidation, and continuity synchronization pass
+- checkpoint scope: Aurora wrapper completion, owning-pack consolidation, continuity synchronization, and ASC explorer progressive-hydration tracking pass
 - hash type: SHA-256
 - note: this ledger does not hash itself to avoid self-reference churn
 - rule: refresh this file when active control truth or other active canonical Aurora surfaces change materially
@@ -31,13 +31,13 @@ It should avoid turning into a full-repo noise dump.
 ```text
 0a944ae296937bdf754caf207661374e8c8331e850412078e2485006bace0b10  Aurora Blueprint/office/README.md
 9148a8f27e693533b3adb936879bd8a653a115bf94f2b73340039735dd60b126  Aurora Blueprint/office/AURORA_OFFICE_CANON.md
-8286d80fef48534a816120ee04e0c2bb1b1db1aa8a0db965769e3e754367f1da  Aurora Blueprint/office/TASK_BOARD.md
-19a66900cc2689f6732f5fcda1c3a9c58dd89b20b78fb198bb69a6627ec6779b  Aurora Blueprint/office/DECISIONS.md
-ba3fe7cd52f0c5fd337cd3495c07f32863921d0a5c1feea824564f6c5cc536a5  Aurora Blueprint/office/WORK_LOG.md
+4203c30bca6b20d6a07e87f171918059c90ca41c62e5e7f0d833c40edfc363b6  Aurora Blueprint/office/TASK_BOARD.md
+455f6b7904b22f6c101fa46c77b9a7fcf6e587dcf9811677cadfd701df866682  Aurora Blueprint/office/DECISIONS.md
+2ffe42dc80544506578d17aba17f398baa35a57410f9fd32093ced5c0abc3ce3  Aurora Blueprint/office/WORK_LOG.md
 1ff83bee146a1b1b90c03f9b43bb3912f741e0571933232cdceb7cadd04cc961  Aurora Blueprint/AURORA_CONTROL_INDEX_V5.md
 236ef137c36fcec25d43bb71df139e26e7f40a09284686fa95d9052ad45b0bb0  Aurora Blueprint/AURORA_OPERATOR_PROTOCOL.md
 c3f190a06ba898919a0bedd93039ce2fcc36e7bdd331c2d89b90d8732504c2c1  Aurora Blueprint/AURORA_RECOVERY_ORDER_V5.md
-984c34c8e2c1fa2ee08a40bdd9405c025581fb98a67ceec2b675c4e0d1fe8875  Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md
+4a527aee213271e33ca0942f79e609f1aded7c53f36f00bc7bc82b532312a61b  Aurora Blueprint/AURORA_PROGRESS_TRACKER_V6.md
 9b3ed1019c58bba32a871f343155ff62d7e87b2bbd9af4ad51368a0dbaa3953d  Aurora Blueprint/AURORA_BOOK_EXTRACTION_COMPLETION_PROTOCOL.md
 e69ec78aca2f45275c4e13f3f4e5f009c0c0185623715f31a471a4ca974edfe3  Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_V2.md
 f86a53100e1937e6cd3a425f3eb91b656d25f0803854cf0372f4a78818aca3c7  Aurora Blueprint/AURORA_BOOK_EXTRACTION_LEDGER_SUPPLEMENT_016.md

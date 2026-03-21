@@ -4,6 +4,14 @@
 #include "ASC_Common.mqh"
 #include "ASC_Classification.mqh"
 
+enum ASC_PreparedBucketProgressState
+  {
+   ASC_PREPARED_BUCKET_NOT_STARTED=0,
+   ASC_PREPARED_BUCKET_PREPARING=1,
+   ASC_PREPARED_BUCKET_READY=2,
+   ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING=3
+  };
+
 struct ASC_BucketViewModel
   {
    string bucket_id;
@@ -15,6 +23,8 @@ struct ASC_BucketViewModel
    int open_symbol_count;
    int unresolved_symbol_count;
    int prepared_symbol_offset;
+   ASC_PreparedBucketProgressState progress_state;
+   string progress_label;
    string symbol_refs[];
    string symbol_notes[];
   };
@@ -54,7 +64,103 @@ struct ASC_PreparedBucketState
    ASC_BucketPreparedSymbol     symbols[];
    int                          batch_ready[];
    int                          batch_reused[];
+   int                          bucket_progress_states[];
   };
+
+
+string ASC_PreparedBucketProgressStateText(const ASC_PreparedBucketProgressState state)
+  {
+   switch(state)
+     {
+      case ASC_PREPARED_BUCKET_PREPARING: return("Preparing");
+      case ASC_PREPARED_BUCKET_READY: return("Ready");
+      case ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING: return("Background enrich pending");
+      default: return("Not started");
+     }
+  }
+
+int ASC_Layer1MainBucketSlot(const string bucket_id)
+  {
+   string value=ASC_ToLower(ASC_Trim(bucket_id));
+   if(value=="fx")
+      return(0);
+   if(value=="indices")
+      return(1);
+   if(value=="metals")
+      return(2);
+   if(value=="energy")
+      return(3);
+   if(value=="crypto")
+      return(4);
+   if(value=="stocks")
+      return(5);
+   return(-1);
+  }
+
+string ASC_Layer1MainBucketIdBySlot(const int slot)
+  {
+   if(slot==0) return("fx");
+   if(slot==1) return("indices");
+   if(slot==2) return("metals");
+   if(slot==3) return("energy");
+   if(slot==4) return("crypto");
+   if(slot==5) return("stocks");
+   return("");
+  }
+
+string ASC_Layer1MainBucketNameBySlot(const int slot)
+  {
+   if(slot==0) return("FX");
+   if(slot==1) return("Indices");
+   if(slot==2) return("Metals");
+   if(slot==3) return("Energy");
+   if(slot==4) return("Crypto");
+   if(slot==5) return("Stocks");
+   return("Unknown");
+  }
+
+ASC_PreparedBucketProgressState ASC_PreparedBucketProgressForSlot(const int slot,const int ready_batches[])
+  {
+   bool batch1_ready=(ArraySize(ready_batches)>=1 && ready_batches[0]!=0);
+   bool batch2_ready=(ArraySize(ready_batches)>=2 && ready_batches[1]!=0);
+   bool batch3_ready=(ArraySize(ready_batches)>=3 && ready_batches[2]!=0);
+   if(slot>=0 && slot<=4)
+      return(batch1_ready ? ASC_PREPARED_BUCKET_READY : ASC_PREPARED_BUCKET_NOT_STARTED);
+   if(slot==5)
+     {
+      if(batch2_ready && !batch3_ready)
+         return(ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING);
+      if(batch3_ready)
+         return(ASC_PREPARED_BUCKET_READY);
+      if(batch1_ready)
+         return(ASC_PREPARED_BUCKET_PREPARING);
+      return(ASC_PREPARED_BUCKET_NOT_STARTED);
+     }
+   return(ASC_PREPARED_BUCKET_NOT_STARTED);
+  }
+
+void ASC_PreparedSeedMainBuckets(ASC_PreparedBucketState &prepared)
+  {
+   ArrayResize(prepared.buckets,6);
+   for(int i=0;i<6;i++)
+     {
+      prepared.buckets[i].bucket_id=ASC_Layer1MainBucketIdBySlot(i);
+      prepared.buckets[i].name=ASC_Layer1MainBucketNameBySlot(i);
+      prepared.buckets[i].family="Layer 1 Main Bucket";
+      prepared.buckets[i].posture="Compressed Layer 1";
+      prepared.buckets[i].note=(i==5
+                                ? "Compressed Layer 1 stock bucket. Regional grouping promotes before finer stock metadata enrichment."
+                                : "Compressed Layer 1 bucket from richer ASC classification truth.");
+      prepared.buckets[i].resolved_symbol_count=0;
+      prepared.buckets[i].open_symbol_count=0;
+      prepared.buckets[i].unresolved_symbol_count=0;
+      prepared.buckets[i].prepared_symbol_offset=-1;
+      prepared.buckets[i].progress_state=ASC_PreparedBucketProgressForSlot(i,prepared.batch_ready);
+      prepared.buckets[i].progress_label=ASC_PreparedBucketProgressStateText(prepared.buckets[i].progress_state);
+      ArrayResize(prepared.buckets[i].symbol_refs,0);
+      ArrayResize(prepared.buckets[i].symbol_notes,0);
+     }
+  }
 
 int ASC_BucketDisplayLimit(const ASC_BucketViewModel &bucket,const ASC_ExplorerBucketDisplayMode display_mode)
   {
@@ -100,12 +206,21 @@ void ASC_BucketSortViews(ASC_BucketViewModel &views[])
    for(int i=1;i<total;i++)
      {
       ASC_BucketViewModel key=views[i];
+      int key_slot=ASC_Layer1MainBucketSlot(key.bucket_id);
       int j=i-1;
       while(j>=0)
         {
-         string left=views[j].family + "|" + views[j].name;
-         string right=key.family + "|" + key.name;
-         if(StringCompare(left,right,true)<=0)
+         int left_slot=ASC_Layer1MainBucketSlot(views[j].bucket_id);
+         bool keep_order=false;
+         if(left_slot>=0 && key_slot>=0)
+            keep_order=(left_slot<=key_slot);
+         else
+           {
+            string left=views[j].family + "|" + views[j].name;
+            string right=key.family + "|" + key.name;
+            keep_order=(StringCompare(left,right,true)<=0);
+           }
+         if(keep_order)
             break;
          views[j+1]=views[j];
          j--;
@@ -262,11 +377,15 @@ void ASC_PreparedBucketStateReset(ASC_PreparedBucketState &prepared)
    ArrayResize(prepared.symbols,0);
    ArrayResize(prepared.batch_ready,ASC_PREPARED_BATCH_COUNT);
    ArrayResize(prepared.batch_reused,ASC_PREPARED_BATCH_COUNT);
+   ArrayResize(prepared.bucket_progress_states,6);
    for(int i=0;i<ASC_PREPARED_BATCH_COUNT;i++)
      {
       prepared.batch_ready[i]=0;
       prepared.batch_reused[i]=0;
      }
+   for(int i=0;i<6;i++)
+      prepared.bucket_progress_states[i]=ASC_PREPARED_BUCKET_NOT_STARTED;
+   ASC_PreparedSeedMainBuckets(prepared);
   }
 
 void ASC_CopyPreparedBucketState(const ASC_PreparedBucketState &source,ASC_PreparedBucketState &target)
@@ -298,39 +417,26 @@ void ASC_PreparedRefreshDiagnostics(ASC_PreparedBucketState &prepared,const int 
       + " | backlog=" + IntegerToString((due_now>budget) ? (due_now-budget) : 0);
   }
 
+void ASC_PreparedRefreshBucketProgressStates(ASC_PreparedBucketState &prepared)
+  {
+   for(int i=0;i<ArraySize(prepared.buckets);i++)
+     {
+      prepared.buckets[i].progress_state=ASC_PreparedBucketProgressForSlot(i,prepared.batch_ready);
+      prepared.buckets[i].progress_label=ASC_PreparedBucketProgressStateText(prepared.buckets[i].progress_state);
+      if(i<ArraySize(prepared.bucket_progress_states))
+         prepared.bucket_progress_states[i]=(int)prepared.buckets[i].progress_state;
+     }
+  }
+
 void ASC_PreparedRebuildBucketsFromSymbols(ASC_PreparedBucketState &prepared)
   {
-   ArrayResize(prepared.buckets,0);
+   ASC_PreparedSeedMainBuckets(prepared);
    for(int i=0;i<ArraySize(prepared.symbols);i++)
      {
       ASC_BucketPreparedSymbol symbol=prepared.symbols[i];
-      int bucket_index=-1;
-      for(int b=0;b<ArraySize(prepared.buckets);b++)
-        {
-         if(prepared.buckets[b].bucket_id==symbol.bucket_id)
-           {
-            bucket_index=b;
-            break;
-           }
-        }
-      if(bucket_index<0)
-        {
-         bucket_index=ArraySize(prepared.buckets);
-         ArrayResize(prepared.buckets,bucket_index+1);
-         prepared.buckets[bucket_index].bucket_id=symbol.bucket_id;
-         prepared.buckets[bucket_index].name=symbol.bucket_name;
-         prepared.buckets[bucket_index].family="Layer 1 Main Bucket";
-         prepared.buckets[bucket_index].posture="Compressed Layer 1";
-         prepared.buckets[bucket_index].note=(symbol.asset_class=="STOCK"
-                                              ? "Compressed Layer 1 stock bucket. Regional grouping is promoted early; finer taxonomy remains metadata-driven."
-                                              : "Compressed Layer 1 bucket from richer ASC classification truth.");
-         prepared.buckets[bucket_index].resolved_symbol_count=0;
-         prepared.buckets[bucket_index].open_symbol_count=0;
-         prepared.buckets[bucket_index].unresolved_symbol_count=0;
-         prepared.buckets[bucket_index].prepared_symbol_offset=-1;
-         ArrayResize(prepared.buckets[bucket_index].symbol_refs,0);
-         ArrayResize(prepared.buckets[bucket_index].symbol_notes,0);
-        }
+      int bucket_index=ASC_Layer1MainBucketSlot(symbol.bucket_id);
+      if(bucket_index<0 || bucket_index>=ArraySize(prepared.buckets))
+         continue;
       int slot=ArraySize(prepared.buckets[bucket_index].symbol_refs);
       ArrayResize(prepared.buckets[bucket_index].symbol_refs,slot+1);
       ArrayResize(prepared.buckets[bucket_index].symbol_notes,slot+1);
@@ -340,6 +446,7 @@ void ASC_PreparedRebuildBucketsFromSymbols(ASC_PreparedBucketState &prepared)
       if(symbol.open_now)
          prepared.buckets[bucket_index].open_symbol_count++;
      }
+   ASC_PreparedRefreshBucketProgressStates(prepared);
   }
 
 void ASC_PreparedPhaseBucketSort(ASC_PreparedBucketState &prepared)
@@ -507,6 +614,7 @@ void ASC_PrepareBucketState(const string server_key,ASC_SymbolState &states[],co
 
    phase_started=ASC_PreparedNowMs();
    working.batch_ready[batch_id-1]=1;
+   ASC_PreparedRefreshBucketProgressStates(working);
    working.batch_generation++;
    working.ready=(ASC_PreparedPromotedBatchCount(working)>0);
    ASC_PreparedRefreshDiagnostics(working,warmup_assessed,warmup_total,readiness_percent,due_now,budget);
@@ -538,7 +646,7 @@ int ASC_PreparedVisibleBucketCount(const ASC_BucketViewModel &bucket,const ASC_E
 bool ASC_PreparedBucketVisible(const ASC_BucketViewModel &bucket,const ASC_ExplorerMarketFilter filter)
   {
    if(filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS)
-      return(bucket.resolved_symbol_count>0);
+      return(bucket.progress_state!=ASC_PREPARED_BUCKET_NOT_STARTED || bucket.resolved_symbol_count>0);
    return(bucket.open_symbol_count>0);
   }
 

@@ -131,6 +131,9 @@ Aurora-reserved surfaces must still consume prepared runtime truth and bounded r
 - combined cross-bucket summary does not replace bucket-preserving shortlist truth
 - open-trade exclusion applies to the later combined lane, not to bucket truth itself
 - no explorer interaction may justify full-universe recomputation by itself
+- Layer 1 hydration progression is a runtime-owned controller lane separate from market-state scheduling cadence
+- the hydration controller must promote Priority 1 (`FX`, `Indices`, `Metals`, `Energy`, `Crypto`) before Priority 2 (`Stocks` plus regional stock grouping) and before Priority 3 (finer stock metadata)
+- prepared compressed buckets must expose `not started`, `preparing`, `ready`, or `background enrich pending` so the HUD can render progressive truth honestly
 
 ## Final rule
 

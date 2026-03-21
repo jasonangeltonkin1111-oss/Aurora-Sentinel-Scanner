@@ -618,7 +618,7 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const ASC_PreparedBuc
 
    ASC_ExplorerPanelTitle(ctx,"buckets.panel","Bucket List",x,y,w,ctx.theme.accent);
    ASC_ExplorerRect(ctx,"buckets.intro",x,y+ctx.theme.title_height,w,intro_h,ctx.theme.panel_soft_fill,ctx.theme.border);
-   string filter_note=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only shows only compressed Layer 1 buckets with at least one classified symbol that is currently OPEN." : "All Symbols shows only compressed Layer 1 buckets built from classified live broker symbols; unresolved symbols remain outside bucket membership.");
+   string filter_note=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "Open Only shows only compressed Layer 1 buckets with at least one classified symbol that is currently OPEN." : "All Symbols progressively reveals compressed Layer 1 buckets from promoted prepared truth; unopened batches remain honestly marked until hydration reaches them.");
    if(prepared.unresolved_count>0)
       filter_note+=" Unresolved live symbols: " + IntegerToString(prepared.unresolved_count) + ".";
    ASC_ExplorerLabel(ctx,"buckets.note",ASC_ExplorerFitText(filter_note,w-ctx.theme.padding-8),x+ctx.theme.padding,y+ctx.theme.title_height+6,ctx.theme.muted);
@@ -640,9 +640,9 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const ASC_PreparedBuc
       ASC_ExplorerRect(ctx,"buckets.card.bar." + IntegerToString(i),x,card_y,6,row_h,accent,accent);
       ASC_ExplorerLabel(ctx,"buckets.name." + IntegerToString(i),ASC_ExplorerFitText(filtered[i].name,w-160,10),x+14,card_y+6,ctx.theme.text,10);
       ASC_ExplorerLabel(ctx,"buckets.meta." + IntegerToString(i),ASC_ExplorerFitText(filtered[i].family + " | " + filtered[i].posture + " | ID " + filtered[i].bucket_id,w-160),x+14,card_y+24,ctx.theme.muted);
-      string truth_line="Classified live: " + IntegerToString(filtered[i].resolved_symbol_count) + " total | Open " + IntegerToString(filtered[i].open_symbol_count);
+      string truth_line="State " + filtered[i].progress_label + " | Classified live " + IntegerToString(filtered[i].resolved_symbol_count) + " | Open " + IntegerToString(filtered[i].open_symbol_count);
       if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
-         truth_line="Open classified visible: " + IntegerToString(live_visible);
+         truth_line="State " + filtered[i].progress_label + " | Open classified visible " + IntegerToString(live_visible);
       ASC_ExplorerLabel(ctx,"buckets.truth." + IntegerToString(i),ASC_ExplorerFitText(truth_line,w-160),x+14,card_y+24+ctx.theme.row_height,accent);
       ASC_ExplorerButton(ctx,"action.bucket." + IntegerToString(i),"Open",x+w-82,card_y+((row_h-ctx.theme.button_height)/2),70,ctx.theme.button_height,ctx.theme.accent,selected);
      }
@@ -722,7 +722,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
          summary_w=0;
      }
 
-   int header_h=78;
+   int header_h=94;
    int controls_h=42;
    int strip_h=(show_side_summary ? ctx.theme.row_height+12 : (ctx.theme.row_height*2)+16);
    int footer_h=ctx.theme.button_height+ctx.theme.gap+4;
@@ -746,6 +746,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
    ASC_ExplorerLabel(ctx,"bucket.detail.title",ASC_ExplorerFitText(bucket.name,w-24,11),x+14,y+8,ctx.theme.text,11);
    ASC_ExplorerLabel(ctx,"bucket.detail.family",ASC_ExplorerFitText("Compressed Layer 1 Bucket | " + bucket.family + " | " + bucket.posture + " | Bucket ID " + bucket.bucket_id,w-24),x+14,y+28,ctx.theme.muted);
    ASC_ExplorerLabel(ctx,"bucket.detail.note",ASC_ExplorerFitText(bucket.note,w-24),x+14,y+46,ctx.theme.dim);
+   ASC_ExplorerLabel(ctx,"bucket.detail.progress",ASC_ExplorerFitText("Prepared state " + bucket.progress_label + " | Promoted batches " + IntegerToString(prepared.diagnostics.promoted_batch_count) + "/" + IntegerToString(ASC_PREPARED_BATCH_COUNT),w-24),x+14,y+46+ctx.theme.row_height,ctx.theme.good);
 
    int controls_y=y+header_h+ctx.theme.gap;
    ASC_ExplorerRect(ctx,"bucket.detail.controls",x,controls_y,w,controls_h,ctx.theme.section_fill,ctx.theme.border);
@@ -762,9 +763,9 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
 
    int strip_y=controls_y+controls_h+ctx.theme.gap;
    ASC_ExplorerRect(ctx,"bucket.detail.meta",x,strip_y,w,strip_h,ctx.theme.panel_soft_fill,ctx.theme.border);
-   string membership_truth="Membership based on live broker symbols mapped into compressed Layer 1 buckets on this server.";
+   string membership_truth="Membership comes only from promoted prepared truth for compressed Layer 1 buckets on this server.";
    if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
-      membership_truth="Membership based on live broker symbols mapped into compressed Layer 1 buckets on this server and currently OPEN.";
+      membership_truth="Membership comes only from promoted prepared truth for compressed Layer 1 buckets on this server and currently OPEN.";
    string left_meta="Bucket Members " + IntegerToString(bucket.resolved_symbol_count) + " | Open " + IntegerToString(bucket.open_symbol_count) + " | Visible Classified Symbols " + IntegerToString(capped_total);
    string right_meta="Showing " + IntegerToString(lane_start+1) + "-" + IntegerToString((capped_total>0 ? lane_end : 0)) + " of " + IntegerToString(capped_total) + " | " + membership_truth;
    if(capped_total<=0)
@@ -807,6 +808,8 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
    if(capped_total<=0)
      {
       string empty_text=(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY ? "No open classified symbols are available for this bucket right now." : "No classified broker symbols are currently visible for this bucket on this server.");
+      if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_ALL_SYMBOLS && bucket.progress_state!=ASC_PREPARED_BUCKET_READY)
+         empty_text="Bucket members will appear here after promoted hydration advances. Current state: " + bucket.progress_label + ".";
       ASC_ExplorerLabel(ctx,"bucket.detail.emptylane",ASC_ExplorerFitText(empty_text,symbol_w-24),x+ctx.theme.padding,list_y+6,ctx.theme.warning);
      }
 
@@ -815,7 +818,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
       int summary_x=x+symbol_w+ctx.theme.gap;
       ASC_ExplorerPanelTitle(ctx,"bucket.detail.summary","Bucket Summary",summary_x,lane_y,summary_w,ctx.theme.accent_alt);
       int summary_y=lane_y+ctx.theme.title_height+ctx.theme.gap;
-      string stock_grouping_hint="Regional stock grouping metadata stays inside symbol detail fields and is not promoted to first-class bucket pages.";
+      string stock_grouping_hint="Regional stock grouping promotes before finer stock metadata, but remains inside the Stocks lane rather than creating first-class bucket pages.";
       if(bucket.bucket_id!="stocks")
          stock_grouping_hint="Second-level grouping remains available from preserved primary/sector/theme/subtype metadata.";
       ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.family","Bucket Family",bucket.family,summary_x,summary_y,summary_w,ctx.theme.accent_alt);

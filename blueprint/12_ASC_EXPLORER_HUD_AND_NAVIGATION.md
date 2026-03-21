@@ -179,6 +179,28 @@ Should show:
 
 The same right-rail filter selection must stay global across Layer 1 bucket surfaces so it also controls bucket-detail symbol visibility and suppresses zero-open buckets in `Open Only` mode.
 
+
+### Progressive-fill contract for Layer 1
+The Layer 1 main surface must hydrate progressively from runtime-owned prepared promotion rather than from page-open demand.
+
+Required progression:
+- Priority 1: `FX`, `Indices`, `Metals`, `Energy`, `Crypto`
+- Priority 2: `Stocks` and regional stock grouping truth attached to that same compressed stocks lane
+- Priority 3: finer stock metadata such as sector, industry, subtype, and related taxonomy detail
+
+Compressed bucket prepared state must report one of:
+- `not started`
+- `preparing`
+- `ready`
+- `background enrich pending`
+
+Explorer rendering law for this flow:
+- the HUD consumes only promoted prepared truth
+- Priority 1 buckets become visible as soon as their promoted batch is ready
+- the `Stocks` lane may appear before finer stock metadata is complete, and must truthfully show background enrich pending until Priority 3 promotion lands
+- page opening, bucket opening, symbol opening, and other navigation actions must not enqueue whole-universe hydration work
+- hydration progression remains runtime-owned and bounded to heartbeat/background flow
+
 ### View 3 — Symbol Detail
 Triggered by clicking a symbol.
 
