@@ -35,6 +35,7 @@ The EA menu and the explorer HUD are different surfaces.
 
 Do not overload the menu with explorer behavior.
 Do not overload the explorer with configuration editing that belongs in the EA properties menu.
+Every meaningful menu or explorer surface edit must bump version.
 
 ## Product-facing wording law
 
@@ -171,6 +172,7 @@ If a capability is not active yet:
 - mark controls as Reserved or Pending
 - do not imply active behavior exists already
 - keep final names stable where possible
+- compress inner controls where possible so reserved groups feel intentional rather than cluttered
 
 ## Operator-surface alignment law
 

@@ -1,16 +1,17 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.001
+// Wrapper Version: 1.020
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.100
+// Explorer Subsystem Version: 0.300
 // Update Bump Law:
-// - 1.001 -> 1.002 for non-breaking fixes and polish
-// - 1.001 -> 1.010 for meaningful subsystem expansion
-// - 1.x -> 2.000 for major architecture revision
+// - Every meaningful edit must bump version
+// - Patch bump for non-breaking fixes and polish
+// - Minor bump for meaningful subsystem expansion
+// - Major bump to 2.000+ for architecture revision
 
 #include "ASC_Common.mqh"
 #include "ASC_ServerPaths.mqh"
@@ -48,7 +49,7 @@ input int InpSchedulerSaveSeconds=15;                  // Scheduler Save Interva
 input int InpSummarySaveSeconds=60;                    // Summary Save Interval Seconds
 input bool InpRepairMissingDossiersOnBoot=true;        // Repair Missing Dossiers On Boot
 
-input group "Logging and Attention"
+input group "Logging & Attention"
 input int InpLogVerbosity=1;                           // Log Verbosity: 0 Errors, 1 Normal, 2 Debug
 input bool InpLogSchedulerDecisions=false;             // Log Scheduler Decisions
 input bool InpLogRecoveryEvents=true;                  // Log Recovery Events
@@ -62,6 +63,7 @@ input group "Explorer HUD"
 input bool InpExplorerEnabled=true;                    // Explorer HUD Enabled
 input int InpExplorerRefreshSeconds=1;                 // Explorer Refresh Seconds
 input int InpExplorerScrollStepRows=1;                 // Explorer Scroll Step Rows
+input int InpExplorerDensityMode=1;                    // Explorer Density: 0 Compact, 1 Normal, 2 Detailed
 input bool InpExplorerShowBreadcrumbs=true;            // Explorer Show Path
 
 input group "Symbol Identity and Bucketing (Reserved)"
@@ -69,6 +71,9 @@ input bool InpReserveIdentityAndBucketingControls=true; // Reserved: Symbol Iden
 
 input group "Open Symbol Snapshot (Reserved)"
 input bool InpReserveOpenSymbolSnapshotControls=true;  // Reserved: Open Symbol Snapshot Controls
+input int InpReservedSnapshotM1Bars=500;              // Reserved: Snapshot M1 Bars
+input int InpReservedSnapshotM5Bars=500;              // Reserved: Snapshot M5 Bars
+input int InpReservedSnapshotM15Bars=500;             // Reserved: Snapshot M15 Bars
 
 input group "Candidate Filtering (Reserved)"
 input bool InpReserveCandidateFilteringControls=true;  // Reserved: Candidate Filtering Controls
@@ -80,6 +85,9 @@ input int InpReservedSelectedSymbolLimit=25;           // Reserved: Selected Sym
 input group "Deep Selective Analysis (Reserved)"
 input bool InpReserveDeepSelectiveAnalysisControls=true; // Reserved: Deep Selective Analysis Controls
 input int InpReservedAtrRefreshSeconds=60;             // Reserved: ATR Refresh Seconds
+input int InpReservedDeepH1Bars=500;                   // Reserved: Deep H1 Bars
+input int InpReservedDeepH4Bars=300;                   // Reserved: Deep H4 Bars
+input int InpReservedDeepD1Bars=300;                   // Reserved: Deep D1 Bars
 
 input group "Combined Opportunity Summary (Reserved)"
 input bool InpReserveCombinedSummaryControls=true;     // Reserved: Combined Opportunity Summary Controls
@@ -112,6 +120,7 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.explorer_enabled=InpExplorerEnabled;
    g_settings.explorer_refresh_seconds=(InpExplorerRefreshSeconds>0 ? InpExplorerRefreshSeconds : 1);
    g_settings.explorer_scroll_step_rows=(InpExplorerScrollStepRows>0 ? InpExplorerScrollStepRows : 1);
+   g_settings.explorer_density_mode=(InpExplorerDensityMode<0 ? 0 : (InpExplorerDensityMode>2 ? 2 : InpExplorerDensityMode));
    g_settings.explorer_show_breadcrumbs=InpExplorerShowBreadcrumbs;
    g_settings.heartbeat_seconds=(InpHeartbeatSeconds>0 ? InpHeartbeatSeconds : 1);
    g_settings.universe_sync_seconds=(InpUniverseSyncSeconds>0 ? InpUniverseSyncSeconds : 300);
@@ -146,12 +155,12 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.timeframe_history_reserved=true;
    g_settings.deep_analysis_controls_reserved=InpReserveDeepSelectiveAnalysisControls;
    g_settings.selection_controls_reserved=InpReserveShortlistSelectionControls;
-   g_settings.reserved_m1_bars=500;
-   g_settings.reserved_m5_bars=500;
-   g_settings.reserved_m15_bars=500;
-   g_settings.reserved_h1_bars=500;
-   g_settings.reserved_h4_bars=300;
-   g_settings.reserved_d1_bars=300;
+   g_settings.reserved_m1_bars=(InpReservedSnapshotM1Bars>0 ? InpReservedSnapshotM1Bars : 1);
+   g_settings.reserved_m5_bars=(InpReservedSnapshotM5Bars>0 ? InpReservedSnapshotM5Bars : 1);
+   g_settings.reserved_m15_bars=(InpReservedSnapshotM15Bars>0 ? InpReservedSnapshotM15Bars : 1);
+   g_settings.reserved_h1_bars=(InpReservedDeepH1Bars>0 ? InpReservedDeepH1Bars : 1);
+   g_settings.reserved_h4_bars=(InpReservedDeepH4Bars>0 ? InpReservedDeepH4Bars : 1);
+   g_settings.reserved_d1_bars=(InpReservedDeepD1Bars>0 ? InpReservedDeepD1Bars : 1);
    g_settings.reserved_selected_symbol_limit=(InpReservedSelectedSymbolLimit>0 ? InpReservedSelectedSymbolLimit : 1);
    g_backlog_attention_threshold=(InpBacklogAttentionThreshold>0 ? InpBacklogAttentionThreshold : 1);
   }
@@ -159,8 +168,8 @@ void ASC_LoadSettingsFromInputs(void)
 void ASC_LogSettingsSummary(void)
   {
    g_logger.Info("Settings",ASC_WrapperHeaderText());
-   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, explorer=" + ASC_BoolText(g_settings.explorer_enabled));
-   g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + ", filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + ", combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
+   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, explorer=" + ASC_BoolText(g_settings.explorer_enabled) + " (" + ASC_ExplorerDensityText(g_settings.explorer_density_mode) + ")");
+   g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + " with timeframe placeholders, filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + " with timeframe placeholders, combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
   }
 
 void ASC_ResetRuntimeState(void)

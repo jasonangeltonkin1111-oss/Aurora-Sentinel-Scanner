@@ -23,6 +23,7 @@ This blueprint canon defines:
 4. The EA, HUD, and menu must never expose build chatter such as `Step 5`, `Layer 2`, `packet`, `wave`, or raw enum names.
 5. Blueprint files may describe architecture layers and internal mechanics, but product-facing surfaces may not.
 6. This folder is the active design canon for the new build. Older material remains in `archives/` for reference only.
+7. Every meaningful wrapper or explorer edit must bump version according to the current version law; version changes are part of the product contract, not optional polish.
 
 ## File order
 

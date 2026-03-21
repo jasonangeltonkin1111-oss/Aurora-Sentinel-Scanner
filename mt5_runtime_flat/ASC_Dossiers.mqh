@@ -57,7 +57,7 @@ string ASC_BuildDossierText(const ASC_ServerPaths &paths,const ASC_RuntimeState 
    body+="Next Due: " + ASC_DateTimeText(state.next_check_at) + "\r\n";
    body+="Next Due Reason: " + state.next_check_reason + "\r\n";
    body+="Uncertain Burst Count: " + IntegerToString(state.uncertain_burst_count) + "\r\n";
-   body+="Publication State: " + (state.publication_ok ? "Last write promoted" : "Waiting for successful promotion") + "\r\n\r\n";
+   body+="Publication State: " + (state.publication_ok ? "Last write promoted" : "Awaiting a successful dossier promotion") + "\r\n\r\n";
 
    body+="Capability Progress\r\n";
    body+="----------------------------------------\r\n";

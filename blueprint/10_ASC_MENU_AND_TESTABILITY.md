@@ -45,12 +45,13 @@ Owns:
 - summary save cadence
 - dossier repair on boot
 
-### Logging
+### Logging & Attention
 Owns:
 - verbosity
 - scheduler decision logging
 - recovery logging
 - dossier repair logging
+- attention visibility thresholds
 
 ### Dossiers & Publication
 Owns:
@@ -58,24 +59,30 @@ Owns:
 - inclusion of pending layer placeholders
 - publication metadata stability
 
+### Explorer HUD
+Owns:
+- explorer visibility
+- explorer refresh cadence
+- explorer density
+- breadcrumb visibility
+- safe scroll step size
+
 ## Reserved menu groups for later capabilities
 
 These groups should already exist in menu design even when their logic is pending.
 
-### Snapshot Controls (Pending)
-Reserved for Open Symbol Snapshot behavior.
+### Open Symbol Snapshot (Reserved)
+Reserved for Open Symbol Snapshot behavior and early snapshot/timeframe scaffolding such as:
+- Reserved: Snapshot M1 Bars
+- Reserved: Snapshot M5 Bars
+- Reserved: Snapshot M15 Bars
 
-### Timeframe History (Pending)
-Reserved for future OHLC and timeframe retention controls such as:
-- M1 Bars
-- M5 Bars
-- M15 Bars
-- H1 Bars
-- H4 Bars
-- D1 Bars
-
-### Deep Analysis (Pending)
-Reserved for Deep Selective Analysis controls.
+### Deep Selective Analysis (Reserved)
+Reserved for Deep Selective Analysis controls and deeper ATR/history cadence scaffolding such as:
+- Reserved: ATR Refresh Seconds
+- Reserved: Deep H1 Bars
+- Reserved: Deep H4 Bars
+- Reserved: Deep D1 Bars
 
 ### Future Selection / Ranking (Pending)
 Reserved for Candidate Filtering and Shortlist Selection controls such as later selected-set limits.
@@ -171,3 +178,9 @@ A healthy Market State Detection test run should make it easy to find:
 - scheduler decision lines only when debug logging is enabled
 - bounded-work warnings only when the heartbeat cap binds
 - save and restore events for runtime, scheduler, summary, and dossiers
+
+
+## Version bump discipline
+
+Every meaningful edit to the wrapper, menu, or explorer contract must bump version.
+Use a patch bump for non-breaking fixes and polish, a minor bump for meaningful subsystem expansion, and a major bump only for architectural revision.

@@ -112,7 +112,7 @@ The sequence above remains active canon for debugging and future implementation 
 
 ### Explorer HUD shell
 - **Status:** working
-- **Pass:** the explorer owns only its prefixed chart objects, shows overview plus placeholder bucket and symbol-detail views, supports Home/Back/scroll navigation, and renders prepared Layer 1 truth without triggering heavy compute on click.
+- **Pass:** the explorer owns only its prefixed chart objects, shows overview plus bucket list, bucket detail, symbol detail, and stat-detail shell views, supports Home/Back/scroll navigation with bucket-aware flow, and renders prepared Layer 1 truth without triggering heavy compute on click.
 - **Break symptoms:** chart clutter overlaps unrelated objects, buttons dead-end, symbol detail shows fabricated future capability state, or redraw logic churns every event without cadence control.
 - **Owners:** `mt5_runtime_flat/AuroraSentinel_Foundation.mq5`, `mt5_runtime_flat/ASC_ExplorerHUD.mqh`, `mt5_runtime_flat/ASC_ExplorerBuckets.mqh`
 - **Regression warning:** do not move scanner computation into button handlers or collapse the explorer into one rigid monolith.

@@ -123,3 +123,19 @@ The prior hardening pass introduced useful structure, but MT5 compile feedback e
 
 ### Result
 The active runtime should now be materially closer to MT5 compile-clean status while preserving Market State Detection as the only working capability and keeping the Explorer shell truthful.
+
+---
+## 2026-03-21 — HUD v2 and menu refinement pass
+
+### Why
+The Explorer shell was structurally correct, but it still felt too flat, bucket navigation skipped an important step, reserved menu groups were noisier than necessary, and version bumps were not yet enforced as a standing rule.
+
+### What changed
+- bumped the wrapper to 1.020 and the explorer subsystem to 0.300 for a meaningful HUD/menu subsystem expansion
+- added explicit blueprint and runtime discipline that every meaningful edit must bump version
+- refined the menu so reserved groups stay visible but more intentional, with timeframe placeholders returned to the correct reserved homes
+- upgraded the explorer to HUD v2 with a stronger console hierarchy, bucket detail view, stat detail shell, right-side control rail, and block-based overview and symbol pages
+- kept Market State Detection as the only working capability and preserved future capability surfaces as honest placeholders
+
+### Result
+The active Layer 1 console is now visually stronger, navigation-safe, future-safe, and explicitly version-disciplined without widening beyond the current capability boundary.

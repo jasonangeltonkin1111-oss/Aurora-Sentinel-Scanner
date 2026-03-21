@@ -2,12 +2,12 @@
 #define __ASC_COMMON_MQH__
 
 #define ASC_PRODUCT_NAME "Aurora Sentinel Scanner"
-#define ASC_WRAPPER_VERSION "1.001"
+#define ASC_WRAPPER_VERSION "1.020"
 #define ASC_SCHEMA_FAMILY "ASC Foundation"
 #define ASC_ACTIVE_CAPABILITY "Market State Detection"
 #define ASC_NEXT_CAPABILITY "Open Symbol Snapshot"
 #define ASC_RUNTIME_POSTURE "Foundation / Layer 1 Truth"
-#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.100"
+#define ASC_EXPLORER_SUBSYSTEM_VERSION "0.300"
 
 enum ASC_RuntimeMode
   {
@@ -52,6 +52,7 @@ struct ASC_RuntimeSettings
    bool              explorer_enabled;
    int               explorer_refresh_seconds;
    int               explorer_scroll_step_rows;
+   int               explorer_density_mode;
    bool              explorer_show_breadcrumbs;
    int               heartbeat_seconds;
    int               universe_sync_seconds;
@@ -386,6 +387,15 @@ int ASC_IntegerFromText(const string text)
    return((int)StringToInteger(ASC_Trim(text)));
   }
 
+string ASC_ExplorerDensityText(const int value)
+  {
+   if(value<=0)
+      return("Compact");
+   if(value>=2)
+      return("Detailed");
+   return("Normal");
+  }
+
 string ASC_WrapperHeaderText(void)
   {
    return(ASC_PRODUCT_NAME + " | Wrapper " + ASC_WRAPPER_VERSION + " | Schema " + ASC_SCHEMA_FAMILY + " | Active " + ASC_ACTIVE_CAPABILITY + " | Next " + ASC_NEXT_CAPABILITY + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION);
@@ -393,7 +403,7 @@ string ASC_WrapperHeaderText(void)
 
 string ASC_UpdateBumpLawText(void)
   {
-   return("Patch 1.001->1.002 for non-breaking fixes; minor 1.001->1.010 for meaningful subsystem expansion; major 1.x->2.000 for architecture revision.");
+   return("Every meaningful edit must bump version. Use a patch bump for non-breaking fixes, a minor bump for meaningful subsystem expansion, and 2.000+ only for major architecture revision.");
   }
 
 string ASC_YesNoPending(const bool condition,const string pending_text)
