@@ -307,11 +307,29 @@ string ASC_ExplorerMarketFilterText(const ASC_ExplorerMarketFilter filter)
 
 string ASC_ExplorerPercentText(const int numerator,const int denominator)
   {
-   if(denominator<=0)
-      return("0%");
-   int percent=(numerator*100)/denominator;
-   return(IntegerToString(ASC_PercentClamp(percent)) + "%");
+   int tenths=ASC_PercentTenths(numerator,denominator);
+   return(IntegerToString(tenths/10) + "." + IntegerToString(tenths%10) + "%");
   }
+
+string ASC_ExplorerCountPercentText(const string label,const int numerator,const int denominator,const string basis_label="")
+  {
+   string text=label + " " + IntegerToString(numerator) + " / " + IntegerToString(denominator) + " (" + ASC_ExplorerPercentText(numerator,denominator) + ")";
+   if(basis_label!="")
+      text+=" of " + basis_label;
+   return(text);
+  }
+
+struct ASC_ExplorerLayer1Overview
+  {
+   int discovered_count;
+   int open_count;
+   int closed_count;
+   int uncertain_count;
+   int unknown_count;
+   int classified_count;
+   int unresolved_count;
+   int warmup_ready_count;
+  };
 
 color ASC_ExplorerStatusAccent(const ASC_ExplorerContext &ctx,const ASC_MarketStatus status,const bool resolved)
   {
@@ -529,6 +547,31 @@ void ASC_ExplorerCounts(ASC_SymbolState &states[],const int count,int &open_coun
      }
   }
 
+void ASC_ExplorerBuildLayer1Overview(const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,ASC_ExplorerLayer1Overview &overview,int &due_count)
+  {
+   overview.discovered_count=count;
+   overview.open_count=0;
+   overview.closed_count=0;
+   overview.uncertain_count=0;
+   overview.unknown_count=0;
+   overview.classified_count=prepared.total_resolved_symbols;
+   overview.unresolved_count=prepared.unresolved_count;
+   overview.warmup_ready_count=runtime.initial_symbols_assessed;
+   due_count=0;
+   for(int i=0;i<count;i++)
+     {
+      if(states[i].dirty || states[i].is_due_now)
+         due_count++;
+      switch(states[i].market_status)
+        {
+         case ASC_MARKET_OPEN: overview.open_count++; break;
+         case ASC_MARKET_CLOSED: overview.closed_count++; break;
+         case ASC_MARKET_UNCERTAIN: overview.uncertain_count++; break;
+         default: overview.unknown_count++; break;
+        }
+     }
+  }
+
 string ASC_ExplorerSelectedBucketName(ASC_ExplorerContext &ctx,const ASC_PreparedBucketState &prepared)
   {
    ASC_BucketViewModel filtered[];
@@ -574,20 +617,21 @@ void ASC_ExplorerSummaryCard(ASC_ExplorerContext &ctx,const string id,const stri
    ASC_ExplorerLabel(ctx,id + ".line3",ASC_ExplorerFitText(line3,w-24),x+14,y+24+(ctx.theme.row_height*2),ctx.theme.muted);
   }
 
-void ASC_ExplorerRenderOverview(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,ASC_SymbolState &states[],const int count,const int x,const int y,const int w,const int h)
+void ASC_ExplorerRenderOverview(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &settings,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,ASC_SymbolState &states[],const int count,const int x,const int y,const int w,const int h)
   {
    int gap=ctx.theme.gap;
    int card_w=(w-gap)/2;
    int card_h=(h-(gap*2))/3;
-   int open_count=0,closed_count=0,uncertain_count=0,unknown_count=0,due_count=0;
-   ASC_ExplorerCounts(states,count,open_count,closed_count,uncertain_count,unknown_count,due_count);
+   ASC_ExplorerLayer1Overview overview;
+   int due_count=0;
+   ASC_ExplorerBuildLayer1Overview(runtime,prepared,states,count,overview,due_count);
 
    ASC_ExplorerSummaryCard(ctx,"overview.identity","System Identity",ASC_PRODUCT_NAME,"Wrapper " + ASC_WRAPPER_VERSION + " | Explorer " + ASC_EXPLORER_SUBSYSTEM_VERSION,"Market Filter " + ASC_ExplorerMarketFilterText(ctx.nav.market_filter),x,y,card_w,card_h,ctx.theme.accent);
    ASC_ExplorerSummaryCard(ctx,"overview.runtime","Runtime","Mode " + ASC_RuntimeModeText(runtime.mode),"Readiness " + IntegerToString(runtime.readiness_percent) + "% | Beat " + IntegerToString(runtime.heartbeats_since_boot),"Server " + runtime.server_clean,x+card_w+gap,y,card_w,card_h,(runtime.degraded ? ctx.theme.warning : (runtime.mode==ASC_RUNTIME_WARMUP ? ctx.theme.warning : ctx.theme.good)));
-   ASC_ExplorerSummaryCard(ctx,"overview.universe","Universe","Tracked symbols " + IntegerToString(count),"Open " + IntegerToString(open_count) + " | Closed " + IntegerToString(closed_count),"Uncertain " + IntegerToString(uncertain_count) + " | Unknown " + IntegerToString(unknown_count),x,y+card_h+gap,card_w,card_h,ctx.theme.accent_alt);
+   ASC_ExplorerSummaryCard(ctx,"overview.universe","Universe","Tracked symbols " + IntegerToString(overview.discovered_count),ASC_ExplorerCountPercentText("Open",overview.open_count,overview.discovered_count,"discovered") + " | " + ASC_ExplorerCountPercentText("Closed",overview.closed_count,overview.discovered_count,"discovered"),ASC_ExplorerCountPercentText("Uncertain",overview.uncertain_count,overview.discovered_count,"discovered") + " | " + ASC_ExplorerCountPercentText("Unknown",overview.unknown_count,overview.discovered_count,"discovered"),x,y+card_h+gap,card_w,card_h,ctx.theme.accent_alt);
    ASC_ExplorerSummaryCard(ctx,"overview.scheduler","Scheduler","Cursor " + IntegerToString(runtime.scheduler_cursor),"Due now " + IntegerToString(due_count),"Budget per beat " + IntegerToString(settings.symbol_budget_per_heartbeat),x+card_w+gap,y+card_h+gap,card_w,card_h,ctx.theme.accent);
-   ASC_ExplorerSummaryCard(ctx,"overview.health","Health and Attention","Recovery " + (runtime.recovery_used ? "Used" : "Fresh Start"),"Degraded " + ASC_BoolText(runtime.degraded) + " | Warmup Min " + ASC_BoolText(runtime.warmup_minimum_met),"Last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),x,y+(card_h+gap)*2,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
-   ASC_ExplorerSummaryCard(ctx,"overview.capability","Layer 1 Readiness","Initial assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered),"Compressed primary ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready),"Background completion " + ASC_BoolText(runtime.background_hydration_active),x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,(runtime.background_hydration_active ? ctx.theme.accent : (runtime.compressed_primary_buckets_ready ? ctx.theme.good : ctx.theme.reserved)));
+   ASC_ExplorerSummaryCard(ctx,"overview.health","Health and Attention","Recovery " + (runtime.recovery_used ? "Used" : "Fresh Start"),ASC_ExplorerCountPercentText("Warmup ready",overview.warmup_ready_count,overview.discovered_count,"discovered") + " | Degraded " + ASC_BoolText(runtime.degraded),"Warmup min " + ASC_BoolText(runtime.warmup_minimum_met) + " | Last heartbeat " + ASC_DateTimeText(runtime.last_heartbeat_at),x,y+(card_h+gap)*2,card_w,card_h,(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
+   ASC_ExplorerSummaryCard(ctx,"overview.capability","Layer 1 Readiness",ASC_ExplorerCountPercentText("Classified",overview.classified_count,overview.discovered_count,"discovered") + " | " + ASC_ExplorerCountPercentText("Unresolved",overview.unresolved_count,overview.discovered_count,"discovered"),"Compressed primary ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready),"Background completion " + ASC_BoolText(runtime.background_hydration_active),x+card_w+gap,y+(card_h+gap)*2,card_w,card_h,(runtime.background_hydration_active ? ctx.theme.accent : (runtime.compressed_primary_buckets_ready ? ctx.theme.good : ctx.theme.reserved)));
   }
 
 void ASC_ExplorerRenderPageButtons(ASC_ExplorerContext &ctx,const string id_prefix,const int page_index,const int page_count,const int x,const int y,const int max_width)
@@ -656,13 +700,13 @@ void ASC_ExplorerRenderBucketList(ASC_ExplorerContext &ctx,const ASC_PreparedBuc
       ASC_ExplorerRect(ctx,"buckets.card.bar." + IntegerToString(i),x,card_y,6,row_h,accent,accent);
       ASC_ExplorerLabel(ctx,"buckets.name." + IntegerToString(i),ASC_ExplorerFitText(filtered[i].name,w-160,10),x+14,card_y+6,ctx.theme.text,10);
       ASC_ExplorerLabel(ctx,"buckets.meta." + IntegerToString(i),ASC_ExplorerFitText("Compressed Layer 1 Main Bucket | Six-bucket adapter | ID " + filtered[i].bucket_id,w-160),x+14,card_y+24,ctx.theme.muted);
-      string truth_line="State " + filtered[i].progress_label + " | Filter-visible " + IntegerToString(live_visible) + "/" + IntegerToString(filtered[i].resolved_symbol_count) + " (" + ASC_ExplorerPercentText(live_visible,filtered[i].resolved_symbol_count) + ")";
+      string truth_line="State " + filtered[i].progress_label + " | Bucket Open " + IntegerToString(filtered[i].open_symbol_count) + " / " + IntegerToString(filtered[i].resolved_symbol_count) + " (" + ASC_ExplorerPercentText(filtered[i].open_symbol_count,filtered[i].resolved_symbol_count) + ") of resolved | Share " + ASC_ExplorerPercentText(filtered[i].resolved_symbol_count,prepared.total_resolved_symbols) + " of Layer 1 resolved";
       if(filtered[i].progress_state==ASC_PREPARED_BUCKET_BACKGROUND_ENRICH_PENDING)
          truth_line+=" | Deeper detail pending";
       else if(filtered[i].progress_state==ASC_PREPARED_BUCKET_PREPARING)
          truth_line+=" | Hydrating now";
       if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
-         truth_line="State " + filtered[i].progress_label + " | Open classified visible " + IntegerToString(live_visible) + "/" + IntegerToString(filtered[i].resolved_symbol_count) + " (" + ASC_ExplorerPercentText(live_visible,filtered[i].resolved_symbol_count) + ")";
+         truth_line="State " + filtered[i].progress_label + " | Open classified visible " + IntegerToString(live_visible) + "/" + IntegerToString(filtered[i].resolved_symbol_count) + " (" + ASC_ExplorerPercentText(live_visible,filtered[i].resolved_symbol_count) + ") of resolved";
       ASC_ExplorerLabel(ctx,"buckets.truth." + IntegerToString(i),ASC_ExplorerFitText(truth_line,w-160),x+14,card_y+24+ctx.theme.row_height,accent);
       ASC_ExplorerButton(ctx,"action.bucket." + IntegerToString(i),"Open",x+w-82,card_y+((row_h-ctx.theme.button_height)/2),70,ctx.theme.button_height,ctx.theme.accent,selected);
      }
@@ -786,7 +830,7 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
    string membership_truth="Membership comes only from promoted prepared truth for compressed Layer 1 buckets on this server.";
    if(ctx.nav.market_filter==ASC_EXPLORER_FILTER_OPEN_ONLY)
       membership_truth="Membership comes only from promoted prepared truth for compressed Layer 1 buckets on this server and currently OPEN.";
-   string left_meta="Bucket Members " + IntegerToString(bucket.resolved_symbol_count) + " | Open " + IntegerToString(bucket.open_symbol_count) + " | Filter-visible " + IntegerToString(total_visible_symbols) + " (" + ASC_ExplorerPercentText(total_visible_symbols,bucket.resolved_symbol_count) + ")";
+   string left_meta="Bucket Open " + IntegerToString(bucket.open_symbol_count) + " / " + IntegerToString(bucket.resolved_symbol_count) + " (" + ASC_ExplorerPercentText(bucket.open_symbol_count,bucket.resolved_symbol_count) + ") of resolved | Bucket share " + ASC_ExplorerPercentText(bucket.resolved_symbol_count,prepared.total_resolved_symbols) + " of Layer 1 resolved";
    string right_meta="Showing " + IntegerToString(lane_start+1) + "-" + IntegerToString((capped_total>0 ? lane_end : 0)) + " of " + IntegerToString(capped_total) + " | " + membership_truth;
    if(capped_total<=0)
       right_meta=membership_truth;
@@ -843,12 +887,15 @@ void ASC_ExplorerRenderBucketDetail(ASC_ExplorerContext &ctx,const ASC_PreparedB
       if(bucket.bucket_id!="stocks")
          stock_grouping_hint="Second-level grouping remains available from preserved primary/sector/theme/subtype metadata without changing the six-bucket main list.";
       ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.family","Bucket Family",bucket.family,summary_x,summary_y,summary_w,ctx.theme.accent_alt);
-      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.members","Bucket Members",IntegerToString(bucket.resolved_symbol_count),summary_x,summary_y+30,summary_w,ctx.theme.accent_alt);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.members","Bucket Members",IntegerToString(bucket.resolved_symbol_count) + " resolved | " + IntegerToString(bucket.source_symbol_count) + " source scope",summary_x,summary_y+30,summary_w,ctx.theme.accent_alt);
       ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.visible","Visible Classified",IntegerToString(capped_total) + " shown in mode | " + IntegerToString(total_visible_symbols) + " filter-visible",summary_x,summary_y+60,summary_w,bucket_accent);
-      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.filter","Filter Coverage",ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + " shows " + IntegerToString(total_visible_symbols) + "/" + IntegerToString(bucket.resolved_symbol_count) + " classified symbols (" + ASC_ExplorerPercentText(total_visible_symbols,bucket.resolved_symbol_count) + ")",summary_x,summary_y+90,summary_w,bucket_accent);
-      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.truth","Membership Truth",membership_truth,summary_x,summary_y+120,summary_w,ctx.theme.warning);
-      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.stockhint","Layer 2 Grouping",stock_grouping_hint,summary_x,summary_y+150,summary_w,ctx.theme.good);
-      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.posture","Bucket Posture",bucket.posture,summary_x,summary_y+180,summary_w,ctx.theme.reserved);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.filter","Filter Coverage",ASC_ExplorerMarketFilterText(ctx.nav.market_filter) + " shows " + IntegerToString(total_visible_symbols) + "/" + IntegerToString(bucket.resolved_symbol_count) + " classified symbols (" + ASC_ExplorerPercentText(total_visible_symbols,bucket.resolved_symbol_count) + ") of resolved",summary_x,summary_y+90,summary_w,bucket_accent);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.open","Bucket Open",IntegerToString(bucket.open_symbol_count) + " / " + IntegerToString(bucket.resolved_symbol_count) + " (" + ASC_ExplorerPercentText(bucket.open_symbol_count,bucket.resolved_symbol_count) + ") of resolved",summary_x,summary_y+120,summary_w,ctx.theme.good);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.unresolved","Bucket Unresolved",IntegerToString(bucket.unresolved_symbol_count) + " / " + IntegerToString(bucket.source_symbol_count) + " (" + ASC_ExplorerPercentText(bucket.unresolved_symbol_count,bucket.source_symbol_count) + ") of source scope",summary_x,summary_y+150,summary_w,ctx.theme.warning);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.share","Layer 1 Share",IntegerToString(bucket.resolved_symbol_count) + " / " + IntegerToString(prepared.total_resolved_symbols) + " (" + ASC_ExplorerPercentText(bucket.resolved_symbol_count,prepared.total_resolved_symbols) + ") of resolved Layer 1",summary_x,summary_y+180,summary_w,ctx.theme.accent);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.truth","Membership Truth",membership_truth,summary_x,summary_y+210,summary_w,ctx.theme.warning);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.stockhint","Layer 2 Grouping",stock_grouping_hint,summary_x,summary_y+240,summary_w,ctx.theme.good);
+      ASC_ExplorerInfoRow(ctx,"bucket.detail.summary.posture","Bucket Posture",bucket.posture,summary_x,summary_y+270,summary_w,ctx.theme.reserved);
      }
 
    int footer_y=y+h-footer_h;
@@ -1025,8 +1072,7 @@ string ASC_ExplorerWarmupBannerText(const ASC_RuntimeState &runtime)
    string progress=IntegerToString(runtime.readiness_percent) + "%";
    string primary_scope=IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count);
    if(runtime.mode==ASC_RUNTIME_WARMUP || !runtime.warmup_minimum_met)
-      return("Warmup active — initial market-state scan in progress | assessed " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered)
-             + " discovered live symbols | primary buckets " + primary_scope + " | readiness " + progress + ".");
+      return("Warmup active — initial market-state scan in progress | warmup ready " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered) + " (" + ASC_ExplorerPercentText(runtime.initial_symbols_assessed,runtime.total_symbols_discovered) + ") of discovered | primary buckets " + primary_scope + " | readiness " + progress + ".");
    if(runtime.background_hydration_active)
       return("Layer 1 readiness met | primary buckets promoted first | lower-priority stock hydration continues in the background without blocking navigation | readiness " + progress + ".");
    return("Layer 1 readiness complete: primary buckets promoted and discovered live symbols assessed | readiness " + progress + ".");
@@ -1043,9 +1089,8 @@ string ASC_ExplorerWarmupModeText(const ASC_RuntimeState &runtime)
 
 string ASC_ExplorerPrimaryBucketLoadingText(const ASC_RuntimeState &runtime)
   {
-   return("Primary buckets load first | compressed ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready)
-          + " | assessed " + IntegerToString(runtime.primary_bucket_symbols_assessed)
-          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " | stock detail may still be pending.");
+   return("Primary buckets load first | primary assessed " + IntegerToString(runtime.primary_bucket_symbols_assessed)
+          + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " (" + ASC_ExplorerPercentText(runtime.primary_bucket_symbols_assessed,runtime.primary_bucket_symbol_count) + ") | compressed ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready) + " | stock detail may still be pending.");
   }
 
 string ASC_ExplorerBackgroundCompletionText(const ASC_RuntimeState &runtime)
@@ -1179,7 +1224,7 @@ void ASC_ExplorerRenderControlRail(ASC_ExplorerContext &ctx,const ASC_RuntimeSet
 void ASC_ExplorerRenderStatusStrip(ASC_ExplorerContext &ctx,const ASC_RuntimeState &runtime,const ASC_PreparedBucketState &prepared,const int x,const int y,const int w,const int chart_w,const int chart_h)
   {
    string base_text=(runtime.degraded ? "Attention: bounded work remains active; some symbols are queued for the next heartbeat." : "Runtime is within the current bounded-work budget.");
-   string readiness_text="Readiness " + IntegerToString(runtime.readiness_percent) + "% | Initial " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered) + " | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " | Primary Ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready);
+   string readiness_text="Readiness " + IntegerToString(runtime.readiness_percent) + "% | Warmup ready " + IntegerToString(runtime.initial_symbols_assessed) + "/" + IntegerToString(runtime.total_symbols_discovered) + " (" + ASC_ExplorerPercentText(runtime.initial_symbols_assessed,runtime.total_symbols_discovered) + ") of discovered | Primary " + IntegerToString(runtime.primary_bucket_symbols_assessed) + "/" + IntegerToString(runtime.primary_bucket_symbol_count) + " (" + ASC_ExplorerPercentText(runtime.primary_bucket_symbols_assessed,runtime.primary_bucket_symbol_count) + ") | Primary Ready " + ASC_BoolText(runtime.compressed_primary_buckets_ready);
    string status_text=base_text + " | " + readiness_text + " | Promoted batch " + IntegerToString(prepared.diagnostics.last_prepared_batch_id) + " | Last-good " + IntegerToString(prepared.last_good_batch_id) + " | " + prepared.diagnostics.active_hydration_priority_set + " | " + IntegerToString(chart_w) + "x" + IntegerToString(chart_h);
    ASC_ExplorerRect(ctx,"status.strip",x,y,w,ctx.theme.status_height,ctx.theme.panel_alt_fill,ctx.theme.border);
    ASC_ExplorerRect(ctx,"status.bar",x,y,5,ctx.theme.status_height,(runtime.degraded ? ctx.theme.warning : ctx.theme.good),(runtime.degraded ? ctx.theme.warning : ctx.theme.good));
@@ -1251,7 +1296,7 @@ void ASC_ExplorerRender(ASC_ExplorerContext &ctx,const ASC_RuntimeSettings &sett
          ASC_ExplorerRenderStatDetail(ctx,runtime,states,count,main_x,main_y,content_w,main_h);
          break;
       default:
-         ASC_ExplorerRenderOverview(ctx,settings,runtime,states,count,main_x,main_y,content_w,main_h);
+         ASC_ExplorerRenderOverview(ctx,settings,runtime,prepared,states,count,main_x,main_y,content_w,main_h);
          break;
      }
 
