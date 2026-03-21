@@ -12,7 +12,6 @@ Archive office patterns were checked across:
 - `archives/Asc Archive/office/SHA_LEDGER.md`
 - `archives/Asc Archive/office/TASK_BOARD.md`
 - `archives/Asc Archive/office/MASTER_LOG.md`
-- `archives/Asc Archive/office/DECISIONS.md`
 - `ASC Office/ASC_OFFICE_CANON.md`
 
 ### What was kept
@@ -192,3 +191,31 @@ The Explorer HUD was close, but cross-broker symbol resolution, Open Only truth,
 The active Explorer HUD remains presentation-only, but it is now more truthful across brokers, more diagnosable across terminals, and cleaner about what is resolved live truth versus canonical placeholder structure.
 
 - 2026-03-21: Migrated Explorer bucket truth to standalone ASC classification and dynamic live-broker buckets; Open Only now hides zero-open classified buckets and bucket detail uses real classified symbols.
+
+---
+## 2026-03-21 — HQ continuity office-control and task-map hardening pass
+
+### Why
+The repo had reached the point where the shallow task board and optimistic stage wording were no longer enough. The next wave needs a tighter control layer that maps what is complete, half-done, provisional, wrong, fragile, and blocked — while enforcing version and SHA discipline on every meaningful pass.
+
+### What was reviewed
+Active control and evidence surfaces were checked across:
+- `office/TASK_BOARD.md`
+- `office/WORKING_STAGE_LEDGER.md`
+- `office/SHA_LEDGER.md`
+- `office/WORK_LOG.md`
+- `office/OFFICE_CANON.md`
+- `mt5_runtime_flat/ASC_Common.mqh`
+
+Repo-state and runtime truth from the current audit were also used to re-evaluate explorer ownership, dynamic bucket maturity, and version-discipline expectations.
+
+### What changed
+- expanded the task board into a standing execution map covering complete, half-done, fragile, blocked, and immediate-next streams
+- embedded mandatory version-bump, SHA-ledger, and fault-finding rules into active office control
+- corrected the working-stage ledger so explorer/runtime ownership leakage is described honestly instead of over-claiming presentation-only purity
+- recorded dynamic classification and bucket truth as active but provisional rather than fully reserved or fully trustworthy
+- bumped the wrapper version to 1.071 and the explorer subsystem version to 0.371 for this meaningful control and runtime-facing truth-discipline pass
+- refreshed the SHA ledger for all changed tracked files
+
+### Result
+The repo now has a much clearer HQ execution map for moving quickly without getting sloppy: every meaningful pass must carry version discipline, SHA-ledger maintenance, and a fault-finding sweep, while the next implementation order is kept anchored to runtime truth rather than convenience.
