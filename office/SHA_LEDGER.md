@@ -8,7 +8,7 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ## Current checkpoint
 
 - checkpoint date: 2026-03-21
-- checkpoint scope: Universal HUD and identity hardening pass
+- checkpoint scope: HQ continuity office-control and task-map hardening pass
 - hash type: SHA-256
 - note: this ledger does not hash itself to avoid self-reference churn
 - rule: refresh this file when a pass materially changes active control or scanner-foundation truth
@@ -18,10 +18,10 @@ It is intentionally compact and focuses on active control, blueprint, layout-pla
 ```text
 3c4ad6ec1b628e7e35c9673610aa3ee92377ed510c88c4096343fbfa90046f7f  office/README.md
 a1a0fcf8200512cec5eee0e91bc68c5bc08f4816b4faf7c600b8a9d9814c8d1b  office/OFFICE_CANON.md
-5157b696ff3707a46c075ea9ee118bcd938390c0d8955c05005d5f90785d7eea  office/TASK_BOARD.md
+4ec5c634d832cd257b5f160d910da525b204beb9bf6bc7752e39788eca77db40  office/TASK_BOARD.md
 80d8e561d42afeb17bc5aeb50bc9fb2dba1ee887f25be6cd11aa6f67df184314  office/DECISIONS.md
-728ae4c9c15cb310acf40b2a7638627cbb3e5b3f467de7ebc4c6e6f4cbd03054  office/WORK_LOG.md
-1d79f1a6e4b7ce4544e44701851a334965b3d7560c7b2aff4855464361c562c0  office/WORKING_STAGE_LEDGER.md
+f13f43bf09f57e262315c8e3dfd54c886cadedcc86cf91a10e8f4aca4b8f0cdf  office/WORK_LOG.md
+8ae48843f63d735bb937bc11ff8da2b82d285073b35781e0d861580c0478082d  office/WORKING_STAGE_LEDGER.md
 5cb93527acefb1593d6e7f9b3899490f2e1a75029206b90393fdfa2d7697c22b  blueprint/README.md
 bff7e8c580415f5459e8f75095f595bd129ce0b649b68078b99bdb2ae90669bf  blueprint/01_ASC_SYSTEM_OVERVIEW.md
 f91f2d675139dd3e95379b494dc205feada19e557523eaf1e943d83d7b1f0419  blueprint/02_ASC_RUNTIME_AND_SCHEDULER.md
@@ -48,7 +48,7 @@ fe3a4a7723cd7e4966ccbcb18d9e4baaa2834e51a3f4dd0d0c9a3677f77ce132  asc-mt5-scanne
 0796928097bf3a9ccdb182cf7b4ce5acf16d2974d2e1711fd0b7690e8c63bf41  asc-mt5-scanner-blueprint/22_ASC_AURORA_BRIDGE_CONTRACT.md
 c3cd1fe9b687bad416e9c721465188b62e8f7520eaef03f1afee3caf7a06d72e  mt5_layout_plan/Include/ASC/README.md
 a234f334205460b5505a14435c953bc3bbd91865ea02c6fb177c86da971ca105  mt5_runtime_flat/AuroraSentinel_Foundation.mq5
-adb5434978c1aa3e0dce0d6ab38370da55521a12720878adff82d08a9d1c4629  mt5_runtime_flat/ASC_Common.mqh
+a7eb72ed574bde35171f861054005c5377f6821f9dada18faf0329d746e7d272  mt5_runtime_flat/ASC_Common.mqh
 476e89a01ac1f2a74f3163cf8701ce5af63f1d59fdbc3782b49b48477ddaa267  mt5_runtime_flat/ASC_Dossiers.mqh
 1ee0224286934b77d7ab29cb65a0f9953c6749e12a78df7dde25914e4a730149  mt5_runtime_flat/ASC_MarketState.mqh
 2a50fab29fded3ac73a63b531b979006a6e71caf024d07a0b235bab67ed0768a  mt5_runtime_flat/ASC_FileIO.mqh
