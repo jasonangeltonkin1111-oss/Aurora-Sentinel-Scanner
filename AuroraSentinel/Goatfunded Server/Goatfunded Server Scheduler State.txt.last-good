@@ -1,0 +1,64 @@
+Schema Version=ASC Foundation v1
+Format Family=Scheduler Continuity
+Generated At=2026.03.21 04:35:02
+
+AUDCAD.x|Closed|2026.03.21 04:36:51|2026.03.20 23:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+AUDCHF.x|Closed|2026.03.21 04:36:51|2026.03.20 23:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+AUDJPY.x|Closed|2026.03.21 04:36:51|2026.03.20 23:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+AUDNZD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+AUDUSD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+CADCHF.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+CADJPY.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+CHFJPY.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURAUD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURCAD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURCHF.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURGBP.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURJPY.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURNZD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+EURUSD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+GBPAUD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+GBPCAD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+GBPCHF.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+GBPJPY.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+GBPNZD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+GBPUSD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+NZDCAD.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+NZDCHF.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+NZDJPY.x|Closed|2026.03.21 04:36:52|2026.03.20 23:58:59|2026.03.21 04:31:52|0|Outside broker trade session|Closed-session maintenance cadence
+NZDUSD.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+USDCAD.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+USDCHF.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+USDJPY.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+XAGUSD.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+XAUUSD.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+BCHUSD.x|Open|2026.03.21 04:35:13|2026.03.21 04:34:55|2026.03.21 04:35:03|0|Fresh tick inside broker trade session|Open market refresh cadence
+BNBUSD.x|Open|2026.03.21 04:35:13|2026.03.21 04:34:54|2026.03.21 04:35:03|0|Fresh tick inside broker trade session|Open market refresh cadence
+BTCUSD.x|Open|2026.03.21 04:35:13|2026.03.21 04:35:02|2026.03.21 04:35:03|0|Fresh tick inside broker trade session|Open market refresh cadence
+ETHUSD.x|Open|2026.03.21 04:35:13|2026.03.21 04:35:01|2026.03.21 04:35:03|0|Fresh tick inside broker trade session|Open market refresh cadence
+LTCUSD.x|Open|2026.03.21 04:35:13|2026.03.21 04:34:54|2026.03.21 04:35:03|0|Fresh tick inside broker trade session|Open market refresh cadence
+SOLUSD.x|Open|2026.03.21 04:35:13|2026.03.21 04:34:54|2026.03.21 04:35:03|0|Fresh tick inside broker trade session|Open market refresh cadence
+BRENT.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:54|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+WTI.x|Closed|2026.03.21 04:36:53|2026.03.20 23:58:59|2026.03.21 04:31:53|0|Outside broker trade session|Closed-session maintenance cadence
+AUS200.x|Closed|2026.03.21 04:36:51|2026.03.20 22:59:43|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+GER40.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+JAP225.x|Closed|2026.03.21 04:36:51|2026.03.20 23:57:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+NAS100.x|Closed|2026.03.21 04:36:51|2026.03.20 23:57:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+SPX500.x|Closed|2026.03.21 04:36:51|2026.03.20 23:57:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+UK100.x|Closed|2026.03.21 04:36:51|2026.03.20 22:59:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+US30.x|Closed|2026.03.21 04:36:51|2026.03.20 23:57:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+AAPL.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+AMZN.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:57|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+BA.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+COST.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:57|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+JPM.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+KO.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:56|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+META.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+MSFT.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+NFLX.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:56|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+NVDA.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+ORCL.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+PLTR.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:57|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+TSLA.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+UNH.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:59|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence
+V.x|Closed|2026.03.21 04:36:51|2026.03.20 22:58:58|2026.03.21 04:31:51|0|Outside broker trade session|Closed-session maintenance cadence

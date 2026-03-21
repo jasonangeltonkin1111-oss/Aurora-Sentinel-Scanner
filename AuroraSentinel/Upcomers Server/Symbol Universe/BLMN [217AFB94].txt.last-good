@@ -1,0 +1,77 @@
+Aurora Sentinel Symbol Dossier
+========================================
+
+Publication Metadata
+----------------------------------------
+Product: Aurora Sentinel Scanner
+Wrapper Version: 1.040
+Explorer Subsystem Version: 0.320
+Schema Family: ASC Foundation
+Schema Version: ASC Foundation v1
+Active Capability: Market State Detection
+Next Planned Capability: Open Symbol Snapshot
+Runtime Posture: Foundation / Layer 1 Truth
+Update Discipline: Every meaningful edit must bump version. Use a patch bump for non-breaking fixes, a minor bump for meaningful subsystem expansion, and 2.000+ only for major architecture revision.
+Generated At: 2026.03.21 02:29:27
+Runtime Mode: Degraded
+
+Symbol Identity
+----------------------------------------
+Symbol: BLMN
+Server: Upcomers Server
+Dossier File: BLMN [217AFB94].txt
+
+Market Status
+----------------------------------------
+Current Status: Closed
+Status Note: Outside broker trade session
+Last Tick Seen: 2026.03.20 20:59:43
+Tick Age Seconds: 19785
+Next Check: 2026.03.21 02:34:28
+Next Check Reason: Closed-session maintenance cadence
+
+Session State
+----------------------------------------
+Trade Sessions Available: Yes
+Within Trade Session: No
+Next Session Open: 2026.03.23 15:30:00
+
+Runtime Health
+----------------------------------------
+Last Heartbeat: 2026.03.21 02:29:27
+Universe Sync: 2026.03.21 02:28:56
+Recovery Used: Yes
+Degraded Runtime: Yes
+
+Scheduler State
+----------------------------------------
+Last Checked: 2026.03.21 02:29:28
+Next Due: 2026.03.21 02:34:28
+Next Due Reason: Closed-session maintenance cadence
+Uncertain Burst Count: 0
+Publication State: Last write promoted
+
+Capability Progress
+----------------------------------------
+Market State Detection: Working
+Symbol Identity and Bucketing: Reserved
+Open Symbol Snapshot: Reserved
+Candidate Filtering: Reserved
+Shortlist Selection: Reserved
+Deep Selective Analysis: Reserved
+Combined Opportunity Summary: Reserved
+Future Signal Surface: Reserved
+
+Tick Activity
+----------------------------------------
+Tick Present: Yes
+Tick Age Seconds: 19785
+
+Future Sections
+----------------------------------------
+Bucket Identity: Reserved
+Open Symbol Snapshot: Reserved
+Selection Status: Reserved
+Deep Analysis: Reserved
+Combined Opportunity Summary: Reserved
+Future Signal Surface: Reserved

@@ -1,0 +1,18 @@
+Summary Top 5 per Basket
+
+Product: Aurora Sentinel Scanner
+Wrapper Version: 1.040
+Schema Version: ASC Foundation v1
+Generated At: 2026.03.21 02:39:16
+Server: Upcomers Server
+Runtime Mode: Degraded
+Degraded: Yes
+Last Heartbeat: 2026.03.21 02:39:16
+Universe Size: 1202
+Due Now: 1
+Open: 31
+Closed: 1162
+Uncertain: 9
+Unknown: 0
+
+Market State Detection is working. Symbol Identity and Bucketing, selection, summary ranking, and signal surfaces remain Reserved.
