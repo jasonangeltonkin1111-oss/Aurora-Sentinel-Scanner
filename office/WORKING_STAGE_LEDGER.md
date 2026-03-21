@@ -12,6 +12,26 @@ Compact regression ledger for the current ASC foundation. This file is operation
 
 The sequence above remains active canon for debugging and future implementation order. Only Market State Detection currently owns fully working live behavior; classification/bucketing and prepared Layer 1 bucket truth are active but provisional.
 
+## Layer 1 completion gate for Layer 2 activation
+
+Use this checklist as the blocking gate before any true Layer 2 activation work begins. `PASS` means the repo already shows the required behavior or continuity artifact. `FAIL` means Layer 2 activation remains blocked until a later pass leaves direct evidence.
+
+| ITEM | STATUS | CURRENT BASIS | NEXT REQUIREMENT |
+|---|---|---|---|
+| honest warmup contract implemented | PASS | Layer 1 warmup readiness is now measured from first-pass coverage and compressed primary readiness rather than dossier-missing heuristics. | Keep runtime, HUD, and publication wording aligned if readiness fields change again. |
+| compressed six-bucket main surface implemented | PASS | Dynamic bucket truth is explicitly compressed into six Layer 1 main buckets for the first operator surface. | Preserve six-bucket ownership unless a later owning pass deliberately revises Layer 1 canon. |
+| progressive hydration active | PASS | Warmup and background completion are surfaced as staged Layer 1 readiness rather than a single blocking rebuild. | Keep hydration signals honest and non-cosmetic during later runtime changes. |
+| rolling prepared truth at least safely scaffolded | PASS | Rolling working/last-good/pending/reuse markers are already stated as active scaffold-grade runtime truth. | Harden reuse/persistence later without overstating current maturity. |
+| right rail owns All Symbols / Open Only | PASS | Explorer HUD shell canon already assigns the right rail and keeps All Symbols / Open Only as active operator controls. | Preserve rail ownership if HUD layout changes later. |
+| Open Only hides zero-open buckets | PASS | Explorer HUD pass criteria already require Open Only to hide buckets with no resolved live open symbols. | Re-verify after any bucket-filter or render-path change. |
+| overview and bucket percentages visible | PASS | Current Layer 1 bucket truth is summarized through compact diagnostics and visible percentages/overview surfaces. | Keep percentages truthful to promoted prepared state only. |
+| prep/render/page-switch instrumentation visible | PASS | Debug observability lane already requires visible prep summary, render time, and page-switch latency signals. | Keep instrumentation debug-only and threshold-based. |
+| explorer page changes do not trigger whole-universe rebuild behavior | PASS | Runtime now owns rolling prepared truth and the explorer/runtime boundary says navigation must stay consumer-only. | Keep watch for regressions; do not let click/render paths regain rebuild work. |
+| dossier/summary/HUD wording aligned | PASS | Current control truth says dossier, summary, and HUD wording already describe Layer 1 truth as active-but-provisional and runtime-prepared. | Update wording immediately if ownership or maturity changes again. |
+| version bump applied | FAIL | This office-control pass changes active control truth only; no runtime-facing version constant was changed in this pass. | Apply the next required wrapper/explorer version bump in the later runtime/code-mode pass that advances Layer 2-blocking implementation. |
+| SHA ledger refreshed | PASS | This pass refreshes the SHA ledger alongside the task board, work log, and stage ledger updates. | Keep hashes in lockstep with every meaningful committed pass. |
+| MT5 compile/test evidence captured in a later code-mode pass | FAIL | Current office pass adds no new MT5 compile/test evidence. | Capture MetaEditor compile/test evidence in the later code-mode pass before true Layer 2 activation begins. |
+
 ## Working items
 
 ### Server path identity
