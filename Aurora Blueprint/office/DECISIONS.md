@@ -12,6 +12,8 @@
 - active consolidated doctrine surfaces should be read before strengthening residue when a consolidated file already exists for the task lane
 - lossless cross-linking is preferred over risky consolidation
 - active Aurora wrapper/machine work must preserve explicit machine-safe versus human-only boundaries
+- `Aurora Wrapper/` is the compiled wrapper-facing canon root and must remain separate from `Aurora Blueprint/`, which stays source-truth
+- wrapper packs may compile active canon for GPT use, but they do not supersede source-truth ownership or run/ledger continuity
 - family competition is a dedicated Aurora stage that sits after context interpretation and before pattern competition, opportunity classification, and generated-card decisions
 - Aurora may request richer ASC fields through bridge notes, but it must not fabricate missing ASC truth
 - any meaningful Aurora architectural pass must record a bridge-check outcome using the joint evolution protocol categories

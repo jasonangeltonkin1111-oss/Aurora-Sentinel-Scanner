@@ -16,6 +16,7 @@
 | Book extraction continuity | ACTIVE | preserve current book-completion truth without re-upload drift | keep Ledger V2 + latest supplements clearly referenced until next safe merge |
 | Wave 2 consolidation discipline | ACTIVE | prepare the richest unconsolidated lane for safe consolidation | use deepening-pass law before any flattening move |
 | Wrapper architecture precision | ACTIVE | make object, deployability, geometry, and strategy-card layers more machine-usable | tighten field-level contracts and machine-safe boundaries |
+| Wrapper canon compilation | ACTIVE | keep `Aurora Wrapper/` low-count, replaceable, and aligned to active source truth | refresh packs only from verified Aurora source surfaces |
 | Operator usability | ACTIVE | keep Aurora workable for future chats and beginner operators | preserve clear read order, active stack, and scaffold references |
 | ASC ⇄ Aurora bridge | ACTIVE | keep Aurora demands aligned with ASC context truth | record bridge-check outcome on meaningful Aurora-side architecture passes |
 | Historical lineage preservation | ACTIVE | preserve runs, source sets, passes, older trackers, and strengthening lineage | classify as historical/reference rather than deleting or collapsing |
@@ -23,10 +24,10 @@
 
 ## Immediate next actions
 
-1. keep the new Aurora office layer synchronized with future control and doctrine passes
+1. keep the new Aurora office layer synchronized with future control, doctrine, and wrapper-compilation passes
 2. refresh active control files whenever a new tracker, ledger merge, or canonical doctrine shift lands
 3. continue Wave 2 consolidation planning under the deepening-pass protocol rather than flattening prematurely
-4. preserve run and source lineage while improving wrapper-ready precision on active objects and protocols
+4. preserve run and source lineage while improving wrapper-ready precision on active objects, protocols, and compiled wrapper packs
 5. propagate the new status/enum alignment and first concrete packet artifacts without widening ASC scope
 
 ## Blocking rules
