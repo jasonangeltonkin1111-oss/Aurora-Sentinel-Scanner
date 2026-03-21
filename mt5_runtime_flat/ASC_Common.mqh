@@ -40,6 +40,12 @@ enum ASC_ExplorerBucketDisplayMode
    ASC_BUCKET_DISPLAY_ALL=2
   };
 
+enum ASC_ExplorerMarketFilter
+  {
+   ASC_EXPLORER_FILTER_ALL_SYMBOLS=0,
+   ASC_EXPLORER_FILTER_OPEN_ONLY=1
+  };
+
 struct ASC_ServerPaths
   {
    string server_raw;
