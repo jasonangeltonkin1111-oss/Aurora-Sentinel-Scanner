@@ -80,6 +80,7 @@ Every generated strategy card should include:
 - `symbol`
 - `asset_class`
 - `bucket_prior`
+- `opportunity_stage`
 - `generated_at`
 - `expiry_at`
 - `asc_context_ref`
@@ -126,6 +127,9 @@ Every card should include:
 
 Aurora must preserve family competition truth.
 It must not act like a family appeared from nowhere.
+
+The card must also preserve whether the live opportunity is emergent, developing, confirmed, mature, late, continuation, re-entry, salvage, or exhausted enough to block issuance.
+That timing truth belongs in the card layer when it materially affects deployability, geometry freedom, or remaining path quality.
 
 ---
 

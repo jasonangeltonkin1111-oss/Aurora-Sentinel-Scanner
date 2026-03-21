@@ -176,12 +176,49 @@ Aurora must not:
 
 ---
 
-# 10. CURRENT JUDGMENT
+
+# 10. STAGE-AWARE OPPORTUNITY LAW
+
+Every preserved opportunity should be allowed to carry an explicit opportunity-stage judgment when timing materially affects honesty.
+
+Recommended stage fields:
+- `opportunity_stage`
+- `stage_justification`
+- `stage_risks`
+- `stage_transition_watchpoints`
+
+Stage language must follow `AURORA_OPPORTUNITY_STAGE_TAXONOMY_PROTOCOL.md`.
+Aurora should not assume early-stage opportunity is always superior.
+A mature, continuation, re-entry, or late-stage case may still outrank an emergent case if the structure is cleaner, the family fit is stronger, and the remaining path still supports preservation.
+
+# 11. MULTI-OPPORTUNITY ECOLOGY LAW
+
+Opportunity inventory should allow multiple preserved opportunity classes at once, such as:
+- one primary live case
+- one degraded secondary case
+- one observe-only continuation or reversal branch
+- one late-join or re-entry path worth monitoring
+
+Aurora should preserve these separately when the structure supports them instead of collapsing them into one forced winner too early.
+
+# 12. LATE-JOIN / MID-PROGRESS LEGITIMACY LAW
+
+A case must not be rejected merely because the market has already moved.
+Reject it only when:
+- structure is exhausted
+- remaining path is too poor
+- geometry becomes dishonest
+- family logic no longer supports continuation, re-entry, or salvage
+
+Some of Aurora's best-preserved cases will correctly appear after additional evidence, not before it.
+
+# 13. CURRENT JUDGMENT
 
 Aurora now has an explicit anti-starvation protocol:
 - preserve opportunities
 - classify them honestly
 - rank them by separable components
 - revisit them when context changes
+- preserve stage-aware and late-join opportunity classes when the structure honestly supports them
 
 This keeps the system opportunity-rich without becoming loose or generic.

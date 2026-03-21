@@ -25,9 +25,10 @@ Aurora strategy-family use should eventually follow this order:
 2. **Execution-context / surface read**
 3. **Family eligibility filter**
 4. **Family competition / ranking**
-5. **Pattern-level confirmation later**
-6. **Execution / wrapper / EA translation later**
-7. **Review and adaptation later**
+5. **Stage-profile and bucket-fit boundary**
+6. **Pattern-level confirmation later**
+7. **Execution / wrapper / EA translation later**
+8. **Review and adaptation later**
 
 This means families sit in the middle of the system.
 They are neither raw chart labels nor raw execution commands.
@@ -75,6 +76,8 @@ These outputs are what a future GPT wrapper or EA can consume.
 
 A family is not a trade.
 A family is a structured class of opportunity.
+It should also be treated as a stage-bearing and bucket-aware class of opportunity rather than an early-entry-only shell.
+It should also be treated as a stage-bearing and bucket-aware class of opportunity rather than an early-entry-only shell.
 
 That means the family layer should answer:
 - which family class best fits current conditions?

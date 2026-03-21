@@ -64,6 +64,15 @@ Reject or suppress the family when:
 - boundary-fade structures
 - internal rotational patterns
 
+# OPPORTUNITY STAGE PROFILE
+- Native stages: `STAGE_CONFIRMED`, `STAGE_MATURE`
+- Legitimate but more sensitive: `STAGE_LATE`, `STAGE_REENTRY` when the range remains intact and a new edge interaction is cleaner than the first one
+- Usually weak or invalid: `STAGE_EMERGENT` when balance is not yet established, `STAGE_EXHAUSTED` when expansion has already broken the range regime
+
+# BUCKET / REGIME FIT NOTES
+- Strongest in orderly balance/range buckets and weaker in one-way discovery or unstable compression-release environments
+- Range maturity often increases legitimacy rather than reducing it, provided the regime still holds
+
 # FUTURE TESTING / RESEARCH NEEDS
 - range stability diagnostics by environment
 - rejection-quality studies at boundaries

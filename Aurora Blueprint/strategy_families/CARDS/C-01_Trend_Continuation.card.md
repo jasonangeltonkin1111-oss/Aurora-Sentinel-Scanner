@@ -61,6 +61,15 @@ Reject or suppress the family when:
 - accepted break-and-hold structures
 - shallow continuation pullback structures
 
+# OPPORTUNITY STAGE PROFILE
+- Native stages: `STAGE_CONFIRMED`, `STAGE_MATURE`, `STAGE_CONTINUATION`
+- Legitimate but more sensitive: `STAGE_LATE`, `STAGE_REENTRY`
+- Usually weak or invalid: `STAGE_EMERGENT` when authority is not yet real, `STAGE_EXHAUSTED` when extension is already spent
+
+# BUCKET / REGIME FIT NOTES
+- Travels across many directional buckets, but late-stage continuation legitimacy depends heavily on remaining path quality and hostility burden
+- Should not be treated as universal in hyper-unstable or structurally rotational environments
+
 # FUTURE TESTING / RESEARCH NEEDS
 - continuation durability by environment
 - distinction between mature continuation and late exhausted continuation

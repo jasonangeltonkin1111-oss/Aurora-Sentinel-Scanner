@@ -77,5 +77,9 @@ Future books and extractions may add:
 ## Parent family dependencies
 - `Aurora Blueprint/strategy_families/CORE/Balance_Rotation_Range_Mean_Reversion.md`
 
+# STAGE FIT
+- Most native in `STAGE_CONFIRMED` and `STAGE_MATURE` balance conditions
+- Can remain legitimate as a later range-edge re-engagement only while balance integrity still holds
+
 # CURRENT JUDGMENT
 Range Rejection / Return To Value is a valid first approved pattern group because it is the clearest foundational child of the balance-rotation family and preserves one of the main mean-reversion pattern classes in the current Aurora stack.

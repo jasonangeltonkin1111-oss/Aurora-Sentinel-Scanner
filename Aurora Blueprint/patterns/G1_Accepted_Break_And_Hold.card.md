@@ -80,5 +80,9 @@ Future books and extractions may add:
 - `Aurora Blueprint/strategy_families/CORE/Trend_Continuation.md`
 - `Aurora Blueprint/strategy_families/CORE/Breakout_Compression_Release.md`
 
+# STAGE FIT
+- Most native in `STAGE_CONFIRMED` and early `STAGE_CONTINUATION` conditions
+- Can become invalid in `STAGE_LATE` or `STAGE_EXHAUSTED` conditions when hold quality is already degrading
+
 # CURRENT JUDGMENT
 Accepted Break And Hold is a valid first approved pattern group because it is one of the clearest pattern children of the current continuation and release families while still being broad enough to deepen later.

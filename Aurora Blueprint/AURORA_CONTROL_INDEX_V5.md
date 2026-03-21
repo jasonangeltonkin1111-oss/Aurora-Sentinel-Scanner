@@ -62,6 +62,8 @@ After the control stack, the primary active surfaces are:
 - current ledger base plus latest supplements not yet merged
 - current module map and book master index
 - current bridge, wrapper, deployability, geometry, generated-card, opportunity, and EA-boundary protocol files
+- `Aurora Blueprint/AURORA_OPPORTUNITY_ABUNDANCE_AND_ANTI_STARVATION_LAW.md`
+- `Aurora Blueprint/AURORA_OPPORTUNITY_STAGE_TAXONOMY_PROTOCOL.md`
 - current consolidated doctrine surfaces by wave
 
 ## Historical truth
@@ -110,7 +112,7 @@ Control-layer next task:
 - keep the new office layer and canonical control files synchronized whenever a meaningful Aurora pass lands
 
 Doctrine next task:
-- continue Wave 2 consolidation planning under the deepening-pass protocol
+- continue Wave 2 consolidation planning under the deepening-pass protocol while propagating the new abundance/stage-aware opportunity law through future family and pattern extraction
 
 Why:
 - Waves 1 and 3–5 have canonical consolidated surfaces

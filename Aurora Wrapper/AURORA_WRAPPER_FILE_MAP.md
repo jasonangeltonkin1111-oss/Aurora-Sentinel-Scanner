@@ -17,7 +17,7 @@ It also keeps the read order retrieval-friendly: small router first, then only t
 | Task | Read first | Then read | Primary Blueprint roots compiled |
 |---|---|---|---|
 | Aurora identity, authority, active-vs-historical law | `AURORA_WRAPPER_CONTROL_PACK.md` | `AURORA_WRAPPER_BRIDGE_PACK.md` if ownership boundary matters | office files, control index, operator protocol, recovery order, progress tracker, build/scope locks |
-| End-to-end execution flow or object-chain questions | `AURORA_WRAPPER_EXECUTION_PACK.md` | `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` if schema/example certainty is needed | workflow packet, wrapper object model, enum registry, status alignment, deployability, geometry, card, packet, review, opportunity, EA-boundary specs |
+| End-to-end execution flow or object-chain questions | `AURORA_WRAPPER_EXECUTION_PACK.md` | `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` if schema/example certainty is needed | workflow packet, wrapper object model, enum registry, status alignment, abundance law, stage taxonomy, deployability, geometry, card, packet, review, opportunity, EA-boundary specs |
 | Family routing or family competition | `AURORA_WRAPPER_FAMILY_VAULT.md` | `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` for worked anchors | family registry, family system map, core family files, family cards, family competition protocol/schema/example |
 | Pattern routing or pattern competition | `AURORA_WRAPPER_PATTERN_VAULT.md` | `AURORA_WRAPPER_PACKET_EXAMPLE_VAULT.md` for worked anchors | pattern atlas, pattern cards, pattern competition protocol/schema/example |
 | ASC context intake, missingness, or bridge ownership | `AURORA_WRAPPER_BRIDGE_PACK.md` | `AURORA_WRAPPER_EXECUTION_PACK.md` | ASC contract, joint evolution protocol, real ASC intake example |

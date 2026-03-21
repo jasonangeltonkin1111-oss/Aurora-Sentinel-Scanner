@@ -104,6 +104,27 @@ Allowed values:
 Use for:
 - pattern competition outputs
 
+## 3.5 Opportunity stage
+Allowed values:
+- `STAGE_EMERGENT`
+- `STAGE_DEVELOPING`
+- `STAGE_CONFIRMED`
+- `STAGE_MATURE`
+- `STAGE_LATE`
+- `STAGE_CONTINUATION`
+- `STAGE_REENTRY`
+- `STAGE_SALVAGE`
+- `STAGE_EXHAUSTED`
+
+Use for:
+- opportunity objects
+- generated strategy cards
+- packets and review packets
+- family/pattern stage profiles where explicit stage labels are required
+
+Cross-reference:
+- `AURORA_OPPORTUNITY_STAGE_TAXONOMY_PROTOCOL.md`
+
 ---
 
 # 4. DEPLOYABILITY ENUMS

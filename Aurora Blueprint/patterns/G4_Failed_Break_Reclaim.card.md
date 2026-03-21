@@ -74,5 +74,9 @@ Future books and extractions may add:
 ## Parent family dependencies
 - `Aurora Blueprint/strategy_families/CORE/Failed_Break_Trap_Reversal.md`
 
+# STAGE FIT
+- Most native in `STAGE_DEVELOPING` and `STAGE_CONFIRMED` failed-break conditions
+- May still support `STAGE_SALVAGE` when reclaim logic survives imperfect first geometry
+
 # CURRENT JUDGMENT
 Failed Break / Reclaim is a valid first approved pattern group because it is one of the clearest child structures of the failed-state family and preserves one of the most important practical reversal pattern classes in the current Aurora stack.

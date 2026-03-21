@@ -16,6 +16,7 @@ It preserves pattern meaning as family-attached structural roles rather than det
 Pattern competition is downstream of family competition.
 Patterns must consume the surviving family posture and must not silently reopen family selection.
 Pattern meaning remains owned by the atlas and cards, not by ad hoc wrapper paraphrase.
+They also inherit stage meaning from the surviving family posture rather than erasing it.
 
 ## Pattern competition laws
 
@@ -87,6 +88,7 @@ For each candidate pattern, preserve:
 - habitat and state/surface dependencies
 - confirmation logic
 - invalidation logic
+- stage fit and stage invalidity pressure
 - anti-confusions and false-positive risks
 - candidate visibility when not yet decisive
 

@@ -46,6 +46,16 @@ The family layer answers: which organizing engine best explains the case now, wh
 
 ## Core family doctrine
 
+## Stage-aware family ecology
+
+Use family stage logic as a family-specific timing language, not a universal scorecard.
+Remember:
+- continuation families often stay legitimate into mature, late, and re-entry states
+- breakout-release families are often strongest earlier and can expire faster
+- failed-break families often require later confirmation before they become trustworthy
+- balance-rotation families may become more legitimate after the range is already established
+- bucket and regime context can expand or compress a stage's usable life
+
 ### C-01 — Trend Continuation
 - **Canonical thesis:** continuation of already established directional discovery or trend expansion.
 - **Native habitat:** clean directional structure, strong discovery posture, post-acceptance continuation, low exhaustion evidence.

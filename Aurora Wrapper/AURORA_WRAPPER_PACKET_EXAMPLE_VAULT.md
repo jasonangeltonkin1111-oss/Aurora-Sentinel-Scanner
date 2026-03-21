@@ -67,8 +67,9 @@ It should answer what layer was right, what layer failed, and what changed versu
 ## Concrete expectations the wrapper should remember
 
 - packets must keep stage sequence, entry/exit conditions, stop conditions, object references, output expectations, and operator notes explicit
-- worked examples may correctly end in observe-only, watch-only, geometry-invalid, or no-card-valid outcomes
-- review packets should isolate whether the issue was structure, deployability, geometry, timebox, or missing truth
+- worked examples may correctly end in observe-only, watch-only, geometry-invalid, stage-exhausted, or no-card-valid outcomes
+- review packets should isolate whether the issue was structure, stage classification/exhaustion, deployability, geometry, timebox, or missing truth
+- packet lanes may legitimately preserve mid-progress, continuation, re-entry, or salvage opportunity classes rather than forcing early-entry framing
 - group-context examples should keep family logic broader than one symbol shell so the wrapper does not become symbol-bound
 
 ## Replace/update note
