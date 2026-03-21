@@ -142,10 +142,18 @@ Should include:
 - warnings / attention summary
 
 ### View 1 — Bucket List
-Shows all active or known buckets as selectable cards or buttons.
+Shows only the compressed Layer 1 main buckets for the first operator surface as selectable cards or buttons.
+
+Those first-class bucket pages are exactly:
+- `FX`
+- `Indices`
+- `Metals`
+- `Energy`
+- `Crypto`
+- `Stocks`
 
 Should include per bucket:
-- bucket name
+- compressed Layer 1 bucket name
 - symbol count
 - active count
 - open / closed / uncertain rollup
@@ -154,12 +162,14 @@ Should include per bucket:
 - last update when available
 
 ### View 2 — Bucket Detail
-Triggered by clicking a bucket.
+Triggered by clicking a compressed Layer 1 bucket.
 
 Should show:
 - bucket summary header
 - top symbols in that bucket
 - readiness status
+- preserved second-level metadata such as `primary_bucket`, sector, industry, theme, and subtype for later drilldown
+- future regional stock grouping hints without promoting US/EU/HK groupings into first-class main pages
 - visible-window scrolling when the list exceeds the screen
 - safe pagination or row-based scroll controls
 
@@ -597,7 +607,7 @@ This remains presentation-only and must not activate future compute capabilities
 
 ## Bucket detail mode law
 
-Bucket Detail must keep an explicit operator-visible display mode state:
+Bucket Detail must keep an explicit operator-visible display mode state while still treating Layer 2 stock grouping as metadata inside the detail surface rather than as new main bucket pages:
 - `Top 3`
 - `Top 5`
 - `All`

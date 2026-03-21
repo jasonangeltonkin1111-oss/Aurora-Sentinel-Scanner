@@ -65,6 +65,7 @@ Current status:
 - blueprint-active
 - runtime-active but provisional
 - classification-driven bucket preparation is active for current Layer 1 explorer use
+- runtime-owned bucket preparation now includes a compressed Layer 1 main-bucket adapter for the first operator surface
 - prepared bucket truth is runtime-owned and explorer-consumed
 - not yet trusted as fully mature downstream identity truth
 
@@ -170,14 +171,15 @@ It should support:
 - cross-bucket diversity logic later
 - later de-duplication and correlation control
 
-Primary bucket is the main grouping surface.
-Sector, industry, theme, and subtype remain secondary but should be preserved for future drilldown and Aurora context.
+Primary bucket remains the rich taxonomy truth for classification.
+The first operator surface must map that richer truth into exactly six compressed Layer 1 main buckets: `FX`, `Indices`, `Metals`, `Energy`, `Crypto`, and `Stocks`.
+Sector, industry, theme, and subtype remain secondary but should be preserved for future drilldown, later regional stock grouping such as US/EU/HK, and Aurora context.
 
 ## Dynamic bucket preparation law
 
 Dynamic bucket membership shown in the HUD is runtime-prepared truth.
 The current runtime already prepares and caches:
-- classified symbol membership by bucket
+- classified symbol membership by compressed Layer 1 main bucket
 - membership counts and summary rollups
 - identity-backed symbol cards or references for bucket detail views
 - invalidation markers when runtime-owned bucket truth is refreshed
@@ -185,6 +187,7 @@ The current runtime already prepares and caches:
 That active preparation is still provisional. Taxonomy depth, confidence posture, and publication wording remain subject to further hardening before this should be treated as fully trusted downstream identity truth.
 
 The HUD must consume prepared bucket membership and summaries through adapters.
+Prepared symbol metadata must still carry the richer classification fields (`primary_bucket`, sector, industry, theme bucket, subtype) even when the visible bucket page only shows the compressed Layer 1 grouping.
 It must not classify symbols, rebuild active membership, or walk raw identity catalogs during render.
 
 ## Data-source law

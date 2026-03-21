@@ -50,7 +50,7 @@ Do not continue building on unresolved contradiction.
 | Foundation runtime | ACTIVE | 84% | heartbeat, fairness, persistence, dossier publication, continuity, and Layer 1 readiness gating are structurally strong | keep stable while ownership and explorer issues are corrected |
 | Market State Detection | WORKING | 88% | still the only fully working capability with real runtime truth | compile/test re-verify after any structural runtime change |
 | Classification catalog | ACTIVE-PROVISIONAL | 55% | standalone classification exists and drives buckets, but catalog quality is mixed and some mappings are too broad or wrong | audit classification truth before treating bucket output as trusted |
-| Dynamic buckets | ACTIVE-PROVISIONAL | 58% | membership is live/classification-driven, but preparation currently happens in explorer-side flows | move bucket preparation to runtime-owned prepared state / snapshot layer |
+| Dynamic buckets | ACTIVE-PROVISIONAL | 58% | membership is live/classification-driven, with the first operator surface now compressed into six Layer 1 main buckets while deeper stock grouping remains metadata, but preparation currently happens in explorer-side flows | keep compressed Layer 1 bucket preparation runtime-owned while preserving richer classification metadata for later drilldown surfaces |
 | Explorer HUD | ACTIVE-FRAGILE | 52% | advanced navigation and layout exist, but render/delete churn and bucket recompute-in-render are still architectural faults | fix ownership boundary first, then performance, then behavior/layout polish |
 | Dossiers and summary | ACTIVE | 76% | atomic publication and scaffold output exist, but wording still understates active provisional identity work | update wording to reflect current truth honestly |
 | ASC ⇄ Aurora bridge | ACTIVE | 80% | separation is still good and future insertion points remain preserved | preserve boundary while tightening upstream truth discipline |
@@ -136,7 +136,7 @@ Still needed:
 1. Home vs Overview redundancy
 2. dead or low-value rail actions
 3. bucket page explosion from granularity / page fit / both
-4. bucket detail still carrying old placeholder-era assumptions
+4. bucket detail still needing to expose preserved stock-region metadata without turning it into first-class main pages
 5. stat/symbol flows depending too heavily on explorer-side rebuilding
 
 ## Required fault-finding sweep on every pass
