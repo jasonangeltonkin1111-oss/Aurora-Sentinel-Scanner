@@ -46,6 +46,21 @@ Layer 2 now has stable reserved insertion points across runtime state, continuit
 
 This file is append-only.
 
+## 2026-03-21 — Layer 1 completion gate office pass
+
+### Why
+Layer 2 reserved scaffolding now exists, but the repo still needed an explicit blocking checklist that states which Layer 1 conditions are already pass, which remain fail, and which evidence must exist before true Layer 2 activation work may begin.
+
+### What changed
+- added a dedicated Layer 1 completion gate to `office/TASK_BOARD.md` and made it the blocking checklist for any true Layer 2 activation work
+- reflected each checklist item as explicit PASS or FAIL in `office/WORKING_STAGE_LEDGER.md`, including keeping version-bump application and MT5 compile/test evidence blocked until a later code-mode pass
+- refreshed the SHA ledger for this office-control pass
+- recorded version-discipline truth honestly for this office-only pass: no runtime-facing version constant changed here, so the next runtime/code-mode implementation pass must apply the required version bump before Layer 2 activation can proceed
+
+### Result
+The repo now has an explicit Layer 1 activation gate: most Layer 1 operator/runtime conditions are already marked pass, while version-bump execution and MT5 compile/test evidence remain visible blockers for true Layer 2 activation.
+
+---
 ## 2026-03-21 — Operator wording alignment for provisional bucket truth
 
 ### Why
