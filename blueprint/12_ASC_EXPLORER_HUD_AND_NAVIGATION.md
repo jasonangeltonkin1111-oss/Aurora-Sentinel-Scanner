@@ -134,6 +134,7 @@ Should include:
 - server and server time
 - runtime state
 - current capability progress
+- Layer 1 readiness / warmup banner
 - bucket totals
 - target symbols
 - pending reason summary
@@ -616,3 +617,21 @@ Bucket Detail layout should now reserve these regions in order:
 5. reserved future layer strip
 
 Those later insertion points are structural only. They must not activate snapshot, filtering, shortlist, deep analysis, combined-summary, or Aurora logic early.
+
+## Warmup visibility law
+
+The header and status surfaces must carry explicit Layer 1 readiness truth.
+
+They should surface at least:
+- initial symbols assessed
+- compressed primary-bucket symbols assessed
+- warmup minimum met
+- warmup progress percent
+- whether background hydration is still active after steady promotion
+
+The HUD should distinguish three states clearly:
+- warmup active
+- steady with background hydration still running
+- fully hydrated for the currently discovered universe
+
+The HUD must not imply that missing dossier count alone controls warmup completion.

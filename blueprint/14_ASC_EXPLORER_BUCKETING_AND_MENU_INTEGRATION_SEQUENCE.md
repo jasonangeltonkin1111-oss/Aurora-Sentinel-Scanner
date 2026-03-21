@@ -89,6 +89,7 @@ The system must now be implemented with the following binding rules:
 - changed truth persists atomically by owned section or prepared snapshot surface
 - explorer redraws reuse prepared snapshots until invalidated
 - focus change or exit removes elevated work promptly while preserving honest last-good display state
+- runtime-owned Layer 1 readiness must gate warmup versus steady mode using first-pass coverage of the live universe and compressed priority-set-1 buckets, not dossier-missing count alone
 
 These rules apply generally across overview, bucket, symbol, stat, shortlist, deep-analysis, and Aurora-reserved surfaces.
 
@@ -150,3 +151,17 @@ The explorer bucket flow must now be read as dynamic-ready even before live iden
 - bucket list and bucket detail must consume prepared bucket snapshots rather than raw identity catalogs
 
 Placeholder taxonomy remains allowed as a temporary source, but only through an honest view-model layer that does not imply live broker membership.
+
+
+## Warmup bridge
+
+The explorer and menu surfaces must now assume a two-stage Layer 1 startup model:
+- `ASC_RUNTIME_WARMUP` on boot and recovery
+- `ASC_RUNTIME_STEADY` once the Layer 1 minimum readiness threshold is met
+
+That threshold should be interpreted as:
+- all currently discovered symbols inside compressed priority-set-1 buckets assessed at least once, and
+- a configurable minimum portion of the currently discovered live universe assessed at least once
+
+After promotion, lower-priority first-pass work may continue as background hydration.
+HUD status and persisted continuity must keep this visible without forcing warmup to remain active forever.

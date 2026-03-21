@@ -1,12 +1,12 @@
 #property strict
 
 // Aurora Sentinel Scanner
-// Wrapper Version: 1.080
+// Wrapper Version: 1.090
 // Schema Family: ASC Foundation
 // Active Capability: Market State Detection
 // Next Planned Capability: Open Symbol Snapshot
 // Runtime Posture: Foundation / Layer 1 Truth
-// Explorer Subsystem Version: 0.380
+// Explorer Subsystem Version: 0.390
 // Update Bump Law:
 // - Every meaningful edit must bump version
 // - Patch bump for non-breaking fixes and polish
@@ -47,6 +47,7 @@ input group "Recovery & Persistence"
 input int InpRuntimeSaveSeconds=30;                    // Runtime Save Interval Seconds
 input int InpSchedulerSaveSeconds=15;                  // Scheduler Save Interval Seconds
 input int InpSummarySaveSeconds=60;                    // Summary Save Interval Seconds
+input int InpWarmupMinimumUniversePercent=35;          // Warmup Minimum Universe Percent
 input bool InpRepairMissingDossiersOnBoot=true;        // Repair Missing Dossiers On Boot
 
 input group "Logging & Attention"
@@ -129,6 +130,7 @@ void ASC_LoadSettingsFromInputs(void)
    g_settings.runtime_save_seconds=(InpRuntimeSaveSeconds>0 ? InpRuntimeSaveSeconds : 30);
    g_settings.scheduler_save_seconds=(InpSchedulerSaveSeconds>0 ? InpSchedulerSaveSeconds : 15);
    g_settings.summary_save_seconds=(InpSummarySaveSeconds>0 ? InpSummarySaveSeconds : 60);
+   g_settings.warmup_minimum_universe_percent=ASC_PercentClamp((InpWarmupMinimumUniversePercent>0 ? InpWarmupMinimumUniversePercent : 35));
    g_settings.fresh_tick_seconds=(InpFreshTickSeconds>0 ? InpFreshTickSeconds : 90);
    g_settings.open_recheck_seconds=(InpOpenRecheckSeconds>0 ? InpOpenRecheckSeconds : 10);
    g_settings.uncertain_burst_limit=(InpUncertainBurstLimit>=0 ? InpUncertainBurstLimit : 0);
@@ -169,7 +171,7 @@ void ASC_LoadSettingsFromInputs(void)
 void ASC_LogSettingsSummary(void)
   {
    g_logger.Info("Settings",ASC_WrapperHeaderText());
-   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, explorer=" + ASC_BoolText(g_settings.explorer_enabled) + " (" + ASC_ExplorerDensityText(g_settings.explorer_density_mode) + ")");
+   g_logger.Info("Settings","heartbeat=" + IntegerToString(g_settings.heartbeat_seconds) + "s, budget=" + IntegerToString(g_settings.symbol_budget_per_heartbeat) + ", open recheck=" + IntegerToString(g_settings.open_recheck_seconds) + "s, runtime save=" + IntegerToString(g_settings.runtime_save_seconds) + "s, warmup min=" + IntegerToString(g_settings.warmup_minimum_universe_percent) + "%, explorer=" + ASC_BoolText(g_settings.explorer_enabled) + " (" + ASC_ExplorerDensityText(g_settings.explorer_density_mode) + ")");
    g_logger.Debug("Settings","reserved surfaces: identity=" + ASC_BoolText(InpReserveIdentityAndBucketingControls) + ", snapshot=" + ASC_BoolText(g_settings.open_symbol_snapshot_reserved) + " with timeframe placeholders, filter=" + ASC_BoolText(g_settings.candidate_filtering_reserved) + ", shortlist=" + ASC_BoolText(g_settings.shortlist_selection_reserved) + ", deep=" + ASC_BoolText(g_settings.deep_selective_analysis_reserved) + " with timeframe placeholders, combined=" + ASC_BoolText(InpReserveCombinedSummaryControls) + ", signal=" + ASC_BoolText(InpReserveFutureSignalSurfaceControls));
   }
 
@@ -200,6 +202,12 @@ void ASC_ResetRuntimeState(void)
    g_runtime.processed_this_heartbeat=0;
    g_runtime.scheduler_cursor=0;
    g_runtime.heartbeats_since_boot=0;
+   g_runtime.initial_symbols_assessed=0;
+   g_runtime.primary_bucket_symbols_assessed=0;
+   g_runtime.primary_bucket_symbol_count=0;
+   g_runtime.warmup_minimum_met=false;
+   g_runtime.warmup_progress_percent=0;
+   g_runtime.background_hydration_active=false;
    ASC_PreparedBucketStateReset(g_prepared_buckets);
    g_last_degraded_state=false;
   }
@@ -314,17 +322,6 @@ bool ASC_ShouldSaveSummary(const datetime now)
    return(g_runtime.summary_dirty || g_runtime.last_summary_save_at<=0 || (now-g_runtime.last_summary_save_at)>=g_settings.summary_save_seconds);
   }
 
-int ASC_CountMissingDossiers(void)
-  {
-   int missing=0;
-   for(int i=0;i<g_symbol_count;i++)
-     {
-      if(!ASC_IsDossierPresent(g_symbols[i]))
-         missing++;
-     }
-   return(missing);
-  }
-
 int ASC_CountDueSymbols(const datetime now)
   {
    int due_count=0;
@@ -337,7 +334,64 @@ int ASC_CountDueSymbols(const datetime now)
    return(due_count);
   }
 
-void ASC_UpdateRuntimeMode(const int missing_dossiers)
+bool ASC_IsPrioritySet1Bucket(const string primary_bucket)
+  {
+   string bucket=ASC_ToUpper(ASC_Trim(primary_bucket));
+   return(bucket=="FX_MAJOR"
+          || bucket=="INDEX_US"
+          || bucket=="INDEX_EUROPE"
+          || bucket=="METALS_PRECIOUS"
+          || bucket=="ENERGY"
+          || bucket=="CRYPTO_LARGE_CAP");
+  }
+
+void ASC_UpdateLayer1Readiness(void)
+  {
+   int assessed=0;
+   int primary_assessed=0;
+   int primary_total=0;
+
+   for(int i=0;i<g_symbol_count;i++)
+     {
+      bool initial_assessed=(g_symbols[i].last_checked_at>0);
+      if(initial_assessed)
+         assessed++;
+
+      ASC_SymbolClassification classification;
+      if(!ASC_CL_ClassifySymbol(g_runtime.server_clean,g_symbols[i].symbol,classification))
+         continue;
+      if(!ASC_IsPrioritySet1Bucket(classification.primary_bucket))
+         continue;
+
+      primary_total++;
+      if(initial_assessed)
+         primary_assessed++;
+     }
+
+   g_runtime.initial_symbols_assessed=assessed;
+   g_runtime.primary_bucket_symbols_assessed=primary_assessed;
+   g_runtime.primary_bucket_symbol_count=primary_total;
+
+   int minimum_assessed=ASC_PercentOfCountCeil(g_symbol_count,g_settings.warmup_minimum_universe_percent);
+   bool universe_minimum_met=(g_symbol_count<=0 || assessed>=minimum_assessed);
+   bool primary_minimum_met=(primary_total<=0 || primary_assessed>=primary_total);
+   g_runtime.warmup_minimum_met=(universe_minimum_met && primary_minimum_met);
+
+   int universe_progress=(g_symbol_count>0 ? (assessed*100)/g_symbol_count : 100);
+   int primary_progress=(primary_total>0 ? (primary_assessed*100)/primary_total : 100);
+   int threshold_progress=(universe_minimum_met ? 100 : ((assessed*100)/minimum_assessed));
+   if(threshold_progress>100)
+      threshold_progress=100;
+   int progress=threshold_progress;
+   if(primary_progress<progress)
+      progress=primary_progress;
+   if(universe_progress>progress && g_runtime.warmup_minimum_met)
+      progress=universe_progress;
+   g_runtime.warmup_progress_percent=ASC_PercentClamp(progress);
+   g_runtime.background_hydration_active=(g_runtime.warmup_minimum_met && assessed<g_symbol_count);
+  }
+
+void ASC_UpdateRuntimeMode(void)
   {
    if(g_runtime.degraded)
      {
@@ -345,7 +399,7 @@ void ASC_UpdateRuntimeMode(const int missing_dossiers)
       return;
      }
 
-   if(missing_dossiers>0)
+   if(!g_runtime.warmup_minimum_met)
       g_runtime.mode=ASC_RUNTIME_WARMUP;
    else
       g_runtime.mode=ASC_RUNTIME_STEADY;
@@ -426,7 +480,8 @@ void ASC_RunHeartbeat(void)
    g_runtime.processed_this_heartbeat=touched_this_heartbeat;
    int remaining_due=ASC_CountDueSymbols(now);
    g_runtime.degraded=(remaining_due>0 && touched_this_heartbeat>=g_settings.symbol_budget_per_heartbeat);
-   ASC_UpdateRuntimeMode(ASC_CountMissingDossiers());
+   ASC_UpdateLayer1Readiness();
+   ASC_UpdateRuntimeMode();
    ASC_RefreshPreparedBucketState();
    g_runtime.runtime_dirty=true;
 
@@ -494,6 +549,8 @@ int OnInit()
    ASC_LogSettingsSummary();
 
    ASC_RestoreContinuity();
+   g_runtime.mode=ASC_RUNTIME_WARMUP;
+   g_runtime.runtime_dirty=true;
    ASC_ExplorerInit(g_explorer,ChartID());
    g_logger.Info("Explorer","init chart=" + IntegerToString((int)ChartID()) + ", server=" + g_runtime.server_clean);
    ASC_ExplorerMaybeRender(g_explorer,g_settings,g_runtime,g_prepared_buckets,g_symbols,g_symbol_count,true,g_logger);
